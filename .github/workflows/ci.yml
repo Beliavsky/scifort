@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / GNU Fortran
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: '14'
+
+      - uses: fortran-lang/setup-fpm@v10
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check ASCII policy
+        run: python tools/check_ascii.py
+
+      - name: Build debug
+        run: fpm build --profile debug
+
+      - name: Test debug
+        run: fpm test --profile debug
+
+      - name: Build release
+        run: fpm build --profile release
+
+      - name: Run example
+        run: fpm run --example distributions_demo
