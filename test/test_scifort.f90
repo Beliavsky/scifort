@@ -36,7 +36,7 @@ program test_scifort
 contains
 
     subroutine test_normal(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         real(dp) :: p(7)
@@ -79,7 +79,7 @@ contains
     end subroutine test_normal
 
     subroutine test_uniform(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('uniform pdf center', uniform_pdf(0.5_dp), &
             1.0_dp, 0.0_dp, 0.0_dp, failures)
@@ -96,7 +96,7 @@ contains
     end subroutine test_uniform
 
     subroutine test_exponential(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('exponential pdf zero', exponential_pdf(0.0_dp), &
             1.0_dp, 0.0_dp, 0.0_dp, failures)
@@ -115,7 +115,7 @@ contains
     end subroutine test_exponential
 
     subroutine test_laplace(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('laplace pdf zero', laplace_pdf(0.0_dp), &
             0.5_dp, 0.0_dp, 0.0_dp, failures)
@@ -132,7 +132,7 @@ contains
     end subroutine test_laplace
 
     subroutine test_logistic(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('logistic pdf zero', logistic_pdf(0.0_dp), &
             0.25_dp, 2.0e-16_dp, 2.0e-15_dp, failures)
@@ -151,7 +151,7 @@ contains
     end subroutine test_logistic
 
     subroutine test_cauchy(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('cauchy pdf zero', cauchy_pdf(0.0_dp), &
             0.31830988618379067154_dp, 2.0e-16_dp, 2.0e-15_dp, failures)
@@ -173,7 +173,7 @@ contains
     end subroutine test_cauchy
 
     subroutine test_invalid_inputs(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_true('normal invalid scale', &
             ieee_is_nan(normal_pdf(0.0_dp, scale=0.0_dp)), failures)
@@ -190,7 +190,7 @@ contains
     end subroutine test_invalid_inputs
 
     subroutine test_ieee_inputs(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp) :: nan_value
         real(dp) :: negative_inf
@@ -236,7 +236,7 @@ contains
     end subroutine test_ieee_inputs
 
     subroutine test_elemental_arrays(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp) :: actual(3)
         real(dp) :: expected(3)
@@ -256,7 +256,7 @@ contains
     end subroutine test_elemental_arrays
 
     subroutine test_distribution_identities(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         real(dp) :: p(6)
@@ -309,7 +309,7 @@ contains
     end subroutine test_distribution_identities
 
     subroutine test_c_api(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer(c_int) :: status
         real(c_double) :: x(3)
@@ -335,12 +335,12 @@ contains
     end subroutine test_c_api
 
     subroutine check_close(name, actual, expected, atol, rtol, failures)
-        character(len=*), intent(in) :: name
-        real(dp), intent(in) :: actual
-        real(dp), intent(in) :: expected
-        real(dp), intent(in) :: atol
-        real(dp), intent(in) :: rtol
-        integer, intent(inout) :: failures
+        character(len=*), intent(in) :: name !! label printed when the check fails
+        real(dp), intent(in) :: actual !! computed value
+        real(dp), intent(in) :: expected !! reference value
+        real(dp), intent(in) :: atol !! absolute tolerance
+        real(dp), intent(in) :: rtol !! relative tolerance, applied to |expected|
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp) :: tolerance
 
@@ -355,12 +355,12 @@ contains
     end subroutine check_close
 
     subroutine check_array_close(name, actual, expected, atol, rtol, failures)
-        character(len=*), intent(in) :: name
-        real(dp), intent(in) :: actual(:)
-        real(dp), intent(in) :: expected(:)
-        real(dp), intent(in) :: atol
-        real(dp), intent(in) :: rtol
-        integer, intent(inout) :: failures
+        character(len=*), intent(in) :: name !! label printed when the check fails
+        real(dp), intent(in) :: actual(:) !! computed values
+        real(dp), intent(in) :: expected(:) !! reference values, same size as actual
+        real(dp), intent(in) :: atol !! absolute tolerance
+        real(dp), intent(in) :: rtol !! relative tolerance, applied to |expected|
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
 
@@ -377,9 +377,9 @@ contains
     end subroutine check_array_close
 
     subroutine check_true(name, condition, failures)
-        character(len=*), intent(in) :: name
-        logical, intent(in) :: condition
-        integer, intent(inout) :: failures
+        character(len=*), intent(in) :: name !! label printed when the check fails
+        logical, intent(in) :: condition !! outcome of the check
+        integer, intent(inout) :: failures !! running count of failed checks
 
         if (.not. condition) then
             failures = failures + 1

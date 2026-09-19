@@ -21,6 +21,17 @@ All notable changes will be documented here.
   (`f_*`) distributions with the same eight functions.
 - `tools/generate_beta_reference.py` and the `test/test_beta.f90` test
   program.
+- Poisson (`poisson_*`) and binomial (`binomial_*`) distributions with
+  `pmf`, `logpmf`, `cdf`, `sf`, `logcdf`, `logsf`, `ppf`, and `isf`. Counts
+  may be given as `integer` or `real(dp)` through generic interfaces.
+- `tools/generate_discrete_reference.py` and the `test/test_discrete.f90`
+  test program.
+
+### Changed
+
+- Every dummy argument in `src/` and the test programs now carries a
+  trailing FORD documentation comment (`!!`) describing its meaning, range,
+  and default. `AGENTS.md` requires these for new code.
 
 ### Fixed
 

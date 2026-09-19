@@ -37,10 +37,10 @@ module scifort_student_t
 contains
 
     pure elemental function t_pdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -57,10 +57,10 @@ contains
     end function t_pdf
 
     pure elemental function t_logpdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -77,10 +77,10 @@ contains
     end function t_logpdf
 
     pure elemental function t_cdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: far
@@ -108,10 +108,10 @@ contains
     end function t_cdf
 
     pure elemental function t_sf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: far
@@ -139,10 +139,10 @@ contains
     end function t_sf
 
     pure elemental function t_logcdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: far
@@ -170,10 +170,10 @@ contains
     end function t_logcdf
 
     pure elemental function t_logsf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: far
@@ -201,10 +201,10 @@ contains
     end function t_logsf
 
     pure elemental function t_ppf(p, df, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -225,10 +225,10 @@ contains
     end function t_ppf
 
     pure elemental function t_isf(p, df, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -250,8 +250,8 @@ contains
 
     ! log density: -(df + 1)/2 log(1 + z**2/df) - log(df)/2 - log(B(df/2, 1/2)).
     pure elemental function standard_logpdf(z, df) result(y)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: df
+        real(dp), intent(in) :: z !! standardized value
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
         real(dp) :: y
 
         real(dp) :: log_term
@@ -279,12 +279,12 @@ contains
     ! |z| (the lower tail for z < 0, the upper tail for z > 0) and near is its
     ! complement, with their logarithms.
     pure elemental subroutine standard_tails(z, df, far, near, log_far, log_near)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: df
-        real(dp), intent(out) :: far
-        real(dp), intent(out) :: near
-        real(dp), intent(out) :: log_far
-        real(dp), intent(out) :: log_near
+        real(dp), intent(in) :: z !! standardized value
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(out) :: far !! probability beyond |z| on the side of z
+        real(dp), intent(out) :: near !! complement of far
+        real(dp), intent(out) :: log_far !! log(far)
+        real(dp), intent(out) :: log_near !! log(near)
 
         real(dp) :: a
         real(dp) :: log_constant
@@ -362,8 +362,8 @@ contains
     ! standard distribution: solve I_x(df/2, 1/2) = 2p for x and y = 1 - x,
     ! then t = sqrt(df y / x).
     pure elemental function standard_upper_quantile(p, df) result(t)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: df
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1/2]
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
         real(dp) :: t
 
         real(dp) :: a
@@ -398,16 +398,16 @@ contains
     end function standard_upper_quantile
 
     pure elemental logical function valid_df(df) result(valid)
-        real(dp), intent(in) :: df
+        real(dp), intent(in) :: df !! degrees of freedom to check
 
         valid = df > 0.0_dp
     end function valid_df
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp

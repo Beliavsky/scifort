@@ -34,11 +34,11 @@ module scifort_f_distribution
 contains
 
     pure elemental function f_pdf(x, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -70,11 +70,11 @@ contains
     end function f_pdf
 
     pure elemental function f_logpdf(x, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -106,11 +106,11 @@ contains
     end function f_logpdf
 
     pure elemental function f_cdf(x, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -128,11 +128,11 @@ contains
     end function f_cdf
 
     pure elemental function f_sf(x, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -150,11 +150,11 @@ contains
     end function f_sf
 
     pure elemental function f_logcdf(x, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logq
@@ -172,11 +172,11 @@ contains
     end function f_logcdf
 
     pure elemental function f_logsf(x, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -194,11 +194,11 @@ contains
     end function f_logsf
 
     pure elemental function f_ppf(p, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -215,11 +215,11 @@ contains
     end function f_ppf
 
     pure elemental function f_isf(p, dfn, dfd, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, finite and > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -240,9 +240,9 @@ contains
     ! When both a and b are large the stable beta kernel is used:
     ! log(x**a (1 - x)**b / B(a, b)) - log(z).
     pure elemental function standard_logpdf(z, dfn, dfd) result(y)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
+        real(dp), intent(in) :: z !! standardized value, finite and > 0
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, > 0
         real(dp) :: y
 
         real(dp) :: a
@@ -280,11 +280,11 @@ contains
     ! x = dfn z / (dfn z + dfd) and its complement dfd / (dfn z + dfd),
     ! each formed without cancellation or overflow.
     pure elemental subroutine beta_coordinates(z, dfn, dfd, x, x_complement)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(out) :: x
-        real(dp), intent(out) :: x_complement
+        real(dp), intent(in) :: z !! standardized value, > 0
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, > 0
+        real(dp), intent(out) :: x !! dfn z / (dfn z + dfd)
+        real(dp), intent(out) :: x_complement !! dfd / (dfn z + dfd)
 
         real(dp) :: v
         real(dp) :: w
@@ -302,13 +302,13 @@ contains
 
     ! Lower and upper tails and their logarithms at standardized z.
     pure elemental subroutine standard_tails(z, dfn, dfd, p, q, logp, logq)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
-        real(dp), intent(out) :: p
-        real(dp), intent(out) :: q
-        real(dp), intent(out) :: logp
-        real(dp), intent(out) :: logq
+        real(dp), intent(in) :: z !! standardized value
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, > 0
+        real(dp), intent(out) :: p !! lower-tail probability
+        real(dp), intent(out) :: q !! upper-tail probability
+        real(dp), intent(out) :: logp !! log(p)
+        real(dp), intent(out) :: logq !! log(q)
 
         real(dp) :: a
         real(dp) :: b
@@ -357,11 +357,11 @@ contains
     ! representable so that the value does not inherit the rounding of a
     ! large logarithm.
     pure elemental subroutine leading_term(s, t, log_c, log_value, value)
-        real(dp), intent(in) :: s
-        real(dp), intent(in) :: t
-        real(dp), intent(in) :: log_c
-        real(dp), intent(out) :: log_value
-        real(dp), intent(out) :: value
+        real(dp), intent(in) :: s !! shape attached to the tiny coordinate c
+        real(dp), intent(in) :: t !! other shape
+        real(dp), intent(in) :: log_c !! log(c)
+        real(dp), intent(out) :: log_value !! log(value)
+        real(dp), intent(out) :: value !! leading term c**s / (s B(s, t))
 
         real(dp) :: log_constant
 
@@ -377,10 +377,10 @@ contains
     ! Standardized quantile for lower tail p and upper tail q = 1 - p:
     ! z = (dfd / dfn) x / (1 - x) with I_x(dfn/2, dfd/2) = p.
     pure elemental function standard_quantile(p, q, dfn, dfd) result(z)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: q
-        real(dp), intent(in) :: dfn
-        real(dp), intent(in) :: dfd
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in) :: q !! upper-tail probability, 1 - p
+        real(dp), intent(in) :: dfn !! numerator degrees of freedom, > 0
+        real(dp), intent(in) :: dfd !! denominator degrees of freedom, > 0
         real(dp) :: z
 
         real(dp) :: x
@@ -401,16 +401,16 @@ contains
     end function standard_quantile
 
     pure elemental logical function valid_df(df) result(valid)
-        real(dp), intent(in) :: df
+        real(dp), intent(in) :: df !! degrees of freedom to check
 
         valid = ieee_is_finite(df) .and. df > 0.0_dp
     end function valid_df
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp

@@ -4,6 +4,8 @@
 module scifort_stats
     use scifort_beta, only : beta_cdf, beta_isf, beta_logcdf, beta_logpdf, &
         beta_logsf, beta_pdf, beta_ppf, beta_sf
+    use scifort_binomial, only : binomial_cdf, binomial_isf, binomial_logcdf, binomial_logpmf, &
+        binomial_logsf, binomial_pmf, binomial_ppf, binomial_sf
     use scifort_cauchy, only : cauchy_cdf, cauchy_isf, cauchy_logcdf, &
         cauchy_logpdf, cauchy_logsf, cauchy_pdf, cauchy_ppf, cauchy_sf
     use scifort_chi2, only : chi2_cdf, chi2_isf, chi2_logcdf, chi2_logpdf, &
@@ -22,6 +24,8 @@ module scifort_stats
         logistic_logpdf, logistic_logsf, logistic_pdf, logistic_ppf, logistic_sf
     use scifort_normal, only : normal_cdf, normal_isf, normal_logcdf, &
         normal_logpdf, normal_logsf, normal_pdf, normal_ppf, normal_sf
+    use scifort_poisson, only : poisson_cdf, poisson_isf, poisson_logcdf, poisson_logpmf, &
+        poisson_logsf, poisson_pmf, poisson_ppf, poisson_sf
     use scifort_student_t, only : t_cdf, t_isf, t_logcdf, t_logpdf, &
         t_logsf, t_pdf, t_ppf, t_sf
     use scifort_uniform, only : uniform_cdf, uniform_isf, uniform_logcdf, &
@@ -37,6 +41,14 @@ module scifort_stats
     public :: beta_pdf
     public :: beta_ppf
     public :: beta_sf
+    public :: binomial_cdf
+    public :: binomial_isf
+    public :: binomial_logcdf
+    public :: binomial_logpmf
+    public :: binomial_logsf
+    public :: binomial_pmf
+    public :: binomial_ppf
+    public :: binomial_sf
     public :: cauchy_cdf
     public :: cauchy_isf
     public :: cauchy_logcdf
@@ -102,6 +114,14 @@ module scifort_stats
     public :: normal_pdf
     public :: normal_ppf
     public :: normal_sf
+    public :: poisson_cdf
+    public :: poisson_isf
+    public :: poisson_logcdf
+    public :: poisson_logpmf
+    public :: poisson_logsf
+    public :: poisson_pmf
+    public :: poisson_ppf
+    public :: poisson_sf
     public :: t_cdf
     public :: t_isf
     public :: t_logcdf

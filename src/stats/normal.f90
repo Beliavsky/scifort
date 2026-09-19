@@ -22,9 +22,9 @@ module scifort_normal
 contains
 
     pure elemental function normal_pdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -42,9 +42,9 @@ contains
     end function normal_pdf
 
     pure elemental function normal_logpdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -62,9 +62,9 @@ contains
     end function normal_logpdf
 
     pure elemental function normal_cdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -82,9 +82,9 @@ contains
     end function normal_cdf
 
     pure elemental function normal_sf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -102,9 +102,9 @@ contains
     end function normal_sf
 
     pure elemental function normal_logcdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -122,9 +122,9 @@ contains
     end function normal_logcdf
 
     pure elemental function normal_logsf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -142,9 +142,9 @@ contains
     end function normal_logsf
 
     pure elemental function normal_ppf(p, loc, scale) result(x)
-        real(dp), intent(in) :: p
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: x
 
         real(dp) :: mu
@@ -164,9 +164,9 @@ contains
     end function normal_ppf
 
     pure elemental function normal_isf(p, loc, scale) result(x)
-        real(dp), intent(in) :: p
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in), optional :: loc !! mean (default 0)
+        real(dp), intent(in), optional :: scale !! standard deviation, > 0 (default 1)
         real(dp) :: x
 
         real(dp) :: mu
@@ -186,10 +186,10 @@ contains
     end function normal_isf
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp
@@ -198,21 +198,21 @@ contains
     end subroutine get_loc_scale
 
     pure elemental function standard_normal_cdf(z) result(p)
-        real(dp), intent(in) :: z
+        real(dp), intent(in) :: z !! standardized value
         real(dp) :: p
 
         p = 0.5_dp * erfc(-z / scifort_sqrt_two)
     end function standard_normal_cdf
 
     pure elemental function standard_normal_sf(z) result(p)
-        real(dp), intent(in) :: z
+        real(dp), intent(in) :: z !! standardized value
         real(dp) :: p
 
         p = 0.5_dp * erfc(z / scifort_sqrt_two)
     end function standard_normal_sf
 
     pure elemental function standard_normal_logcdf(z) result(y)
-        real(dp), intent(in) :: z
+        real(dp), intent(in) :: z !! standardized value
         real(dp) :: y
 
         real(dp) :: inv_z2
@@ -234,7 +234,7 @@ contains
     end function standard_normal_logcdf
 
     pure elemental function standard_normal_ppf(p) result(x)
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
         real(dp) :: x
 
         integer :: iteration

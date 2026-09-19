@@ -28,11 +28,11 @@ module scifort_beta
 contains
 
     pure elemental function beta_pdf(x, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: z
@@ -60,11 +60,11 @@ contains
     end function beta_pdf
 
     pure elemental function beta_logpdf(x, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: z
@@ -92,11 +92,11 @@ contains
     end function beta_logpdf
 
     pure elemental function beta_cdf(x, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -127,11 +127,11 @@ contains
     end function beta_cdf
 
     pure elemental function beta_sf(x, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -162,11 +162,11 @@ contains
     end function beta_sf
 
     pure elemental function beta_logcdf(x, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -197,11 +197,11 @@ contains
     end function beta_logcdf
 
     pure elemental function beta_logsf(x, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: logp
@@ -232,11 +232,11 @@ contains
     end function beta_logsf
 
     pure elemental function beta_ppf(p, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: u
@@ -263,11 +263,11 @@ contains
     end function beta_ppf
 
     pure elemental function beta_isf(p, a, b, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: u
@@ -297,10 +297,10 @@ contains
     ! shapes are large, the density is formed from the stable kernel
     ! z**a w**b / B(a, b) of scifort_incomplete_beta.
     pure elemental function standard_logpdf(a, b, z, w) result(y)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: w
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: z !! standardized value, 0 < z < 1
+        real(dp), intent(in) :: w !! 1 - z
         real(dp) :: y
 
         if (min(a, b) >= stirling_threshold) then
@@ -313,8 +313,8 @@ contains
     ! Standard density at the endpoint where the first shape applies:
     ! infinite for s < 1, t for s = 1 (since 1 / B(1, t) = t), zero above.
     pure elemental function endpoint_density(s, t) result(y)
-        real(dp), intent(in) :: s
-        real(dp), intent(in) :: t
+        real(dp), intent(in) :: s !! shape attached to the endpoint
+        real(dp), intent(in) :: t !! other shape
         real(dp) :: y
 
         if (s < 1.0_dp) then
@@ -327,7 +327,7 @@ contains
     end function endpoint_density
 
     pure elemental function log_nonnegative(p) result(y)
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: p !! value, >= 0, to take the log of
         real(dp) :: y
 
         if (p > 0.0_dp) then
@@ -338,16 +338,16 @@ contains
     end function log_nonnegative
 
     pure elemental logical function valid_shape(a) result(valid)
-        real(dp), intent(in) :: a
+        real(dp), intent(in) :: a !! shape to check
 
         valid = ieee_is_finite(a) .and. a > 0.0_dp
     end function valid_shape
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp

@@ -51,7 +51,7 @@ program test_beta
 contains
 
     subroutine test_betainc_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -75,7 +75,7 @@ contains
     ! Conventions follow scipy.special.betainc: a and b must be finite and
     ! positive and 0 <= x <= 1.
     subroutine test_betainc_special_values(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('betainc(1, 1, 0)', betainc(1.0_dp, 1.0_dp, 0.0_dp), 0.0_dp, &
             0.0_dp, 0.0_dp, failures)
@@ -110,7 +110,7 @@ contains
     end subroutine test_betainc_special_values
 
     subroutine test_betainc_identities(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: j
         integer :: m
@@ -146,7 +146,7 @@ contains
     end subroutine test_betainc_identities
 
     subroutine test_inverse_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -162,7 +162,7 @@ contains
     end subroutine test_inverse_reference
 
     subroutine test_t_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -187,7 +187,7 @@ contains
     end subroutine test_t_reference
 
     subroutine test_f_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -206,7 +206,7 @@ contains
     end subroutine test_f_reference
 
     subroutine test_beta_distribution_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -232,7 +232,7 @@ contains
     end subroutine test_beta_distribution_reference
 
     subroutine test_endpoints(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_true('beta pdf 0, a < 1', beta_pdf(0.0_dp, 0.5_dp, 2.0_dp) > huge(1.0_dp), &
             failures)
@@ -284,7 +284,7 @@ contains
     end subroutine test_endpoints
 
     subroutine test_invalid_and_ieee(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_true('beta zero shape', ieee_is_nan(beta_cdf(0.5_dp, 0.0_dp, 1.0_dp)), &
             failures)
@@ -311,7 +311,7 @@ contains
     ! Exact limits of the Cauchy case df = 1: sf(t) = atan(1/t) / pi and
     ! ppf(p) = -1 / tan(pi p), both of which reduce to 1 / (pi t) far out.
     subroutine test_extreme_tails(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('t sf 1e200, df 1', t_sf(1.0e200_dp, 1.0_dp), &
             1.0_dp / (scifort_pi * 1.0e200_dp), 0.0_dp, 1.0e-14_dp, failures)
@@ -324,7 +324,7 @@ contains
     end subroutine test_extreme_tails
 
     subroutine test_monotonicity(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         logical :: ok
@@ -370,7 +370,7 @@ contains
     ! support endpoint cannot reproduce p; the test then checks that this is
     ! justified.
     subroutine test_round_trips(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp), parameter :: probabilities(6) = [1.0e-100_dp, 1.0e-8_dp, 0.025_dp, &
             0.3_dp, 0.5_dp, 0.99_dp]
@@ -424,7 +424,7 @@ contains
     end subroutine test_round_trips
 
     subroutine test_distribution_identities(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         real(dp) :: t(6)
@@ -459,7 +459,7 @@ contains
     end subroutine test_distribution_identities
 
     subroutine test_elemental(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         real(dp) :: actual(4)

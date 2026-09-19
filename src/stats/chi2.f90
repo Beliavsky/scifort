@@ -26,10 +26,10 @@ module scifort_chi2
 contains
 
     pure elemental function chi2_pdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -44,10 +44,10 @@ contains
     end function chi2_pdf
 
     pure elemental function chi2_logpdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -62,10 +62,10 @@ contains
     end function chi2_logpdf
 
     pure elemental function chi2_cdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -80,10 +80,10 @@ contains
     end function chi2_cdf
 
     pure elemental function chi2_sf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -98,10 +98,10 @@ contains
     end function chi2_sf
 
     pure elemental function chi2_logcdf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -116,10 +116,10 @@ contains
     end function chi2_logcdf
 
     pure elemental function chi2_logsf(x, df, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -134,10 +134,10 @@ contains
     end function chi2_logsf
 
     pure elemental function chi2_ppf(p, df, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -152,10 +152,10 @@ contains
     end function chi2_ppf
 
     pure elemental function chi2_isf(p, df, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: df
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in) :: df !! degrees of freedom, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -170,16 +170,16 @@ contains
     end function chi2_isf
 
     pure elemental logical function valid_df(df) result(valid)
-        real(dp), intent(in) :: df
+        real(dp), intent(in) :: df !! degrees of freedom to check
 
         valid = ieee_is_finite(df) .and. df > 0.0_dp
     end function valid_df
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp

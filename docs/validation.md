@@ -168,3 +168,56 @@ Known limitations:
   parameters large loses accuracy in proportion to `sqrt(a + b)`, which is
   within the conditioning of the problem.
 - Only GNU Fortran was tested. The C ABI does not yet expose these functions.
+
+## Poisson and binomial validation
+
+Validation date: 2026-09-19. Same environment as the previous sections.
+
+Commands run on the final code, all passing (`test_discrete`, `test_beta`,
+`test_gamma`, and `test_scifort`):
+
+```text
+fpm test
+fpm test --profile debug
+fpm test --flag "-O0 -g -fcheck=all -ffpe-trap=zero,overflow -fbacktrace -Wall -Wextra -Wno-integer-division -std=f2018"
+python tools/check_ascii.py
+```
+
+The trapping build produced no compiler warnings and no traps.
+
+`test/test_discrete.f90` compares against mpmath reference values whose
+tolerances combine the accuracy of the underlying special function with the
+sensitivity of each probability to the rounding of `mu` or `p`. It also
+checks that the mass function sums to the cumulative function and to one,
+that each quantile is the smallest count reaching its probability, the
+identities with the incomplete gamma and beta functions, the reflection
+identity of the binomial distribution at `p = 1/4`, the degenerate cases
+`mu = 0`, `p = 0`, `p = 1`, and `n = 0`, and that the integer and real
+interfaces agree.
+
+Comparison with SciPy 1.15.3 on 4000 random cases, with `mu` from `1e-3` to
+`1e6`, `n` up to `1e6`, and `p` from `1e-5` to `1`, covering both the bulk
+and the tails:
+
+| quantity | median difference | largest difference |
+| --- | --- | --- |
+| Poisson pmf | `3.6e-15` | `2.3e-9` |
+| Poisson cdf | `0` | `3.8e-12` |
+| Poisson sf | `1.9e-16` | `3.9e-6` |
+| binomial pmf | `1.4e-15` | `2.9e-11` |
+| binomial cdf | `0` | `2.9e-11` |
+| binomial sf | `4.4e-16` | `2.9e-11` |
+
+Each of those six largest differences was checked against mpmath at 60
+digits. In every case SciFort was the more accurate of the two, with errors
+from `1.4e-15` to `1.7e-13` against SciPy's `2.3e-9` to `3.9e-6`. The largest
+SciPy error was in `poisson.sf(981157, 976226)`.
+
+Known limitations:
+
+- The quantile search evaluates the cumulative function about
+  `log2(range)` times; no closed-form starting bound is used beyond the
+  normal approximation.
+- Counts are held in binary64, so a count above `2**53` cannot be
+  distinguished from its neighbors.
+- Only GNU Fortran was tested. The C ABI does not expose these functions.

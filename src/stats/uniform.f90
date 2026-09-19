@@ -20,9 +20,9 @@ module scifort_uniform
 contains
 
     pure elemental function uniform_pdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -46,9 +46,9 @@ contains
     end function uniform_pdf
 
     pure elemental function uniform_logpdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -72,9 +72,9 @@ contains
     end function uniform_logpdf
 
     pure elemental function uniform_cdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -98,9 +98,9 @@ contains
     end function uniform_cdf
 
     pure elemental function uniform_sf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -124,9 +124,9 @@ contains
     end function uniform_sf
 
     pure elemental function uniform_logcdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: cdf
@@ -148,9 +148,9 @@ contains
     end function uniform_logcdf
 
     pure elemental function uniform_logsf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -172,9 +172,9 @@ contains
     end function uniform_logsf
 
     pure elemental function uniform_ppf(p, loc, scale) result(x)
-        real(dp), intent(in) :: p
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: x
 
         real(dp) :: mu
@@ -191,9 +191,9 @@ contains
     end function uniform_ppf
 
     pure elemental function uniform_isf(p, loc, scale) result(x)
-        real(dp), intent(in) :: p
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! width of the support, > 0 (default 1)
         real(dp) :: x
 
         real(dp) :: mu
@@ -210,10 +210,10 @@ contains
     end function uniform_isf
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp

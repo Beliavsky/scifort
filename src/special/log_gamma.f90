@@ -78,7 +78,7 @@ contains
     ! used so that the result keeps full relative accuracy as a -> 0; the
     ! intrinsic would first round 1 + a.
     pure elemental function log_gamma_one_plus(a) result(y)
-        real(dp), intent(in) :: a
+        real(dp), intent(in) :: a !! argument of log(Gamma(1 + a)), >= 0
         real(dp) :: y
 
         integer :: k
@@ -103,7 +103,7 @@ contains
     ! equivalently log(Gamma(a + 1)) = (a + 1/2) log(a) - a +
     ! log(sqrt(2 pi)) + S(a).
     pure elemental function stirling_remainder(a) result(y)
-        real(dp), intent(in) :: a
+        real(dp), intent(in) :: a !! argument, >= 10
         real(dp) :: y
 
         integer :: k
@@ -120,7 +120,7 @@ contains
     ! log(1 + t) - t for t > -1. For |t| <= 0.25 the Maclaurin series of
     ! DLMF 4.6.1 is summed so that the result keeps full relative accuracy.
     pure elemental function log1p_minus_x(t) result(y)
-        real(dp), intent(in) :: t
+        real(dp), intent(in) :: t !! argument of log(1 + t) - t, > -1
         real(dp) :: y
 
         integer :: k
@@ -146,8 +146,8 @@ contains
     ! for the large arguments so that the terms of order n log(n) cancel
     ! analytically rather than numerically.
     pure elemental function log_beta(a, b) result(y)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
+        real(dp), intent(in) :: a !! first argument, finite and > 0
+        real(dp), intent(in) :: b !! second argument, finite and > 0
         real(dp) :: y
 
         real(dp) :: big
@@ -180,8 +180,8 @@ contains
     ! with each term of S(x + s) - S(x) formed through expm1. Smaller x is
     ! shifted upward with Gamma(x + 1) = x Gamma(x).
     pure elemental function log_gamma_difference(x, s) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: s
+        real(dp), intent(in) :: x !! base argument, > 0
+        real(dp), intent(in) :: s !! increment in log(Gamma(x + s)) - log(Gamma(x)), >= 0
         real(dp) :: y
 
         integer :: j
@@ -207,8 +207,8 @@ contains
     ! (x + s - 1/2) (log1p(t) - t) + s (s - 1/2) / x + S(x + s) - S(x),
     ! in which no terms of order s cancel.
     pure elemental function log_gamma_ratio_scaled(x, s) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: s
+        real(dp), intent(in) :: x !! base argument, >= 10
+        real(dp), intent(in) :: s !! increment, >= 0
         real(dp) :: y
 
         real(dp) :: t
@@ -221,8 +221,8 @@ contains
     ! S(x + s) - S(x) for x >= 10 given log_ratio = log(1 + s/x), with each
     ! term c_k x**(1 - 2k) ((1 + s/x)**(1 - 2k) - 1) formed through expm1.
     pure elemental function stirling_remainder_difference(x, log_ratio) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: log_ratio
+        real(dp), intent(in) :: x !! base argument, >= 10
+        real(dp), intent(in) :: log_ratio !! log(1 + s/x) for the increment s
         real(dp) :: y
 
         integer :: k

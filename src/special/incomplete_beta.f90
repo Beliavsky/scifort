@@ -98,9 +98,9 @@ contains
 
     ! Regularized incomplete beta function I_x(a, b).
     pure elemental function betainc(a, b, x) result(p)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: x !! upper limit of integration in [0, 1]
         real(dp) :: p
 
         real(dp) :: logp
@@ -120,9 +120,9 @@ contains
 
     ! Complement 1 - I_x(a, b), computed without forming the difference.
     pure elemental function betaincc(a, b, x) result(q)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: x !! lower limit of integration in [0, 1]
         real(dp) :: q
 
         real(dp) :: logp
@@ -142,9 +142,9 @@ contains
 
     ! Inverse of I_x(a, b) with respect to x.
     pure elemental function betaincinv(a, b, p) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: p !! value of I_x(a, b) in [0, 1]
         real(dp) :: x
 
         real(dp) :: y
@@ -162,9 +162,9 @@ contains
 
     ! Inverse of 1 - I_x(a, b) with respect to x.
     pure elemental function betainccinv(a, b, q) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: q
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: q !! value of 1 - I_x(a, b) in [0, 1]
         real(dp) :: x
 
         real(dp) :: y
@@ -189,14 +189,14 @@ contains
     ! small; the complement is then computed directly by
     ! small_parameter_complement so that it is not formed by cancellation.
     pure elemental subroutine incomplete_beta_xy(a, b, x, y, p, q, logp, logq)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
-        real(dp), intent(out) :: p
-        real(dp), intent(out) :: q
-        real(dp), intent(out) :: logp
-        real(dp), intent(out) :: logq
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: x !! argument, 0 < x < 1
+        real(dp), intent(in) :: y !! 1 - x, formed accurately by the caller
+        real(dp), intent(out) :: p !! I_x(a, b)
+        real(dp), intent(out) :: q !! 1 - I_x(a, b)
+        real(dp), intent(out) :: logp !! log(I_x(a, b))
+        real(dp), intent(out) :: logq !! log(1 - I_x(a, b))
 
         if (use_gamma_expansion(a, b, x, y)) then
             call gamma_expansion(a, b, x, y, p, q, logp, logq)
@@ -232,12 +232,12 @@ contains
     ! d(2m) = m (b - m) x / ((a + 2m - 1) (a + 2m)),
     ! d(2m + 1) = -(a + m) (a + b + m) x / ((a + 2m) (a + 2m + 1)).
     pure elemental subroutine lower_tail(a, b, x, y, t, logt)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
-        real(dp), intent(out) :: t
-        real(dp), intent(out) :: logt
+        real(dp), intent(in) :: a !! first shape, > 0
+        real(dp), intent(in) :: b !! second shape, > 0
+        real(dp), intent(in) :: x !! argument, 0 < x < 1
+        real(dp), intent(in) :: y !! 1 - x
+        real(dp), intent(out) :: t !! I_x(a, b) from the continued fraction
+        real(dp), intent(out) :: logt !! log(I_x(a, b))
 
         real(dp), parameter :: tiny_value = 1.0e-300_dp
         integer :: max_terms
@@ -290,9 +290,9 @@ contains
     ! T = sum over k >= 1 of (1 - t)_k z**k / (k! (s + k)). The complement
     ! -expm1(L) - exp(L) s T keeps full relative accuracy as s -> 0.
     pure function small_parameter_complement(s, t, z) result(c)
-        real(dp), intent(in) :: s
-        real(dp), intent(in) :: t
-        real(dp), intent(in) :: z
+        real(dp), intent(in) :: s !! small first shape, 0 < s < 1
+        real(dp), intent(in) :: t !! second shape, > 0
+        real(dp), intent(in) :: z !! argument below the continued-fraction switch point
         real(dp) :: c
 
         integer :: k
@@ -316,10 +316,10 @@ contains
     end function small_parameter_complement
 
     pure elemental logical function use_gamma_expansion(big, small, x, y) result(use)
-        real(dp), intent(in) :: big
-        real(dp), intent(in) :: small
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
+        real(dp), intent(in) :: big !! larger shape
+        real(dp), intent(in) :: small !! smaller shape
+        real(dp), intent(in) :: x !! argument paired with the larger shape
+        real(dp), intent(in) :: y !! 1 - x
 
         real(dp) :: w
 
@@ -333,8 +333,8 @@ contains
 
     ! -log(x) given y = 1 - x, using the complement when x > 1/2.
     pure elemental function minus_log(x, y) result(w)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
+        real(dp), intent(in) :: x !! argument, 0 < x < 1
+        real(dp), intent(in) :: y !! 1 - x
         real(dp) :: w
 
         if (x > 0.5_dp) then
@@ -359,14 +359,14 @@ contains
     ! it converges and gives the complement with lower incomplete gamma
     ! functions. The smaller tail is summed and the other is its complement.
     pure elemental subroutine gamma_expansion(a, b, x, y, p, q, logp, logq)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
-        real(dp), intent(out) :: p
-        real(dp), intent(out) :: q
-        real(dp), intent(out) :: logp
-        real(dp), intent(out) :: logq
+        real(dp), intent(in) :: a !! large shape
+        real(dp), intent(in) :: b !! small shape
+        real(dp), intent(in) :: x !! argument, exp(-1) <= x < 1
+        real(dp), intent(in) :: y !! 1 - x
+        real(dp), intent(out) :: p !! I_x(a, b)
+        real(dp), intent(out) :: q !! 1 - I_x(a, b)
+        real(dp), intent(out) :: logp !! log(I_x(a, b))
+        real(dp), intent(out) :: logq !! log(1 - I_x(a, b))
 
         integer, parameter :: max_terms = 60
         integer :: j
@@ -456,8 +456,8 @@ contains
     ! Term limit for the continued fraction. Near the mean the number of
     ! terms needed grows like sqrt(a + b).
     pure function iteration_limit(a, b) result(n)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
+        real(dp), intent(in) :: a !! first shape, > 0
+        real(dp), intent(in) :: b !! second shape, > 0
         integer :: n
 
         real(dp) :: estimate
@@ -478,10 +478,10 @@ contains
     ! in which no large terms cancel. When one parameter is large the
     ! n log(n) terms of log(B) cancel analytically (see log_beta).
     pure elemental function log_beta_kernel(a, b, x, y) result(logk)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: x !! argument in [0, 1]
+        real(dp), intent(in) :: y !! 1 - x
         real(dp) :: logk
 
         real(dp) :: n
@@ -515,12 +515,12 @@ contains
     ! as a product so that its relative error does not grow with its
     ! logarithm.
     pure elemental subroutine beta_kernel(a, b, x, y, k, logk)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: y
-        real(dp), intent(out) :: k
-        real(dp), intent(out) :: logk
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: x !! argument, 0 < x < 1
+        real(dp), intent(in) :: y !! 1 - x
+        real(dp), intent(out) :: k !! x**a y**b / B(a, b)
+        real(dp), intent(out) :: logk !! log(k)
 
         real(dp), parameter :: safe_exponent = 690.0_dp
 
@@ -538,8 +538,8 @@ contains
     ! log(z) for z in (0, 1] given its complement w = 1 - z. Near z = 1 the
     ! complement carries the information, so log1p(-w) is used.
     pure elemental function log_pair(z, w) result(y)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: w
+        real(dp), intent(in) :: z !! argument in (0, 1]
+        real(dp), intent(in) :: w !! 1 - z
         real(dp) :: y
 
         if (z <= 0.5_dp) then
@@ -553,10 +553,10 @@ contains
     ! w = 1 - z and w0 = 1 - z0. When z > 1/2 the difference z - z0 is
     ! formed as w0 - w from the complements.
     pure elemental function relative_log_term(z, w, z0, w0) result(y)
-        real(dp), intent(in) :: z
-        real(dp), intent(in) :: w
-        real(dp), intent(in) :: z0
-        real(dp), intent(in) :: w0
+        real(dp), intent(in) :: z !! argument in (0, 1]
+        real(dp), intent(in) :: w !! 1 - z
+        real(dp), intent(in) :: z0 !! reference point in (0, 1)
+        real(dp), intent(in) :: w0 !! 1 - z0
         real(dp) :: y
 
         real(dp) :: t
@@ -574,9 +574,9 @@ contains
     end function relative_log_term
 
     pure elemental logical function valid_arguments(a, b, x) result(valid)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! first shape to check
+        real(dp), intent(in) :: b !! second shape to check
+        real(dp), intent(in) :: x !! argument or probability to check
 
         valid = ieee_is_finite(a) .and. a > 0.0_dp .and. &
             ieee_is_finite(b) .and. b > 0.0_dp .and. &
@@ -589,12 +589,12 @@ contains
     ! I_y(b, a) = q (DLMF 8.17.4), so that both x and y keep full relative
     ! accuracy.
     pure elemental subroutine beta_inverse_xy(a, b, p, q, x, y)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: q
-        real(dp), intent(out) :: x
-        real(dp), intent(out) :: y
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: p !! target value of I_x(a, b), 0 < p < 1
+        real(dp), intent(in) :: q !! 1 - p
+        real(dp), intent(out) :: x !! root of I_x(a, b) = p
+        real(dp), intent(out) :: y !! 1 - x, accurate when x is near 1
 
         logical :: root_below_half
         real(dp) :: logp_half
@@ -624,10 +624,10 @@ contains
     ! increasing in x. Newton steps in log(x) are safeguarded by a bracket
     ! with geometric bisection as the fallback.
     pure function solve_below_half(a, b, p, q) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: b
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: q
+        real(dp), intent(in) :: a !! first shape, finite and > 0
+        real(dp), intent(in) :: b !! second shape, finite and > 0
+        real(dp), intent(in) :: p !! target value of I_x(a, b), 0 < p < 1
+        real(dp), intent(in) :: q !! 1 - p
         real(dp) :: x
 
         real(dp), parameter :: max_log_step = 50.0_dp

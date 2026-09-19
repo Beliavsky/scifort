@@ -22,18 +22,18 @@ module scifort_cauchy
 contains
 
     pure elemental function cauchy_pdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: y
 
         y = exp(cauchy_logpdf(x, loc, scale))
     end function cauchy_pdf
 
     pure elemental function cauchy_logpdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: a
@@ -59,9 +59,9 @@ contains
     end function cauchy_logpdf
 
     pure elemental function cauchy_cdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -87,9 +87,9 @@ contains
     end function cauchy_cdf
 
     pure elemental function cauchy_sf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -115,9 +115,9 @@ contains
     end function cauchy_sf
 
     pure elemental function cauchy_logcdf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -150,9 +150,9 @@ contains
     end function cauchy_logcdf
 
     pure elemental function cauchy_logsf(x, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -185,9 +185,9 @@ contains
     end function cauchy_logsf
 
     pure elemental function cauchy_ppf(p, loc, scale) result(x)
-        real(dp), intent(in) :: p
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: x
 
         real(dp) :: mu
@@ -205,9 +205,9 @@ contains
     end function cauchy_ppf
 
     pure elemental function cauchy_isf(p, loc, scale) result(x)
-        real(dp), intent(in) :: p
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in), optional :: loc !! median (default 0)
+        real(dp), intent(in), optional :: scale !! half width at half maximum, > 0 (default 1)
         real(dp) :: x
 
         real(dp) :: mu
@@ -225,10 +225,10 @@ contains
     end function cauchy_isf
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp
@@ -237,7 +237,7 @@ contains
     end subroutine get_loc_scale
 
     pure elemental function standard_cauchy_ppf(p) result(z)
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
         real(dp) :: z
 
         if (.not. (p >= 0.0_dp .and. p <= 1.0_dp)) then

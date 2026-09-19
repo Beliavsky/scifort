@@ -29,10 +29,10 @@ module scifort_gamma
 contains
 
     pure elemental function gamma_pdf(x, a, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the density is evaluated
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -64,10 +64,10 @@ contains
     end function gamma_pdf
 
     pure elemental function gamma_logpdf(x, a, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point at which the log density is evaluated
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -99,10 +99,10 @@ contains
     end function gamma_logpdf
 
     pure elemental function gamma_cdf(x, a, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the lower-tail probability P(X <= x)
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -126,10 +126,10 @@ contains
     end function gamma_cdf
 
     pure elemental function gamma_sf(x, a, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of the upper-tail probability P(X > x)
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -153,10 +153,10 @@ contains
     end function gamma_sf
 
     pure elemental function gamma_logcdf(x, a, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X <= x))
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -180,10 +180,10 @@ contains
     end function gamma_logcdf
 
     pure elemental function gamma_logsf(x, a, loc, scale) result(y)
-        real(dp), intent(in) :: x
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: x !! point x of log(P(X > x))
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -207,10 +207,10 @@ contains
     end function gamma_logsf
 
     pure elemental function gamma_ppf(p, a, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -230,10 +230,10 @@ contains
     end function gamma_ppf
 
     pure elemental function gamma_isf(p, a, loc, scale) result(y)
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: a
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
+        real(dp), intent(in) :: p !! upper-tail probability in [0, 1]
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in), optional :: loc !! lower end of the support (default 0)
+        real(dp), intent(in), optional :: scale !! scale (inverse rate), > 0 (default 1)
         real(dp) :: y
 
         real(dp) :: mu
@@ -256,8 +256,8 @@ contains
     ! formed as a * kernel(a, z) / z, where kernel = z**a exp(-z) / Gamma(a + 1)
     ! is evaluated without the cancellation of (a - 1) log(z) - z - log(Gamma(a)).
     pure elemental function standard_logpdf(a, z) result(y)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: z
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: z !! standardized value, finite and > 0
         real(dp) :: y
 
         if (a < 10.0_dp) then
@@ -268,16 +268,16 @@ contains
     end function standard_logpdf
 
     pure elemental logical function valid_shape(a) result(valid)
-        real(dp), intent(in) :: a
+        real(dp), intent(in) :: a !! shape to check
 
         valid = ieee_is_finite(a) .and. a > 0.0_dp
     end function valid_shape
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
-        real(dp), intent(in), optional :: loc
-        real(dp), intent(in), optional :: scale
-        real(dp), intent(out) :: mu
-        real(dp), intent(out) :: sigma
+        real(dp), intent(in), optional :: loc !! location argument, if present
+        real(dp), intent(in), optional :: scale !! scale argument, if present
+        real(dp), intent(out) :: mu !! location, 0 when loc is absent
+        real(dp), intent(out) :: sigma !! scale, 1 when scale is absent
 
         mu = 0.0_dp
         sigma = 1.0_dp

@@ -13,12 +13,12 @@ module test_checks
 contains
 
     subroutine check_close(name, actual, expected, atol, rtol, failures)
-        character(len=*), intent(in) :: name
-        real(dp), intent(in) :: actual
-        real(dp), intent(in) :: expected
-        real(dp), intent(in) :: atol
-        real(dp), intent(in) :: rtol
-        integer, intent(inout) :: failures
+        character(len=*), intent(in) :: name !! label printed when the check fails
+        real(dp), intent(in) :: actual !! computed value
+        real(dp), intent(in) :: expected !! reference value
+        real(dp), intent(in) :: atol !! absolute tolerance
+        real(dp), intent(in) :: rtol !! relative tolerance, applied to |expected|
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp) :: tolerance
 
@@ -34,9 +34,9 @@ contains
     end subroutine check_close
 
     subroutine check_true(name, condition, failures)
-        character(len=*), intent(in) :: name
-        logical, intent(in) :: condition
-        integer, intent(inout) :: failures
+        character(len=*), intent(in) :: name !! label printed when the check fails
+        logical, intent(in) :: condition !! outcome of the check
+        integer, intent(inout) :: failures !! running count of failed checks
 
         if (.not. condition) then
             failures = failures + 1

@@ -20,9 +20,9 @@ probability distributions:
 - Cauchy
 
 The unreleased development version adds the gamma, chi-square, beta,
-Student t, and F distributions and, in `scifort_special`, the regularized
-incomplete gamma and beta functions (`gammainc`, `gammaincc`, `betainc`,
-`betaincc`) with their inverses.
+Student t, F, Poisson, and binomial distributions and, in `scifort_special`,
+the regularized incomplete gamma and beta functions (`gammainc`,
+`gammaincc`, `betainc`, `betaincc`) with their inverses.
 
 Each distribution currently provides:
 

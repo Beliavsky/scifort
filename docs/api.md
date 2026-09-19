@@ -110,6 +110,47 @@ limiting distribution (for example `f.cdf(1, 2, inf) = 0`), so SciFort returns
 NaN for infinite degrees of freedom. The density at `x = loc` is `+infinity`
 for `dfn < 2`, `1 / scale` for `dfn = 2`, and `0` for `dfn > 2`.
 
+## Discrete distributions
+
+Discrete families provide `pmf` and `logpmf` in place of `pdf` and `logpdf`.
+The count may be an `integer` or a `real(dp)`; the two forms are separate
+specific procedures behind one generic name, so the count and the number of
+trials must have the same type. Following `scipy.stats`:
+
+- a non-integer count has probability zero, and `cdf`, `sf`, and their
+  logarithms use its floor;
+- `ppf(p)` is the smallest count whose `cdf` reaches `p`, and `isf(p)` the
+  smallest count whose `sf` falls to `p` or below;
+- `ppf(0)` returns `loc - 1`, the value just below the support, and `isf(1)`
+  does the same. `ppf(1)` returns `+infinity` for the Poisson distribution
+  and `loc + n` for the binomial one.
+
+### Poisson
+
+```text
+poisson_pmf(k, mu [, loc])
+poisson_logpmf, poisson_cdf, poisson_sf, poisson_logcdf, poisson_logsf
+poisson_ppf(p, mu [, loc]), poisson_isf(p, mu [, loc])
+```
+
+The mean must satisfy `mu >= 0`; `mu = 0` places all mass at `loc` and
+`mu = +infinity` pushes it beyond every finite count. The tails use
+`P(X <= k) = Q(k + 1, mu)` and `P(X > k) = P(k + 1, mu)` (DLMF 8.4.8 with
+8.4.11), so no sum over counts is formed.
+
+### Binomial
+
+```text
+binomial_pmf(k, n, p [, loc])
+binomial_logpmf, binomial_cdf, binomial_sf, binomial_logcdf, binomial_logsf
+binomial_ppf(probability, n, p [, loc]), binomial_isf(probability, n, p [, loc])
+```
+
+The number of trials `n` must be a finite nonnegative integer value and the
+success probability must lie in `[0, 1]`; other values give NaN, as in
+`scipy.stats.binom`. The tails use `P(X > k) = I_p(k + 1, n - k)`
+(DLMF 8.17.5).
+
 ## Special functions
 
 ```fortran
@@ -160,6 +201,13 @@ For the incomplete beta function the same bound, with `x f(x) / V` replaced by
 other, an expansion in incomplete gamma functions replaces the continued
 fraction near the transition region, where the continued fraction would
 lose accuracy in proportion to the large parameter.
+
+The discrete distributions inherit these bounds, with one addition: a
+probability is also sensitive to the rounding of `mu` or `p`, which moves it
+by `mu pmf(k)` or `n p pmf(k; n - 1, p)`. In a comparison of 4000 random
+cases with SciPy 1.15.3 the median relative difference was at most `4e-15`,
+and in every one of the six largest differences SciPy was the less accurate
+of the two (see `docs/validation.md`).
 
 ## Elemental operation
 

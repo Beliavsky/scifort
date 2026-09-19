@@ -52,7 +52,7 @@ contains
 
     ! Reference values from mpmath 1.3.0 at 40 digits.
     subroutine test_elementary(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('log1p 1e-300', log1p_safe(1.0e-300_dp), 1.0e-300_dp, &
             0.0_dp, 2.0_dp * eps, failures)
@@ -90,7 +90,7 @@ contains
     end subroutine test_elementary
 
     subroutine test_incomplete_gamma_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -113,7 +113,7 @@ contains
 
     ! Conventions follow scipy.special.gammainc and gammaincc.
     subroutine test_incomplete_gamma_special_values(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_close('gammainc(0, 1)', gammainc(0.0_dp, 1.0_dp), 1.0_dp, &
             0.0_dp, 0.0_dp, failures)
@@ -168,7 +168,7 @@ contains
     end subroutine test_incomplete_gamma_special_values
 
     subroutine test_incomplete_gamma_identities(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: k
         integer :: n
@@ -197,7 +197,7 @@ contains
     end subroutine test_incomplete_gamma_identities
 
     subroutine test_inverse_reference(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -213,7 +213,7 @@ contains
     end subroutine test_inverse_reference
 
     subroutine test_gamma_reference_values(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -247,7 +247,7 @@ contains
     end subroutine test_gamma_reference_values
 
     subroutine test_chi2_reference_values(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         character(len=64) :: label
@@ -269,7 +269,7 @@ contains
     end subroutine test_chi2_reference_values
 
     subroutine test_endpoints(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_true('gamma pdf 0, a < 1', gamma_pdf(0.0_dp, 0.5_dp) > huge(1.0_dp), &
             failures)
@@ -316,7 +316,7 @@ contains
     end subroutine test_endpoints
 
     subroutine test_invalid_and_ieee(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         call check_true('gamma zero shape', ieee_is_nan(gamma_pdf(1.0_dp, 0.0_dp)), &
             failures)
@@ -357,7 +357,7 @@ contains
     end subroutine test_invalid_and_ieee
 
     subroutine test_monotonicity(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp), parameter :: shapes(6) = [1.0e-3_dp, 0.3_dp, 1.0_dp, 2.5_dp, &
             40.0_dp, 5000.0_dp]
@@ -395,7 +395,7 @@ contains
     ! order eps, which moves a tail probability V by eps * x f(x) / V; the
     ! forward function adds eps * (1 + |log V|).
     subroutine test_round_trips(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         real(dp), parameter :: shapes(7) = [1.0e-3_dp, 0.3_dp, 1.0_dp, 2.5_dp, &
             30.0_dp, 1000.0_dp, 1.0e5_dp]
@@ -444,7 +444,7 @@ contains
     end subroutine test_round_trips
 
     subroutine test_distribution_identities(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         real(dp) :: x(6)
@@ -477,7 +477,7 @@ contains
     end subroutine test_distribution_identities
 
     subroutine test_elemental(failures)
-        integer, intent(inout) :: failures
+        integer, intent(inout) :: failures !! running count of failed checks
 
         integer :: i
         real(dp) :: actual(4)

@@ -44,8 +44,8 @@ contains
 
     ! Regularized lower incomplete gamma function P(a, x).
     pure elemental function gammainc(a, x) result(p)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, >= 0
+        real(dp), intent(in) :: x !! upper limit of integration, >= 0
         real(dp) :: p
 
         real(dp) :: logp
@@ -80,8 +80,8 @@ contains
     ! Regularized upper incomplete gamma function Q(a, x) = 1 - P(a, x),
     ! computed without forming the difference.
     pure elemental function gammaincc(a, x) result(q)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, >= 0
+        real(dp), intent(in) :: x !! lower limit of integration, >= 0
         real(dp) :: q
 
         real(dp) :: logp
@@ -115,8 +115,8 @@ contains
 
     ! log(P(a, x)), accurate when P(a, x) underflows or is close to one.
     pure elemental function log_gammainc(a, x) result(logp)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, >= 0
+        real(dp), intent(in) :: x !! upper limit of integration, >= 0
         real(dp) :: logp
 
         real(dp) :: logq
@@ -138,8 +138,8 @@ contains
 
     ! log(Q(a, x)), accurate when Q(a, x) underflows or is close to one.
     pure elemental function log_gammaincc(a, x) result(logq)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, >= 0
+        real(dp), intent(in) :: x !! lower limit of integration, >= 0
         real(dp) :: logq
 
         real(dp) :: logp
@@ -161,8 +161,8 @@ contains
 
     ! Inverse of P(a, x) with respect to x.
     pure elemental function gammaincinv(a, p) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: p !! value of P(a, x) in [0, 1]
         real(dp) :: x
 
         if (.not. valid_inverse_arguments(a, p)) then
@@ -180,8 +180,8 @@ contains
 
     ! Inverse of Q(a, x) with respect to x.
     pure elemental function gammainccinv(a, q) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: q
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: q !! value of Q(a, x) in [0, 1]
         real(dp) :: x
 
         if (.not. valid_inverse_arguments(a, q)) then
@@ -201,8 +201,8 @@ contains
     ! For large a the Stirling series is used so that the result is formed
     ! from a * (log(1 + t) - t), t = (x - a) / a, without cancellation.
     pure elemental function log_gamma_kernel(a, x) result(y)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: x !! argument, >= 0
         real(dp) :: y
 
         real(dp) :: ratio
@@ -234,10 +234,10 @@ contains
     ! can overflow or underflow and a is moderate, the kernel is formed as a
     ! product so that its relative error does not grow with |log(kernel)|.
     pure elemental subroutine gamma_kernel(a, x, d, logd)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
-        real(dp), intent(out) :: d
-        real(dp), intent(out) :: logd
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: x !! argument, finite and > 0
+        real(dp), intent(out) :: d !! x**a exp(-x) / Gamma(a + 1)
+        real(dp), intent(out) :: logd !! log(d)
 
         real(dp), parameter :: safe_exponent = 690.0_dp
 
@@ -255,12 +255,12 @@ contains
     ! In each region the smaller tail is computed directly and the other is
     ! its complement, which is then at least about 0.37 and well conditioned.
     pure elemental subroutine incomplete_gamma_core(a, x, p, q, logp, logq)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
-        real(dp), intent(out) :: p
-        real(dp), intent(out) :: q
-        real(dp), intent(out) :: logp
-        real(dp), intent(out) :: logq
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: x !! argument, finite and > 0
+        real(dp), intent(out) :: p !! P(a, x)
+        real(dp), intent(out) :: q !! Q(a, x)
+        real(dp), intent(out) :: logp !! log(P(a, x))
+        real(dp), intent(out) :: logq !! log(Q(a, x))
 
         logical :: use_series
         real(dp) :: d
@@ -302,8 +302,8 @@ contains
 
     ! Sum over k >= 0 of x**k / ((a + 1) (a + 2) ... (a + k)), DLMF 8.7.1.
     pure function lower_series(a, x) result(s)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, > 0
+        real(dp), intent(in) :: x !! argument, > 0
         real(dp) :: s
 
         integer :: k
@@ -326,8 +326,8 @@ contains
     ! L = a log(x) - log(Gamma(1 + a)), Q = -expm1(L) - exp(L) * a * T.
     ! This avoids the cancellation in 1 - P when a is small.
     pure function small_shape_upper(a, x) result(q)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, 0 < a < 1
+        real(dp), intent(in) :: x !! argument, 0 < x <= 1.5
         real(dp) :: q
 
         integer :: k
@@ -354,8 +354,8 @@ contains
     ! Partial numerators are 1/x, then (k - a)/x and k/x for k = 1, 2, ...
     ! Every partial denominator is 1. Evaluated by the modified Lentz method.
     pure function upper_continued_fraction(a, x) result(f)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: x
+        real(dp), intent(in) :: a !! shape, > 0
+        real(dp), intent(in) :: x !! argument, > 0, in the continued-fraction region
         real(dp) :: f
 
         real(dp), parameter :: tiny_value = 1.0e-300_dp
@@ -395,7 +395,7 @@ contains
     ! Term limit for the series and continued fraction. Near x = a both
     ! need a number of terms proportional to sqrt(a).
     pure function iteration_limit(a) result(n)
-        real(dp), intent(in) :: a
+        real(dp), intent(in) :: a !! shape, > 0
         integer :: n
 
         real(dp) :: estimate
@@ -410,7 +410,7 @@ contains
 
     ! log(p) for p >= 0 without evaluating log(0).
     pure elemental function log_nonnegative(p) result(y)
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: p !! value, >= 0, to take the log of
         real(dp) :: y
 
         if (p > 0.0_dp) then
@@ -423,8 +423,8 @@ contains
     end function log_nonnegative
 
     pure elemental logical function valid_inverse_arguments(a, p) result(valid)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: p
+        real(dp), intent(in) :: a !! shape to check
+        real(dp), intent(in) :: p !! probability to check
 
         valid = ieee_is_finite(a) .and. a > 0.0_dp .and. &
             p >= 0.0_dp .and. p <= 1.0_dp
@@ -437,10 +437,10 @@ contains
     ! the log-gamma density is log-concave, log(P) and log(Q) are concave in
     ! u, so the Newton iteration cannot oscillate once it is near the root.
     pure function solve_incomplete_gamma(a, p, q, lower) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: q
-        logical, intent(in) :: lower
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: p !! target value of P(a, x), 0 < p < 1
+        real(dp), intent(in) :: q !! target value of Q(a, x), 1 - p
+        logical, intent(in) :: lower !! .true. to match P, .false. to match Q
         real(dp) :: x
 
         real(dp), parameter :: max_log_step = 50.0_dp
@@ -537,10 +537,10 @@ contains
     ! P(a, x) ~ x**a / Gamma(a + 1) or the large-x behavior Q(a, x) ~ exp(-x)
     ! provides the start.
     pure function inverse_start(a, p, q, lower) result(x)
-        real(dp), intent(in) :: a
-        real(dp), intent(in) :: p
-        real(dp), intent(in) :: q
-        logical, intent(in) :: lower
+        real(dp), intent(in) :: a !! shape, finite and > 0
+        real(dp), intent(in) :: p !! target value of P(a, x)
+        real(dp), intent(in) :: q !! target value of Q(a, x), 1 - p
+        logical, intent(in) :: lower !! .true. when the root is sought through P
         real(dp) :: x
 
         real(dp) :: log_x

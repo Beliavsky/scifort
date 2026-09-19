@@ -80,6 +80,11 @@ Never trade away correctness or provenance merely to add more functions.
 - Prefix public modules with `scifort_`.
 - Prefer one distribution family per module.
 - Use `result(...)` on functions.
+- Document every dummy argument with a trailing FORD comment on its
+  declaration, for example
+  `real(dp), intent(in) :: scale !! standard deviation, > 0 (default 1)`.
+  State what the argument means for that procedure, with its valid range,
+  default, or units where they apply; do not restate the type or the name.
 - Use `newunit=` for file I/O and `i0` for unrestricted integer output.
 - Put one statement on each line.
 - Keep lines at or below 100 columns when practical and never exceed the
