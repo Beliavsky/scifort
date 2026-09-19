@@ -71,17 +71,6 @@ For a debug build with current FPM:
 fpm test --profile debug
 ```
 
-To clone the committed repository into a temporary directory and verify a
-clean build and test run on Windows:
-
-```text
-test_clone.bat
-test_clone.bat https://github.com/Beliavsky/scifort.git
-```
-
-With no argument, the script clones the local repository containing it. Local
-working-tree changes and untracked files are not included in that clone.
-
 ## Fortran use
 
 ```fortran
