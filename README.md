@@ -76,7 +76,7 @@ clean build and test run on Windows:
 
 ```text
 test_clone.bat
-test_clone.bat https://github.com/OWNER/scifort.git
+test_clone.bat https://github.com/Beliavsky/scifort.git
 ```
 
 With no argument, the script clones the local repository containing it. Local
@@ -101,14 +101,15 @@ program example
 end program example
 ```
 
-To use SciFort from another FPM project after publishing the repository:
+To use SciFort from another FPM project:
 
 ```toml
 [dependencies]
-scifort = { git = "https://github.com/OWNER/scifort.git", tag = "v0.1.0" }
+scifort = { git = "https://github.com/Beliavsky/scifort.git" }
 ```
 
-Replace `OWNER` with the repository owner.
+This tracks the default branch. After a release is tagged, add
+`tag = "vX.Y.Z"` to pin that version.
 
 ## Repository rules
 
