@@ -20,6 +20,9 @@ src/
     kinds.f90
     constants.f90
     math.f90
+    special.f90
+    special/
+        <function family>.f90
     stats.f90
     stats/
         <distribution>.f90

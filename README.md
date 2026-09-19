@@ -19,6 +19,10 @@ probability distributions:
 - logistic
 - Cauchy
 
+The unreleased development version adds the gamma and chi-square
+distributions and, in `scifort_special`, the regularized incomplete gamma
+functions `gammainc` and `gammaincc` with their inverses.
+
 Each distribution currently provides:
 
 - `pdf`
@@ -66,6 +70,17 @@ For a debug build with current FPM:
 ```text
 fpm test --profile debug
 ```
+
+To clone the committed repository into a temporary directory and verify a
+clean build and test run on Windows:
+
+```text
+test_clone.bat
+test_clone.bat https://github.com/OWNER/scifort.git
+```
+
+With no argument, the script clones the local repository containing it. Local
+working-tree changes and untracked files are not included in that clone.
 
 ## Fortran use
 

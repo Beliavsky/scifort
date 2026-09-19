@@ -4,9 +4,13 @@
 module scifort_stats
     use scifort_cauchy, only : cauchy_cdf, cauchy_isf, cauchy_logcdf, &
         cauchy_logpdf, cauchy_logsf, cauchy_pdf, cauchy_ppf, cauchy_sf
+    use scifort_chi2, only : chi2_cdf, chi2_isf, chi2_logcdf, chi2_logpdf, &
+        chi2_logsf, chi2_pdf, chi2_ppf, chi2_sf
     use scifort_exponential, only : exponential_cdf, exponential_isf, &
         exponential_logcdf, exponential_logpdf, exponential_logsf, &
         exponential_pdf, exponential_ppf, exponential_sf
+    use scifort_gamma, only : gamma_cdf, gamma_isf, gamma_logcdf, gamma_logpdf, &
+        gamma_logsf, gamma_pdf, gamma_ppf, gamma_sf
     use scifort_kinds, only : dp
     use scifort_laplace, only : laplace_cdf, laplace_isf, laplace_logcdf, &
         laplace_logpdf, laplace_logsf, laplace_pdf, laplace_ppf, laplace_sf
@@ -27,6 +31,14 @@ module scifort_stats
     public :: cauchy_pdf
     public :: cauchy_ppf
     public :: cauchy_sf
+    public :: chi2_cdf
+    public :: chi2_isf
+    public :: chi2_logcdf
+    public :: chi2_logpdf
+    public :: chi2_logsf
+    public :: chi2_pdf
+    public :: chi2_ppf
+    public :: chi2_sf
     public :: dp
     public :: exponential_cdf
     public :: exponential_isf
@@ -36,6 +48,14 @@ module scifort_stats
     public :: exponential_pdf
     public :: exponential_ppf
     public :: exponential_sf
+    public :: gamma_cdf
+    public :: gamma_isf
+    public :: gamma_logcdf
+    public :: gamma_logpdf
+    public :: gamma_logsf
+    public :: gamma_pdf
+    public :: gamma_ppf
+    public :: gamma_sf
     public :: laplace_cdf
     public :: laplace_isf
     public :: laplace_logcdf
