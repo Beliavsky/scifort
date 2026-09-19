@@ -22,14 +22,22 @@ module scifort_stats
         laplace_logpdf, laplace_logsf, laplace_pdf, laplace_ppf, laplace_sf
     use scifort_logistic, only : logistic_cdf, logistic_isf, logistic_logcdf, &
         logistic_logpdf, logistic_logsf, logistic_pdf, logistic_ppf, logistic_sf
+    use scifort_lognormal, only : lognormal_cdf, lognormal_isf, lognormal_logcdf, &
+        lognormal_logpdf, lognormal_logsf, lognormal_pdf, lognormal_ppf, lognormal_sf
     use scifort_normal, only : normal_cdf, normal_isf, normal_logcdf, &
         normal_logpdf, normal_logsf, normal_pdf, normal_ppf, normal_sf
+    use scifort_pareto, only : pareto_cdf, pareto_isf, pareto_logcdf, &
+        pareto_logpdf, pareto_logsf, pareto_pdf, pareto_ppf, pareto_sf
     use scifort_poisson, only : poisson_cdf, poisson_isf, poisson_logcdf, poisson_logpmf, &
         poisson_logsf, poisson_pmf, poisson_ppf, poisson_sf
+    use scifort_rayleigh, only : rayleigh_cdf, rayleigh_isf, rayleigh_logcdf, &
+        rayleigh_logpdf, rayleigh_logsf, rayleigh_pdf, rayleigh_ppf, rayleigh_sf
     use scifort_student_t, only : t_cdf, t_isf, t_logcdf, t_logpdf, &
         t_logsf, t_pdf, t_ppf, t_sf
     use scifort_uniform, only : uniform_cdf, uniform_isf, uniform_logcdf, &
         uniform_logpdf, uniform_logsf, uniform_pdf, uniform_ppf, uniform_sf
+    use scifort_weibull, only : weibull_cdf, weibull_isf, weibull_logcdf, &
+        weibull_logpdf, weibull_logsf, weibull_pdf, weibull_ppf, weibull_sf
     implicit none
     private
 
@@ -106,6 +114,14 @@ module scifort_stats
     public :: logistic_pdf
     public :: logistic_ppf
     public :: logistic_sf
+    public :: lognormal_cdf
+    public :: lognormal_isf
+    public :: lognormal_logcdf
+    public :: lognormal_logpdf
+    public :: lognormal_logsf
+    public :: lognormal_pdf
+    public :: lognormal_ppf
+    public :: lognormal_sf
     public :: normal_cdf
     public :: normal_isf
     public :: normal_logcdf
@@ -114,6 +130,14 @@ module scifort_stats
     public :: normal_pdf
     public :: normal_ppf
     public :: normal_sf
+    public :: pareto_cdf
+    public :: pareto_isf
+    public :: pareto_logcdf
+    public :: pareto_logpdf
+    public :: pareto_logsf
+    public :: pareto_pdf
+    public :: pareto_ppf
+    public :: pareto_sf
     public :: poisson_cdf
     public :: poisson_isf
     public :: poisson_logcdf
@@ -122,6 +146,14 @@ module scifort_stats
     public :: poisson_pmf
     public :: poisson_ppf
     public :: poisson_sf
+    public :: rayleigh_cdf
+    public :: rayleigh_isf
+    public :: rayleigh_logcdf
+    public :: rayleigh_logpdf
+    public :: rayleigh_logsf
+    public :: rayleigh_pdf
+    public :: rayleigh_ppf
+    public :: rayleigh_sf
     public :: t_cdf
     public :: t_isf
     public :: t_logcdf
@@ -138,4 +170,12 @@ module scifort_stats
     public :: uniform_pdf
     public :: uniform_ppf
     public :: uniform_sf
+    public :: weibull_cdf
+    public :: weibull_isf
+    public :: weibull_logcdf
+    public :: weibull_logpdf
+    public :: weibull_logsf
+    public :: weibull_pdf
+    public :: weibull_ppf
+    public :: weibull_sf
 end module scifort_stats

@@ -110,6 +110,55 @@ limiting distribution (for example `f.cdf(1, 2, inf) = 0`), so SciFort returns
 NaN for infinite degrees of freedom. The density at `x = loc` is `+infinity`
 for `dfn < 2`, `1 / scale` for `dfn = 2`, and `0` for `dfn > 2`.
 
+## Lognormal
+
+Shape `s > 0` is the standard deviation of `log((X - loc) / scale)`. The
+support is `x >= loc`. With `z = (x - loc) / scale > 0`, `log(z) / s` is
+standard normal, matching `scipy.stats.lognorm`.
+
+```text
+lognormal_pdf(x, s [, loc, scale])
+lognormal_logpdf, lognormal_cdf, lognormal_sf, lognormal_logcdf, lognormal_logsf
+lognormal_ppf(p, s [, loc, scale]), lognormal_isf(p, s [, loc, scale])
+```
+
+## Weibull
+
+Shape `c > 0` follows `x` or `p`. With `z = (x - loc) / scale >= 0`, the density is
+`(c / scale) z**(c - 1) exp(-z**c)`, matching `scipy.stats.weibull_min`.
+
+```text
+weibull_pdf(x, c [, loc, scale])
+weibull_logpdf, weibull_cdf, weibull_sf, weibull_logcdf, weibull_logsf
+weibull_ppf(p, c [, loc, scale]), weibull_isf(p, c [, loc, scale])
+```
+
+At `x = loc`, the density is `+infinity` for `c < 1`, `1 / scale` for `c = 1`,
+and `0` for `c > 1`.
+
+## Pareto
+
+Shape `b > 0` follows `x` or `p`. The support is `x >= loc + scale`, so
+`z = (x - loc) / scale >= 1`. The density is `(b / scale) / z**(b + 1)`,
+matching `scipy.stats.pareto`.
+
+```text
+pareto_pdf(x, b [, loc, scale])
+pareto_logpdf, pareto_cdf, pareto_sf, pareto_logcdf, pareto_logsf
+pareto_ppf(p, b [, loc, scale]), pareto_isf(p, b [, loc, scale])
+```
+
+## Rayleigh
+
+The support is `x >= loc`. With `z = (x - loc) / scale >= 0`, the density is
+`(z / scale) exp(-z**2 / 2)`, matching `scipy.stats.rayleigh`.
+
+```text
+rayleigh_pdf(x [, loc, scale])
+rayleigh_logpdf, rayleigh_cdf, rayleigh_sf, rayleigh_logcdf, rayleigh_logsf
+rayleigh_ppf(p [, loc, scale]), rayleigh_isf(p [, loc, scale])
+```
+
 ## Discrete distributions
 
 Discrete families provide `pmf` and `logpmf` in place of `pdf` and `logpdf`.
