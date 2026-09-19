@@ -9,8 +9,7 @@
 ! - DLMF 8.7.3 with 8.7.1: series used for Q(a, x) when a < 1 and x is small;
 ! - DLMF 8.9.2: continued fraction for Q(a, x), evaluated with the modified
 !   Lentz method (Lentz 1976; Thompson and Barnett 1986);
-! - DLMF 5.7.3: series for log(Gamma(1 + a)) when a is small;
-! - DLMF 5.11.1: Stirling series for the prefactor when a is large;
+! - DLMF 5.7.3 and 5.11.1 through scifort_log_gamma;
 ! - Wilson and Hilferty (1931): starting values for the inverse.
 !
 ! This module is an implementation layer. The supported entry points are
@@ -20,6 +19,8 @@ module scifort_incomplete_gamma
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_constants, only : scifort_log_sqrt_two_pi
     use scifort_kinds, only : dp
+    use scifort_log_gamma, only : log1p_minus_x, log_gamma_one_plus, &
+        stirling_remainder
     use scifort_math, only : expm1_safe, log1p_safe, negative_infinity, &
         positive_infinity, quiet_nan
     use scifort_normal, only : normal_isf, normal_ppf
@@ -33,52 +34,6 @@ module scifort_incomplete_gamma
     public :: log_gamma_kernel
     public :: log_gammainc
     public :: log_gammaincc
-
-    real(dp), parameter :: euler_gamma = &
-        0.577215664901532860606512090082402431_dp
-
-    ! zeta(k) - 1 for k = 2, ..., 30, generated with mpmath 1.3.0 at 40 digits
-    ! and checked against zeta(2) = pi**2 / 6 and zeta(4) = pi**4 / 90.
-    real(dp), parameter :: zeta_minus_one(2:30) = [ &
-        0.644934066848226436472415166646_dp, &
-        0.202056903159594285399738161511_dp, &
-        0.0823232337111381915160036965412_dp, &
-        0.036927755143369926331365486457_dp, &
-        0.0173430619844491397145179297909_dp, &
-        0.0083492773819228268397975498498_dp, &
-        0.00407735619794433937868523850865_dp, &
-        0.00200839282608221441785276923241_dp, &
-        0.000994575127818085337145958900319_dp, &
-        0.00049418860411946455870228252647_dp, &
-        0.00024608655330804829863799804774_dp, &
-        0.000122713347578489146751836526357_dp, &
-        0.0000612481350587048292585451051353_dp, &
-        0.0000305882363070204935517285106451_dp, &
-        0.0000152822594086518717325714876367_dp, &
-        0.00000763719763789976227360029356303_dp, &
-        0.00000381729326499983985646164462194_dp, &
-        0.0000019082127165539389256569577951_dp, &
-        0.000000953962033872796113152038683449_dp, &
-        0.000000476932986787806463116719604373_dp, &
-        0.000000238450502727732990003648186753_dp, &
-        0.000000119219925965311073067788718882_dp, &
-        0.0000000596081890512594796124402079358_dp, &
-        0.0000000298035035146522801860637050694_dp, &
-        0.0000000149015548283650412346585066307_dp, &
-        0.0000000074507117898354294919810041706_dp, &
-        0.0000000037253340247884570548192040184_dp, &
-        0.00000000186265972351304900640390994542_dp, &
-        0.000000000931327432419668182871764735021_dp]
-
-    ! B(2k) / (2k (2k - 1)) for k = 1, ..., 7 (DLMF 5.11.1).
-    real(dp), parameter :: stirling_coefficients(7) = [ &
-        1.0_dp / 12.0_dp, &
-        -1.0_dp / 360.0_dp, &
-        1.0_dp / 1260.0_dp, &
-        -1.0_dp / 1680.0_dp, &
-        1.0_dp / 1188.0_dp, &
-        -691.0_dp / 360360.0_dp, &
-        1.0_dp / 156.0_dp]
 
     ! Shape parameter above which the Stirling form of the prefactor is used.
     real(dp), parameter :: large_shape = 10.0_dp
@@ -271,7 +226,7 @@ contains
                     y = a * (log(x) - log(a)) - (x - a)
                 end if
             end if
-            y = y - scifort_log_sqrt_two_pi - 0.5_dp * log(a) - stirling_tail(a)
+            y = y - scifort_log_sqrt_two_pi - 0.5_dp * log(a) - stirling_remainder(a)
         end if
     end function log_gamma_kernel
 
@@ -452,67 +407,6 @@ contains
             n = int(estimate)
         end if
     end function iteration_limit
-
-    ! log(Gamma(1 + a)) for a >= 0. For a < 0.5 the series of DLMF 5.7.3 is
-    ! used so that the result keeps full relative accuracy as a -> 0; the
-    ! intrinsic would first round 1 + a.
-    pure elemental function log_gamma_one_plus(a) result(y)
-        real(dp), intent(in) :: a
-        real(dp) :: y
-
-        integer :: k
-        real(dp) :: power
-        real(dp) :: s
-
-        if (a < 0.5_dp) then
-            s = 0.0_dp
-            power = -a
-            do k = 2, 30
-                power = -power * a
-                s = s + zeta_minus_one(k) * power / real(k, dp)
-            end do
-            y = -log1p_safe(a) + a * (1.0_dp - euler_gamma) + s
-        else
-            y = log_gamma(1.0_dp + a)
-        end if
-    end function log_gamma_one_plus
-
-    ! Stirling series remainder log(Gamma(a + 1)) - ((a + 1/2) log(a) - a +
-    ! log(sqrt(2 pi))) for a >= 10, from DLMF 5.11.1 with log(Gamma(a + 1)) =
-    ! log(a) + log(Gamma(a)).
-    pure elemental function stirling_tail(a) result(y)
-        real(dp), intent(in) :: a
-        real(dp) :: y
-
-        integer :: k
-        real(dp) :: inv_a2
-
-        inv_a2 = 1.0_dp / (a * a)
-        y = stirling_coefficients(size(stirling_coefficients))
-        do k = size(stirling_coefficients) - 1, 1, -1
-            y = stirling_coefficients(k) + inv_a2 * y
-        end do
-        y = y / a
-    end function stirling_tail
-
-    ! log(1 + t) - t for |t| <= 0.25 by its Maclaurin series (DLMF 4.6.1).
-    pure elemental function log1p_minus_x(t) result(y)
-        real(dp), intent(in) :: t
-        real(dp) :: y
-
-        integer :: k
-        real(dp) :: power
-        real(dp) :: term
-
-        power = t * t
-        y = -0.5_dp * power
-        do k = 3, 80
-            power = -power * t
-            term = power / real(k, dp)
-            y = y - term
-            if (abs(term) <= 0.25_dp * epsilon(1.0_dp) * abs(y)) exit
-        end do
-    end function log1p_minus_x
 
     ! log(p) for p >= 0 without evaluating log(0).
     pure elemental function log_nonnegative(p) result(y)

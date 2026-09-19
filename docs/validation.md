@@ -103,3 +103,68 @@ Known limitations:
   and roots below them are returned as zero.
 - Only GNU Fortran was tested. Intel `ifx` and LLVM Flang were not run.
 - The C ABI does not yet expose the new functions.
+
+## Incomplete beta, beta, Student t, and F validation
+
+Validation date: 2026-09-19. Same environment as the previous section.
+
+Commands run on the final code, all passing (`test_beta`, `test_gamma`, and
+`test_scifort`):
+
+```text
+fpm test
+fpm test --profile debug
+fpm test --profile release
+fpm test --flag "-O0 -g -fcheck=all -ffpe-trap=zero,overflow -fbacktrace -Wall -Wextra -Wno-integer-division -std=f2018"
+fpm run --example distributions_demo
+python tools/check_ascii.py
+```
+
+The trapping build produced no compiler warnings and no traps.
+`-Wno-integer-division` silences only the notice for the constant
+`huge(n) / 4` in the iteration limits.
+
+Sweeps on the final code, with the modules compiled directly by
+`gfortran -O2` and compared with mpmath (the sweep scripts were not
+committed):
+
+- `betainc` and `betaincc` with their logarithms, 1000 random `(a, b, x)`
+  with parameters from `1e-6` to `1e5`, concentrated near the mean and in both
+  tails: with `V` the tail, `f` the density, and `z = min(x, 1 - x)`, the
+  maximum of `|error| / (V (1 + |log V| + z f / V))` was `3.8e-16`. For 21
+  cases mpmath produced no reference that was stable across precisions.
+- 150 cases with one parameter from `1e-7` to `0.3` and the other from `1e2`
+  to `1e5` (the region that the gamma expansion now covers): the same
+  normalized error was at most `2.4e-16`.
+- Against SciPy 1.15.3 on 20000 random t, F, and beta cases, the median
+  relative difference in `cdf` and `sf` was between `1.3e-16` and `3.8e-15`.
+  The largest differences were checked with mpmath. In the worst t and F
+  survival-function cases SciPy had the larger error (for F, `4.8e-11`
+  against `5.8e-17`). The largest beta `cdf` difference, `6.3e-3`, was a
+  SciPy error at a probability near `5.8e-271`; SciFort's error there was
+  `2.7e-13`, consistent with `eps |log V|`.
+
+The following sweeps were started on the final code but did not complete;
+Claude Code stopped the background job because the system was low on
+memory. Their results are therefore not claimed here:
+
+- a second 1000-case forward sweep of the incomplete beta function;
+- a 600-case sweep of `betaincinv` and `betainccinv`;
+- a 900-case mpmath sweep of the t, F, and beta distribution functions.
+
+Earlier runs of those sweeps on intermediate versions of the code found the
+defects that led to the small-parameter complement, the gamma expansion, and
+the F log-density rearrangement. The committed tests cover the inverses and
+distribution functions against mpmath reference values with
+conditioning-based tolerances.
+
+Known limitations:
+
+- For `|t|` beyond about `1e150 sqrt(df)`, and for the corresponding
+  quantiles, the Student t tail uses the exact leading term; SciPy 1.15.3
+  returns `0` and `-1e100` for `t.sf(1e200, 1)` and `t.ppf(1e-300, 1)`.
+- Infinite F degrees of freedom return NaN.
+- Continued-fraction evaluation near the transition point with both
+  parameters large loses accuracy in proportion to `sqrt(a + b)`, which is
+  within the conditioning of the problem.
+- Only GNU Fortran was tested. The C ABI does not yet expose these functions.

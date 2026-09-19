@@ -19,9 +19,10 @@ probability distributions:
 - logistic
 - Cauchy
 
-The unreleased development version adds the gamma and chi-square
-distributions and, in `scifort_special`, the regularized incomplete gamma
-functions `gammainc` and `gammaincc` with their inverses.
+The unreleased development version adds the gamma, chi-square, beta,
+Student t, and F distributions and, in `scifort_special`, the regularized
+incomplete gamma and beta functions (`gammainc`, `gammaincc`, `betainc`,
+`betaincc`) with their inverses.
 
 Each distribution currently provides:
 

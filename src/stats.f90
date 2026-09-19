@@ -2,6 +2,8 @@
 ! Copyright (c) 2026 SciFort contributors
 
 module scifort_stats
+    use scifort_beta, only : beta_cdf, beta_isf, beta_logcdf, beta_logpdf, &
+        beta_logsf, beta_pdf, beta_ppf, beta_sf
     use scifort_cauchy, only : cauchy_cdf, cauchy_isf, cauchy_logcdf, &
         cauchy_logpdf, cauchy_logsf, cauchy_pdf, cauchy_ppf, cauchy_sf
     use scifort_chi2, only : chi2_cdf, chi2_isf, chi2_logcdf, chi2_logpdf, &
@@ -9,6 +11,8 @@ module scifort_stats
     use scifort_exponential, only : exponential_cdf, exponential_isf, &
         exponential_logcdf, exponential_logpdf, exponential_logsf, &
         exponential_pdf, exponential_ppf, exponential_sf
+    use scifort_f_distribution, only : f_cdf, f_isf, f_logcdf, f_logpdf, &
+        f_logsf, f_pdf, f_ppf, f_sf
     use scifort_gamma, only : gamma_cdf, gamma_isf, gamma_logcdf, gamma_logpdf, &
         gamma_logsf, gamma_pdf, gamma_ppf, gamma_sf
     use scifort_kinds, only : dp
@@ -18,11 +22,21 @@ module scifort_stats
         logistic_logpdf, logistic_logsf, logistic_pdf, logistic_ppf, logistic_sf
     use scifort_normal, only : normal_cdf, normal_isf, normal_logcdf, &
         normal_logpdf, normal_logsf, normal_pdf, normal_ppf, normal_sf
+    use scifort_student_t, only : t_cdf, t_isf, t_logcdf, t_logpdf, &
+        t_logsf, t_pdf, t_ppf, t_sf
     use scifort_uniform, only : uniform_cdf, uniform_isf, uniform_logcdf, &
         uniform_logpdf, uniform_logsf, uniform_pdf, uniform_ppf, uniform_sf
     implicit none
     private
 
+    public :: beta_cdf
+    public :: beta_isf
+    public :: beta_logcdf
+    public :: beta_logpdf
+    public :: beta_logsf
+    public :: beta_pdf
+    public :: beta_ppf
+    public :: beta_sf
     public :: cauchy_cdf
     public :: cauchy_isf
     public :: cauchy_logcdf
@@ -48,6 +62,14 @@ module scifort_stats
     public :: exponential_pdf
     public :: exponential_ppf
     public :: exponential_sf
+    public :: f_cdf
+    public :: f_isf
+    public :: f_logcdf
+    public :: f_logpdf
+    public :: f_logsf
+    public :: f_pdf
+    public :: f_ppf
+    public :: f_sf
     public :: gamma_cdf
     public :: gamma_isf
     public :: gamma_logcdf
@@ -80,6 +102,14 @@ module scifort_stats
     public :: normal_pdf
     public :: normal_ppf
     public :: normal_sf
+    public :: t_cdf
+    public :: t_isf
+    public :: t_logcdf
+    public :: t_logpdf
+    public :: t_logsf
+    public :: t_pdf
+    public :: t_ppf
+    public :: t_sf
     public :: uniform_cdf
     public :: uniform_isf
     public :: uniform_logcdf
