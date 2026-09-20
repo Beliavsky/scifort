@@ -1,4 +1,4 @@
-# SciFort starter
+# SciFort
 
 SciFort is a proposed modern Fortran statistics library with an idiomatic
 Fortran API, an FPM build, and a stable C ABI for future Python, R, MATLAB, and
@@ -19,11 +19,11 @@ probability distributions:
 - logistic
 - Cauchy
 
-The unreleased development version adds the gamma, chi-square, beta,
-Student t, F, Poisson, binomial, lognormal, Weibull, Pareto, and Rayleigh
-distributions and, in `scifort_special`, the regularized incomplete gamma
-and beta functions (`gammainc`, `gammaincc`, `betainc`, `betaincc`) with
-their inverses.
+The unreleased development version also provides gamma, chi-square, beta,
+Student t, F, lognormal, Weibull, Pareto, and Rayleigh distributions; Poisson
+and binomial discrete distributions; and, in `scifort_special`, the
+regularized incomplete gamma and beta functions (`gammainc`, `gammaincc`,
+`betainc`, `betaincc`) with their inverses.
 
 Each distribution currently provides:
 
@@ -39,6 +39,12 @@ Each distribution currently provides:
 All scalar functions are `pure elemental`, so the same routines operate on
 scalars and conformable arrays. Invalid location or scale parameters return a
 quiet NaN. Probability arguments outside `[0, 1]` also return a quiet NaN.
+
+Continuous distributions expose PDF, log-PDF, CDF, survival function, log-CDF,
+log-survival, PPF, and ISF functions. Poisson and binomial expose PMF,
+log-PMF, CDF, survival function, log-CDF, log-survival, PPF, and ISF
+functions. See `docs/api.md` for parameterizations, support, endpoint
+behavior, and the complete public API.
 
 The normal CDF uses the standard `erfc` identity. The initial normal quantile
 implementation uses safeguarded bisection against the CDF or log-CDF. It is a
@@ -118,10 +124,11 @@ See `CONTRIBUTING.md`, `CODE_PROVENANCE.md`, and the files under `docs/`.
 
 ## Validation
 
-The starter has been compiled and tested directly with GNU Fortran 14.2.0,
-including a shared-library C smoke test and selected numerical comparison with
-SciPy. See `docs/validation.md` for exact checks and the explicit limitation
-that FPM itself was not available in the archive-creation environment.
+The repository is tested with GNU Fortran and FPM on Linux, macOS, and
+Windows in GitHub Actions. The current validation record also includes local
+debug, release, runtime-checking, and numerical reference tests for the
+special functions and distributions. See `docs/validation.md` for exact
+commands, reference comparisons, and known limitations.
 
 ## C ABI
 
