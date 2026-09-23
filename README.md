@@ -2,7 +2,7 @@
 
 SciFort is a proposed modern Fortran statistics library with an idiomatic
 Fortran API, an FPM build, and a stable C ABI for future Python, R, MATLAB, and
-Octave bindings.
+Octave bindings. The code has been written by OpenAI and Anthropic LLMs.
 
 This repository is an independent project. It is not affiliated with or
 endorsed by SciPy, NumFOCUS, or the Python Software Foundation.
