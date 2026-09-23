@@ -8,6 +8,7 @@ module scifort_math
     implicit none
     private
 
+    public :: floor_real
     public :: expm1_safe
     public :: log1p_safe
     public :: log1pexp
@@ -17,6 +18,17 @@ module scifort_math
     public :: valid_loc_scale
 
 contains
+
+    pure elemental function floor_real(x) result(y)
+        implicit none
+        real(dp), intent(in) :: x !! real observation; NaN and infinities pass through
+        real(dp) :: y
+
+        y = x
+        if (.not. ieee_is_finite(x)) return
+        y = aint(x)
+        if (y > x) y = y - 1.0_dp
+    end function floor_real
 
     pure elemental function quiet_nan(x) result(y)
         real(dp), intent(in) :: x !! argument whose real kind selects the kind of the result

@@ -165,7 +165,15 @@ contains
                 stirling_remainder(big) - stirling_remainder(n)
         else if (big >= stirling_threshold) then
             ! log(Gamma(big)) - log(Gamma(n)) from the Stirling forms.
-            y = log_gamma(small) + (big - 0.5_dp) * log1p_safe(-small / n) - &
+            ! For a very small second argument, obtain log(Gamma(small))
+            ! from log(Gamma(1 + small)) - log(small) so the intrinsic does
+            ! not lose the small displacement from the pole at zero.
+            if (small < 0.5_dp) then
+                y = log_gamma_one_plus(small) - log(small)
+            else
+                y = log_gamma(small)
+            end if
+            y = y + (big - 0.5_dp) * log1p_safe(-small / n) - &
                 small * log(n) + small + stirling_remainder(big) - &
                 stirling_remainder(n)
         else

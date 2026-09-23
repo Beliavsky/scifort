@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when project text files contain non-ASCII characters."""
+"""Fail when project-authored text files contain non-ASCII characters."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 SUFFIXES = {".f90", ".h", ".md", ".toml", ".yml", ".yaml", ".txt"}
 SKIP_PARTS = {"build", ".git"}
+# Preserve reviewed third-party license text verbatim, including its typography.
+VERBATIM_LICENSES = {"LICENSES/CC-BY-4.0.txt"}
 
 
 def main() -> int:
@@ -17,6 +19,8 @@ def main() -> int:
         if not path.is_file() or path.suffix.lower() not in SUFFIXES:
             continue
         if any(part in SKIP_PARTS for part in path.parts):
+            continue
+        if path.relative_to(ROOT).as_posix() in VERBATIM_LICENSES:
             continue
         text = path.read_text(encoding="utf-8")
         for line_number, line in enumerate(text.splitlines(), start=1):

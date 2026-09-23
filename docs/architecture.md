@@ -20,6 +20,15 @@ src/
     kinds.f90
     constants.f90
     math.f90
+    descriptive.f90
+    hypothesis.f90
+    hypothesis_extended.f90
+    contingency_meta.f90
+    multiple_comparisons.f90
+    nonparametric_extended.f90
+    goodness_of_fit.f90
+    random.f90
+    resampling.f90
     special.f90
     special/
         <function family>.f90
@@ -47,7 +56,10 @@ normal_isf
 
 Scalar arguments are elemental. Array reductions, fitting routines, random
 sampling, and algorithms requiring workspaces should use separate procedural
-interfaces rather than overloading scalar distribution evaluation.
+interfaces rather than overloading scalar distribution evaluation. The same
+rule applies to special functions: scalar transforms in `scifort_special` are
+elemental, while `logsumexp`, `softmax`, and `log_softmax` are explicit
+one-dimensional reduction interfaces.
 
 ## C ABI
 
