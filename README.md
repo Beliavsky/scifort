@@ -12,36 +12,17 @@ endorsed by SciPy, NumFOCUS, or the Python Software Foundation.
 Cloning or downloading the current `main` branch provides all the features
 described below. For release history, see [CHANGELOG.md](CHANGELOG.md).
 
-SciFort provides dependency-free implementations of normal, uniform,
-exponential, Laplace, logistic, Cauchy, gamma, chi-square, beta,
-Student t, F, lognormal, Weibull, Pareto, Rayleigh, right/left Gumbel,
-power-function, triangular, generalized Pareto, arcsine, half-normal, half-Cauchy,
-Lomax, chi, Maxwell, cosine, semicircular, Anglit, Moyal, hyperbolic-secant,
-half-logistic, inverse-gamma, inverse-Gaussian, Levy, log-Laplace, Bradford,
-truncated exponential, Fisk/log-logistic, double-Weibull, Alpha, Birnbaum-Saunders
-(fatigue-life), generalized logistic, generalized normal, Nakagami, power-normal,
-log-gamma, Wald, Gompertz, inverse-Weibull, beta-prime, Burr XII, generalized
-half-logistic, exponential-power, exponentiated-Weibull, power-lognormal,
-left-Levy, Weibull maximum, R-distribution, skew-Cauchy, double-gamma,
-asymmetric Laplace, finite-bound truncated normal, log-uniform, folded normal, folded Cauchy,
-reciprocal inverse-Gaussian, truncated Pareto, exponentially modified normal,
-Johnson SB, Johnson SU, trapezoid, Burr Type III, Mielke beta-kappa/Dagum,
-Gibrat, wrapped Cauchy, generalized extreme-value, kappa-3, kappa-4, doubly
-truncated Weibull-minimum, generalized-gamma, half-generalized-normal, ARGUS,
-Erlang, Crystal Ball, Jones-Faddy skew-t, Pearson III, relativistic
-Breit-Wigner, generalized exponential, skew-normal, Tukey lambda, Rice,
-double-Pareto lognormal, circular von Mises, von Mises-on-a-line,
-asymptotic two-sided Kolmogorov, Irwin-Hall, one-sided and two-sided finite-sample
-Kolmogorov-Smirnov, noncentral chi-square, noncentral F, noncentral Student t,
-Gauss hypergeometric, Landau, Levy-stable, studentized-range, generalized hyperbolic,
-generalized inverse-Gaussian, and normal-inverse-Gaussian distributions; Bernoulli, binomial,
-geometric, negative-binomial, Poisson, discrete-uniform
-(`randint`), Planck, discrete-Laplace, logarithmic-series, beta-binomial,
-hypergeometric, Fisher and Wallenius noncentral-hypergeometric, negative-hypergeometric, Boltzmann, beta-negative-binomial,
-Yule-Simon, Zipf/zeta, finite Zipfian, Skellam, and Poisson-binomial discrete distributions; and,
-in `scifort_special`, the regularized incomplete gamma
-and beta functions (`gammainc`, `gammaincc`, `betainc`, `betaincc`) with their
-inverses. `scifort_special` also provides error/inverse-error
+SciFort provides a broad collection of continuous, discrete, and multivariate
+probability distributions, covering most distribution families available in
+`scipy.stats`. Examples include normal, gamma, beta, binomial, Poisson, and
+multivariate normal. Supported operations include density and mass functions,
+cumulative and survival probabilities, quantiles, and random sampling. See the
+[API reference](docs/api.md) for the complete list, supported operations,
+parameterizations, and limitations.
+
+The dependency-free special-function layer provides regularized incomplete
+gamma and beta functions (`gammainc`, `gammaincc`, `betainc`, `betaincc`) with
+their inverses. `scifort_special` also provides error/inverse-error
 functions, `gammaln`, positive-shape `betaln`, real `digamma`/`psi`, normal-CDF
 transforms, logistic transforms, entropy helpers, Box-Cox transforms, and
 one-dimensional `logsumexp`, `softmax`, and `log_softmax`. The
@@ -51,11 +32,6 @@ the Zipf family, real modified-Bessel-K log/derivative kernels, including a scal
 generalized hyperbolic, generalized inverse-Gaussian, and normal-inverse-Gaussian families, and
 real-order scaled modified-Bessel-I log and adjacent-order ratio kernels used by von Mises-Fisher.
 
-The multivariate layer provides `multivariate_normal`, `multivariate_t`,
-`dirichlet`, `multinomial`, `dirichlet_multinomial`, `multivariate_hypergeom`,
-`normal_inverse_gamma`, `matrix_normal`, `wishart`, `invwishart`, `matrix_t`,
-`uniform_direction`, `vonmises_fisher`, `ortho_group`, `special_ortho_group`,
-`unitary_group`, `random_correlation`, and `random_table`.
 Multivariate normal exposes PDF/log-PDF, CDF/log-CDF with optional finite lower limits,
 marginal extraction, entropy, explicit-state RNG, and maximum-likelihood fitting,
 including SciPy-compatible positive-semidefinite covariance handling and lower-triangle
