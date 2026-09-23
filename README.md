@@ -9,17 +9,11 @@ endorsed by SciPy, NumFOCUS, or the Python Software Foundation.
 
 ## Current scope
 
-Version 0.1.0 contains dependency-free implementations of six continuous
-probability distributions:
+Cloning or downloading the current `main` branch provides all the features
+described below. For release history, see [CHANGELOG.md](CHANGELOG.md).
 
-- normal
-- uniform
-- exponential
-- Laplace
-- logistic
-- Cauchy
-
-The unreleased development version also provides gamma, chi-square, beta,
+SciFort provides dependency-free implementations of normal, uniform,
+exponential, Laplace, logistic, Cauchy, gamma, chi-square, beta,
 Student t, F, lognormal, Weibull, Pareto, Rayleigh, right/left Gumbel,
 power-function, triangular, generalized Pareto, arcsine, half-normal, half-Cauchy,
 Lomax, chi, Maxwell, cosine, semicircular, Anglit, Moyal, hyperbolic-secant,
@@ -47,17 +41,17 @@ hypergeometric, Fisher and Wallenius noncentral-hypergeometric, negative-hyperge
 Yule-Simon, Zipf/zeta, finite Zipfian, Skellam, and Poisson-binomial discrete distributions; and,
 in `scifort_special`, the regularized incomplete gamma
 and beta functions (`gammainc`, `gammaincc`, `betainc`, `betaincc`) with their
-inverses. Milestone 6 expands `scifort_special` with error/inverse-error
+inverses. `scifort_special` also provides error/inverse-error
 functions, `gammaln`, positive-shape `betaln`, real `digamma`/`psi`, normal-CDF
 transforms, logistic transforms, entropy helpers, Box-Cox transforms, and
-one-dimensional `logsumexp`, `softmax`, and `log_softmax`. The development
+one-dimensional `logsumexp`, `softmax`, and `log_softmax`. The
 special-function layer also exposes scaled modified-Bessel `i0e` and `i1e` kernels shared by the Rice and von Mises
 families, plus a real Hurwitz-zeta kernel and its exponent derivative used by
 the Zipf family, real modified-Bessel-K log/derivative kernels, including a scaled-log form, used by the
 generalized hyperbolic, generalized inverse-Gaussian, and normal-inverse-Gaussian families, and
 real-order scaled modified-Bessel-I log and adjacent-order ratio kernels used by von Mises-Fisher.
 
-The development multivariate layer now adds `multivariate_normal`, `multivariate_t`,
+The multivariate layer provides `multivariate_normal`, `multivariate_t`,
 `dirichlet`, `multinomial`, `dirichlet_multinomial`, `multivariate_hypergeom`,
 `normal_inverse_gamma`, `matrix_normal`, `wishart`, `invwishart`, `matrix_t`,
 `uniform_direction`, `vonmises_fisher`, `ortho_group`, `special_ortho_group`,
@@ -79,7 +73,7 @@ layer adds unit-sphere and von Mises-Fisher sampling/densities, Haar orthogonal/
 generators, prescribed-spectrum random correlation matrices, and fixed-margin random contingency tables.
 
 
-The development statistics layer also includes `gaussian_kde`, with weighted or
+The statistics layer also includes `gaussian_kde`, with weighted or
 unweighted data, Scott/Silverman/constant bandwidth factors, PDF/log-PDF evaluation,
 Gaussian and box integration, KDE-product integration, marginals, inverse covariance,
 and explicit-state resampling. The `scipy.stats.qmc` layer provides sample scaling
@@ -115,7 +109,7 @@ PMF, log-PMF, CDF, survival function, log-CDF, log-survival, PPF, and ISF
 functions. See `docs/api.md` for parameterizations, support, endpoint
 behavior, and the complete public API.
 
-The development version also has an explicit-state random-number interface in
+SciFort also has an explicit-state random-number interface in
 `scifort_random` and scalar or array `*_rvs` sampling routines for every
 current distribution. Sampling is deterministic for a given `rng_state` and
 never relies on Fortran's process-global `random_number` state. Most family samplers use inverse transforms through the existing PPF kernels,
@@ -142,7 +136,7 @@ correctness-first implementation intended to be replaced or supplemented by
 a faster, carefully licensed approximation after accuracy and provenance
 reviews.
 
-Milestone 5 adds native descriptive statistics and inference. `scifort_descriptive`
+SciFort includes native descriptive statistics and inference. `scifort_descriptive`
 provides mean, sample/population variance through configurable `ddof`, standard
 deviation, central moments, linear quantiles, median, covariance, Pearson
 correlation, and SciPy-style `rankdata` tie methods. `scifort_hypothesis`
