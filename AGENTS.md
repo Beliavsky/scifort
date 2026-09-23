@@ -17,6 +17,23 @@ The immediate scope is probability distributions and their required special
 functions. Do not expand into unrelated SciPy areas without an approved issue
 or roadmap change.
 
+## SciPy compatibility and SciFort extensions
+
+SciPy compatibility is a convention for shared functionality, not a limit on
+SciFort's scope within the project objective.
+
+- For functionality implemented by both libraries, follow SciPy's distribution
+  names, mathematical notation, parameter names and ordering, parameterizations,
+  and mathematical behavior while preserving an idiomatic Fortran interface.
+- Document intentional differences and compatibility limitations explicitly.
+  Preserve existing public API commitments when reconciling differences.
+- Additional distributions, methods, and capabilities are welcome even when
+  SciPy does not provide them, subject to the same correctness, testing, and
+  provenance requirements.
+- Clearly label functionality absent from SciPy as "SciFort extension" in the
+  API documentation. For additions to a shared distribution, label the specific
+  method or option rather than the entire distribution.
+
 ## Priority order
 
 When goals conflict, use this order:

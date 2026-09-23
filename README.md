@@ -7,6 +7,19 @@ Octave bindings. The code has been written by OpenAI and Anthropic LLMs.
 This repository is an independent project. It is not affiliated with or
 endorsed by SciPy, NumFOCUS, or the Python Software Foundation.
 
+## SciPy compatibility and SciFort extensions
+
+SciFort aims to follow SciPy's distribution names, mathematical notation,
+parameter names and ordering, parameterizations, and mathematical behavior
+where both libraries provide the same functionality, while keeping an idiomatic
+Fortran interface. Intentional differences and compatibility limitations are
+documented in the API reference.
+
+SciFort also welcomes additional distributions, methods, and capabilities beyond
+those in SciPy. Functionality absent from SciPy is labeled **SciFort extension**
+in the API documentation. Extensions to a shared distribution are labeled at the
+method or option level.
+
 ## Current scope
 
 Cloning or downloading the current `main` branch provides all the features
