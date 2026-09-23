@@ -66,6 +66,23 @@ Never trade away correctness or provenance merely to add more functions.
 - Never invent a source URL, commit hash, author, test result, or license.
 - When provenance is uncertain, stop the import and leave a documented issue.
 
+### Reuse of established Fortran implementations
+
+- Prefer reusing established Fortran implementations over writing new ones
+  when their numerical behavior, portability, maintainability, and license meet
+  SciFort's requirements. Inspect the exact upstream source and license before
+  adoption; a compatible license alone does not establish numerical quality.
+- Refactor adopted code to meet SciFort's style and API conventions while
+  preserving applicable copyright notices, license notices, and attribution.
+  Style changes do not make third-party code an original SciFort implementation.
+- Include attribution in adapted source files. Record the upstream project,
+  source URL, version or commit, license, imported files, and significant
+  modifications in `CODE_PROVENANCE.md`. Retain full required license texts in
+  `THIRD_PARTY_LICENSES.md` or `LICENSES/`.
+- Validate adapted implementations against upstream tests where available and
+  SciFort's numerical tests. Keep refactoring separate from algorithmic changes
+  where practical to simplify review and future upstream comparisons.
+
 ## AI-generated implementation policy
 
 - Do not ask a model to reproduce a known library routine from memory and then

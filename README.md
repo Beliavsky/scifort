@@ -20,6 +20,20 @@ those in SciPy. Functionality absent from SciPy is labeled **SciFort extension**
 in the API documentation. Extensions to a shared distribution are labeled at the
 method or option level.
 
+## Reuse and attribution
+
+SciFort prefers reusing established Fortran implementations when their numerical
+behavior, portability, maintainability, and license meet project requirements.
+Adopted code is refactored to SciFort's style and API conventions, with upstream
+attribution and applicable copyright and license notices preserved in the source
+and documentation. Adaptations are validated using upstream tests where available
+and SciFort's numerical tests.
+
+See [AGENTS.md](AGENTS.md#reuse-of-established-fortran-implementations) for the
+policy, [CODE_PROVENANCE.md](CODE_PROVENANCE.md) for sources and modifications,
+and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) and [LICENSES/](LICENSES/)
+for license texts.
+
 ## Current scope
 
 Cloning or downloading the current `main` branch provides all the features
