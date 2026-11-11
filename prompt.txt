@@ -1,0 +1,68 @@
+  Continue developing SciFort from the attached ZIP.
+
+  Task for this batch:
+  [Describe the next distribution family, feature, or roadmap milestone.]
+
+  Baseline:
+  [Git commit ID, if known, and uploaded ZIP filename.]
+
+  Read and follow AGENTS.md and the relevant roadmap, API documentation,
+  tests, and provenance records before editing.
+
+  Integration requirements:
+
+  1. Treat the uploaded project as the authoritative starting point.
+     Preserve an untouched baseline for comparison. Do not reconstruct
+     existing files from memory or substitute files from another version.
+     If the archive cannot be fully inspected, say so before editing.
+
+  2. Complete a coherent, reviewable batch. Preserve existing fixes and
+     public APIs. Avoid unrelated formatting, renaming, directory changes,
+     dependency changes, or changes to repository rules.
+
+  3. Preserve the existing directory structure, filename capitalization,
+     and text conventions. Keep paths portable between Windows and Linux.
+     Preserve required files regardless of extension, including headers,
+     license files, test data, scripts, and hidden configuration files.
+
+  4. Add regression tests before or alongside fixes. Do not remove tests
+     or relax tolerances merely to obtain a passing result. Explain and
+     justify any changes to expected values or tolerances.
+
+  5. Run the checks required by AGENTS.md when tools are available.
+     Report exact commands, compiler/tool versions, and results. Clearly
+     distinguish tests actually executed from tests only inspected.
+     Record unavailable checks and commands I must run locally.
+
+  6. Deliver a complete updated project ZIP, excluding build outputs,
+     compiler module files, caches, temporary files, and .git metadata.
+     Preserve intentional project data and reference fixtures.
+     Verify the ZIP by extracting it into a fresh directory and checking
+     its contents; build and test that extracted copy when possible.
+
+  7. Also provide a machine-generated changes.patch against the exact
+     uploaded baseline, using repository-relative paths and including
+     additions and deletions. Verify that applying it to a clean baseline
+     reproduces the delivered project. If patch generation or verification
+     is unavailable, state that clearly.
+
+  8. Provide a separate HANDOFF.md containing:
+     - Baseline ZIP filename and supplied Git commit ID, if known.
+     - Summary of completed work.
+     - Exact added, modified, deleted, and renamed file paths.
+     - Public API changes and SciFort extensions.
+     - Provenance and license additions.
+     - Validation commands, environment, and actual results.
+     - Known limitations, unfinished work, and recommended next steps.
+
+     Generate the file-change list by comparing the final files against
+     the untouched baseline, not from memory. Explicitly say when there
+     are no deletions or renames.
+
+  9. Update the repository's changelog, API documentation, and provenance
+     records where applicable. Keep temporary handoff reports and patches
+     separate from the project source tree.
+
+  10. Make the handoff sufficient for a new chat to continue using only
+      the updated project ZIP and HANDOFF.md. Do not rely on information
+      that exists only in this conversation.
