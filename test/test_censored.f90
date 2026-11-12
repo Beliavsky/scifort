@@ -13,6 +13,8 @@ program test_censored
         lognormal_loglikelihood, lognormal_fit
     use scifort_stats, only : gamma_censored_loglikelihood, gamma_censored_nnlf, &
         gamma_loglikelihood, gamma_fit, gamma_logcdf, gamma_logsf
+    use scifort_stats, only : beta_censored_loglikelihood, beta_censored_nnlf, &
+        beta_loglikelihood, beta_fit, beta_logcdf, beta_logsf, uniform_loglikelihood
     use scifort_math, only : quiet_nan, negative_infinity, positive_infinity
     implicit none
 
@@ -418,6 +420,168 @@ program test_censored
     data = make_censored_data(right=[1.0e-300_dp])
     call close(gamma_censored_loglikelihood(data, 1.0e308_dp, scale=1.0e300_dp), &
         0.0_dp, 0.0_dp, 'gamma huge-shape scaled-underflow upper tail')
+
+    data = make_censored_data(uncensored=[0.1_dp,0.3_dp,0.6_dp], left=[0.05_dp], &
+        right=[0.8_dp], interval=reshape([0.2_dp,0.7_dp,0.25_dp,0.75_dp],[2,2]))
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        -10.367442718990157_dp, 4.0e-12_dp, 'beta mixed reference')
+    call close(beta_censored_nnlf(data,0.4_dp,0.6_dp), &
+        10.367442718990157_dp, 4.0e-12_dp, 'beta negative log likelihood')
+    call close(beta_censored_loglikelihood(data,1.0_dp,1.0_dp), &
+        log(0.05_dp)+log(0.2_dp)+2.0_dp*log(0.05_dp), &
+        2.0e-14_dp, 'beta uniform mixed-data identity')
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp], &
+        fit,guess=[1.0_dp,1.0_dp,0.0_dp,1.0_dp],tolerance=1.0e-9_dp)
+    call check(fit%success,'beta mixed fit')
+    call close(fit%params(1),0.640291446923525_dp,3.0e-4_dp,'beta fitted first shape')
+    call close(fit%params(2),0.9270186194778561_dp,3.0e-4_dp,'beta fitted second shape')
+    call close(fit%nllf,beta_censored_nnlf(data,fit%params(1),fit%params(2), &
+        fit%params(3),fit%params(4)),1.0e-13_dp,'beta fit objective')
+    call beta_fit(data,[0.1_dp,0.1_dp,-1.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta free location rejected')
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,0.5_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta free scale rejected')
+    call beta_fit(data,[0.1_dp,0.1_dp,nan,1.0_dp],[5.0_dp,5.0_dp,nan,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta NaN location bounds rejected')
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,nan],[5.0_dp,5.0_dp,0.0_dp,nan],fit)
+    call check(fit%status == fit_status_invalid_input,'beta NaN scale bounds rejected')
+    call beta_fit(empty,[0.1_dp,0.1_dp,0.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta empty fit rejected')
+    data = make_censored_data(uncensored=[0.2_dp,0.4_dp,0.7_dp])
+    call close(beta_censored_loglikelihood(data,2.5_dp,3.5_dp,loc=-0.5_dp,scale=2.0_dp), &
+        beta_loglikelihood(data%uncensored,2.5_dp,3.5_dp,loc=-0.5_dp,scale=2.0_dp), &
+        4.0e-14_dp,'beta uncensored array agreement')
+    call close(beta_censored_loglikelihood(data,1.0_dp,1.0_dp,loc=-0.5_dp,scale=2.0_dp), &
+        uniform_loglikelihood(data%uncensored,loc=-0.5_dp,scale=2.0_dp), &
+        1.0e-14_dp,'beta uniform exact-data identity')
+    call set_interval(0.5_dp,nearest(0.5_dp,1.0_dp))
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        -37.23856506488818_dp,4.0e-13_dp,'beta adjacent interior endpoints')
+    call set_interval(0.0_dp,1.0e-300_dp)
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        -276.58883210318237_dp,3.0e-12_dp,'beta tiny interval touching lower edge')
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp,scale=1.0e300_dp), &
+        -552.8990432624679_dp,4.0e-12_dp,'beta standardized lower distance underflows')
+    call set_interval(nearest(1.0_dp,-1.0_dp),1.0_dp)
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        -22.726166393811287_dp,4.0e-13_dp,'beta interval touching upper edge')
+    call set_interval(0.99_dp,0.999_dp)
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        -3.7335165416256575_dp,4.0e-13_dp,'beta upper tail interval')
+    data = make_censored_data(right=[1.0e300_dp])
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp, &
+        loc=1.0e-300_dp,scale=1.0e300_dp),-829.6147195298614_dp,5.0e-12_dp, &
+        'beta compensated upper edge retains positive upper tail')
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp, &
+        loc=-1.0e-300_dp,scale=1.0e300_dp) == -inf, &
+        'beta compensated upper edge recognizes outside point')
+    data = make_censored_data(left=[0.2_dp],right=[0.8_dp])
+    other = make_censored_data(interval=reshape([-inf,0.8_dp,0.2_dp,inf],[2,2]))
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        beta_censored_loglikelihood(other,0.4_dp,0.6_dp), &
+        1.0e-14_dp,'beta infinite interval endpoint agreement')
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        beta_logcdf(0.2_dp,0.4_dp,0.6_dp)+beta_logsf(0.8_dp,0.4_dp,0.6_dp), &
+        3.0e-14_dp,'beta ordinary log-tail agreement')
+    call set_interval(0.4_dp,0.4_dp)
+    other = make_censored_data(uncensored=[0.4_dp])
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        beta_censored_loglikelihood(other,0.4_dp,0.6_dp), &
+        1.0e-14_dp,'beta equal endpoints represent exact observations')
+    call set_interval(-2.0_dp,2.0_dp)
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp),0.0_dp,0.0_dp, &
+        'beta interval covers support')
+    call set_interval(-2.0_dp,0.0_dp)
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp) == -inf, &
+        'beta interval outside lower support')
+    call set_interval(1.0_dp,2.0_dp)
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp) == -inf, &
+        'beta interval outside upper support')
+    data = make_censored_data(uncensored=[0.0_dp])
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp) == inf, &
+        'beta infinite lower endpoint density')
+    call check(beta_censored_loglikelihood(data,2.0_dp,0.6_dp) == -inf, &
+        'beta zero lower endpoint density')
+    call close(beta_censored_loglikelihood(data,1.0_dp,2.0_dp),log(2.0_dp), &
+        1.0e-15_dp,'beta finite lower endpoint density')
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta exact lower endpoint fit rejected')
+    data = make_censored_data(uncensored=[1.0_dp])
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp) == inf, &
+        'beta infinite upper endpoint density')
+    call check(beta_censored_loglikelihood(data,0.4_dp,2.0_dp) == -inf, &
+        'beta zero upper endpoint density')
+    call close(beta_censored_loglikelihood(data,2.0_dp,1.0_dp),log(2.0_dp), &
+        1.0e-15_dp,'beta finite upper endpoint density')
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta exact upper endpoint fit rejected')
+    call set_interval(1.0_dp,1.0_dp)
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'beta exact interval endpoint fit rejected')
+    data = make_censored_data(uncensored=[0.0_dp,1.0_dp])
+    call check(ieee_is_nan(beta_censored_loglikelihood(data,0.4_dp,2.0_dp)), &
+        'beta opposing infinite densities yield NaN')
+    data = make_censored_data(uncensored=[-1.0_dp])
+    call beta_fit(data,[0.1_dp,0.1_dp,0.0_dp,1.0_dp],[5.0_dp,5.0_dp,0.0_dp,1.0_dp],fit)
+    call check(fit%status == fit_status_no_finite_objective,'beta impossible exact sample fit')
+    data = make_censored_data(right=[0.0_dp],left=[1.0_dp])
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp),0.0_dp,0.0_dp, &
+        'beta certain left and right limits at endpoints')
+    data = make_censored_data(left=[0.0_dp])
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp) == -inf, &
+        'beta impossible left limit at lower edge')
+    data = make_censored_data(right=[1.0_dp])
+    call check(beta_censored_loglikelihood(data,0.4_dp,0.6_dp) == -inf, &
+        'beta impossible right limit at upper edge')
+    call set_interval(0.1_dp,0.2_dp)
+    base = beta_censored_loglikelihood(data,0.4_dp,0.6_dp)
+    call set_interval(0.1_dp,0.3_dp)
+    value = beta_censored_loglikelihood(data,0.4_dp,0.6_dp)
+    call check(value >= base .and. value <= 0.0_dp,'beta interval monotonicity and nonnegativity')
+    data = make_censored_data(uncensored=[0.2_dp,0.6_dp],left=[0.1_dp],right=[0.9_dp])
+    other = make_censored_data(uncensored=[0.8_dp,0.4_dp],left=[0.1_dp],right=[0.9_dp])
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp), &
+        beta_censored_loglikelihood(other,0.6_dp,0.4_dp),3.0e-13_dp,'beta reflection identity')
+    call close(beta_censored_loglikelihood(empty,0.4_dp,0.6_dp),0.0_dp,0.0_dp, &
+        'beta empty likelihood')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.0_dp,0.6_dp)), 'beta zero first shape')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.4_dp,-1.0_dp)), 'beta negative second shape')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,nan,0.6_dp)), 'beta NaN first shape')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.4_dp,inf)), 'beta infinite second shape')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.4_dp,0.6_dp,loc=nan)), 'beta NaN location')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.4_dp,0.6_dp,scale=nan)), 'beta NaN scale')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.4_dp,0.6_dp,scale=0.0_dp)), 'beta zero scale')
+    call check(ieee_is_nan(beta_censored_loglikelihood(empty,0.4_dp,0.6_dp, &
+        loc=huge(1.0_dp),scale=huge(1.0_dp))), 'beta unrepresentable upper edge')
+    data = make_censored_data(uncensored=[nan])
+    call check(ieee_is_nan(beta_censored_loglikelihood(data,0.4_dp,0.6_dp)), 'beta invalid sample')
+
+    data = make_censored_data(right=[1.0e-300_dp])
+    call close(beta_censored_loglikelihood(data,1.0e-20_dp,0.6_dp,scale=1.0e300_dp), &
+        -38.82004266769975_dp,4.0e-13_dp,'beta tiny shape scaled-underflow upper tail')
+    data = make_censored_data(uncensored=[1.0e-300_dp])
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp,scale=1.0e300_dp), &
+        136.9601939038717_dp,5.0e-13_dp,'beta scaled-underflow exact density')
+    data = make_censored_data(uncensored=[0.5_dp])
+    call close(beta_censored_loglikelihood(data,1000.0_dp,1000.0_dp), &
+        3.574534877131522_dp,3.0e-12_dp,'beta large-shape density at mode')
+    call set_interval(0.5_dp,nearest(0.5_dp,1.0_dp))
+    call close(beta_censored_loglikelihood(data,1000.0_dp,1000.0_dp), &
+        -33.16226569254558_dp,4.0e-12_dp,'beta large-shape adjacent interval')
+    data = make_censored_data(right=[-1.0e-300_dp])
+    call close(beta_censored_loglikelihood(data,0.4_dp,0.6_dp, &
+        loc=-1.0e300_dp,scale=1.0e300_dp),-829.6147195298614_dp,5.0e-12_dp, &
+        'beta independently normalized upper distance underflows')
+    data = make_censored_data(left=[1.0e-300_dp])
+    call check(ieee_is_nan(beta_censored_loglikelihood(data,0.4_dp,1.0e308_dp, &
+        scale=1.0e24_dp)),'beta unsupported underflow expansion returns NaN safely')
+
+    data = make_censored_data(right=[1.0e-300_dp])
+    call close(beta_censored_loglikelihood(data,1.0e-20_dp,1.0e308_dp,scale=1.0e300_dp), &
+        -39.541774479640864_dp,4.0e-13_dp,'beta tiny/huge shapes retain small complement')
+
+    call close(beta_censored_loglikelihood(data,1.0e-20_dp,1.0e6_dp,scale=1.0e300_dp), &
+        -38.831212206840114_dp,4.0e-13_dp,'beta gamma-ratio powers do not overflow')
 
     if (failures /= 0) error stop 1
     print '(a,i0,a)', 'Censored likelihood and fitting: ', checks, ' checks passed'

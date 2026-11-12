@@ -8,7 +8,7 @@
 module scifort_fit
     use scifort_censored, only : censored_data, censored_data_valid, censored_size, &
         normal_censored_nnlf, exponential_censored_nnlf, weibull_censored_nnlf, &
-        lognormal_censored_nnlf, gamma_censored_nnlf
+        lognormal_censored_nnlf, gamma_censored_nnlf, beta_censored_nnlf
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : dp
     use scifort_likelihood, only : normal_nnlf, &
@@ -449,6 +449,10 @@ module scifort_fit
         module procedure gamma_fit, gamma_fit_censored
     end interface gamma_fit
 
+    interface beta_fit
+        module procedure beta_fit, beta_fit_censored
+    end interface beta_fit
+
 contains
 
     subroutine normal_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
@@ -553,6 +557,53 @@ contains
         call bounded_fit([real(dp) ::], family_gamma, lower, upper, result, guess, &
             [.false., .false., .false.], max_iter, tolerance, data)
     end subroutine gamma_fit_censored
+
+    subroutine beta_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds for a, b, location, width
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; location and width must be fixed
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! starting a, b, location, width
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        logical :: valid, endpoint
+        real(dp) :: edge, correction
+        integer :: i
+        valid = .false.
+        if (all(ieee_is_finite(lower(3:4))) .and. all(ieee_is_finite(upper(3:4)))) then
+            valid = all(lower(3:4) == upper(3:4)) .and. lower(4) > 0.0_dp
+            if (lower(3) > 0.0_dp) valid = valid .and. lower(4) <= huge(1.0_dp)-lower(3)
+        end if
+        endpoint = .false.
+        if (valid .and. censored_data_valid(data)) then
+            edge = lower(3)+lower(4)
+            if (abs(lower(3)) >= lower(4)) then
+                correction = (lower(3)-edge)+lower(4)
+            else
+                correction = (lower(4)-edge)+lower(3)
+            end if
+            if (allocated(data%uncensored)) then
+                endpoint = any(data%uncensored == lower(3))
+                if (correction == 0.0_dp) endpoint = endpoint .or. any(data%uncensored == edge)
+            end if
+            if (allocated(data%interval)) then
+                do i = 1, size(data%interval,1)
+                    if (data%interval(i,1) /= data%interval(i,2)) cycle
+                    if (data%interval(i,1) == lower(3)) endpoint = .true.
+                    if (correction == 0.0_dp .and. data%interval(i,1) == edge) endpoint = .true.
+                end do
+            end if
+        end if
+        if (.not. valid .or. endpoint) then
+            allocate(result%params(4))
+            result%params = nan_value()
+            result%nllf = nan_value()
+            return
+        end if
+        call bounded_fit([real(dp) ::], family_beta, lower, upper, result, guess, &
+            [.false., .false., .false., .false.], max_iter, tolerance, data)
+    end subroutine beta_fit_censored
 
     subroutine exponential_fit_right_censored(data, loc, result)
         implicit none
@@ -833,6 +884,8 @@ contains
                 value = normal_censored_nnlf(censored, params(1), params(2))
             case (family_exponential)
                 value = exponential_censored_nnlf(censored, params(1), params(2))
+            case (family_beta)
+                value = beta_censored_nnlf(censored, params(1), params(2), params(3), params(4))
             case (family_gamma)
                 value = gamma_censored_nnlf(censored, params(1), params(2), params(3))
             case (family_lognormal)

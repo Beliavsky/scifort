@@ -11,9 +11,13 @@ from scipy import stats
 mp.mp.dps = 100
 
 
-def logpdf(x, family, shape, loc, scale):
+def logpdf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'beta':
+        second_shape=mp.mpf(second_shape)
+        return ((shape-1)*mp.log(z)+(second_shape-1)*mp.log1p(-z)
+                -mp.log(mp.beta(shape,second_shape))-mp.log(scale))
     if family == 'normal':
         return -z*z/2 - mp.log(scale) - mp.log(2*mp.pi)/2
     if family == 'lognormal':
@@ -27,13 +31,15 @@ def logpdf(x, family, shape, loc, scale):
     return mp.log(shape/scale) + (shape-1)*mp.log(z) - z**shape
 
 
-def logcdf(x, family, shape, loc, scale):
+def logcdf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
     if family == 'normal':
         return mp.log(mp.erfc(-z/mp.sqrt(2))/2)
     if z <= 0:
         return mp.ninf
+    if family == 'beta':
+        return mp.log(mp.betainc(shape,mp.mpf(second_shape),0,min(z,mp.mpf(1)),regularized=True))
     if family == 'gamma':
         return mp.log(mp.gammainc(shape,0,z,regularized=True))
     if family == 'lognormal':
@@ -41,11 +47,14 @@ def logcdf(x, family, shape, loc, scale):
     return mp.log(-mp.expm1(-z**shape))
 
 
-def logsf(x, family, shape, loc, scale):
+def logsf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
     if family == 'normal':
         return mp.log(mp.erfc(z/mp.sqrt(2))/2)
+    if family == 'beta':
+        z=max(mp.mpf(0),min(z,mp.mpf(1)))
+        return mp.log(mp.betainc(shape,mp.mpf(second_shape),z,1,regularized=True))
     if family == 'gamma':
         return mp.log(mp.gammainc(shape,max(z,mp.mpf(0)),mp.inf,regularized=True))
     if family == 'lognormal':
@@ -53,13 +62,13 @@ def logsf(x, family, shape, loc, scale):
     return -max(z, mp.mpf(0))**shape
 
 
-def loginterval(a, b, family, shape=1., loc=0., scale=1.):
-    if logsf(a, family, shape, loc, scale) < logcdf(b, family, shape, loc, scale):
-        large = logsf(a, family, shape, loc, scale)
-        small = logsf(b, family, shape, loc, scale)
+def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1.):
+    if logsf(a, family, shape, loc, scale, second_shape) < logcdf(b, family, shape, loc, scale, second_shape):
+        large = logsf(a, family, shape, loc, scale, second_shape)
+        small = logsf(b, family, shape, loc, scale, second_shape)
     else:
-        large = logcdf(b, family, shape, loc, scale)
-        small = logcdf(a, family, shape, loc, scale)
+        large = logcdf(b, family, shape, loc, scale, second_shape)
+        small = logcdf(a, family, shape, loc, scale, second_shape)
     return large + mp.log(-mp.expm1(small-large))
 
 
@@ -105,6 +114,34 @@ def main():
     with mp.workdps(400):
         result['gamma_small_sf'] = float(logsf(1e-300, 'gamma', 1e-20, 0., 1e300))
         result['gamma_small_pdf'] = float(logpdf(1e-300, 'gamma', .4, 0., 1e300))
+    exact, left, right, intervals = [.1,.3,.6], [.05], [.8], [(.2,.25),(.7,.75)]
+    beta_data=stats.CensoredData(uncensored=exact,left=left,right=right,interval=intervals)
+    result['beta_fit']=list(stats.beta.fit(beta_data,floc=0.,fscale=1.))
+    with mp.workdps(700):
+        result['beta_mixed']=float(sum(logpdf(x,'beta',.4,0.,1.,.6) for x in exact)
+            +sum(logcdf(x,'beta',.4,0.,1.,.6) for x in left)
+            +sum(logsf(x,'beta',.4,0.,1.,.6) for x in right)
+            +sum(loginterval(a,b,'beta',.4,0.,1.,.6) for a,b in intervals))
+        for name,a,b in [('beta_adjacent',.5,math.nextafter(.5,1.)),
+                         ('beta_left',0.,1e-300),
+                         ('beta_right',math.nextafter(1.,0.),1.),
+                         ('beta_tail',.99,.999)]:
+            result[name]=float(loginterval(a,b,'beta',.4,0.,1.,.6))
+        result['beta_scaled_left']=float(logcdf(1e-300,'beta',.4,0.,1e300,.6))
+        result['beta_compensated_right']=float(logsf(1e300,'beta',.4,1e-300,1e300,.6))
+        result['beta_small_shape_sf']=float(logsf(1e-300,'beta',1e-20,0.,1e300,.6))
+        result['beta_small_pdf']=float(logpdf(1e-300,'beta',.4,0.,1e300,.6))
+        result['beta_large_pdf']=float(logpdf(.5,'beta',1000.,0.,1.,1000.))
+        result['beta_large_adjacent']=float(loginterval(.5,math.nextafter(.5,1.),'beta',1000.,0.,1.,1000.))
+    with mp.workdps(700):
+        a,b=map(mp.mpf,(1e-20,1e308))
+        z=mp.mpf(1e-300)/mp.mpf(1e300)
+        # Leading-term relative correction is bounded by b*z < 1e-291.
+        lp=a*mp.log(z)-mp.log(a)-mp.log(mp.beta(a,b))
+        result['beta_tiny_huge_sf']=float(mp.log(-mp.expm1(lp)))
+        b=mp.mpf(1e6)
+        lp=a*mp.log(z)-mp.log(a)-mp.log(mp.beta(a,b))
+        result['beta_tiny_large_sf']=float(mp.log(-mp.expm1(lp)))
     print(json.dumps(result, indent=2))
 
 

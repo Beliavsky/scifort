@@ -12,7 +12,9 @@ module scifort_censored
         expm1_safe, log1p_safe, log1pexp
     use scifort_normal, only : normal_logpdf, normal_logcdf, normal_logsf
     use scifort_exponential, only : exponential_logpdf, exponential_logcdf, exponential_logsf
-    use scifort_log_gamma, only : log_gamma_one_plus, stirling_remainder
+    use scifort_log_gamma, only : log_gamma_one_plus, stirling_remainder, log_beta, &
+        stirling_threshold, log_gamma_difference, log_gamma_ratio_scaled
+    use scifort_incomplete_beta, only : incomplete_beta_xy, log_beta_kernel
     use scifort_gamma, only : gamma_logpdf
     use scifort_incomplete_gamma, only : log_gammainc, log_gammaincc, log_gamma_kernel
     use scifort_weibull, only : weibull_logpdf, weibull_logcdf, weibull_logsf
@@ -49,6 +51,7 @@ module scifort_censored
     public :: weibull_censored_loglikelihood, weibull_censored_nnlf
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
+    public :: beta_censored_loglikelihood, beta_censored_nnlf
 
 contains
 
@@ -779,5 +782,250 @@ contains
             value = tail_interval(a,b,params,gamma_lcdf,gamma_lsf)
         end if
     end function gamma_interval
+
+    pure function beta_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite first shape, > 0
+        real(dp), intent(in) :: b !! finite second shape, > 0
+        real(dp), intent(in), optional :: loc !! lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! finite support width, > 0 (default 1)
+        real(dp) :: value, params(4)
+        params = [a, b, 0.0_dp, 1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. beta_parameters_valid(params)) return
+        value = censored_loglikelihood(data,params,beta_lpdf,beta_lcdf,beta_lsf,beta_interval)
+    end function beta_censored_loglikelihood
+
+    pure function beta_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite first shape, > 0
+        real(dp), intent(in) :: b !! finite second shape, > 0
+        real(dp), intent(in), optional :: loc !! lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! finite support width, > 0 (default 1)
+        real(dp) :: value
+        value = -beta_censored_loglikelihood(data,a,b,loc,scale)
+    end function beta_censored_nnlf
+
+    pure function beta_parameters_valid(params) result(valid)
+        implicit none
+        real(dp), intent(in) :: params(:) !! first/second shapes, location, support width
+        logical :: valid
+        valid = .false.
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(params(1),params(2),params(4)) <= 0.0_dp) return
+        ! This initial interface requires a finite rounded upper support edge.
+        if (params(3) > 0.0_dp) then
+            if (params(4) > huge(1.0_dp)-params(3)) return
+        end if
+        valid = .true.
+    end function beta_parameters_valid
+
+    pure subroutine beta_distances(x, params, left, right)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(out) :: left !! distance above lower edge; negative outside support
+        real(dp), intent(out) :: right !! distance below upper edge; negative outside support
+        real(dp) :: upper, correction
+        ! FastTwoSum with operands ordered by magnitude (Ogita et al. 2005).
+        upper = params(3)+params(4)
+        if (abs(params(3)) >= params(4)) then
+            correction = (params(3)-upper)+params(4)
+        else
+            correction = (params(4)-upper)+params(3)
+        end if
+        left = 0.0_dp
+        right = params(4)
+        if (x == params(3)) return
+        if (x < params(3)) then
+            left = -1.0_dp
+            return
+        end if
+        left = positive_infinity(0.0_dp)
+        if (params(3) < 0.0_dp .and. x > 0.0_dp) then
+            if (x <= huge(1.0_dp)+params(3)) left = x-params(3)
+        else
+            left = x-params(3)
+        end if
+        if (x > 0.0_dp .and. upper < 0.0_dp) then
+            if (x > huge(1.0_dp)+upper) then
+                right = -1.0_dp
+                return
+            end if
+        else if (x < 0.0_dp .and. upper > 0.0_dp) then
+            if (upper > huge(1.0_dp)+x) then
+                right = huge(1.0_dp)
+                return
+            end if
+        end if
+        right = (upper-x)+correction
+    end subroutine beta_distances
+
+    pure subroutine beta_coordinates(x, params, left, right, z, w, logz, logw)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly inside support
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: left !! positive distance above lower edge, possibly infinite
+        real(dp), intent(in) :: right !! positive distance below upper edge
+        real(dp), intent(out) :: z !! standardized lower distance, possibly rounded to 0 or 1
+        real(dp), intent(out) :: w !! standardized upper distance, formed independently of z
+        real(dp), intent(out) :: logz !! finite log standardized lower distance
+        real(dp), intent(out) :: logw !! finite log standardized upper distance
+        if (ieee_is_finite(left)) then
+            z = left/params(4)
+        else
+            z = x/params(4)-params(3)/params(4)
+        end if
+        w = right/params(4)
+        logz = log_distance(x,params(3))-log(params(4))
+        logw = log(right)-log(params(4))
+        if (w < 0.5_dp) logz = log1p_safe(-w)
+        if (z < 0.5_dp) logw = log1p_safe(-z)
+    end subroutine beta_coordinates
+
+    pure function beta_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp) :: value, left, right, z, w, logz, logw, shape, other
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        if (left == 0.0_dp .or. right == 0.0_dp) then
+            shape = params(1)
+            other = params(2)
+            if (right == 0.0_dp) then
+                shape = params(2)
+                other = params(1)
+            end if
+            if (shape < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (shape == 1.0_dp) value = log(other)-log(params(4))
+            return
+        end if
+        call beta_coordinates(x,params,left,right,z,w,logz,logw)
+        if (min(params(1),params(2)) >= stirling_threshold .and. min(z,w) > 0.0_dp) then
+            value = log_beta_kernel(params(1),params(2),z,w)-logz-logw-log(params(4))
+        else
+            value = (params(1)-1.0_dp)*logz+(params(2)-1.0_dp)*logw - &
+                log_beta(params(1),params(2))-log(params(4))
+        end if
+    end function beta_lpdf
+
+    pure subroutine beta_logtails(x, params, logp, logq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(out) :: logp !! stable log lower probability
+        real(dp), intent(out) :: logq !! stable log upper probability
+        real(dp) :: left, right, z, w, logz, logw, p, q
+        logp = negative_infinity(0.0_dp)
+        logq = 0.0_dp
+        call beta_distances(x,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            logp = 0.0_dp
+            logq = negative_infinity(0.0_dp)
+            return
+        end if
+        call beta_coordinates(x,params,left,right,z,w,logz,logw)
+        if (z == 0.0_dp) then
+            logp = quiet_nan(0.0_dp)
+            logq = logp
+            if (log(params(2))+logz > log(epsilon(1.0_dp))-2.0_dp) return
+            logp = beta_small_tail(params(1),params(2),logz)
+            logq = log_difference(0.0_dp,logp)
+        else if (w == 0.0_dp) then
+            logp = quiet_nan(0.0_dp)
+            logq = logp
+            if (log(params(1))+logw > log(epsilon(1.0_dp))-2.0_dp) return
+            logq = beta_small_tail(params(2),params(1),logw)
+            logp = log_difference(0.0_dp,logq)
+        else
+            call incomplete_beta_xy(params(1),params(2),z,w,p,q,logp,logq)
+        end if
+    end subroutine beta_logtails
+
+    pure function beta_small_tail(a, b, logz) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! positive shape at the nearby endpoint
+        real(dp), intent(in) :: b !! positive shape at the far endpoint
+        real(dp), intent(in) :: logz !! log coordinate rounded to zero in ordinary arithmetic
+        real(dp) :: value, normalization
+        ! The gamma-difference form retains the O(a) normalization when a is tiny.
+        if (a < sqrt(epsilon(1.0_dp))*min(b,1.0_dp)) then
+            if (b > 1.0_dp/epsilon(1.0_dp)) then
+                ! For a < sqrt(epsilon), the gamma-ratio correction is O(a/b),
+                ! below roundoff in this tail; avoid powers of enormous b.
+                normalization = a*log(b)-log_gamma_one_plus(a)
+            else if (b >= stirling_threshold) then
+                normalization = a*log(b)+log_gamma_ratio_scaled(b,a)-log_gamma_one_plus(a)
+            else
+                normalization = log_gamma_difference(b,a)-log_gamma_one_plus(a)
+            end if
+        else
+            normalization = -log(a)-log_beta(a,b)
+        end if
+        value = a*logz+normalization
+    end function beta_small_tail
+
+    pure function beta_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp) :: value, logq
+        call beta_logtails(x,params,value,logq)
+    end function beta_lcdf
+
+    pure function beta_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp) :: value, logp
+        call beta_logtails(x,params,logp,value)
+    end function beta_lsf
+
+    pure function beta_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp) :: value, left, right, logwidth, logql, logqr, ql, qr, t(3), r(3), correction
+        value = negative_infinity(0.0_dp)
+        call beta_distances(b,params,left,right)
+        if (left <= 0.0_dp) return
+        call beta_distances(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = beta_lcdf(b,params)
+            return
+        end if
+        call beta_distances(b,params,left,right)
+        if (right <= 0.0_dp) then
+            value = beta_lsf(a,params)
+            return
+        end if
+        call beta_distances(a,params,left,right)
+        logwidth = log_distance(b,a)
+        logql = logwidth-log_distance(a,params(3))
+        logqr = logwidth-log(right)
+        if (logql+log(max(1.0_dp,abs(params(1)-1.0_dp))) <= log(0.001_dp) .and. &
+                logqr+log(max(1.0_dp,abs(params(2)-1.0_dp))) <= log(0.001_dp)) then
+            ql = exp(logql)
+            qr = exp(logqr)
+            t = [0.5_dp, 0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            r = (params(1)-1.0_dp)*log1p_safe(t*ql) + &
+                (params(2)-1.0_dp)*log1p_safe(-t*qr)
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) + &
+                (5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = beta_lpdf(a,params)+logwidth+log1p_safe(correction)
+        else
+            value = tail_interval(a,b,params,beta_lcdf,beta_lsf)
+        end if
+    end function beta_interval
 
 end module scifort_censored

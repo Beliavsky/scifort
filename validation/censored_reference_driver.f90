@@ -4,16 +4,18 @@
 program censored_reference_driver
     use scifort_censored, only : censored_data, normal_censored_loglikelihood, &
         exponential_censored_loglikelihood, weibull_censored_loglikelihood, &
-        lognormal_censored_loglikelihood, gamma_censored_loglikelihood
+        lognormal_censored_loglikelihood, gamma_censored_loglikelihood, &
+        beta_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
     integer :: family, nu, nl, nr, ni, ios, i
-    real(dp) :: c, loc, scale, value
+    real(dp) :: c, second_shape, loc, scale, value
     do
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
+        if (family == 6) read(*, *) second_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -32,6 +34,8 @@ program censored_reference_driver
             value = lognormal_censored_loglikelihood(data, c, loc, scale)
         case (5)
             value = gamma_censored_loglikelihood(data, c, loc, scale)
+        case (6)
+            value = beta_censored_loglikelihood(data,c,second_shape,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

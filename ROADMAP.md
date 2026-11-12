@@ -7,6 +7,7 @@
   explicit status reporting when no finite identifiable estimate is available.
 - [x] Add stable lognormal censored likelihoods and fixed-location bounded fits.
 - [x] Add gamma censored likelihoods and fixed-location bounded fits.
+- [x] Add beta censored likelihoods and fixed-support bounded fits.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

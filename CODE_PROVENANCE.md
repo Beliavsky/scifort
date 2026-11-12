@@ -1,3 +1,43 @@
+## 2026-11-12 - Censored beta extension
+
+The beta additions to `src/censored.f90` and `src/fit.f90`, with tests and
+reference checks, are MIT-licensed SciFort implementations from mathematical
+specifications. They reuse existing incomplete-beta, log-beta, gamma-difference,
+and scaled gamma-ratio kernels with their notices unchanged. No third-party
+implementation source, dependency, binary, or archive was imported.
+Specifications inspected 2026-11-12:
+
+- Beta density and parameter convention:
+  https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.beta.html
+- Defining integral, symmetry, and series: https://dlmf.nist.gov/8.17
+- Gauss quadrature: https://dlmf.nist.gov/3.5.v
+- Stirling gamma-ratio limit: https://dlmf.nist.gov/5.11
+- FastTwoSum error-free sum, Algorithm 1.1 in T. Ogita, S. M. Rump, and
+  S. Oishi, "Accurate Sum and Dot Product", SIAM Journal on Scientific
+  Computing 26(6), 1955-1988 (2005):
+  https://www.tuhh.de/ti3/paper/rump/OgRuOi05.pdf
+- Censored likelihood specification:
+  https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
+
+The implementation of the upper-edge correction follows the cited arithmetic
+specification with operands ordered by magnitude. Endpoint distances are
+normalized independently. Narrow intervals integrate the lower-endpoint
+factored density with log ratio `(a-1)*log1p(t*ql)+(b-1)*log1p(-t*qr)`.
+Three-point Gauss-Legendre nodes and weights follow polynomial exactness
+through degree five. Conservative relative-distance/variation bounds of .001
+select this rule. Other intervals use log tails. At an underflowed coordinate,
+`I_z(a,b) = z**a/(a*B(a,b)) * (1 + O(max(1,b)*z))` is evaluated in logs,
+with a far-shape/coordinate bound before using the approximation. Existing
+gamma-difference and scaled-ratio identities retain tiny-shape normalization.
+For a tiny first shape and a far shape above `1/epsilon`, the Stirling
+limit `log(Gamma(b+a)/Gamma(b)) = a*log(b)+O(a/b)` avoids powers of an
+enormous argument. The neglected term is below roundoff under that branch's
+`a < sqrt(epsilon)` and underflow-tail conditions.
+The associated one-line fix in `src/special/log_gamma.f90` evaluates negative
+powers as positive powers of the reciprocal, avoiding intermediate overflow
+in compiler integer-power routines without changing the Stirling coefficients.
+No C ABI symbols are added.
+
 ## 2026-11-12 - Censored gamma extension
 
 Gamma additions in `src/censored.f90` and `src/fit.f90`, with tests and reference

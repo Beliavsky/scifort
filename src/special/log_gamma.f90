@@ -237,7 +237,7 @@ contains
 
         y = 0.0_dp
         do k = 1, size(stirling_coefficients)
-            y = y + stirling_coefficients(k) * x**(1 - 2 * k) * &
+            y = y + stirling_coefficients(k) * (1.0_dp / x)**(2 * k - 1) * &
                 expm1_safe(real(1 - 2 * k, dp) * log_ratio)
         end do
     end function stirling_remainder_difference

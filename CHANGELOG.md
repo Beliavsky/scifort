@@ -1,3 +1,14 @@
+## 2026-11-12 - Censored beta likelihoods and fitting
+
+- Add beta censored likelihoods and bounded shape fitting with fixed location
+  and scale, excluding exact endpoint samples from the fitting overload.
+- Preserve independently formed endpoint distances, tiny normalized distances,
+  and narrow interval masses; retain singular endpoint densities in likelihoods.
+- Prevent intermediate overflow in negative powers in the shared gamma-ratio
+  remainder, found by the extreme-shape beta checks.
+- Add high-precision references, SciPy fitting comparisons, endpoint and uniform
+  identities, numerical regressions, documentation, and provenance.
+
 ## 2026-11-12 - Censored gamma likelihoods and fitting
 
 - Add gamma censored log-likelihood and negative log-likelihood, including

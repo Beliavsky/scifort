@@ -50,6 +50,27 @@ def main():
             inputs.append(f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2')
             inputs.extend(' '.join(f'{x:.17g}' for x in group)
                           for group in [exact,left,right,*intervals])
+    for _ in range(args.cases):
+        loc, scale = rng.uniform(-3.,3.), 10**rng.uniform(-4.,4.)
+        shape, second = 10**rng.uniform(-1.,1.), 10**rng.uniform(-1.,1.)
+        exact=[loc+scale*rng.uniform(.05,.95) for _ in range(3)]
+        left=[loc+scale*rng.uniform(.01,.2)]
+        right=[loc+scale*rng.uniform(.8,.99)]
+        intervals=[]
+        for _ in range(2):
+            a=loc+scale*rng.uniform(.01,.95)
+            b=min(a+scale*10**rng.uniform(-12.,-.3),loc+scale*1.1)
+            if b == a: b=math.nextafter(a,math.inf)
+            intervals.append((a,b))
+        value=sum(reference.logpdf(x,'beta',shape,loc,scale,second) for x in exact)
+        value+=sum(reference.logcdf(x,'beta',shape,loc,scale,second) for x in left)
+        value+=sum(reference.logsf(x,'beta',shape,loc,scale,second) for x in right)
+        value+=sum(reference.loginterval(a,b,'beta',shape,loc,scale,second) for a,b in intervals)
+        cases.append(('beta',float(value)))
+        inputs.append(f'6 {shape:.17g} {loc:.17g} {scale:.17g} 3 1 1 2')
+        inputs.append(f'{second:.17g}')
+        inputs.extend(' '.join(f'{x:.17g}' for x in group)
+                      for group in [exact,left,right,*intervals])
     stdin = '\n'.join(inputs)+'\n'
     a = math.nextafter(1e100, math.inf)
     b = math.nextafter(a, math.inf)
@@ -78,13 +99,29 @@ def main():
         cases.append(('gamma_stress', float(reference.loginterval(
             a, b, 'gamma', shape, 0., scale))))
         stdin += f'5 {shape:.17g} 0 {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    with mp.workdps(700):
+        for a,b,shape,second,loc,scale in [
+            (0.,1e-300,.4,.6,0.,1.),
+            (math.nextafter(1.,0.),1.,.4,.6,0.,1.),
+            (.5,math.nextafter(.5,1.),.4,.6,0.,1.),
+            (1e-300,2e-300,.4,.6,0.,1e300),
+            (0.,1e-300,1e-20,.6,0.,1e300),
+            (.49,.51,1000.,1000.,0.,1.),
+            (.5,math.nextafter(.5,1.),1000.,1000.,0.,1.),
+            (.99,.999,.4,3.5,0.,1.),
+            (1e300,math.nextafter(1e300,math.inf),.4,.6,1e-300,1e300),
+        ]:
+            cases.append(('beta_stress',float(reference.loginterval(
+                a,b,'beta',shape,loc,scale,second))))
+            stdin+=f'6 {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{second:.17g}\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
         directory = ROOT / 'build/censored_reference' / mode
         directory.mkdir(parents=True, exist_ok=True)
         exe = directory / 'driver.exe'
-        source = [ROOT / path for path in ['src/empirical_distribution.f90',
+        source = [ROOT / path for path in ['src/special/log_gamma.f90',
+                  'src/empirical_distribution.f90',
                   'src/censored.f90', 'validation/censored_reference_driver.f90']]
         subprocess.run([args.compiler,*flags,'-J'+str(directory),'-I'+str(directory),
                         '-I'+str(args.module_dir.resolve()), *map(str,source),
