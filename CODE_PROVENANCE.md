@@ -1,3 +1,29 @@
+## 2026-11-12 - Censored logistic extension
+
+The logistic additions to `src/censored.f90` and `src/fit.f90`, their tests,
+and reference scripts are independent MIT-licensed SciFort implementations
+from the mathematical definitions below. No upstream implementation source,
+coefficients, dependency, archive, or binary was imported. Existing kernels
+retain their provenance and notices.
+
+Specifications inspected 2026-11-12:
+
+- [SciPy logistic distribution](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.logistic.html):
+  standardized density and location/scale transformation.
+- [SciPy CensoredData](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html):
+  exact, left, right, and interval observation semantics, including infinite
+  endpoints and equal endpoints representing exact observations.
+
+Integrating the defining density gives `F(z)=1/(1+exp(-z))`.
+Algebra then gives `F(b)-F(a)=F(b)*S(a)*(1-exp(-(b-a)/scale))`.
+The implementation evaluates this identity with log tails and the existing
+log-width exponential-mass helper, without subtracting nearly equal CDFs.
+Standardization rescales displacements near subtraction overflow and divides
+bounded significands with a checked binary exponent. The bounded fitter reuses SciFort's existing local search.
+Reference values use independent mpmath defining formulas; SciPy is used only
+as an external fit comparison. No guarantee of a global optimum, finite MLE,
+or parameter identifiability follows from optimizer convergence.
+
 ## 2026-11-12 - Censored beta extension
 
 The beta additions to `src/censored.f90` and `src/fit.f90`, with tests and

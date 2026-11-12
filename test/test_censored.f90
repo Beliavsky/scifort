@@ -15,6 +15,8 @@ program test_censored
         gamma_loglikelihood, gamma_fit, gamma_logcdf, gamma_logsf
     use scifort_stats, only : beta_censored_loglikelihood, beta_censored_nnlf, &
         beta_loglikelihood, beta_fit, beta_logcdf, beta_logsf, uniform_loglikelihood
+    use scifort_stats, only : logistic_censored_loglikelihood, logistic_censored_nnlf, &
+        logistic_loglikelihood, logistic_fit, logistic_logcdf, logistic_logsf
     use scifort_math, only : quiet_nan, negative_infinity, positive_infinity
     implicit none
 
@@ -582,6 +584,113 @@ program test_censored
 
     call close(beta_censored_loglikelihood(data,1.0e-20_dp,1.0e6_dp,scale=1.0e300_dp), &
         -38.831212206840114_dp,4.0e-13_dp,'beta gamma-ratio powers do not overflow')
+
+    ! Logistic references: independent mpmath formulas and SciPy CensoredData fit.
+    data = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp],left=[0.3_dp], &
+        right=[3.5_dp],interval=reshape([1.1_dp,4.0_dp,1.4_dp,4.4_dp],[2,2]))
+    call close(logistic_censored_loglikelihood(data,0.4_dp,1.3_dp), &
+        -15.999635359473038_dp,2.0e-12_dp,'logistic mixed reference')
+    call close(logistic_censored_nnlf(data,0.4_dp,1.3_dp), &
+        -logistic_censored_loglikelihood(data,0.4_dp,1.3_dp),0.0_dp,'logistic NNLF')
+    call logistic_fit(data,[-5.0_dp,0.05_dp],[8.0_dp,10.0_dp],fit,tolerance=1.0e-10_dp)
+    call check(fit%success,'logistic censored fit converges')
+    call close(fit%params(1),1.847711699978416_dp,3.0e-4_dp,'logistic SciPy fit center')
+    call close(fit%params(2),1.12816063694188_dp,3.0e-4_dp,'logistic SciPy fit scale')
+    call close(fit%nllf,logistic_censored_nnlf(data,fit%params(1),fit%params(2)), &
+        1.0e-13_dp,'logistic fit objective')
+    call logistic_fit(data,[0.4_dp,1.3_dp],[0.4_dp,1.3_dp],fit)
+    call check(fit%success,'logistic both parameters fixed')
+    call close(fit%nllf,logistic_censored_nnlf(data,0.4_dp,1.3_dp), &
+        0.0_dp,'logistic fixed objective')
+    call logistic_fit(data,[0.4_dp,0.05_dp],[0.4_dp,10.0_dp],fit)
+    call check(fit%success .and. fit%params(1) == 0.4_dp,'logistic fixed location')
+    other = make_censored_data(uncensored=[-0.5_dp,-1.2_dp,-2.5_dp],right=[-0.3_dp], &
+        left=[-3.5_dp],interval=reshape([-1.4_dp,-4.4_dp,-1.1_dp,-4.0_dp],[2,2]))
+    call close(logistic_censored_loglikelihood(data,0.4_dp,1.3_dp), &
+        logistic_censored_loglikelihood(other,-0.4_dp,1.3_dp),2.0e-13_dp,'logistic reflection')
+    data = make_censored_data(uncensored=[-2.0_dp,0.0_dp,0.5_dp,4.0_dp])
+    call close(logistic_censored_loglikelihood(data,0.4_dp,1.3_dp), &
+        logistic_loglikelihood(data%uncensored,0.4_dp,1.3_dp),2.0e-14_dp, &
+        'logistic exact array agreement')
+    call logistic_fit(data%uncensored,[-5.0_dp,0.05_dp],[8.0_dp,10.0_dp],fit)
+    base = fit%nllf
+    call logistic_fit(data,[-5.0_dp,0.05_dp],[8.0_dp,10.0_dp],fit)
+    call close(fit%nllf,base,1.0e-12_dp,'logistic exact fit overload agreement')
+    call set_interval(-1.0_dp,1.0_dp)
+    base = logistic_censored_loglikelihood(data)
+    call close(base,log(tanh(0.5_dp)),2.0e-15_dp,'logistic symmetric mass identity')
+    call set_interval(-2.0_dp,2.0_dp)
+    value = logistic_censored_loglikelihood(data)
+    call check(value >= base .and. value <= 0.0_dp,'logistic nested interval masses')
+    call set_interval(0.0_dp,nearest(0.0_dp,1.0_dp))
+    call close(logistic_censored_loglikelihood(data), &
+        log(nearest(0.0_dp,1.0_dp))-log(4.0_dp),2.0e-13_dp,'logistic subnormal width')
+    call set_interval(1.0e-300_dp,2.0e-300_dp)
+    call close(logistic_censored_loglikelihood(data,scale=1.0e300_dp), &
+        log(1.0e-300_dp)-log(1.0e300_dp)-log(4.0_dp),3.0e-13_dp, &
+        'logistic standardized width underflows')
+    call set_interval(1000.0_dp,nearest(1000.0_dp,1.0_dp))
+    call close(logistic_censored_loglikelihood(data),-1029.8053287640778_dp, &
+        3.0e-13_dp,'logistic adjacent upper tail')
+    call set_interval(-1000.0_dp,nearest(-1000.0_dp,1.0_dp))
+    call close(logistic_censored_loglikelihood(data),-1029.8053287640778_dp, &
+        3.0e-13_dp,'logistic adjacent lower tail')
+    call set_interval(-1.0e308_dp,1.0e308_dp)
+    call close(logistic_censored_loglikelihood(data),0.0_dp,0.0_dp,'logistic width overflow')
+    data = make_censored_data(uncensored=[1.0e308_dp])
+    call close(logistic_censored_loglikelihood(data,loc=-1.0e308_dp,scale=1.0e308_dp), &
+        -2.0_dp-2.0_dp*log(1.0_dp+exp(-2.0_dp))-log(1.0e308_dp), &
+        2.0e-13_dp,'logistic subtraction overflow with finite standardized value')
+    call check(logistic_censored_loglikelihood(data,scale=1.0e-300_dp) == -inf, &
+        'logistic unrepresentable log density')
+    data = make_censored_data(uncensored=[nearest(huge(1.0_dp),-1.0_dp)])
+    call close(logistic_censored_loglikelihood(data, &
+        loc=-1.5_dp*spacing(huge(1.0_dp)),scale=huge(1.0_dp)), &
+        -1.0_dp-2.0_dp*log(1.0_dp+exp(-1.0_dp))-log(huge(1.0_dp)), &
+        2.0e-13_dp,'logistic rounded subtraction-overflow threshold')
+    data = make_censored_data(uncensored=[0.75_dp*huge(1.0_dp)])
+    call close(logistic_censored_loglikelihood(data,scale=0.75_dp), &
+        -huge(1.0_dp),0.0_dp,'logistic largest finite standardized magnitude')
+    data = make_censored_data(uncensored=[0.0_dp])
+    call close(logistic_censored_loglikelihood(data,scale=nearest(0.0_dp,1.0_dp)), &
+        -log(4.0_dp)-log(nearest(0.0_dp,1.0_dp)),2.0e-13_dp, &
+        'logistic zero displacement with smallest positive scale')
+    data = make_censored_data(left=[-1.0e308_dp])
+    call check(logistic_censored_loglikelihood(data,scale=1.0e-300_dp) == -inf, &
+        'logistic unrepresentable lower log tail')
+    data = make_censored_data(right=[1.0e308_dp])
+    call check(logistic_censored_loglikelihood(data,scale=1.0e-300_dp) == -inf, &
+        'logistic unrepresentable upper log tail')
+    data = make_censored_data(left=[-1000.0_dp],right=[1000.0_dp])
+    call close(logistic_censored_loglikelihood(data),-2000.0_dp,0.0_dp,'logistic extreme tails')
+    call set_interval(-inf,0.4_dp)
+    call close(logistic_censored_loglikelihood(data,0.4_dp,1.3_dp), &
+        logistic_logcdf(0.4_dp,0.4_dp,1.3_dp),0.0_dp,'logistic infinite lower endpoint')
+    call set_interval(0.4_dp,inf)
+    call close(logistic_censored_loglikelihood(data,0.4_dp,1.3_dp), &
+        logistic_logsf(0.4_dp,0.4_dp,1.3_dp),0.0_dp,'logistic infinite upper endpoint')
+    call set_interval(0.4_dp,0.4_dp)
+    other = make_censored_data(uncensored=[0.4_dp])
+    call close(logistic_censored_loglikelihood(data,0.4_dp,1.3_dp), &
+        logistic_censored_loglikelihood(other,0.4_dp,1.3_dp),0.0_dp,'logistic equal endpoints exact')
+    call close(logistic_censored_loglikelihood(empty),0.0_dp,0.0_dp,'logistic empty likelihood')
+    call check(ieee_is_nan(logistic_censored_loglikelihood(empty,loc=nan)),'logistic NaN center')
+    call check(ieee_is_nan(logistic_censored_loglikelihood(empty,loc=inf)),'logistic infinite center')
+    call check(ieee_is_nan(logistic_censored_loglikelihood(empty,scale=nan)),'logistic NaN scale')
+    call check(ieee_is_nan(logistic_censored_loglikelihood(empty,scale=inf)),'logistic infinite scale')
+    call check(ieee_is_nan(logistic_censored_loglikelihood(empty,scale=0.0_dp)),'logistic zero scale')
+    call check(ieee_is_nan(logistic_censored_loglikelihood(empty,scale=-1.0_dp)),'logistic negative scale')
+    data = make_censored_data(uncensored=[nan])
+    call check(ieee_is_nan(logistic_censored_loglikelihood(data)),'logistic invalid exact observation')
+    call logistic_fit(data,[-5.0_dp,0.05_dp],[8.0_dp,10.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'logistic invalid sample fit')
+    call logistic_fit(empty,[-5.0_dp,0.05_dp],[8.0_dp,10.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'logistic empty sample fit')
+    data = make_censored_data(uncensored=[0.0_dp])
+    call logistic_fit(data,[1.0_dp,0.05_dp],[-1.0_dp,10.0_dp],fit)
+    call check(fit%status == fit_status_invalid_input,'logistic reversed bounds')
+    call logistic_fit(data,[0.0_dp,-1.0_dp],[0.0_dp,-1.0_dp],fit)
+    call check(fit%status == fit_status_no_finite_objective,'logistic invalid fixed scale')
 
     if (failures /= 0) error stop 1
     print '(a,i0,a)', 'Censored likelihood and fitting: ', checks, ' checks passed'

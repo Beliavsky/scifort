@@ -71,6 +71,25 @@ def main():
         inputs.append(f'{second:.17g}')
         inputs.extend(' '.join(f'{x:.17g}' for x in group)
                       for group in [exact,left,right,*intervals])
+    for _ in range(args.cases):
+        loc, scale = rng.uniform(-3.,3.), 10**rng.uniform(-4.,4.)
+        exact = [loc+scale*rng.uniform(-20.,20.) for _ in range(3)]
+        left = [loc+scale*rng.uniform(-40.,40.)]
+        right = [loc+scale*rng.uniform(-40.,40.)]
+        intervals = []
+        for _ in range(2):
+            a=loc+scale*rng.uniform(-1000.,1000.)
+            b=a+scale*10**rng.uniform(-14.,3.)
+            if b == a: b=math.nextafter(a,math.inf)
+            intervals.append((a,b))
+        value=sum(reference.logpdf(x,'logistic',1.,loc,scale) for x in exact)
+        value+=sum(reference.logcdf(x,'logistic',1.,loc,scale) for x in left)
+        value+=sum(reference.logsf(x,'logistic',1.,loc,scale) for x in right)
+        value+=sum(reference.loginterval(a,b,'logistic',1.,loc,scale) for a,b in intervals)
+        cases.append(('logistic',float(value)))
+        inputs.append(f'7 1 {loc:.17g} {scale:.17g} 3 1 1 2')
+        inputs.extend(' '.join(f'{x:.17g}' for x in group)
+                      for group in [exact,left,right,*intervals])
     stdin = '\n'.join(inputs)+'\n'
     a = math.nextafter(1e100, math.inf)
     b = math.nextafter(a, math.inf)
@@ -114,6 +133,19 @@ def main():
             cases.append(('beta_stress',float(reference.loginterval(
                 a,b,'beta',shape,loc,scale,second))))
             stdin+=f'6 {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{second:.17g}\n{a:.17g} {b:.17g}\n'
+    with mp.workdps(700):
+        for a,b,loc,scale in [
+            (0.,math.nextafter(0.,1.),0.,1.),
+            (1e-300,2e-300,0.,1e300),
+            (1000.,math.nextafter(1000.,math.inf),0.,1.),
+            (-1000.,math.nextafter(-1000.,math.inf),0.,1.),
+            (-1e308,1e308,0.,1.),
+            (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+            (-1e-300,1e-300,0.,1e-300),
+        ]:
+            cases.append(('logistic_stress',float(reference.loginterval(
+                a,b,'logistic',1.,loc,scale))))
+            stdin+=f'7 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:

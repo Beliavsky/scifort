@@ -52,8 +52,103 @@ module scifort_censored
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: logistic_censored_loglikelihood, logistic_censored_nnlf
 
 contains
+
+    pure function logistic_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value, params(2)
+
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, logistic_lpdf, logistic_lcdf, &
+            logistic_lsf, logistic_interval)
+    end function logistic_censored_loglikelihood
+
+    pure function logistic_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value
+        value = -logistic_censored_loglikelihood(data, loc, scale)
+    end function logistic_censored_nnlf
+
+    pure function logistic_z(x, params) result(z)
+        implicit none
+        real(dp), intent(in) :: x !! evaluation point, possibly infinite
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: z, delta, factor, ratio
+        integer :: power
+
+        if (.not. ieee_is_finite(x)) then
+            z = x
+            return
+        end if
+        factor = 1.0_dp
+        if ((x > 0.0_dp .and. params(1) < 0.0_dp) .or. &
+            (x < 0.0_dp .and. params(1) > 0.0_dp)) then
+            if (abs(x) >= huge(x) - abs(params(1))) factor = 2.0_dp
+        end if
+        ! Halve near subtraction overflow; retain nearby differences elsewhere.
+        delta = x / factor - params(1) / factor
+        if (delta == 0.0_dp) then
+            z = delta
+            return
+        end if
+        z = sign(positive_infinity(0.0_dp), delta)
+        ! Divide bounded significands, then scale by a checked binary exponent.
+        ! A rounded huge*scale threshold can otherwise miss division overflow.
+        ratio = fraction(delta) / fraction(params(2))
+        power = exponent(delta) - exponent(params(2)) + exponent(ratio)
+        if (factor == 2.0_dp) power = power + 1
+        if (power > maxexponent(z)) return
+        z = scale(fraction(ratio), power)
+    end function logistic_z
+
+    pure function logistic_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! exact observation
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, a
+        a = abs(logistic_z(x, params))
+        value = -a - 2.0_dp * log1p_safe(exp(-a)) - log(params(2))
+    end function logistic_lpdf
+
+    pure function logistic_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value
+        value = -log1pexp(-logistic_z(x, params))
+    end function logistic_lcdf
+
+    pure function logistic_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value
+        value = -log1pexp(logistic_z(x, params))
+    end function logistic_lsf
+
+    pure function logistic_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value
+        ! F(b)-F(a) = F(b)*S(a)*(1-exp(-(b-a)/scale)).
+        value = logistic_lcdf(b, params) + logistic_lsf(a, params) + &
+            log_exponential_mass(log_distance(b, a) - log(params(2)))
+    end function logistic_interval
 
     function make_censored_data(uncensored, left, right, interval, status) result(data)
         implicit none

@@ -1,7 +1,7 @@
 # Censored likelihoods and distribution fitting
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
-observations for normal, exponential, minimum-Weibull, lognormal, gamma, and beta
+observations for normal, exponential, minimum-Weibull, lognormal, gamma, beta, and logistic
 likelihoods and bounded maximum-likelihood fits. Lognormal and gamma censored
 fits currently require fixed location. Beta censored fits require fixed location
 and scale. The definitions follow SciPy's
@@ -49,6 +49,7 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
+logistic_censored_loglikelihood(data [, loc, scale])
 exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
 lognormal_censored_loglikelihood(data, s [, loc, scale])
@@ -75,6 +76,12 @@ For narrow normal intervals, a three-point Gauss-Legendre density integral
 avoids subtraction of nearly equal tail logs. It is used when the standardized
 width times the larger of 1 and the absolute standardized lower endpoint is
 at most 0.01; the sixth-order quadrature error is below binary64 roundoff there.
+Logistic interval masses use the exact identity
+`F(b)-F(a) = F(b)*S(a)*(1-exp(-(b-a)/scale))`, evaluated with log tails,
+`expm1`, and the log interval width. This retains finite log masses when the
+standardized width underflows. Logistic standardization avoids intermediate
+subtraction or division overflow; log magnitudes beyond binary64 range return
+negative infinity. No location or scale fixing is required for logistic fits.
 The distribution kernels' accuracy and representability limits still apply.
 
 `censored_loglikelihood(data, params, logpdf, logcdf, logsf [, loginterval])`
@@ -89,8 +96,8 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`, and
-`beta_fit` generics accept
+The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`,
+`beta_fit`, and `logistic_fit` generics accept
 `censored_data` in place of the observation array:
 
 ```fortran
@@ -105,8 +112,8 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ! fit%params is approximately [0, 26.25].
 ```
 
-Bounds and parameter order follow the existing API: `[loc, scale]` for normal
-and exponential, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
+Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
+exponential, and logistic, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -285,8 +292,8 @@ the directory containing `scifort_kinds.mod` and `--library` for the matching
 `scifort/libscifort.a`. The script builds its input-driven reference driver
 outside `test/`, in checked and optimized configurations. `--seed` and
 `--cases` control the reproducible sampling; `--cases` is the number per
-distribution, followed by one large-shape Weibull, three lognormal, nine gamma, and
-nine beta stress cases. Reference tail selection is based on conditioning,
+distribution, followed by one large-shape Weibull, three lognormal, nine gamma,
+nine beta, and seven logistic stress cases. Reference tail selection is based on conditioning,
 and the checker rejects nonfinite expected values.
 
 See the [dated validation record](../validation/censored_fitting_2026-11-12.md)
@@ -300,3 +307,6 @@ for the gamma extension checks and commands.
 
 See the [beta validation record](../validation/beta_censored_2026-11-12.md)
 for the beta extension checks and commands.
+
+See the [logistic validation record](../validation/logistic_censored_2026-11-12.md)
+for the logistic extension checks and commands.

@@ -10,7 +10,8 @@ module scifort_stats
         weibull_censored_loglikelihood, weibull_censored_nnlf, &
         lognormal_censored_loglikelihood, lognormal_censored_nnlf, &
         gamma_censored_loglikelihood, gamma_censored_nnlf, &
-        beta_censored_loglikelihood, beta_censored_nnlf
+        beta_censored_loglikelihood, beta_censored_nnlf, &
+        logistic_censored_loglikelihood, logistic_censored_nnlf
     use scifort_fit, only : exponential_fit_right_censored, fit_status_no_finite_mle
     use scifort_arcsine, only : arcsine_cdf, arcsine_isf, arcsine_logcdf, &
         arcsine_logpdf, arcsine_logsf, arcsine_pdf, arcsine_ppf, arcsine_sf
@@ -696,6 +697,7 @@ module scifort_stats
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: logistic_censored_loglikelihood, logistic_censored_nnlf
     public :: exponential_fit_right_censored, fit_status_no_finite_mle
 
     public :: exponnorm_cdf, exponnorm_isf, exponnorm_logcdf, exponnorm_logpdf

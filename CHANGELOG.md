@@ -1,3 +1,11 @@
+## 2026-11-12 - Censored logistic likelihoods and fitting
+
+- Add logistic censored log-likelihood and negative log-likelihood with stable
+  interval masses, extreme tails, and overflow-safe standardization.
+- Extend `logistic_fit` to censored samples with bounded location and scale,
+  preserving the existing array API. C ABI work remains deferred.
+- Add native regression and independent high-precision reference checks.
+
 ## 2026-11-12 - Censored beta likelihoods and fitting
 
 - Add beta censored likelihoods and bounded shape fitting with fixed location
