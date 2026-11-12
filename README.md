@@ -154,7 +154,7 @@ references, including
 [Ian Morrall's differential-evolution example](https://github.com/ian-mmm/differential-evolution_f95).
 These acknowledgments do not
 imply that those packages are linked dependencies or that their source was
-copied. SciPy and mpmath also supply independent numerical reference values
+copied. SciPy and [mpmath](https://mpmath.org/) also supply independent numerical reference values
 for many validation workflows.
 
 ## Documentation and development
