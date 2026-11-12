@@ -187,15 +187,24 @@ of:
 Use absolute, relative, and tail-appropriate error measures. Do not use one
 blanket tolerance for every regime.
 
-Before reporting completion, run at least:
+For changes to library code, tests, dependencies, build configuration, or
+executable scripts, run the full test suite before reporting completion:
 
 ```text
 fpm test
 ```
 
-When available, also run a debug configuration with bounds and runtime checks.
-Report the exact compiler and commands used. If a command could not be run,
-say so plainly.
+When available, also run a debug configuration with bounds and runtime checks
+for these changes. Report the exact compiler and commands used. If a required
+command could not be run, say so plainly.
+
+Documentation-only changes, including edits to contributor or agent
+instructions, do not require `fpm build` or `fpm test`. Check the affected
+content, local links, and formatting instead. Compile or run new or changed
+code examples when practical, and validate changed build commands with a
+focused check when needed; neither requires the full suite solely because it
+appears in documentation. Do not rerun the numerical suite unless executable
+behavior is also affected. Report the checks actually performed.
 
 ## Change workflow
 
@@ -203,7 +212,8 @@ say so plainly.
 2. Make the smallest coherent change that satisfies the task.
 3. Update tests before or with implementation changes.
 4. Update API documentation, changelog, and provenance when applicable.
-5. Run the full test suite.
+5. Perform the checks required by the Testing requirements section above;
+   run the full test suite for code, test, dependency, build, or script changes.
 6. Inspect the diff for accidental generated files, build artifacts, copied
    notices, API changes, and non-ASCII text.
 7. Summarize what changed, what was tested, and any remaining numerical or
