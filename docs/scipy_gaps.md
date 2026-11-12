@@ -11,6 +11,9 @@ Some older roadmap entries describe work that has since been completed,
 including dependency-backed FPM tests. Verify candidates against current
 source and topic guides before starting an implementation.
 
+For the complete list of remaining censored-distribution candidates, see
+the [censored distribution coverage inventory](censored_distribution_gaps.md).
+
 | Area | Remaining functionality or compatibility |
 | --- | --- |
 | FFT | A complete standalone [`scipy.fft` API](https://docs.scipy.org/doc/scipy/reference/fft.html), including cosine transforms, real/Hermitian multidimensional transforms, and fast Hankel transforms. SciFort already uses FFTs internally. |
