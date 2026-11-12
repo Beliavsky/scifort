@@ -5,7 +5,8 @@ program censored_reference_driver
     use scifort_censored, only : censored_data, normal_censored_loglikelihood, &
         exponential_censored_loglikelihood, weibull_censored_loglikelihood, &
         lognormal_censored_loglikelihood, gamma_censored_loglikelihood, &
-        beta_censored_loglikelihood, logistic_censored_loglikelihood
+        beta_censored_loglikelihood, logistic_censored_loglikelihood, &
+        gumbel_r_censored_loglikelihood, gumbel_l_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -38,6 +39,10 @@ program censored_reference_driver
             value = beta_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (7)
             value = logistic_censored_loglikelihood(data,loc,scale)
+        case (8)
+            value = gumbel_r_censored_loglikelihood(data,loc,scale)
+        case (9)
+            value = gumbel_l_censored_loglikelihood(data,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

@@ -2125,7 +2125,7 @@ arrays. The binomial integer-data overload takes an integer trial count, just
 as the underlying integer-count PMF interface does.
 
 These functions assume independent, uncensored, equally weighted
-observations. Separate normal, exponential, Weibull, lognormal, gamma, beta, and logistic censored likelihoods
+observations. Separate normal, exponential, Weibull, lognormal, gamma, beta, logistic, and both Gumbel censored likelihoods
 and censored-data fitting overloads are described in
 [censored likelihoods and fitting](censored_fitting.md). Observation weights
 and censored fitting for other distribution families are not yet implemented.

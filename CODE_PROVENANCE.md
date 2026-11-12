@@ -1,3 +1,36 @@
+## 2026-11-12 - Censored Gumbel extension
+
+The Gumbel additions to `src/censored.f90` and `src/fit.f90`, their tests,
+and reference scripts are independent MIT-licensed SciFort implementations
+from the mathematical definitions below. No upstream implementation source,
+coefficients, dependency, archive, or binary was imported. Existing SciFort
+kernels retain their notices and provenance.
+
+Specifications inspected 2026-11-12:
+
+- [SciPy gumbel_r](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gumbel_r.html)
+  and [gumbel_l](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gumbel_l.html):
+  defining densities, support, and location/scale parameterizations.
+- [SciPy CensoredData](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html):
+  exact, left, right, and interval observations and endpoint conventions.
+
+Integrating the right-skewed density gives `F(z)=exp(-exp(-z))`.
+For standardized endpoints `za < zb`, algebra gives
+`F(b)-F(a)=F(b)*(1-exp(-delta))`, where
+`delta=exp(-za)*(1-exp(-(b-a)/scale))`.
+SciFort evaluates this identity with the existing log-width and exponential
+mass helpers, keeping the increment in the log domain. Left-skewed kernels
+use reflection, reversing endpoints and interchanging tails without copying
+or modifying observations. The prior private `logistic_z` helper is renamed
+`location_scale_z` and reused with its numerical algorithm unchanged.
+The censored fitting overloads reuse the existing bounded local search.
+
+Reference likelihoods use independently evaluated mpmath defining formulas
+and high-precision tail subtraction; SciPy is used only for external fit
+comparisons. No public Fortran API is removed or renamed, and no C ABI symbol
+is added. Optimizer convergence does not establish global optimality,
+identifiability, or existence of an unconstrained finite MLE.
+
 ## 2026-11-12 - Censored logistic extension
 
 The logistic additions to `src/censored.f90` and `src/fit.f90`, their tests,

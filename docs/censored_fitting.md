@@ -1,9 +1,9 @@
 # Censored likelihoods and distribution fitting
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
-observations for normal, exponential, minimum-Weibull, lognormal, gamma, beta, and logistic
-likelihoods and bounded maximum-likelihood fits. Lognormal and gamma censored
-fits currently require fixed location. Beta censored fits require fixed location
+likelihoods and bounded maximum-likelihood fits for normal, exponential,
+minimum-Weibull, lognormal, gamma, beta, logistic, and both Gumbel distributions.
+Lognormal and gamma censored fits currently require fixed location. Beta censored fits require fixed location
 and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
 and [censored fitting likelihood](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html).
@@ -50,6 +50,8 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
+gumbel_r_censored_loglikelihood(data [, loc, scale])
+gumbel_l_censored_loglikelihood(data [, loc, scale])
 exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
 lognormal_censored_loglikelihood(data, s [, loc, scale])
@@ -97,7 +99,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`,
-`beta_fit`, and `logistic_fit` generics accept
+`beta_fit`, `logistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
 
 ```fortran
@@ -113,7 +115,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-exponential, and logistic, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
+exponential, logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -126,6 +128,29 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Gumbel details
+
+`gumbel_r` and `gumbel_l` follow SciPy's respective right- and left-skewed
+parameterizations, with finite location and positive finite scale. Both
+parameters may be free in censored fits; equal bounds fix either parameter.
+For the right-skewed family, `F(x)=exp(-exp(-z))`, where
+`z=(x-loc)/scale`. For a finite interval with standardized endpoints `za < zb`,
+
+```text
+F(b)-F(a) = F(b) * (1-exp(-delta))
+delta = exp(-za) * (1-exp(-(b-a)/scale))
+```
+
+The implementation evaluates the increment in the log domain using `expm1`
+and the log interval width. This preserves narrow and extreme-tail masses
+without subtracting nearly equal tail probabilities. Left-skewed likelihoods
+share the same kernels through reflection, reversing interval endpoints and
+interchanging the two tails. The standardization helper shared with logistic
+censoring checks binary exponents to avoid intermediate overflow.
+Unrepresentable log densities or log tails return negative infinity; finite
+sample sums must still fit in binary64. Fits use the same bounded local
+optimizer and have the convergence limitations described above.
 
 ## Lognormal details
 
@@ -271,14 +296,14 @@ likelihood as scale tends to zero. Neither is reported as a successful fit.
 
 ## Verification
 
-`test/test_censored.f90` covers the new likelihoods and fits, compatibility with
+`test/test_censored.f90` and `test/test_censored_gumbel.f90` cover the new likelihoods and fits, compatibility with
 uncensored calls, invalid inputs, infinite bounds, support endpoints, narrow
 and extreme-tail intervals, analytic MLEs, and unsupported ECDF/logrank groups.
 Regime-specific tolerances are used. Numerical constants can be reproduced by:
 
 ```text
 python tools/generate_censored_reference.py
-fpm test test_censored test_fit test_likelihood test_logrank test_empirical_distribution
+fpm test test_censored test_censored_gumbel test_fit test_likelihood test_logrank test_empirical_distribution
 ```
 
 The reference generator uses mpmath for independent high-precision defining
@@ -293,7 +318,8 @@ the directory containing `scifort_kinds.mod` and `--library` for the matching
 outside `test/`, in checked and optimized configurations. `--seed` and
 `--cases` control the reproducible sampling; `--cases` is the number per
 distribution, followed by one large-shape Weibull, three lognormal, nine gamma,
-nine beta, and seven logistic stress cases. Reference tail selection is based on conditioning,
+nine beta, seven logistic, and sixteen Gumbel stress cases (eight per direction).
+Reference tail selection is based on conditioning,
 and the checker rejects nonfinite expected values.
 
 See the [dated validation record](../validation/censored_fitting_2026-11-12.md)
@@ -310,3 +336,6 @@ for the beta extension checks and commands.
 
 See the [logistic validation record](../validation/logistic_censored_2026-11-12.md)
 for the logistic extension checks and commands.
+
+See the [Gumbel validation record](../validation/gumbel_censored_2026-11-12.md)
+for the two Gumbel families, reference checks, and reproducible commands.

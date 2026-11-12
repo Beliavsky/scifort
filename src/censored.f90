@@ -53,8 +53,128 @@ module scifort_censored
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
     public :: logistic_censored_loglikelihood, logistic_censored_nnlf
+    public :: gumbel_r_censored_loglikelihood, gumbel_r_censored_nnlf
+    public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function gumbel_r_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! location (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value, params(3)
+
+        params = [0.0_dp, 1.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, gumbel_lpdf, gumbel_lcdf, &
+            gumbel_lsf, gumbel_interval)
+    end function gumbel_r_censored_loglikelihood
+
+    pure function gumbel_r_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! location (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value
+        value = -gumbel_r_censored_loglikelihood(data, loc, scale)
+    end function gumbel_r_censored_nnlf
+
+    pure function gumbel_l_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! location (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value, params(3)
+
+        params = [0.0_dp, 1.0_dp, -1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, gumbel_lpdf, gumbel_lcdf, &
+            gumbel_lsf, gumbel_interval)
+    end function gumbel_l_censored_loglikelihood
+
+    pure function gumbel_l_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! location (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value
+        value = -gumbel_l_censored_loglikelihood(data, loc, scale)
+    end function gumbel_l_censored_nnlf
+
+    pure function gumbel_right_logcdf(z) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized point for the right-skewed family
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (-z > log(huge(1.0_dp))) return
+        value = -exp(-z)
+    end function gumbel_right_logcdf
+
+    pure function gumbel_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! exact observation
+        real(dp), intent(in) :: params(:) !! location, positive scale, direction (+1 or -1)
+        real(dp) :: value, z
+        z = params(3) * location_scale_z(x, params)
+        value = gumbel_right_logcdf(z)
+        if (.not. ieee_is_finite(value)) return
+        value = value - z - log(params(2))
+    end function gumbel_lpdf
+
+    pure function gumbel_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! upper censoring limit
+        real(dp), intent(in) :: params(:) !! location, positive scale, direction (+1 or -1)
+        real(dp) :: value, z
+        z = params(3) * location_scale_z(x, params)
+        if (params(3) > 0.0_dp) then
+            value = gumbel_right_logcdf(z)
+        else
+            value = log_exponential_mass(-z)
+        end if
+    end function gumbel_lcdf
+
+    pure function gumbel_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! lower censoring limit
+        real(dp), intent(in) :: params(:) !! location, positive scale, direction (+1 or -1)
+        real(dp) :: value, z
+        z = params(3) * location_scale_z(x, params)
+        if (params(3) > 0.0_dp) then
+            value = log_exponential_mass(-z)
+        else
+            value = gumbel_right_logcdf(z)
+        end if
+    end function gumbel_lsf
+
+    pure function gumbel_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, > a
+        real(dp), intent(in) :: params(:) !! location, positive scale, direction (+1 or -1)
+        real(dp) :: value, za, zb, logwidth, logincrement
+        if (params(3) > 0.0_dp) then
+            za = location_scale_z(a, params)
+            zb = location_scale_z(b, params)
+        else
+            ! Reflection interchanges the interval endpoints and the two tails.
+            za = -location_scale_z(b, params)
+            zb = -location_scale_z(a, params)
+        end if
+        logwidth = log_distance(b, a) - log(params(2))
+        ! exp(-za)-exp(-zb) = exp(-za)*(1-exp(-(b-a)/scale)).
+        logincrement = -za + log_exponential_mass(logwidth)
+        value = gumbel_right_logcdf(zb) + log_exponential_mass(logincrement)
+    end function gumbel_interval
 
     pure function logistic_censored_loglikelihood(data, loc, scale) result(value)
         implicit none
@@ -82,7 +202,7 @@ contains
         value = -logistic_censored_loglikelihood(data, loc, scale)
     end function logistic_censored_nnlf
 
-    pure function logistic_z(x, params) result(z)
+    pure function location_scale_z(x, params) result(z)
         implicit none
         real(dp), intent(in) :: x !! evaluation point, possibly infinite
         real(dp), intent(in) :: params(:) !! finite center and positive finite scale
@@ -112,14 +232,14 @@ contains
         if (factor == 2.0_dp) power = power + 1
         if (power > maxexponent(z)) return
         z = scale(fraction(ratio), power)
-    end function logistic_z
+    end function location_scale_z
 
     pure function logistic_lpdf(x, params) result(value)
         implicit none
         real(dp), intent(in) :: x !! exact observation
         real(dp), intent(in) :: params(:) !! finite center and positive finite scale
         real(dp) :: value, a
-        a = abs(logistic_z(x, params))
+        a = abs(location_scale_z(x, params))
         value = -a - 2.0_dp * log1p_safe(exp(-a)) - log(params(2))
     end function logistic_lpdf
 
@@ -128,7 +248,7 @@ contains
         real(dp), intent(in) :: x !! upper censoring limit
         real(dp), intent(in) :: params(:) !! finite center and positive finite scale
         real(dp) :: value
-        value = -log1pexp(-logistic_z(x, params))
+        value = -log1pexp(-location_scale_z(x, params))
     end function logistic_lcdf
 
     pure function logistic_lsf(x, params) result(value)
@@ -136,7 +256,7 @@ contains
         real(dp), intent(in) :: x !! lower censoring limit
         real(dp), intent(in) :: params(:) !! finite center and positive finite scale
         real(dp) :: value
-        value = -log1pexp(logistic_z(x, params))
+        value = -log1pexp(location_scale_z(x, params))
     end function logistic_lsf
 
     pure function logistic_interval(a, b, params) result(value)

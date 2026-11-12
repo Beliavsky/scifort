@@ -1,3 +1,12 @@
+## 2026-11-12 - Censored Gumbel likelihoods and fitting
+
+- Add `gumbel_r` and `gumbel_l` censored log-likelihood and negative
+  log-likelihood, with stable exponential increments for interval masses.
+- Extend both Gumbel fitting generics to censored samples with bounded
+  location and scale, preserving the existing array APIs.
+- Share kernels through reflection and reuse logistic censoring's checked
+  standardization helper. Add native and high-precision reference checks.
+
 ## 2026-11-12 - Censored logistic likelihoods and fitting
 
 - Add logistic censored log-likelihood and negative log-likelihood with stable

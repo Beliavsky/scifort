@@ -90,6 +90,34 @@ def main():
         inputs.append(f'7 1 {loc:.17g} {scale:.17g} 3 1 1 2')
         inputs.extend(' '.join(f'{x:.17g}' for x in group)
                       for group in [exact,left,right,*intervals])
+    for number,family in [(8,'gumbel_r'),(9,'gumbel_l')]:
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            exact=[loc+scale*rng.uniform(-5.,8.) for _ in range(3)]
+            left=[loc+scale*rng.uniform(-7.,8.)]
+            right=[loc+scale*rng.uniform(-7.,8.)]
+            intervals=[]
+            for _ in range(2):
+                a=loc+scale*rng.uniform(-30.,1000.)
+                b=a+scale*10**rng.uniform(-14.,3.)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            # Reflect the sampling range as well as the family for comparable tails.
+            if family == 'gumbel_l':
+                exact=[2*loc-x for x in exact]
+                left=[2*loc-x for x in left]
+                right=[2*loc-x for x in right]
+                intervals=[(2*loc-b,2*loc-a) for a,b in intervals]
+                intervals=[(a,math.nextafter(a,math.inf) if b == a else b)
+                           for a,b in intervals]
+            value=sum(reference.logpdf(x,family,1.,loc,scale) for x in exact)
+            value+=sum(reference.logcdf(x,family,1.,loc,scale) for x in left)
+            value+=sum(reference.logsf(x,family,1.,loc,scale) for x in right)
+            value+=sum(reference.loginterval(a,b,family,1.,loc,scale) for a,b in intervals)
+            cases.append((family,float(value)))
+            inputs.append(f'{number} 1 {loc:.17g} {scale:.17g} 3 1 1 2')
+            inputs.extend(' '.join(f'{x:.17g}' for x in group)
+                          for group in [exact,left,right,*intervals])
     stdin = '\n'.join(inputs)+'\n'
     a = math.nextafter(1e100, math.inf)
     b = math.nextafter(a, math.inf)
@@ -146,6 +174,22 @@ def main():
             cases.append(('logistic_stress',float(reference.loginterval(
                 a,b,'logistic',1.,loc,scale))))
             stdin+=f'7 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    with mp.workdps(700):
+        for a,b,loc,scale in [
+            (0.,math.nextafter(0.,1.),0.,1.),
+            (1e-300,2e-300,0.,1e300),
+            (1000.,math.nextafter(1000.,math.inf),0.,1.),
+            (-5.,math.nextafter(-5.,math.inf),0.,1.),
+            (-700.,math.nextafter(-700.,math.inf),0.,1.),
+            (-1e308,1e308,0.,1e308),
+            (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+            (-1e-300,1e-300,0.,1e-300),
+        ]:
+            for number,family,lo,hi,center in [
+                (8,'gumbel_r',a,b,loc),(9,'gumbel_l',-b,-a,-loc)]:
+                cases.append((family+'_stress',float(reference.loginterval(
+                    lo,hi,family,1.,center,scale))))
+                stdin+=f'{number} 1 {center:.17g} {scale:.17g} 0 0 0 1\n{lo:.17g} {hi:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:

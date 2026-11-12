@@ -18,6 +18,9 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
         second_shape=mp.mpf(second_shape)
         return ((shape-1)*mp.log(z)+(second_shape-1)*mp.log1p(-z)
                 -mp.log(mp.beta(shape,second_shape))-mp.log(scale))
+    if family in ('gumbel_r','gumbel_l'):
+        if family == 'gumbel_l': z=-z
+        return -z-mp.exp(-z)-mp.log(scale)
     if family == 'logistic':
         return -abs(z)-2*mp.log1p(mp.exp(-abs(z)))-mp.log(scale)
     if family == 'normal':
@@ -36,6 +39,10 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
 def logcdf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'gumbel_r':
+        return -mp.exp(-z)
+    if family == 'gumbel_l':
+        return mp.log(-mp.expm1(-mp.exp(z)))
     if family == 'logistic':
         return min(z,0)-mp.log1p(mp.exp(-abs(z)))
     if family == 'normal':
@@ -54,6 +61,10 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 def logsf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'gumbel_r':
+        return mp.log(-mp.expm1(-mp.exp(-z)))
+    if family == 'gumbel_l':
+        return -mp.exp(z)
     if family == 'logistic':
         return -max(z,0)-mp.log1p(mp.exp(-abs(z)))
     if family == 'normal':
@@ -85,6 +96,8 @@ def main():
     for family, distribution, shape, loc, scale in [
         ('normal', stats.norm, 1., .4, 1.3),
         ('logistic', stats.logistic, 1., .4, 1.3),
+        ('gumbel_r', stats.gumbel_r, 1., .4, 1.3),
+        ('gumbel_l', stats.gumbel_l, 1., .4, 1.3),
         ('exponential', stats.expon, 1., 0., 2.3),
         ('weibull', stats.weibull_min, 1.7, 0., 2.3),
         ('lognormal', stats.lognorm, .8, 0., 2.3),
@@ -96,9 +109,13 @@ def main():
         value += sum(loginterval(a, b, family, shape, loc, scale)
                      for a, b in [(1.1, 1.4), (4., 4.4)])
         result[family+'_mixed'] = float(value)
-        kwargs = {} if family in ('normal','logistic') else {'floc': 0.}
+        kwargs = {} if family in ('normal','logistic','gumbel_r','gumbel_l') else {'floc': 0.}
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
     intervals = [
+        ('gumbel_r_tail',1000.,math.nextafter(1000.,math.inf),'gumbel_r',1.,1.),
+        ('gumbel_r_left',-5.,math.nextafter(-5.,math.inf),'gumbel_r',1.,1.),
+        ('gumbel_r_subnormal',0.,math.nextafter(0.,1.),'gumbel_r',1.,1.),
+        ('gumbel_r_underflow',1e-300,2e-300,'gumbel_r',1.,1e300),
         ('logistic_tail',1000.,math.nextafter(1000.,math.inf),'logistic',1.,1.),
         ('logistic_subnormal',0.,math.nextafter(0.,1.),'logistic',1.,1.),
         ('logistic_underflow',1e-300,2e-300,'logistic',1.,1e300),
