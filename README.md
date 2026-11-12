@@ -8,7 +8,8 @@ tools for integration, interpolation, optimization, linear algebra, and signals.
 The project follows SciPy conventions for shared functionality while keeping
 Fortran interfaces. Coverage and numerical guarantees vary by routine; consult
 the linked guides for supported options, validation, and limitations. SciFort
-is under active development and is not a complete replacement for SciPy.
+is under active development and is not a complete replacement for SciPy. Code
+was written primarily by ChatGPT with Extra High thinking effort.
 
 ## What is included
 
