@@ -144,8 +144,15 @@ are recorded in [code provenance](CODE_PROVENANCE.md) and
 | [polyroots-fortran](https://github.com/jacobwilliams/polyroots-fortran) | Polynomial root finding through [the optional root backend](optional/polyroots_backend/). |
 
 The provenance records also credit design, algorithmic, and cross-check
-references, including nlesolver-fortran, kiss, NumDiff, TRLIB, Spectrum, PEAKS,
-and Ian Morrall's differential-evolution example. These acknowledgments do not
+references, including
+[nlesolver-fortran](https://github.com/jacobwilliams/nlesolver-fortran),
+[kiss](https://github.com/ivan-pi/kiss),
+[NumDiff](https://github.com/jacobwilliams/NumDiff),
+[TRLIB](https://github.com/felixlen/trlib),
+[Spectrum](https://github.com/jchristopherson/spectrum),
+[PEAKS](https://github.com/jchristopherson/peaks), and
+[Ian Morrall's differential-evolution example](https://github.com/ian-mmm/differential-evolution_f95).
+These acknowledgments do not
 imply that those packages are linked dependencies or that their source was
 copied. SciPy and mpmath also supply independent numerical reference values
 for many validation workflows.
