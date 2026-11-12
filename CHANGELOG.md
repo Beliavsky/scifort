@@ -1,3 +1,9 @@
+## 2026-11-11 - External package acknowledgments
+
+- List external packages in the README, distinguishing FPM dependencies,
+  adapted implementations, optional backends, and design/testing references.
+- Link to upstream projects and the detailed provenance and license records.
+
 ## 2026-11-11 - Documentation validation policy
 
 - Exempt documentation-only and contributor-instruction edits from full FPM

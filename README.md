@@ -103,6 +103,53 @@ SciFort is independent of SciPy, NumFOCUS, and the Python Software Foundation.
 Development has used OpenAI and Anthropic language models; implementation
 sources and adaptations are recorded in [code provenance](CODE_PROVENANCE.md).
 
+## External packages and acknowledgments
+
+SciFort builds on the following external packages. The tables distinguish
+dependencies fetched by FPM from implementations adapted into SciFort's source.
+Exact versions, source files, modifications, authorship, and retained notices
+are recorded in [code provenance](CODE_PROVENANCE.md) and
+[third-party licenses](THIRD_PARTY_LICENSES.md).
+
+**FPM dependencies** (declared in [fpm.toml](fpm.toml)):
+
+| Package | Use in SciFort |
+| --- | --- |
+| [Modern QUADPACK](https://github.com/jacobwilliams/quadpack) | One-dimensional numerical quadrature. |
+| [Modern MINPACK](https://github.com/fortran-lang/minpack) | Nonlinear equation and least-squares kernels. |
+| [L-BFGS-B](https://github.com/jacobwilliams/lbfgsb), tag `1.0.0` | Bound-constrained minimization. |
+| [SLSQP](https://github.com/jacobwilliams/slsqp), tag `1.6.0` | Constrained optimization and least-squares adapters. |
+
+**Adapted implementations, recurrences, and coefficients** included in SciFort:
+
+| Package or source | Use in SciFort |
+| --- | --- |
+| [SciPy](https://github.com/scipy/scipy) | Selected optimization, differentiation, interpolation, sparse-solver, signal, spatial-transform, and special-function kernels. |
+| [PRIMA](https://github.com/libprima/prima) | COBYLA implementation adapted primarily through SciPy's `pyprima` translation. |
+| [ODEPACK](https://github.com/jacobwilliams/odepack) | Selected LSODA operations, coefficients, and control logic. |
+| [MATH77](https://netlib.org/math/) | Selected Bessel and sine/cosine-integral kernels. |
+| [carlson-elliptic-integrals](https://github.com/jacobwilliams/carlson-elliptic-integrals) | Real Carlson symmetric elliptic-integral kernels. |
+| [rklib](https://github.com/jacobwilliams/rklib) | Bogacki-Shampine and Dormand-Prince Runge-Kutta tableaux. |
+| [DOP853](https://github.com/jacobwilliams/dop853) | Eighth-order Runge-Kutta coefficients, error estimator, and dense output. |
+| [ForDiff](https://github.com/gha3mi/fordiff) | Scalar complex-step differentiation identity. |
+| [roots-fortran](https://github.com/jacobwilliams/roots-fortran) | Bisection, Brent, and Ridders scalar root-finding kernels. |
+| [fmin](https://github.com/jacobwilliams/fmin) | Bounded Brent scalar minimization. |
+| [Fong-Saunders LSMR](THIRD_PARTY_LICENSES.md#lsmr-fong-saunders) | Iterative least squares, adapted through SciPy's LSMR implementation. |
+
+**Optional backends**, built separately from the default project:
+
+| Package | Integration |
+| --- | --- |
+| [perazz/FITPACK](https://github.com/perazz/fitpack) | Spline smoothing and fitting through [the optional FITPACK adapter](optional/fitpack_backend/). |
+| [polyroots-fortran](https://github.com/jacobwilliams/polyroots-fortran) | Polynomial root finding through [the optional root backend](optional/polyroots_backend/). |
+
+The provenance records also credit design, algorithmic, and cross-check
+references, including nlesolver-fortran, kiss, NumDiff, TRLIB, Spectrum, PEAKS,
+and Ian Morrall's differential-evolution example. These acknowledgments do not
+imply that those packages are linked dependencies or that their source was
+copied. SciPy and mpmath also supply independent numerical reference values
+for many validation workflows.
+
 ## Documentation and development
 
 - [API reference](docs/api.md) and [topic guides](docs/)
