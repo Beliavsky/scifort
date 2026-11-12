@@ -1,6 +1,7 @@
 # Remaining SciPy functionality
 
-Preliminary inventory, 2026-11-11. This table summarizes gaps identified from
+Initial inventory: 2026-11-11; statistics entry updated 2026-11-12.
+This preliminary table summarizes gaps identified from
 SciFort's current source, documentation, roadmap, and an initial API-name
 comparison. It is not an exhaustive compatibility audit. A matching name or
 passing native test does not establish complete SciPy behavior, option,
@@ -17,7 +18,7 @@ source and topic guides before starting an implementation.
 | Interpolation | AAA rational approximation, spherical spline interfaces, and additional spline-construction APIs. Automatic-knot smoothing currently relies on the optional FITPACK backend. |
 | Optimization | Stored sparse Jacobians and worker parallelism in least squares; stronger sparse LP/MILP capabilities; SciPy-equivalent SHGO homology stopping and sampling options. |
 | Special functions | Additional complex-valued cases, including complex zeta and complex zeros of selected Bessel Y functions. |
-| Statistics | Censoring and observation weights in distribution fitting, plus remaining method and option differences. Distribution-name coverage alone does not establish complete compatibility. |
+| Statistics | Censored likelihoods and bounded fits are available for normal, exponential, Weibull, lognormal, and gamma distributions (lognormal and gamma fits require fixed location; gamma fits exclude exact support endpoints); extend censoring support to other families. Observation weights and additional method/option compatibility remain. See [censored fitting](censored_fitting.md). Distribution-name coverage alone does not establish complete compatibility. |
 | Sparse graphs | Functions such as `min_weight_full_bipartite_matching` and additional graph conversion helpers. |
 | Linear algebra | Broader batching, larger-problem backends, stronger conditioning/error handling, and real generalized Schur output. Most major algorithm families already exist. |
 

@@ -6,6 +6,9 @@
 ! optional integer coordinates and no hidden global state.
 
 module scifort_fit
+    use scifort_censored, only : censored_data, censored_data_valid, censored_size, &
+        normal_censored_nnlf, exponential_censored_nnlf, weibull_censored_nnlf, &
+        lognormal_censored_nnlf, gamma_censored_nnlf
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : dp
     use scifort_likelihood, only : normal_nnlf, &
@@ -64,6 +67,7 @@ module scifort_fit
     integer, parameter, public :: fit_status_max_iter = 1
     integer, parameter, public :: fit_status_invalid_input = 2
     integer, parameter, public :: fit_status_no_finite_objective = 3
+    integer, parameter, public :: fit_status_no_finite_mle = 4
 
     integer, parameter :: family_normal = 1
     integer, parameter :: family_uniform = 2
@@ -206,6 +210,7 @@ module scifort_fit
     end type fit_result
 
     public :: normal_fit
+    public :: exponential_fit_right_censored
     public :: uniform_fit
     public :: exponential_fit
     public :: laplace_fit
@@ -426,10 +431,231 @@ module scifort_fit
         module procedure poisson_binom_fit_int
     end interface poisson_binom_fit
 
+    interface normal_fit
+        module procedure normal_fit, normal_fit_censored
+    end interface normal_fit
+    interface exponential_fit
+        module procedure exponential_fit, exponential_fit_censored
+    end interface exponential_fit
+    interface weibull_fit
+        module procedure weibull_fit, weibull_fit_censored
+    end interface weibull_fit
+
+    interface lognormal_fit
+        module procedure lognormal_fit, lognormal_fit_censored
+    end interface lognormal_fit
+
+    interface gamma_fit
+        module procedure gamma_fit, gamma_fit_censored
+    end interface gamma_fit
+
 contains
 
+    subroutine normal_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for mean and standard deviation
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting mean and standard deviation
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_normal, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine normal_fit_censored
+
+    subroutine exponential_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for location and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting location and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_exponential, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine exponential_fit_censored
+
+    subroutine weibull_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds for shape, location, scale
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting shape, location, scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_weibull, lower, upper, result, guess, &
+            [.false., .false., .false.], max_iter, tolerance, data)
+    end subroutine weibull_fit_censored
+
+    subroutine lognormal_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds for shape, location, scale
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting shape, location, scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        logical :: fixed_location
+
+        ! Initially require fixed location for the censored lognormal overload.
+        fixed_location = .false.
+        if (all(ieee_is_finite([lower(2), upper(2)]))) then
+            fixed_location = lower(2) == upper(2)
+        end if
+        if (.not. fixed_location) then
+            allocate(result%params(3))
+            result%params = nan_value()
+            result%nllf = nan_value()
+            return
+        end if
+        call bounded_fit([real(dp) ::], family_lognormal, lower, upper, result, guess, &
+            [.false., .false., .false.], max_iter, tolerance, data)
+    end subroutine lognormal_fit_censored
+
+    subroutine gamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds for shape, location, scale
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting shape, location, scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        logical :: fixed_location, endpoint
+        integer :: i
+
+        ! Initially require fixed location for the censored gamma overload.
+        fixed_location = .false.
+        if (all(ieee_is_finite([lower(2), upper(2)]))) then
+            fixed_location = lower(2) == upper(2)
+        end if
+        endpoint = .false.
+        if (fixed_location .and. censored_data_valid(data)) then
+            if (allocated(data%uncensored)) endpoint = any(data%uncensored == lower(2))
+            if (allocated(data%interval)) then
+                do i = 1, size(data%interval,1)
+                    if (data%interval(i,1) == data%interval(i,2)) then
+                        if (data%interval(i,1) == lower(2)) endpoint = .true.
+                    end if
+                end do
+            end if
+        end if
+        if (.not. fixed_location .or. endpoint) then
+            allocate(result%params(3))
+            result%params = nan_value()
+            result%nllf = nan_value()
+            return
+        end if
+        call bounded_fit([real(dp) ::], family_gamma, lower, upper, result, guess, &
+            [.false., .false., .false.], max_iter, tolerance, data)
+    end subroutine gamma_fit_censored
+
+    subroutine exponential_fit_right_censored(data, loc, result)
+        implicit none
+        type(censored_data), intent(in) :: data !! finite exact values and right censoring only
+        real(dp), intent(in) :: loc !! finite fixed lower support endpoint
+        type(fit_result), intent(out) :: result !! analytic MLE, params=[loc,scale]; status 4 if absent
+        integer :: n, i
+        real(dp) :: scale, term, a, b, reference, total, factor
+
+        allocate(result%params(2))
+        result%params = nan_value()
+        result%nllf = nan_value()
+        if (.not. ieee_is_finite(loc)) return
+        if (.not. censored_data_valid(data)) return
+        if (censored_size(data) == 0) return
+        if (allocated(data%left)) then
+            if (size(data%left) > 0) return
+        end if
+        n = 0
+        if (allocated(data%uncensored)) n = size(data%uncensored)
+        if (allocated(data%interval)) then
+            do i = 1, size(data%interval, 1)
+                a = data%interval(i,1)
+                b = data%interval(i,2)
+                if (a == b) then
+                    n = n + 1
+                else if (ieee_is_finite(b)) then
+                    return
+                end if
+            end do
+        end if
+        result%status = fit_status_no_finite_mle
+        if (n == 0) return
+        reference = 0.0_dp
+        total = 0.0_dp
+        if (allocated(data%uncensored)) then
+            do i = 1, size(data%uncensored)
+                if (data%uncensored(i) < loc) then
+                    result%status = fit_status_no_finite_objective
+                    return
+                end if
+                call accumulate(data%uncensored(i))
+            end do
+        end if
+        if (allocated(data%right)) then
+            do i = 1, size(data%right)
+                call accumulate(data%right(i))
+            end do
+        end if
+        if (allocated(data%interval)) then
+            do i = 1, size(data%interval, 1)
+                a = data%interval(i,1)
+                b = data%interval(i,2)
+                if (a == b .and. a < loc) then
+                    result%status = fit_status_no_finite_objective
+                    return
+                end if
+                call accumulate(a)
+            end do
+        end if
+        if (reference == 0.0_dp) return
+        factor = total/real(n, dp)
+        if (factor > 1.0_dp) then
+            if (reference > huge(1.0_dp)/factor) return
+        end if
+        scale = reference*factor
+        if (.not. ieee_is_finite(scale) .or. scale <= 0.0_dp) return
+        result%params = [loc, scale]
+        result%nllf = exponential_censored_nnlf(data, loc, scale)
+        result%evaluations = 1
+        result%status = fit_status_no_finite_objective
+        if (.not. ieee_is_finite(result%nllf)) return
+        result%status = fit_status_success
+        result%success = .true.
+
+    contains
+
+        subroutine accumulate(x)
+            implicit none
+            real(dp), intent(in) :: x !! exact value or right limit; limits below loc add zero
+            real(dp) :: magnitude
+            if (x <= loc) return
+            magnitude = max(abs(x), abs(loc))
+            if (magnitude > reference) then
+                total = total*(reference/magnitude)
+                reference = magnitude
+            end if
+            if (loc < 0.0_dp .and. x > 0.0_dp) then
+                if (x > huge(1.0_dp) + loc) then
+                    term = x/reference - loc/reference
+                else
+                    term = (x - loc)/reference
+                end if
+            else
+                term = (x - loc)/reference
+            end if
+            total = total + term
+        end subroutine accumulate
+
+    end subroutine exponential_fit_right_censored
+
     subroutine bounded_fit(data, family, lower, upper, result, guess, integral, &
-        max_iter, tolerance)
+        max_iter, tolerance, censored)
         real(dp), intent(in) :: data(:) !! observations passed to the family objective
         integer, intent(in) :: family !! internal distribution identifier
         real(dp), intent(in) :: lower(:) !! finite lower bounds for every parameter
@@ -439,6 +665,7 @@ contains
         logical, intent(in) :: integral(:) !! true for integer-constrained parameters
         integer, intent(in), optional :: max_iter !! maximum optimizer sweeps (default 1000)
         real(dp), intent(in), optional :: tolerance !! relative convergence tolerance
+        type(censored_data), intent(in), optional :: censored !! optional censored observations
 
         real(dp), parameter :: penalty_fraction = 16.0_dp
         logical :: improved
@@ -467,6 +694,11 @@ contains
         result%evaluations = 0
         result%status = fit_status_invalid_input
         result%success = .false.
+
+        if (present(censored)) then
+            if (.not. censored_data_valid(censored)) return
+            if (censored_size(censored) == 0) return
+        end if
 
         if (n == 0 .or. size(upper) /= n .or. size(integral) /= n) return
         if (.not. all(ieee_is_finite(lower)) .or. .not. all(ieee_is_finite(upper))) return
@@ -515,7 +747,7 @@ contains
         end do
 
         penalty = huge(1.0_dp) / penalty_fraction
-        best = evaluate_family(family, data, x)
+        best = evaluate_family(family, data, x, censored)
         result%evaluations = result%evaluations + 1
         if (.not. ieee_is_finite(best)) best = penalty
 
@@ -530,7 +762,7 @@ contains
                     trial(i) = trial(i) + real(sign_index, dp) * step(i)
                     call project_point(trial, lo, hi, integral)
                     if (all(trial == x)) cycle
-                    candidate = evaluate_family(family, data, trial)
+                    candidate = evaluate_family(family, data, trial, censored)
                     result%evaluations = result%evaluations + 1
                     if (.not. ieee_is_finite(candidate)) candidate = penalty
                     if (candidate < best) then
@@ -546,7 +778,7 @@ contains
                 trial = x + delta
                 call project_point(trial, lo, hi, integral)
                 if (.not. all(trial == x)) then
-                    candidate = evaluate_family(family, data, trial)
+                    candidate = evaluate_family(family, data, trial, censored)
                     result%evaluations = result%evaluations + 1
                     if (.not. ieee_is_finite(candidate)) candidate = penalty
                     if (candidate < best) then
@@ -574,7 +806,7 @@ contains
         end do
 
         result%params = x
-        result%nllf = evaluate_family(family, data, x)
+        result%nllf = evaluate_family(family, data, x, censored)
         result%evaluations = result%evaluations + 1
         if (.not. ieee_is_finite(result%nllf) .or. best >= penalty) then
             result%status = fit_status_no_finite_objective
@@ -588,11 +820,30 @@ contains
         end if
     end subroutine bounded_fit
 
-    pure function evaluate_family(family, data, params) result(value)
+    pure function evaluate_family(family, data, params, censored) result(value)
         integer, intent(in) :: family !! internal distribution identifier
         real(dp), intent(in) :: data(:) !! independent observations
         real(dp), intent(in) :: params(:) !! candidate parameters in canonical order
+        type(censored_data), intent(in), optional :: censored !! optional censored observations
         real(dp) :: value
+
+        if (present(censored)) then
+            select case (family)
+            case (family_normal)
+                value = normal_censored_nnlf(censored, params(1), params(2))
+            case (family_exponential)
+                value = exponential_censored_nnlf(censored, params(1), params(2))
+            case (family_gamma)
+                value = gamma_censored_nnlf(censored, params(1), params(2), params(3))
+            case (family_lognormal)
+                value = lognormal_censored_nnlf(censored, params(1), params(2), params(3))
+            case (family_weibull)
+                value = weibull_censored_nnlf(censored, params(1), params(2), params(3))
+            case default
+                value = nan_value()
+            end select
+            return
+        end if
 
         select case (family)
         case (family_normal)

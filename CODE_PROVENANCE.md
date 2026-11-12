@@ -1,3 +1,77 @@
+## 2026-11-12 - Censored gamma extension
+
+Gamma additions in `src/censored.f90` and `src/fit.f90`, with tests and reference
+checks, are original MIT-licensed SciFort code. No upstream implementation code
+or dependencies were imported. Existing gamma, incomplete-gamma, logarithmic
+Gamma, and arithmetic helpers are reused with their notices unchanged.
+Public mathematical specifications inspected 2026-11-12:
+
+- Gamma density, shape/scale convention, and exponential identity:
+  https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gamma.html
+- Defining incomplete-gamma integrals: https://dlmf.nist.gov/8.2
+- Small-argument series: https://dlmf.nist.gov/8.7
+- Gauss quadrature: https://dlmf.nist.gov/3.5.v
+- Stirling form used for large-shape small-argument kernels: https://dlmf.nist.gov/5.11
+- Censored likelihood contributions:
+  https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
+
+The narrow-interval rule factors out the lower-endpoint gamma density and
+integrates `exp((a-1)*log1p(t*q)-t*d)` for `t` in `[0,1]`. Three-point
+Gauss-Legendre nodes/weights follow from polynomial exactness through degree
+five. Conservative bounds `q*max(1,abs(a-1)) <= .001`, `d <= .001` limit
+endpoint separation and density variation. At scaled arguments below the
+smallest normal real, `log(P(a,z)) = a*log(z)-log(Gamma(a+1))+O(z)` is used;
+the omitted relative correction is bounded by `z`. Other intervals reuse
+existing log tails. These algebraic evaluations are independent derivations,
+not adaptations of a third-party implementation. No C ABI symbols are added.
+
+## 2026-11-12 - Censored lognormal extension
+
+The lognormal additions to `src/censored.f90` and `src/fit.f90`, their native
+tests, and high-precision reference checks are original MIT-licensed SciFort
+code derived from the public mathematical specifications:
+
+- https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
+- https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
+
+Both were inspected 2026-11-12. No upstream implementation was imported.
+The change of variable `y=log(x-loc)` has normal mean `log(scale)` and
+standard deviation `s`; exact densities include Jacobian `1/(x-loc)`.
+Interval probabilities reuse SciFort's three-point normal quadrature, with
+width `log1p((b-a)/(a-loc))` evaluated through log distances. Existing notices
+and licenses are retained. No dependency or C ABI change is introduced.
+
+## 2026-11-12 - Censored likelihoods and distribution fitting
+
+`src/censored.f90`, the censored fitting additions in `src/fit.f90`, extensions
+to the existing `censored_data` in `src/empirical_distribution.f90`, and their
+tests and documentation are original SciFort MIT-licensed implementations.
+No third-party source was copied, translated, or imported, and no dependency
+was added. Existing notices on reused distribution kernels remain unchanged.
+
+Mathematical and behavioral specifications:
+
+- SciPy's public censored log-likelihood definition, inspected 2026-11-12:
+  https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
+- SciPy's public observation/endpoint conventions:
+  https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html
+
+The analytic fixed-location exponential estimate follows by differentiating
+`-d*log(scale)-exposure/scale`, giving `scale=exposure/d`. Interval calculations
+use algebraic log-difference and cumulative-hazard identities. Narrow normal
+intervals use three-point Gauss-Legendre quadrature, specified by NIST DLMF
+https://dlmf.nist.gov/3.5.v . The nodes `0,+/-sqrt(3/5)` and weights
+`8/9,5/9,5/9` follow by exact integration of polynomials through degree five.
+The standardized width bound of `0.01/max(1,abs(z))` makes the sixth-order
+remainder negligible at binary64 precision. Large Weibull hazard-ratio differences omit a relative
+term below `exp(-50) < 2e-22`; small-increment shortcuts use an epsilon-based
+bound. These are original algebraic evaluations, not upstream adaptations.
+
+`tools/generate_censored_reference.py` evaluates independent mathematical
+formulas with mpmath and compares fits with SciPy. Initial native reference
+constants were generated with mpmath 1.3.0 (100 to 700 decimal digits) and
+SciPy 1.15.3. This numerical reference use does not import implementation code.
+
 ## 2026-11-11 - Repository refresh from the sibling working tree
 
 The refreshed project files were copied from `../scifort-main`, based on Git

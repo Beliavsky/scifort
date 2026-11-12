@@ -84,6 +84,9 @@ program normal_example
 end program normal_example
 ```
 
+Normal, exponential, Weibull, lognormal, and gamma distributions also support
+[censored likelihoods and fitting](docs/censored_fitting.md).
+
 See [runnable examples](example/) for other APIs and [numerical policy](docs/numerical-policy.md)
 for parameter validation, endpoint behavior, precision, and error handling.
 

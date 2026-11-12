@@ -1,3 +1,31 @@
+## 2026-11-12 - Censored gamma likelihoods and fitting
+
+- Add gamma censored log-likelihood and negative log-likelihood, including
+  support endpoints, narrow intervals, and scaled arguments below binary64 range.
+- Extend `gamma_fit` to censored samples with fixed location; exact support
+  endpoints are excluded from this initial fitting overload.
+- Handle opposing infinite censored likelihood contributions as quiet NaN.
+- Add high-precision references, fitting comparisons, tests, and documentation.
+
+## 2026-11-12 - Censored lognormal likelihoods and fitting
+
+- Add lognormal censored log-likelihood and negative log-likelihood with stable
+  log-domain distances and narrow interval probabilities.
+- Extend `lognormal_fit` to censored observations with fixed location and
+  bounded shape/scale, preserving its existing array interface.
+- Add native, high-precision, and SciPy fit comparisons and document limits.
+
+## 2026-11-12 - Censored likelihoods and fitting
+
+- Extend the existing censored-data type with left and interval observations.
+  Add stable normal, exponential, and Weibull censored likelihoods and bounded
+  fitting overloads, preserving existing uncensored calls.
+- Add an analytic fixed-location right-censored exponential MLE, including
+  explicit failure reporting for absent or unrepresentable finite estimates.
+- Reject unsupported censoring groups in ECDF/logrank with NaN results.
+- Add high-precision likelihood references, SciPy fit comparisons, native
+  numerical regressions, documentation, and provenance.
+
 ## 2026-11-11 - External package acknowledgments
 
 - List external packages in the README, distinguishing FPM dependencies,

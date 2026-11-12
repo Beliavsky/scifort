@@ -2,6 +2,15 @@
 ! Copyright (c) 2026 SciFort contributors
 
 module scifort_stats
+    use scifort_censored, only : make_censored_data, censored_data_valid, &
+        censored_size, censored_status_success, censored_status_invalid_input, &
+        censored_loglikelihood, censored_log_function, censored_log_interval, &
+        normal_censored_loglikelihood, normal_censored_nnlf, &
+        exponential_censored_loglikelihood, exponential_censored_nnlf, &
+        weibull_censored_loglikelihood, weibull_censored_nnlf, &
+        lognormal_censored_loglikelihood, lognormal_censored_nnlf, &
+        gamma_censored_loglikelihood, gamma_censored_nnlf
+    use scifort_fit, only : exponential_fit_right_censored, fit_status_no_finite_mle
     use scifort_arcsine, only : arcsine_cdf, arcsine_isf, arcsine_logcdf, &
         arcsine_logpdf, arcsine_logsf, arcsine_pdf, arcsine_ppf, arcsine_sf
     use scifort_halfnorm, only : halfnorm_cdf, halfnorm_isf, halfnorm_logcdf, &
@@ -677,6 +686,15 @@ module scifort_stats
         random_table_status_numerical_failure
     implicit none
     private
+    public :: make_censored_data, censored_data_valid, censored_size
+    public :: censored_status_success, censored_status_invalid_input
+    public :: censored_loglikelihood, censored_log_function, censored_log_interval
+    public :: normal_censored_loglikelihood, normal_censored_nnlf
+    public :: exponential_censored_loglikelihood, exponential_censored_nnlf
+    public :: weibull_censored_loglikelihood, weibull_censored_nnlf
+    public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
+    public :: gamma_censored_loglikelihood, gamma_censored_nnlf
+    public :: exponential_fit_right_censored, fit_status_no_finite_mle
 
     public :: exponnorm_cdf, exponnorm_isf, exponnorm_logcdf, exponnorm_logpdf
     public :: exponnorm_logsf, exponnorm_pdf, exponnorm_ppf, exponnorm_sf

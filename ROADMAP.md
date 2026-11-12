@@ -1,3 +1,15 @@
+## Censored distribution fitting (2026-11-12)
+
+- [x] Extend the existing censored-data type to left and interval censoring.
+- [x] Add stable normal, exponential, and Weibull censored likelihoods and
+  bounded fitting overloads, with independent high-precision references.
+- [x] Add an analytic fixed-location right-censored exponential MLE with
+  explicit status reporting when no finite identifiable estimate is available.
+- [x] Add stable lognormal censored likelihoods and fixed-location bounded fits.
+- [x] Add gamma censored likelihoods and fixed-location bounded fits.
+- [ ] Extend censored fitting to additional continuous families.
+- [ ] Design observation-weight semantics as a separate SciFort extension.
+
 ## Mixed-integer linear programming (2026-11-10)
 
 - [x] Add `scipy.optimize.milp`-style dense branch-and-bound with continuous,

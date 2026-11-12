@@ -30,6 +30,8 @@ module scifort_empirical_distribution
     type, public :: censored_data
         real(dp), allocatable :: uncensored(:) !! observed event/failure times
         real(dp), allocatable :: right(:) !! right-censoring/loss times
+        real(dp), allocatable :: left(:) !! finite upper limits; used by parametric fitting only
+        real(dp), allocatable :: interval(:,:) !! (n,2) lower/upper limits; parametric fitting only
     contains
         procedure :: n_observations => censored_data_n_observations
     end type censored_data
@@ -109,12 +111,15 @@ module scifort_empirical_distribution
 contains
 
     pure function censored_data_n_observations(self) result(n)
-        class(censored_data), intent(in) :: self
+        implicit none
+        class(censored_data), intent(in) :: self !! exact and censored observations
         integer :: n
 
         n = 0
         if (allocated(self%uncensored)) n = n + size(self%uncensored)
         if (allocated(self%right)) n = n + size(self%right)
+        if (allocated(self%left)) n = n + size(self%left)
+        if (allocated(self%interval)) n = n + size(self%interval, 1)
     end function censored_data_n_observations
 
     function ecdf_censored(sample) result(res)
@@ -123,6 +128,13 @@ contains
         real(dp), allocatable :: right(:)
         real(dp), allocatable :: uncensored(:)
 
+        if (.not. right_censoring_only(sample)) then
+            call set_edf(res%cdf, [quiet_nan(0.0_dp)], [quiet_nan(0.0_dp)], &
+                [0], [0], .false., .false.)
+            call set_edf(res%sf, [quiet_nan(0.0_dp)], [quiet_nan(0.0_dp)], &
+                [0], [0], .true., .false.)
+            return
+        end if
         call unpack_censored_data(sample, uncensored, right)
         res = ecdf_right_censored(uncensored, right)
     end function ecdf_censored
@@ -148,6 +160,11 @@ contains
         real(dp), allocatable :: yr(:)
         real(dp), allocatable :: yu(:)
 
+        if (.not. right_censoring_only(x) .or. .not. right_censoring_only(y)) then
+            res%statistic = quiet_nan(0.0_dp)
+            res%pvalue = quiet_nan(0.0_dp)
+            return
+        end if
         call unpack_censored_data(x, xu, xr)
         call unpack_censored_data(y, yu, yr)
         res = logrank_core(xu, xr, yu, yr, alternative)
@@ -162,6 +179,11 @@ contains
         real(dp), allocatable :: xr(:)
         real(dp), allocatable :: xu(:)
 
+        if (.not. right_censoring_only(x)) then
+            res%statistic = quiet_nan(0.0_dp)
+            res%pvalue = quiet_nan(0.0_dp)
+            return
+        end if
         allocate(empty(0))
         call unpack_censored_data(x, xu, xr)
         res = logrank_core(xu, xr, y, empty, alternative)
@@ -176,6 +198,11 @@ contains
         real(dp), allocatable :: yr(:)
         real(dp), allocatable :: yu(:)
 
+        if (.not. right_censoring_only(y)) then
+            res%statistic = quiet_nan(0.0_dp)
+            res%pvalue = quiet_nan(0.0_dp)
+            return
+        end if
         allocate(empty(0))
         call unpack_censored_data(y, yu, yr)
         res = logrank_core(x, empty, yu, yr, alternative)
@@ -266,6 +293,19 @@ contains
             end select
         end if
     end function logrank_core
+
+    pure function right_censoring_only(sample) result(valid)
+        implicit none
+        type(censored_data), intent(in) :: sample !! sample for ECDF or logrank
+        logical :: valid
+        valid = .true.
+        if (allocated(sample%left)) then
+            if (size(sample%left) > 0) valid = .false.
+        end if
+        if (allocated(sample%interval)) then
+            if (size(sample%interval, 1) > 0 .or. size(sample%interval, 2) /= 2) valid = .false.
+        end if
+    end function right_censoring_only
 
     subroutine unpack_censored_data(sample, uncensored, right)
         type(censored_data), intent(in) :: sample
