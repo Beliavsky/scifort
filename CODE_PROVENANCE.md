@@ -1,3 +1,43 @@
+## 2026-11-12 - Standalone FFT, DCT, and DST APIs
+
+`src/fft.f90`, `test/test_fft.f90`, `validation/fft_reference_driver.f90`, and
+`validation/check_fft.py` are original MIT-licensed SciFort code, implemented
+from public mathematical specifications. No implementation code, numerical
+coefficients, archive, binary, or dependency was imported. The existing
+`scifort_signal_spectral.fft_plan` is reused unchanged; its mixed-radix,
+Bluestein, and radix-2 provenance and notices remain applicable.
+
+Specifications inspected 2026-11-12:
+
+- [SciPy FFT](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.fft.html):
+  defining DFT, padding/cropping, inverse sign, and normalization conventions.
+- [SciPy DCT](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.dct.html)
+  and [DST](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.dst.html):
+  type I-IV sums, logical sizes, inverse relationships, and endpoint weights.
+- [SciPy Hermitian FFT](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.hfft.html):
+  half-sequence interpretation, inferred length, and odd/even endpoint rules.
+- [SciPy frequency bins](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.fftfreq.html):
+  signed bin ordering and cycles-per-spacing units.
+
+Even/odd FFT extensions are derived algebraically from those sums. DCT-I
+uses length `2*(n-1)` and DST-I `2*(n+1)`; types II/III use length `4*n`, and
+type IV uses `8*n`. Cosine extensions are even and sine extensions odd.
+For type II, input positions are `2*j+1`; for type III they are `j` (cosine)
+or `j+1` (sine), with the endpoint half-weight required by the defining sum.
+Type IV samples odd output frequencies from odd input positions. Symmetric
+endpoints and orthogonalization weights follow the definitions, not copied
+upstream code. Complex transforms extend the same linear real definitions.
+Inverse Fourier transforms use conjugation and the documented normalization.
+
+The installed SciPy 1.15.3 `_pocketfft.realtransforms._r2r` source was inspected
+only to confirm that its complex path omits the `orthogonalize` argument.
+No source was adopted. Reference checks therefore call the public real
+transform independently for each complex component. mpmath supplies bin
+references when the tested frequency helper's product `n*d` overflows;
+other external transform references use SciPy. Native tests independently
+evaluate the defining matrices. Scope expansion to a standalone FFT API is
+recorded in the roadmap in response to the user's explicit FFT request.
+
 ## 2026-11-12 - Censored Gumbel extension
 
 The Gumbel additions to `src/censored.f90` and `src/fit.f90`, their tests,

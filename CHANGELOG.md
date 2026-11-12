@@ -1,3 +1,13 @@
+## 2026-11-12 - Standalone FFT module
+
+- Add `scifort_fft` with 1D complex, real, and Hermitian forward/inverse
+  transform pairs, padding/cropping, and three SciPy normalization modes.
+- Add FFT-backed real/complex DCT/DST types I-IV and inverse transforms,
+  including explicit/default orthogonalization, frequency bins, and shifts.
+- Reuse the existing FFT engine; document error contracts, numerical limits,
+  differences from SciPy 1.15.3, and remaining multidimensional/Hankel work.
+- Add native matrix/identity regressions and independent reference comparisons.
+
 ## 2026-11-12 - Censored Gumbel likelihoods and fitting
 
 - Add `gumbel_r` and `gumbel_l` censored log-likelihood and negative

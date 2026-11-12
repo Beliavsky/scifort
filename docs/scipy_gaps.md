@@ -16,7 +16,7 @@ the [censored distribution coverage inventory](censored_distribution_gaps.md).
 
 | Area | Remaining functionality or compatibility |
 | --- | --- |
-| FFT | A complete standalone [`scipy.fft` API](https://docs.scipy.org/doc/scipy/reference/fft.html), including cosine transforms, real/Hermitian multidimensional transforms, and fast Hankel transforms. SciFort already uses FFTs internally. |
+| FFT | Standalone 1D complex, real, and Hermitian FFT pairs, DCT/DST types I-IV, frequency bins, and shifts are available in [`scifort_fft`](fft.md). Remaining gaps include multidimensional transforms and axis selection, multidimensional DCT/DST, fast Hankel transforms, fast-length helpers, workers, and backend/option parity. |
 | Integration | [`solve_bvp`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_bvp.html) for boundary-value ODEs, Lebedev quadrature, and some QMC integration options. |
 | Interpolation | AAA rational approximation, spherical spline interfaces, and additional spline-construction APIs. Automatic-knot smoothing currently relies on the optional FITPACK backend. |
 | Optimization | Stored sparse Jacobians and worker parallelism in least squares; stronger sparse LP/MILP capabilities; SciPy-equivalent SHGO homology stopping and sampling options. |

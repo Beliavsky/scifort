@@ -1,3 +1,15 @@
+## Standalone FFT coverage (2026-11-12)
+
+The user's request to work on FFT gaps approves this roadmap expansion beyond
+probability distributions. Prioritize native Fortran APIs; defer C ABI work.
+
+- [x] Expose 1D complex, real, and Hermitian FFT pairs with SciPy normalization.
+- [x] Add frequency bins, FFT shifts, and FFT-backed DCT/DST types I-IV.
+- [ ] Add multidimensional transforms and axis selection, including real and
+  Hermitian pairs and multidimensional DCT/DST.
+- [ ] Add fast Hankel transforms (`fht`, `ifht`, `fhtoffset`).
+- [ ] Audit fast-length helpers, batching, workers, and backend option parity.
+
 ## Censored distribution fitting (2026-11-12)
 
 - [x] Extend the existing censored-data type to left and interval censoring.
