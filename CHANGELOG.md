@@ -1,3 +1,16 @@
+## 2026-11-11 - Documentation validation policy
+
+- Exempt documentation-only and contributor-instruction edits from full FPM
+  builds and tests. Require focused content, link, formatting, and applicable
+  example checks instead; retain full tests for executable and build changes.
+
+## 2026-11-11 - Project overview and historical notes
+
+- Replace the README's accumulated announcements with a project overview,
+  build and test instructions, a Fortran usage example, and documentation links.
+- Preserve the previous README in `README_HISTORY.md`, with its relative links
+  intact and a notice distinguishing historical reports from current API guides.
+
 ## 2026-11-11 - CPU-timed Krylov test portability
 
 - Increase the synthetic CPU workloads and their iteration allowance so the
