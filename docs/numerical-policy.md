@@ -49,3 +49,17 @@ Use several forms of evidence where practical:
 - property tests.
 
 Reference data must record how and with which version it was generated.
+
+## Optimization limits and fixed coordinates
+
+COBYLA searches only free coordinates. Every objective and constraint callback
+receives the full vector with equal-bound coordinates fixed at their bound.
+An all-fixed problem is evaluated once; constraint feasibility determines success.
+SLSQP's `nit` counts completed major iterations and does not include the kernel's
+attempt to start an iteration beyond `maxiter`.
+
+## Circular comparisons
+
+Circular-mean reference comparisons use angular distance at a period boundary:
+zero and a full period represent the same direction. Floating-point rounding may
+select either endpoint without changing the mean direction.

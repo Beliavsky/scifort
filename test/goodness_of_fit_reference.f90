@@ -38,6 +38,31 @@ module goodness_of_fit_reference
     real(dp), parameter :: shapiro_ref(2) = [ &
         0.93249901475758934_dp, 0.47291801143797862_dp &
     ]
+    real(dp), parameter :: gof_norm_stat_ref(4) = [ &
+        0.16037688412030526_dp, 0.15974186350126363_dp, 0.021556784442519711_dp, &
+        0.99279372074509475_dp &
+    ]
+    real(dp), parameter :: gof_norm_fit_ref(2) = [ &
+        0.060000000000000012_dp, 0.90719347440333808_dp &
+    ]
+    real(dp), parameter :: gof_expon_stat_ref(3) = [ &
+        0.14469362699804938_dp, 0.040699268494258041_dp, 0.98202995739785703_dp &
+    ]
+    real(dp), parameter :: gof_expon_fit_ref(2) = [ &
+        0.20000000000000001_dp, 1.1900000000000002_dp &
+    ]
+    real(dp), parameter :: gof_uniform_stat_ref(3) = [ &
+        0.22068965517241373_dp, 0.12251288149028933_dp, 0.98365904202157328_dp &
+    ]
+    real(dp), parameter :: gof_uniform_fit_ref(2) = [ &
+        0.20000000000000001_dp, 2.8999999999999999_dp &
+    ]
+    real(dp), parameter :: gof_known_norm_ref(3) = [ &
+        0.15803634777692699_dp, 0.0_dp, 1.0_dp &
+    ]
+    real(dp), parameter :: gof_prefit_norm_ref(3) = [ &
+        0.021556784442519711_dp, 0.20000000000000001_dp, 1.3_dp &
+    ]
     real(dp), parameter :: and_norm_stat = 0.20595986043426251_dp
     real(dp), parameter :: and_norm_critical(5) = [ &
         0.51100000000000001_dp, 0.57499999999999996_dp, 0.68500000000000005_dp, &

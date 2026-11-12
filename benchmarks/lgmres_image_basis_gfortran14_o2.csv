@@ -1,0 +1,3 @@
+mode,n,outer_k,repetitions,original_seconds,cached_seconds,speedup,compiler,flags
+fixed,192,48,250,0.382827,0.209880,1.824,GNU Fortran 14.2,"-O2 -fcheck=all -ffpe-trap=invalid,zero,overflow"
+automatic,192,48,250,0.366937,0.198937,1.844,GNU Fortran 14.2,"-O2 -fcheck=all -ffpe-trap=invalid,zero,overflow"

@@ -2,11 +2,12 @@
 ! Copyright (c) 2026 SciFort contributors
 
 program test_special_elementary
-    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan, ieee_positive_inf, ieee_value
     use scifort_special, only : betaln, boxcox, boxcox1p, cosm1, digamma, &
         dp, entr, erf, erfc, erfcinv, erfinv, expit, exprel, gammaln, &
         inv_boxcox, inv_boxcox1p, &
-        kl_div, log_expit, log_ndtr, log_softmax, logit, logsumexp, ndtr, &
+        kl_div, log_expit, log_ndtr, log_softmax, logit, logsumexp, &
+        logsumexp_signed, ndtr, &
         ndtri, psi, rel_entr, softmax, xlog1py, xlogy
     implicit none
 
@@ -18,8 +19,32 @@ program test_special_elementary
         -1.4076059644443804_dp, -0.4076059644443804_dp, &
         -2.4076059644443806_dp, -2001.4076059644444_dp]
 
+    real(dp), parameter :: reduction_matrix(3, 4) = reshape([ &
+        1.0_dp, 1.0_dp, 2.0_dp, &
+        0.5_dp, -1.0_dp, 12.0_dp, &
+        0.2_dp, 7.0_dp, 13.0_dp, &
+        3.0_dp, 3.0_dp, 3.0_dp], [3, 4])
+    real(dp), parameter :: reduction_weights(3, 4) = reshape([ &
+        1.0_dp, 2.0_dp, 1.0_dp, &
+        -1.0_dp, 1.0_dp, 0.5_dp, &
+        2.0_dp, -1.0_dp, 1.0_dp, &
+        0.5_dp, 1.0_dp, -2.0_dp], [3, 4])
+    real(dp), parameter :: lse_dim1_expected(4) = [ &
+        2.5514447139320513_dp, 12.000012390346244_dp, &
+        13.00247843908016_dp, 4.098612288668110_dp]
+    real(dp), parameter :: lse_dim2_expected(3) = [ &
+        3.245476577966125_dp, 7.020909713948857_dp, 13.31330708641744_dp]
+    real(dp), parameter :: signed_dim1_expected(4) = [ &
+        2.7436683806286792_dp, 11.306837079787805_dp, &
+        12.997523705881417_dp, 2.3068528194400546_dp]
+    real(dp), parameter :: signed_dim1_signs(4) = [1.0_dp, 1.0_dp, 1.0_dp, -1.0_dp]
+
     real(dp) :: empty(0)
     real(dp), allocatable :: values(:)
+    real(dp), allocatable :: signs(:)
+    real(dp), allocatable :: matrix_values(:, :)
+    real(dp) :: logabs
+    real(dp) :: sign_value
 
     call check_close('erf', erf(1.0_dp), 0.8427007929497148_dp, 2.0e-16_dp)
     call check_close('erfc tail', erfc(5.0_dp), &
@@ -50,7 +75,8 @@ program test_special_elementary
         -192.134192274979_dp, 2.0e-13_dp)
     call check_close('betaln mixed scale', betaln(1.0e-3_dp, 2000.0_dp), &
         6.8995782326950825_dp, 4.0e-15_dp)
-    call check_true('betaln invalid shape', ieee_is_nan(betaln(-0.5_dp, 2.0_dp)))
+    call check_close('betaln negative continuation', betaln(-0.5_dp, 2.0_dp), &
+        1.3862943611198906_dp, 4.0e-15_dp)
 
     call check_close('digamma negative', digamma(-2.5_dp), &
         1.1031566406452433_dp, 4.0e-15_dp)
@@ -131,6 +157,74 @@ program test_special_elementary
     values = log_softmax(reduction_x)
     call check_array('log_softmax', values, log_softmax_expected, 4.0e-13_dp)
     call check_true('logsumexp empty', logsumexp(empty) < -huge(1.0_dp))
+
+    call check_close('logsumexp weighted positive', &
+        logsumexp([1000.0_dp, 999.0_dp], [1.0_dp, -2.0_dp]), &
+        998.669106731796_dp, 3.0e-13_dp)
+    call check_true('logsumexp weighted negative', &
+        ieee_is_nan(logsumexp([1.0_dp, 2.0_dp], [1.0_dp, -1.0_dp])))
+    call logsumexp_signed([1.0_dp, 2.0_dp], logabs, sign_value, [1.0_dp, -1.0_dp])
+    call check_close('logsumexp signed logabs', logabs, 1.5413248546129181_dp, 3.0e-16_dp)
+    call check_close('logsumexp signed sign', sign_value, -1.0_dp, 0.0_dp)
+    call logsumexp_signed([1.0_dp, 2.0_dp], logabs, sign_value, [0.0_dp, 0.0_dp])
+    call check_true('logsumexp signed zero logabs', logabs < -huge(1.0_dp))
+    call check_close('logsumexp signed zero sign', sign_value, 0.0_dp, 0.0_dp)
+    call logsumexp_signed([1000.0_dp, 1.0_dp], logabs, sign_value, [0.0_dp, 1.0_dp])
+    call check_close('logsumexp zero weight avoids overflow', logabs, 1.0_dp, 0.0_dp)
+    call check_close('logsumexp zero weight sign', sign_value, 1.0_dp, 0.0_dp)
+    call check_true('logsumexp weight size mismatch', &
+        ieee_is_nan(logsumexp([1.0_dp, 2.0_dp], [1.0_dp, 2.0_dp, 3.0_dp])))
+    call logsumexp_signed([ieee_value(0.0_dp, ieee_positive_inf), &
+        ieee_value(0.0_dp, ieee_positive_inf), ieee_value(0.0_dp, ieee_positive_inf)], &
+        logabs, sign_value, [1.0_dp, 1.0_dp, -1.0_dp])
+    call check_true('logsumexp opposite infinite terms logabs', ieee_is_nan(logabs))
+    call check_true('logsumexp opposite infinite terms sign', ieee_is_nan(sign_value))
+
+    call check_close('logsumexp matrix all', logsumexp(reduction_matrix), &
+        13.315198038711424_dp, 4.0e-15_dp)
+    values = logsumexp(reduction_matrix, 1)
+    call check_array('logsumexp matrix dim1', values, lse_dim1_expected, 4.0e-15_dp)
+    values = logsumexp(reduction_matrix, 2)
+    call check_array('logsumexp matrix dim2', values, lse_dim2_expected, 4.0e-15_dp)
+    call logsumexp_signed(reduction_matrix, logabs, sign_value, reduction_weights)
+    call check_close('logsumexp signed matrix all value', logabs, 13.16676452899442_dp, 4.0e-15_dp)
+    call check_close('logsumexp signed matrix all sign', sign_value, 1.0_dp, 0.0_dp)
+    call logsumexp_signed(reduction_matrix, 1, values, signs, reduction_weights)
+    call check_array('logsumexp signed matrix dim1 values', values, signed_dim1_expected, 4.0e-15_dp)
+    call check_array('logsumexp signed matrix dim1 signs', signs, signed_dim1_signs, 0.0_dp)
+    values = logsumexp(reduction_matrix, 1, reduction_weights)
+    call check_true('logsumexp weighted negative slice', ieee_is_nan(values(4)))
+    call check_array('logsumexp weighted positive slices', values(:3), signed_dim1_expected(:3), 4.0e-15_dp)
+    call logsumexp_signed(reduction_matrix, 2, values, signs, reduction_weights)
+    call check_array('logsumexp signed matrix dim2 signs', signs, [1.0_dp, -1.0_dp, 1.0_dp], 0.0_dp)
+    call check_array('logsumexp signed matrix dim2 values', values, &
+        [2.606765408070913_dp, 6.976108245620348_dp, 13.168785035449016_dp], 4.0e-15_dp)
+    values = logsumexp(reduction_matrix, 3)
+    call check_true('logsumexp invalid dim empty', size(values) == 0)
+
+    matrix_values = softmax(reduction_matrix, 1)
+    call check_close('softmax matrix dim1 normalization', maxval(abs(sum(matrix_values, dim=1) - 1.0_dp)), &
+        0.0_dp, 3.0e-16_dp)
+    call check_close('softmax matrix dim1 reference', matrix_values(3, 3), &
+        0.99752462971418010_dp, 4.0e-16_dp)
+    matrix_values = softmax(reduction_matrix, 2)
+    call check_close('softmax matrix dim2 normalization', maxval(abs(sum(matrix_values, dim=2) - 1.0_dp)), &
+        0.0_dp, 3.0e-16_dp)
+    call check_close('softmax matrix dim2 reference', matrix_values(1, 4), &
+        0.78233160737733076_dp, 4.0e-16_dp)
+    matrix_values = softmax(reduction_matrix)
+    call check_close('softmax matrix all normalization', sum(matrix_values), 1.0_dp, 3.0e-16_dp)
+
+    matrix_values = log_softmax(reduction_matrix, 1)
+    call check_close('log_softmax matrix dim1 normalization', &
+        maxval(abs(sum(exp(matrix_values), dim=1) - 1.0_dp)), 0.0_dp, 4.0e-16_dp)
+    call check_close('log_softmax matrix dim1 reference', matrix_values(1, 2), &
+        -11.500012390346244_dp, 4.0e-15_dp)
+    matrix_values = log_softmax(reduction_matrix, 2)
+    call check_close('log_softmax matrix dim2 normalization', &
+        maxval(abs(sum(exp(matrix_values), dim=2) - 1.0_dp)), 0.0_dp, 4.0e-16_dp)
+    call check_close('log_softmax matrix dim2 reference', matrix_values(3, 3), &
+        -0.3133070864174398_dp, 4.0e-15_dp)
 
     print *, 'special elementary tests passed'
 

@@ -32,6 +32,32 @@ cvm2_exact = stats.cramervonmises_2samp(cvm_x, cvm_y, method="exact")
 cvm2_asymp = stats.cramervonmises_2samp(cvm_x, cvm_y, method="asymptotic")
 shap = stats.shapiro(shap_x)
 
+
+# Generalized Monte Carlo goodness-of-fit observed statistics. Only the
+# deterministic fitted parameters/statistics are written as references; the
+# Monte Carlo p-value depends on the RNG implementation.
+gof_norm = []
+for stat in ["ad", "ks", "cvm", "filliben"]:
+    gof_norm.append(stats.goodness_of_fit(stats.norm, x, statistic=stat,
+                                          n_mc_samples=3,
+                                          rng=np.random.default_rng(123)))
+gof_expon = []
+for stat in ["ks", "cvm", "filliben"]:
+    gof_expon.append(stats.goodness_of_fit(stats.expon, and_x, statistic=stat,
+                                           n_mc_samples=3,
+                                           rng=np.random.default_rng(123)))
+gof_uniform = []
+for stat in ["ks", "cvm", "filliben"]:
+    gof_uniform.append(stats.goodness_of_fit(stats.uniform, and_x, statistic=stat,
+                                             n_mc_samples=3,
+                                             rng=np.random.default_rng(123)))
+gof_known_norm = stats.goodness_of_fit(
+    stats.norm, x, known_params={"loc": 0.0, "scale": 1.0}, statistic="ks",
+    n_mc_samples=3, rng=np.random.default_rng(123))
+gof_prefit_norm = stats.goodness_of_fit(
+    stats.norm, x, fit_params={"loc": 0.2, "scale": 1.3}, statistic="cvm",
+    n_mc_samples=3, rng=np.random.default_rng(123))
+
 ands = {}
 for name, vals in [
     ("norm", and_x),
@@ -76,6 +102,14 @@ out.append(vec("ks2_ref", [ks2.statistic, ks2.pvalue, ks2.statistic_location, ks
 out.append(vec("ks2_one_sided_ref", [ks2_less.statistic, ks2_less.pvalue, ks2_greater.statistic, ks2_greater.pvalue]))
 out.append(vec("cvm_ref", [cvm1.statistic, cvm1.pvalue, cvm2_exact.statistic, cvm2_exact.pvalue, cvm2_asymp.pvalue]))
 out.append(vec("shapiro_ref", [shap.statistic, shap.pvalue]))
+out.append(vec("gof_norm_stat_ref", [r.statistic for r in gof_norm]))
+out.append(vec("gof_norm_fit_ref", list(gof_norm[0].fit_result.params)))
+out.append(vec("gof_expon_stat_ref", [r.statistic for r in gof_expon]))
+out.append(vec("gof_expon_fit_ref", list(gof_expon[0].fit_result.params)))
+out.append(vec("gof_uniform_stat_ref", [r.statistic for r in gof_uniform]))
+out.append(vec("gof_uniform_fit_ref", list(gof_uniform[0].fit_result.params)))
+out.append(vec("gof_known_norm_ref", [gof_known_norm.statistic, *gof_known_norm.fit_result.params]))
+out.append(vec("gof_prefit_norm_ref", [gof_prefit_norm.statistic, *gof_prefit_norm.fit_result.params]))
 for name, r in ands.items():
     out.append(f"    real(dp), parameter :: and_{name}_stat = {fr(r.statistic)}\n")
     out.append(vec(f"and_{name}_critical", r.critical_values))

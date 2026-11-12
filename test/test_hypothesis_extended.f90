@@ -7,8 +7,8 @@ program test_hypothesis_extended
         chi2_contingency_result, chisquare, dp, fisher_exact, fisher_exact_result, &
         fligner, fligner_result, friedmanchisquare, friedmanchisquare_result, &
         f_oneway, f_oneway_result, kruskal, kruskal_result, levene, levene_result, &
-        make_sample_group, power_divergence_named, power_divergence_result, ranksums, &
-        ranksums_result, sample_group, wilcoxon, wilcoxon_result
+        make_sample_group, obrientransform, power_divergence_named, power_divergence_result, &
+        ranksums, ranksums_result, sample_group, wilcoxon, wilcoxon_result
     implicit none
 
     real(dp), parameter :: x(5) = [1.0_dp, 3.0_dp, 5.0_dp, 7.0_dp, 9.0_dp]
@@ -31,10 +31,12 @@ program test_hypothesis_extended
     type(power_divergence_result) :: divergence
     type(ranksums_result) :: rank_sum
     type(sample_group) :: groups(3)
+    type(sample_group), allocatable :: transformed_groups(:)
     type(wilcoxon_result) :: signed_rank
     integer :: table(2, 2)
     real(dp) :: friedman_data(4, 8)
     real(dp) :: contingency_table(2, 2)
+    real(dp), allocatable :: obrien_values(:)
 
     rank_sum = ranksums(x, y)
     call check_close('ranksums statistic', rank_sum%statistic, -0.5222329678670935_dp, 2.0e-15_dp)
@@ -145,6 +147,39 @@ program test_hypothesis_extended
     flig = fligner(groups, 'trimmed')
     call check_close('fligner trimmed statistic', flig%statistic, 10.141132565185508_dp, 1.0e-14_dp)
 
+    obrien_values = obrientransform([0.0_dp, 2.0_dp, 4.0_dp])
+    call check_array_close('obrien hand n3', obrien_values, &
+        [7.0_dp, -2.0_dp, 7.0_dp], 0.0_dp)
+    obrien_values = obrientransform([0.0_dp, 3.0_dp, 6.0_dp, 9.0_dp])
+    call check_array_close('obrien hand n4', obrien_values, &
+        [30.0_dp, 0.0_dp, 0.0_dp, 30.0_dp], 0.0_dp)
+
+    groups(1) = make_sample_group([10.0_dp, 11.0_dp, 13.0_dp, 9.0_dp, 7.0_dp, &
+        12.0_dp, 12.0_dp, 9.0_dp, 10.0_dp])
+    groups(2) = make_sample_group([13.0_dp, 21.0_dp, 5.0_dp, 10.0_dp, 8.0_dp, &
+        14.0_dp, 10.0_dp, 12.0_dp, 7.0_dp, 15.0_dp])
+    transformed_groups = obrientransform(groups(1:2))
+    call check_array_close('obrien unequal group one', transformed_groups(1)%values, &
+        [-0.11607142857142806_dp, 0.2857142857142848_dp, 8.321428571428568_dp, &
+        1.8928571428571448_dp, 13.142857142857148_dp, 3.098214285714284_dp, &
+        3.098214285714284_dp, 1.8928571428571448_dp, -0.11607142857142806_dp], &
+        2.0e-14_dp)
+    call check_array_close('obrien unequal group two', transformed_groups(2)%values, &
+        [1.3333333333333333_dp, 105.22222222222223_dp, 48.55555555555556_dp, &
+        1.3333333333333333_dp, 13.13888888888889_dp, 6.055555555555555_dp, &
+        1.3333333333333333_dp, -1.0277777777777777_dp, 22.583333333333332_dp, &
+        13.13888888888889_dp], 2.0e-13_dp)
+    anova = f_oneway(transformed_groups)
+    call check_close('obrien transformed anova statistic', anova%statistic, &
+        2.511906476204772_dp, 2.0e-14_dp)
+    call check_close('obrien transformed anova pvalue', anova%pvalue, &
+        0.13141394770403342_dp, 3.0e-15_dp)
+    obrien_values = obrientransform([2.0_dp, 2.0_dp, 2.0_dp, 2.0_dp])
+    call check_array_close('obrien constant', obrien_values, &
+        [0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp], 0.0_dp)
+    obrien_values = obrientransform([1.0_dp, 2.0_dp])
+    call check_true('obrien short sample nan', all(ieee_is_nan(obrien_values)))
+
     groups(1) = make_sample_group([1.0_dp, 1.0_dp, 1.0_dp])
     groups(2) = make_sample_group([1.0_dp, 1.0_dp])
     kruskal_value = kruskal(groups(1:2))
@@ -179,5 +214,23 @@ contains
             error stop 1
         end if
     end subroutine check_true
+
+    subroutine check_array_close(name, actual, expected_value, tolerance)
+        character(len=*), intent(in) :: name !! check label printed on failure
+        real(dp), intent(in) :: actual(:) !! computed values
+        real(dp), intent(in) :: expected_value(:) !! SciPy 1.17.0 reference values
+        real(dp), intent(in) :: tolerance !! maximum absolute error
+
+        if (size(actual) /= size(expected_value)) then
+            print *, 'FAIL ', name, ' size mismatch'
+            error stop 1
+        end if
+        if (any(ieee_is_nan(actual)) .or. any(abs(actual - expected_value) > tolerance)) then
+            print *, 'FAIL ', name
+            print *, ' actual  = ', actual
+            print *, ' expected= ', expected_value
+            error stop 1
+        end if
+    end subroutine check_array_close
 
 end program test_hypothesis_extended

@@ -8,6 +8,7 @@ module scifort_skewnorm
     use scifort_kinds, only : dp
     use scifort_math, only : negative_infinity, positive_infinity, quiet_nan, valid_loc_scale
     use scifort_normal, only : normal_cdf, normal_logcdf, normal_logpdf
+    use scifort_owens_t, only : owens_t
     implicit none
     private
 
@@ -293,30 +294,6 @@ contains
         end do
         logp = maxlog + log(sumv)
     end function tail_logcdf
-
-    pure elemental function owens_t(h, a) result(t)
-        real(dp), intent(in) :: h !! first Owen-T argument
-        real(dp), intent(in) :: a !! second Owen-T argument
-        real(dp) :: t
-        real(dp) :: half, center, theta, ct, sum
-        integer :: i
-
-        if (a == 0.0_dp) then
-            t = 0.0_dp
-            return
-        end if
-        half = 0.5_dp * atan(a)
-        center = half
-        sum = 0.0_dp
-        do i = 1, size(gl_x)
-            theta = center + half * gl_x(i)
-            ct = cos(theta)
-            if (ct /= 0.0_dp) then
-                sum = sum + gl_w(i) * exp(-0.5_dp * (h / ct)**2)
-            end if
-        end do
-        t = half * sum / (2.0_dp * scifort_pi)
-    end function owens_t
 
     pure elemental subroutine get_loc_scale(loc, scale, mu, sigma)
         real(dp), intent(in), optional :: loc !! optional location parameter

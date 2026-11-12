@@ -1,0 +1,2 @@
+benchmark,compiler,flags,n,history,proposals,repeats,legacy_cpu_seconds,fifo_cpu_seconds,speedup
+full_history,gfortran_14.2,-O2_checked,192,48,200,12,1.437279,0.184281,7.799

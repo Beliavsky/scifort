@@ -38,6 +38,17 @@ for xx, yy in ((x, y), (xt, yt)):
         r = stats.mood(xx, yy, alternative=alt)
         mood_vals.extend([r.statistic, r.pvalue])
 
+bx = np.array([1., 2., 3., 4., 6., 7., 8.])
+by = np.array([5., 9., 10., 11., 12., 13., 14.])
+bxt = np.array([1., 2., 2., 5.])
+byt = np.array([0., 2., 3., 4., 4.])
+bws_vals = []
+exact_method = stats.PermutationMethod(n_resamples=np.inf)
+for xx, yy in ((bx, by), (bxt, byt)):
+    for alt in ("two-sided", "less", "greater"):
+        r = stats.bws_test(xx, yy, alternative=alt, method=exact_method)
+        bws_vals.extend([r.statistic, r.pvalue])
+
 xe = np.array([1., 2., 2.5, 3.5, 5., 8., 13., 21.])
 ye = np.array([0.5, 1.5, 2.2, 4., 4.5, 7., 11., 18., 29.])
 e1 = stats.epps_singleton_2samp(xe, ye)
@@ -85,6 +96,7 @@ lines = [
     "    private\n",
     arr("ansari_ref", ans),
     arr("mood_ref", mood_vals),
+    arr("bws_ref", bws_vals),
     arr("epps_ref", epps),
     arr("anderson_ref", and_vals),
     arr("anderson_tie_ref", and_tie),

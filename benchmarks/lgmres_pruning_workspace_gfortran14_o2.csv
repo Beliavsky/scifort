@@ -1,0 +1,5 @@
+snapshot,variables,outer_k,peak_rss_kib,nonlinear_iterations,residual_evaluations,jacobian_products
+previous,150000,64,151220,6,6,46
+updated,150000,64,145392,6,6,46
+previous,250000,64,251264,6,6,46
+updated,250000,64,241568,6,6,46

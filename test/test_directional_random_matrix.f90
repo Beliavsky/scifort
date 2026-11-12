@@ -16,6 +16,7 @@ program test_directional_random_matrix
     integer :: failures
 
     failures = 0
+    call test_directional_stats(failures)
     call test_bessel_i(failures)
     call test_vonmises_fisher(failures)
     call test_uniform_direction(failures)
@@ -31,6 +32,89 @@ program test_directional_random_matrix
     print '(a)', 'test_directional_random_matrix: PASS'
 
 contains
+
+
+    subroutine test_directional_stats(failures)
+        integer, intent(inout) :: failures !! accumulated test failure count
+
+        integer :: i
+        integer :: j
+        real(dp) :: data3(2, 2, 2)
+        type(directional_stats_result) :: res2
+        type(directional_stats_batch_result) :: res3
+
+        res2 = directional_stats(directional_data2_ref)
+        do i = 1, 2
+            call check_close('directional stats 2d axis1 mean', res2%mean_direction(i), &
+                directional_2_axis0_mean_ref(i), 3.0e-15_dp, 3.0e-15_dp, failures)
+        end do
+        call check_close('directional stats 2d axis1 mrl', res2%mean_resultant_length, &
+            directional_2_axis0_mrl_ref, 3.0e-15_dp, 3.0e-15_dp, failures)
+
+        res2 = directional_stats(directional_data2_ref, normalize=.false.)
+        do i = 1, 2
+            call check_close('directional stats 2d raw mean', res2%mean_direction(i), &
+                directional_2_axis0_raw_mean_ref(i), 3.0e-15_dp, 3.0e-15_dp, failures)
+        end do
+        call check_close('directional stats 2d raw mrl', res2%mean_resultant_length, &
+            directional_2_axis0_raw_mrl_ref, 3.0e-15_dp, 3.0e-15_dp, failures)
+
+        res2 = directional_stats(directional_data2_ref, axis=2)
+        do i = 1, 2
+            call check_close('directional stats 2d axis2 mean', res2%mean_direction(i), &
+                directional_2_axis1_mean_ref(i), 3.0e-15_dp, 3.0e-15_dp, failures)
+        end do
+        call check_close('directional stats 2d axis2 mrl', res2%mean_resultant_length, &
+            directional_2_axis1_mrl_ref, 3.0e-15_dp, 3.0e-15_dp, failures)
+
+        data3(1, 1, :) = [1.0_dp, 0.0_dp]
+        data3(1, 2, :) = [0.0_dp, 1.0_dp]
+        data3(2, 1, :) = [1.0_dp, 1.0_dp]
+        data3(2, 2, :) = [1.0_dp, 0.0_dp]
+
+        res3 = directional_stats(data3, axis=1)
+        do j = 1, 2
+            do i = 1, 2
+                call check_close('directional stats 3d axis1 mean', res3%mean_direction(i, j), &
+                    directional_3_axis0_mean_ref(i, j), 4.0e-15_dp, 4.0e-15_dp, failures)
+            end do
+            call check_close('directional stats 3d axis1 mrl', res3%mean_resultant_length(j), &
+                directional_3_axis0_mrl_ref(j), 4.0e-15_dp, 4.0e-15_dp, failures)
+        end do
+
+        res3 = directional_stats(data3, axis=2)
+        do j = 1, 2
+            do i = 1, 2
+                call check_close('directional stats 3d axis2 mean', res3%mean_direction(i, j), &
+                    directional_3_axis1_mean_ref(i, j), 4.0e-15_dp, 4.0e-15_dp, failures)
+            end do
+            call check_close('directional stats 3d axis2 mrl', res3%mean_resultant_length(j), &
+                directional_3_axis1_mrl_ref(j), 4.0e-15_dp, 4.0e-15_dp, failures)
+        end do
+
+        res3 = directional_stats(data3, axis=3)
+        do j = 1, 2
+            do i = 1, 2
+                call check_close('directional stats 3d axis3 mean', res3%mean_direction(i, j), &
+                    directional_3_axis2_mean_ref(i, j), 4.0e-15_dp, 4.0e-15_dp, failures)
+            end do
+            call check_close('directional stats 3d axis3 mrl', res3%mean_resultant_length(j), &
+                directional_3_axis2_mrl_ref(j), 4.0e-15_dp, 4.0e-15_dp, failures)
+        end do
+
+        res2 = directional_stats(reshape([1.0_dp, -1.0_dp, 0.0_dp, 0.0_dp], [2, 2]))
+        call check_close('directional stats zero resultant length', res2%mean_resultant_length, &
+            0.0_dp, 0.0_dp, 0.0_dp, failures)
+        call check_true('directional stats zero resultant direction', &
+            all(ieee_is_nan(res2%mean_direction)), failures)
+
+        res2 = directional_stats(directional_data2_ref, axis=3)
+        call check_true('directional stats invalid axis rank2', &
+            size(res2%mean_direction) == 0 .and. ieee_is_nan(res2%mean_resultant_length), failures)
+        res3 = directional_stats(data3, axis=4)
+        call check_true('directional stats invalid axis rank3', &
+            size(res3%mean_direction) == 0 .and. size(res3%mean_resultant_length) == 0, failures)
+    end subroutine test_directional_stats
 
     subroutine test_bessel_i(failures)
         integer, intent(inout) :: failures !! accumulated test failure count

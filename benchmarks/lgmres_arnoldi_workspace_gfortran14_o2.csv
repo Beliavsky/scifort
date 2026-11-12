@@ -1,0 +1,5 @@
+version,n,peak_rss_kib,elapsed_seconds,nit,nfev,njvp,max_residual
+previous,250000,145820,0.59,6,6,46,1.4906e-10
+updated,250000,141876,0.56,6,6,46,1.4906e-10
+previous,500000,294168,1.25,6,6,46,1.4876e-10
+updated,500000,282528,1.12,6,6,46,1.4876e-10

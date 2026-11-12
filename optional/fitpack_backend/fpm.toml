@@ -1,0 +1,37 @@
+name = "scifort-fitpack-backend"
+version = "0.1.0"
+license = "MIT"
+author = "SciFort contributors"
+description = "Optional perazz/FITPACK scalar, parametric, periodic and bivariate smoothing backend"
+
+[build]
+auto-executables = false
+auto-tests = true
+
+[fortran]
+implicit-typing = false
+implicit-external = false
+source-form = "free"
+
+[dependencies]
+scifort = { path = "../.." }
+# This stable upstream tag is retained for existing FPM users; the added
+# periodic/parametric/bivariate adapters are verified against the user-supplied FITPACK
+# 2.0.0 MAIN source only. A 2.0.0 Git tag was not verified. For 2.0.0, use
+# the offline source build or generate a local path dependency (see docs).
+fitpack = { git = "https://github.com/perazz/fitpack.git", tag = "1.0.0" }
+
+[[executable]]
+name = "fitpack_reference_driver"
+source-dir = "app"
+main = "fitpack_reference_driver.f90"
+
+[[executable]]
+name = "fitpack_periodic_parametric_driver"
+source-dir = "app"
+main = "fitpack_periodic_parametric_driver.f90"
+
+[[executable]]
+name = "fitpack_bivariate_driver"
+source-dir = "app"
+main = "fitpack_bivariate_driver.f90"

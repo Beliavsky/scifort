@@ -1,0 +1,7 @@
+problem,mode,success,nit,nfev,njvp,max_residual
+skew2,fixed,F,0,1,1,  2.00000000E+00
+skew2,adaptive,T,2,2,4,  4.44089210E-16
+skew2,capped,F,0,1,1,  2.00000000E+00
+scaled12,fixed,F,5,6,360,  2.49740101E-02
+scaled12,adaptive,T,5,5,182,  1.52623025E-10
+scaled12,capped,F,5,6,360,  2.49740101E-02

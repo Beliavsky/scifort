@@ -1,0 +1,2 @@
+compiler,optimization,vector_length,proposed,retained,repetitions,reconstruction_cpu_seconds,incremental_cpu_seconds,speedup
+GNU Fortran 14.2,-O2,192,96,70,12,0.505688,0.035134,14.39

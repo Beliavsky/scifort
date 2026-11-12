@@ -8,6 +8,51 @@ module test_directional_random_matrix_reference
     real(dp), parameter :: besseli_ratio_ref = 7.38092974491790232e-01_dp
     real(dp), parameter :: besseli_large_log_ref = -5.62305578454131449e+00_dp
     real(dp), parameter :: besseli_large_ratio_ref = 9.50750343507047235e-01_dp
+    real(dp), parameter :: directional_data2_ref(2,2) = reshape([ &
+        3.00000000000000000e+00_dp, &
+        6.00000000000000000e+00_dp, &
+        4.00000000000000000e+00_dp, &
+        -8.00000000000000000e+00_dp ], &
+        [2,2])
+    real(dp), parameter :: directional_2_axis0_mean_ref(2) = [ &
+        1.00000000000000000e+00_dp, &
+        0.00000000000000000e+00_dp ]
+    real(dp), parameter :: directional_2_axis0_mrl_ref = 5.99999999999999978e-01_dp
+    real(dp), parameter :: directional_2_axis0_raw_mean_ref(2) = [ &
+        9.13811548620257263e-01_dp, &
+        -4.06138466053447666e-01_dp ]
+    real(dp), parameter :: directional_2_axis0_raw_mrl_ref = 4.92442890089805196e+00_dp
+    real(dp), parameter :: directional_2_axis1_mean_ref(2) = [ &
+        1.00000000000000000e+00_dp, &
+        0.00000000000000000e+00_dp ]
+    real(dp), parameter :: directional_2_axis1_mrl_ref = 4.47213595499957928e-01_dp
+    real(dp), parameter :: directional_3_axis0_mean_ref(2,2) = reshape([ &
+        9.23879532511286738e-01_dp, &
+        7.07106781186547462e-01_dp, &
+        3.82683432365089726e-01_dp, &
+        7.07106781186547462e-01_dp ], &
+        [2,2])
+    real(dp), parameter :: directional_3_axis0_mrl_ref(2) = [ &
+        9.23879532511286738e-01_dp, &
+        7.07106781186547573e-01_dp ]
+    real(dp), parameter :: directional_3_axis1_mean_ref(2,2) = reshape([ &
+        7.07106781186547462e-01_dp, &
+        9.23879532511286738e-01_dp, &
+        7.07106781186547462e-01_dp, &
+        3.82683432365089726e-01_dp ], &
+        [2,2])
+    real(dp), parameter :: directional_3_axis1_mrl_ref(2) = [ &
+        7.07106781186547573e-01_dp, &
+        9.23879532511286738e-01_dp ]
+    real(dp), parameter :: directional_3_axis2_mean_ref(2,2) = reshape([ &
+        7.07106781186547462e-01_dp, &
+        9.23879532511286738e-01_dp, &
+        7.07106781186547462e-01_dp, &
+        3.82683432365089726e-01_dp ], &
+        [2,2])
+    real(dp), parameter :: directional_3_axis2_mrl_ref(2) = [ &
+        7.07106781186547573e-01_dp, &
+        9.23879532511286738e-01_dp ]
     real(dp), parameter :: vmf_mu2_ref(2) = [ &
         9.21060994002885103e-01_dp, &
         3.89418342308650522e-01_dp ]

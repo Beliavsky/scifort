@@ -15,6 +15,8 @@ module scifort_nonparametric_extended
     use scifort_linalg, only : linalg_status_success, symmetric_eigen_jacobi
     use scifort_math, only : quiet_nan
     use scifort_normal, only : normal_cdf, normal_sf
+    use scifort_random, only : rng_state
+    use scifort_resampling, only : permutation_test, permutation_test_result
     implicit none
     private
 
@@ -33,12 +35,146 @@ module scifort_nonparametric_extended
 
     public :: anderson_ksamp
     public :: ansari
+    public :: bws_test
     public :: epps_singleton_2samp
     public :: median_test
     public :: median_test_named
     public :: mood
 
 contains
+
+    function bws_test(x, y, state, alternative, n_resamples) result(result_value)
+        real(dp), intent(in) :: x(:) !! first independent sample, nonempty and without NaN
+        real(dp), intent(in) :: y(:) !! second independent sample, nonempty and without NaN
+        type(rng_state), intent(inout) :: state !! RNG state for randomized permutations
+        character(len=*), intent(in), optional :: alternative !! two-sided, less, or greater
+        integer, intent(in), optional :: n_resamples !! maximum permutation draws, default 9999
+        type(permutation_test_result) :: result_value
+
+        character(len=9) :: selected_alternative
+        integer :: draws
+        real(dp), allocatable :: pooled(:)
+        real(dp), allocatable :: ranks(:)
+
+        selected_alternative = select_alternative(alternative)
+        draws = 9999
+        if (present(n_resamples)) draws = n_resamples
+
+        if (size(x) == 0 .or. size(y) == 0 .or. any(ieee_is_nan(x)) .or. &
+                any(ieee_is_nan(y)) .or. draws < 1 .or. &
+                .not. valid_alternative(selected_alternative)) then
+            call invalidate_permutation_result(result_value)
+            return
+        end if
+
+        allocate(pooled(size(x) + size(y)))
+        pooled(1:size(x)) = x
+        pooled(size(x) + 1:) = y
+        ranks = rankdata(pooled)
+
+        select case (selected_alternative)
+        case ('two-sided')
+            result_value = permutation_test(ranks(1:size(x)), ranks(size(x) + 1:), &
+                bws_statistic_two_sided, state, draws, 'greater', 'independent')
+        case ('less')
+            result_value = permutation_test(ranks(1:size(x)), ranks(size(x) + 1:), &
+                bws_statistic_one_sided, state, draws, 'less', 'independent')
+        case ('greater')
+            result_value = permutation_test(ranks(1:size(x)), ranks(size(x) + 1:), &
+                bws_statistic_one_sided, state, draws, 'greater', 'independent')
+        end select
+    end function bws_test
+
+    pure function bws_statistic_two_sided(x, y) result(statistic)
+        real(dp), intent(in) :: x(:) !! pooled ranks assigned to the first sample
+        real(dp), intent(in) :: y(:) !! pooled ranks assigned to the second sample
+        real(dp) :: statistic
+
+        statistic = bws_statistic_core(x, y, .true.)
+    end function bws_statistic_two_sided
+
+    pure function bws_statistic_one_sided(x, y) result(statistic)
+        real(dp), intent(in) :: x(:) !! pooled ranks assigned to the first sample
+        real(dp), intent(in) :: y(:) !! pooled ranks assigned to the second sample
+        real(dp) :: statistic
+
+        statistic = bws_statistic_core(x, y, .false.)
+    end function bws_statistic_one_sided
+
+    pure function bws_statistic_core(x, y, two_sided) result(statistic)
+        real(dp), intent(in) :: x(:) !! pooled ranks assigned to the first sample
+        real(dp), intent(in) :: y(:) !! pooled ranks assigned to the second sample
+        logical, intent(in) :: two_sided !! use squared deviations when true
+        real(dp) :: statistic
+
+        real(dp) :: bx
+        real(dp) :: by
+        real(dp) :: denominator
+        real(dp) :: deviation
+        integer :: i
+        integer :: m
+        integer :: n
+        real(dp) :: total
+        real(dp), allocatable :: rx(:)
+        real(dp), allocatable :: ry(:)
+
+        n = size(x)
+        m = size(y)
+        if (n == 0 .or. m == 0) then
+            statistic = quiet_nan(0.0_dp)
+            return
+        end if
+
+        rx = x
+        ry = y
+        call sort_values(rx)
+        call sort_values(ry)
+        total = real(n + m, dp)
+
+        bx = 0.0_dp
+        do i = 1, n
+            deviation = rx(i) - total * real(i, dp) / real(n, dp)
+            denominator = real(i, dp) / real(n + 1, dp) * &
+                (1.0_dp - real(i, dp) / real(n + 1, dp)) * &
+                real(m, dp) * total / real(n, dp)
+            if (two_sided) then
+                bx = bx + deviation * deviation / denominator
+            else
+                bx = bx + deviation * abs(deviation) / denominator
+            end if
+        end do
+        bx = bx / real(n, dp)
+
+        by = 0.0_dp
+        do i = 1, m
+            deviation = ry(i) - total * real(i, dp) / real(m, dp)
+            denominator = real(i, dp) / real(m + 1, dp) * &
+                (1.0_dp - real(i, dp) / real(m + 1, dp)) * &
+                real(n, dp) * total / real(m, dp)
+            if (two_sided) then
+                by = by + deviation * deviation / denominator
+            else
+                by = by + deviation * abs(deviation) / denominator
+            end if
+        end do
+        by = by / real(m, dp)
+
+        if (two_sided) then
+            statistic = 0.5_dp * (bx + by)
+        else
+            statistic = 0.5_dp * (bx - by)
+        end if
+    end function bws_statistic_core
+
+    subroutine invalidate_permutation_result(result_value)
+        type(permutation_test_result), intent(out) :: result_value !! invalid NaN result
+
+        result_value%statistic = quiet_nan(0.0_dp)
+        result_value%pvalue = quiet_nan(0.0_dp)
+        result_value%n_resamples = 0
+        result_value%exact = .false.
+        allocate(result_value%null_distribution(0))
+    end subroutine invalidate_permutation_result
 
     function anderson_ksamp(groups, variant) result(result_value)
         type(sample_group), intent(in) :: groups(:) !! two or more independent samples
@@ -917,7 +1053,7 @@ contains
         value = (1.0_dp - fraction) * sorted(lower) + fraction * sorted(upper)
     end function linear_quantile_sorted
 
-    subroutine sort_values(values)
+    pure subroutine sort_values(values)
         real(dp), intent(inout) :: values(:) !! values sorted ascending in place
 
         real(dp), allocatable :: temporary(:)
@@ -927,7 +1063,7 @@ contains
         call merge_sort_values(values, temporary, 1, size(values))
     end subroutine sort_values
 
-    recursive subroutine merge_sort_values(values, temporary, left, right)
+    pure recursive subroutine merge_sort_values(values, temporary, left, right)
         real(dp), intent(inout) :: values(:) !! values being sorted
         real(dp), intent(inout) :: temporary(:) !! merge workspace
         integer, intent(in) :: left !! first index of inclusive range

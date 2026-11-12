@@ -79,6 +79,11 @@ module scifort_hypothesis_extended
         real(dp) :: pvalue !! upper-tail chi-square p-value
     end type fligner_result
 
+    interface obrientransform
+        module procedure obrientransform_sample
+        module procedure obrientransform_groups
+    end interface obrientransform
+
     public :: bartlett
     public :: chi2_contingency
     public :: chisquare
@@ -90,12 +95,71 @@ module scifort_hypothesis_extended
     public :: kruskal
     public :: levene
     public :: make_sample_group
+    public :: obrientransform
     public :: power_divergence
     public :: power_divergence_named
     public :: ranksums
     public :: wilcoxon
 
 contains
+
+    pure function obrientransform_sample(sample) result(transformed)
+        real(dp), intent(in) :: sample(:) !! observations in one factor level
+        real(dp) :: transformed(size(sample))
+
+        integer :: n
+        real(dp) :: sample_mean
+        real(dp) :: sumsq
+        real(dp) :: transformed_mean
+        real(dp) :: variance_value
+        real(dp), allocatable :: squared_deviations(:)
+        real(dp), parameter :: convergence_tolerance = sqrt(epsilon(1.0_dp))
+
+        n = size(sample)
+        if (n == 0) return
+        if (n < 3 .or. any(.not. ieee_is_finite(sample))) then
+            transformed = quiet_nan(0.0_dp)
+            return
+        end if
+
+        sample_mean = mean(sample)
+        if (.not. ieee_is_finite(sample_mean)) then
+            transformed = quiet_nan(0.0_dp)
+            return
+        end if
+        allocate(squared_deviations(n))
+        squared_deviations = (sample - sample_mean) ** 2
+        if (any(.not. ieee_is_finite(squared_deviations))) then
+            transformed = quiet_nan(0.0_dp)
+            return
+        end if
+        sumsq = sum(squared_deviations)
+        transformed = ((real(n, dp) - 1.5_dp) * real(n, dp) * squared_deviations - &
+            0.5_dp * sumsq) / real((n - 1) * (n - 2), dp)
+
+        variance_value = sumsq / real(n - 1, dp)
+        transformed_mean = mean(transformed)
+        if (.not. ieee_is_finite(transformed_mean) .or. &
+                abs(variance_value - transformed_mean) > convergence_tolerance) then
+            transformed = quiet_nan(0.0_dp)
+        end if
+    end function obrientransform_sample
+
+    function obrientransform_groups(groups) result(transformed)
+        type(sample_group), intent(in) :: groups(:) !! factor levels, which may have different sizes
+        type(sample_group), allocatable :: transformed(:)
+
+        integer :: i
+
+        allocate(transformed(size(groups)))
+        do i = 1, size(groups)
+            if (allocated(groups(i)%values)) then
+                transformed(i)%values = obrientransform_sample(groups(i)%values)
+            else
+                allocate(transformed(i)%values(0))
+            end if
+        end do
+    end function obrientransform_groups
 
     function make_sample_group(values) result(group)
         real(dp), intent(in) :: values(:) !! observations copied into the returned group

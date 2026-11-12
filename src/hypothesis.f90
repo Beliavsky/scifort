@@ -33,6 +33,7 @@ module scifort_hypothesis
     public :: spearmanr
     public :: ttest_1samp
     public :: ttest_ind
+    public :: ttest_ind_from_stats
     public :: ttest_rel
 
 contains
@@ -135,6 +136,86 @@ contains
         result_value%pvalue = student_t_pvalue(&
             result_value%statistic, result_value%df, selected_alternative)
     end function ttest_ind
+
+    pure elemental function ttest_ind_from_stats(mean1, std1, nobs1, mean2, std2, &
+            nobs2, equal_var, alternative) result(result_value)
+        real(dp), intent(in) :: mean1 !! sample mean of first independent sample
+        real(dp), intent(in) :: std1 !! corrected sample standard deviation of first sample
+        integer, intent(in) :: nobs1 !! number of observations in first sample
+        real(dp), intent(in) :: mean2 !! sample mean of second independent sample
+        real(dp), intent(in) :: std2 !! corrected sample standard deviation of second sample
+        integer, intent(in) :: nobs2 !! number of observations in second sample
+        logical, intent(in), optional :: equal_var !! use pooled variance when true, default true
+        character(len=*), intent(in), optional :: alternative !! two-sided, less, or greater
+        type(ttest_result) :: result_value
+
+        character(len=9) :: selected_alternative
+        logical :: use_equal_variance
+        real(dp) :: denominator_df
+        real(dp) :: pooled_variance
+        real(dp) :: standard_error
+        real(dp) :: term1
+        real(dp) :: term2
+        real(dp) :: variance1
+        real(dp) :: variance2
+
+        selected_alternative = choose_alternative(alternative)
+        use_equal_variance = .true.
+        if (present(equal_var)) use_equal_variance = equal_var
+
+        if (nobs1 < 1 .or. nobs2 < 1 .or. &
+                .not. ieee_is_finite(mean1) .or. .not. ieee_is_finite(mean2) .or. &
+                .not. ieee_is_finite(std1) .or. .not. ieee_is_finite(std2) .or. &
+                .not. valid_alternative(selected_alternative)) then
+            call set_invalid_ttest(result_value)
+            return
+        end if
+
+        variance1 = std1 * std1
+        variance2 = std2 * std2
+        if (.not. ieee_is_finite(variance1) .or. .not. ieee_is_finite(variance2)) then
+            call set_invalid_ttest(result_value)
+            return
+        end if
+
+        if (use_equal_variance) then
+            result_value%df = real(nobs1 + nobs2 - 2, dp)
+            if (result_value%df <= 0.0_dp) then
+                call set_invalid_ttest(result_value)
+                return
+            end if
+            if (nobs1 == 1) variance1 = 0.0_dp
+            if (nobs2 == 1) variance2 = 0.0_dp
+            pooled_variance = (real(nobs1 - 1, dp) * variance1 + &
+                real(nobs2 - 1, dp) * variance2) / result_value%df
+            standard_error = sqrt(pooled_variance * &
+                (1.0_dp / real(nobs1, dp) + 1.0_dp / real(nobs2, dp)))
+        else
+            term1 = variance1 / real(nobs1, dp)
+            term2 = variance2 / real(nobs2, dp)
+            standard_error = sqrt(term1 + term2)
+
+            if ((nobs1 == 1 .and. term1 == 0.0_dp) .or. &
+                    (nobs2 == 1 .and. term2 == 0.0_dp)) then
+                result_value%df = 1.0_dp
+            else if ((nobs1 == 1 .and. term1 > 0.0_dp) .or. &
+                    (nobs2 == 1 .and. term2 > 0.0_dp)) then
+                result_value%df = 0.0_dp
+            else
+                denominator_df = term1 * term1 / real(nobs1 - 1, dp) + &
+                    term2 * term2 / real(nobs2 - 1, dp)
+                if (denominator_df > 0.0_dp) then
+                    result_value%df = (term1 + term2) ** 2 / denominator_df
+                else
+                    result_value%df = 1.0_dp
+                end if
+            end if
+        end if
+
+        result_value%statistic = ratio_statistic(mean1 - mean2, standard_error)
+        result_value%pvalue = student_t_pvalue(&
+            result_value%statistic, result_value%df, selected_alternative)
+    end function ttest_ind_from_stats
 
     pure function ttest_rel(x, y, alternative) result(result_value)
         real(dp), intent(in) :: x(:) !! first paired observations

@@ -8,6 +8,9 @@ module qmc_reference
     public :: qmc_ref_scale, qmc_ref_sobol_first, qmc_ref_sobol_later, qmc_ref_sobol_hi
     public :: qmc_ref_sobol_deep, qmc_ref_sobol_second8
     public :: qmc_ref_multinomial, qmc_ref_mvn, qmc_ref_mvn_singular
+    public :: qmc_ref_lloyd_input, qmc_ref_lloyd_once
+    public :: qmc_ref_sensitivity_first, qmc_ref_sensitivity_total
+    public :: qmc_ref_sensitivity_multi_first, qmc_ref_sensitivity_multi_total
 
     real(dp), parameter :: qmc_ref_space(6,2) = reshape([ &
         0.083333333333333329_dp, 0.25_dp, 0.41666666666666669_dp, 0.58333333333333337_dp, &
@@ -23,6 +26,20 @@ module qmc_reference
     real(dp), parameter :: qmc_ref_geo(3) = [ &
         0.37267799624996489_dp, 0.40355165233891788_dp, 0.49999999999999989_dp &
     ]
+    real(dp), parameter :: qmc_ref_lloyd_input(10,2) = reshape([ &
+        0.43389468669586539_dp, 0.34240635722080759_dp, 0.22580773595182554_dp, 0.65363833635054502_dp, &
+        0.75045402305972819_dp, 0.3009291948166416_dp, 0.81970043584254171_dp, 0.66132570758335274_dp, &
+        0.25568962342979429_dp, 0.10496270977626461_dp, 0.39327530366669794_dp, 0.36372265141334181_dp, &
+        0.40996027057491968_dp, 0.69802648978283011_dp, 0.57435783793536077_dp, 0.8688066670720066_dp, &
+        0.26060381411219968_dp, 0.21651468999055032_dp, 0.48603646863859928_dp, 0.24000260422988468_dp &
+    ], [10,2])
+    real(dp), parameter :: qmc_ref_lloyd_once(10,2) = reshape([ &
+        0.53993283367437162_dp, 0.34668565842408255_dp, 0.22580773595182554_dp, 0.31304362907950745_dp, &
+        0.52435205509779326_dp, 0.3009291948166416_dp, 0.58498635514390707_dp, 0.42806762366357953_dp, &
+        0.25568962342979429_dp, 0.10496270977626461_dp, 0.48725190462142842_dp, 0.18953177609120309_dp, &
+        0.40996027057491968_dp, 0.51912877743995889_dp, 0.33256197894004524_dp, 0.8688066670720066_dp, &
+        0.52138680384433211_dp, 0.2832045606071863_dp, 0.48603646863859928_dp, 0.24000260422988468_dp &
+    ], [10,2])
     real(dp), parameter :: qmc_ref_halton_first(8,3) = reshape([ &
         0.0_dp, 0.5_dp, 0.25_dp, 0.75_dp, &
         0.125_dp, 0.625_dp, 0.375_dp, 0.875_dp, &
@@ -95,4 +112,16 @@ module qmc_reference
         -5.9669510747324184_dp, 0.5_dp, -0.17448975011741019_dp, 1.1744897501174103_dp, &
         -7.4669510747324184_dp, -1.0_dp, -1.6744897501174103_dp, -0.32551024988258981_dp &
     ], [4,2])
+    real(dp), parameter :: qmc_ref_sensitivity_first(3) = [ &
+        0.66666666666666663_dp, 0.071428571428571425_dp, 1.1666666666666667_dp &
+    ]
+    real(dp), parameter :: qmc_ref_sensitivity_total(3) = [ &
+        0.66666666666666663_dp, 0.071428571428571425_dp, 1.1666666666666667_dp &
+    ]
+    real(dp), parameter :: qmc_ref_sensitivity_multi_first(2,2) = reshape([ &
+        -0.12738853503184713_dp, 0.5_dp, 0.15286624203821655_dp, -1.0_dp &
+    ], [2,2])
+    real(dp), parameter :: qmc_ref_sensitivity_multi_total(2,2) = reshape([ &
+        0.067940552016985137_dp, 0.5_dp, 0.13588110403397027_dp, 1.0_dp &
+    ], [2,2])
 end module qmc_reference

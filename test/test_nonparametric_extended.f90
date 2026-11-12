@@ -1,10 +1,11 @@
 program test_nonparametric_extended
-    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan, ieee_quiet_nan, ieee_value
     use nonparametric_extended_reference
+    use scifort_random, only : rng_seed, rng_state
     use scifort_kinds, only : dp
-    use scifort_stats, only : anderson_ksamp, anderson_ksamp_result, ansari, &
+    use scifort_stats, only : anderson_ksamp, anderson_ksamp_result, ansari, bws_test, &
         epps_singleton_2samp, make_sample_group, median_test, median_test_named, &
-        median_test_result, mood, sample_group, significance_result
+        median_test_result, mood, permutation_test_result, sample_group, significance_result
     implicit none
 
     real(dp), parameter :: x(5) = [1.0_dp, 2.0_dp, 5.0_dp, 7.0_dp, 9.0_dp]
@@ -19,12 +20,21 @@ program test_nonparametric_extended
         0.4_dp, 0.9_dp, 1.4_dp, 2.0_dp, 2.5_dp]
     real(dp), parameter :: ay(10) = [-0.3_dp, 0.4_dp, 1.0_dp, 1.5_dp, 1.8_dp, &
         2.2_dp, 2.6_dp, 3.1_dp, 3.7_dp, 4.3_dp]
+    real(dp), parameter :: bx(7) = [1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 6.0_dp, 7.0_dp, 8.0_dp]
+    real(dp), parameter :: by(7) = [5.0_dp, 9.0_dp, 10.0_dp, 11.0_dp, 12.0_dp, &
+        13.0_dp, 14.0_dp]
+    real(dp), parameter :: bxt(4) = [1.0_dp, 2.0_dp, 2.0_dp, 5.0_dp]
+    real(dp), parameter :: byt(5) = [0.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 4.0_dp]
 
     type(anderson_ksamp_result) :: ar
     integer :: failures
     type(sample_group) :: groups2(2)
     type(sample_group) :: groups3(3)
     type(median_test_result) :: mr
+    type(permutation_test_result) :: pr
+    real(dp), allocatable :: random_null(:)
+    real(dp) :: random_pvalue
+    type(rng_state) :: state
     type(significance_result) :: sr
 
     failures = 0
@@ -54,6 +64,37 @@ program test_nonparametric_extended
     call check_pair('mood ties less', sr, mood_ref(9:10), 3.0e-15_dp, failures)
     sr = mood(xt, yt, 'greater')
     call check_pair('mood ties greater', sr, mood_ref(11:12), 3.0e-15_dp, failures)
+
+    call rng_seed(state, 20261003)
+    pr = bws_test(bx, by, state)
+    call check_bws('bws canonical two-sided', pr, bws_ref(1:2), 3432, failures)
+    pr = bws_test(bx, by, state, alternative='less')
+    call check_bws('bws canonical less', pr, bws_ref(3:4), 3432, failures)
+    pr = bws_test(bx, by, state, alternative='greater')
+    call check_bws('bws canonical greater', pr, bws_ref(5:6), 3432, failures)
+
+    pr = bws_test(bxt, byt, state)
+    call check_bws('bws ties two-sided', pr, bws_ref(7:8), 126, failures)
+    pr = bws_test(bxt, byt, state, alternative='less')
+    call check_bws('bws ties less', pr, bws_ref(9:10), 126, failures)
+    pr = bws_test(bxt, byt, state, alternative='greater')
+    call check_bws('bws ties greater', pr, bws_ref(11:12), 126, failures)
+
+    call rng_seed(state, 20261003)
+    pr = bws_test(bx, by, state, n_resamples=100)
+    call check_true('bws randomized flag', .not. pr%exact, failures)
+    call check_true('bws randomized count', pr%n_resamples == 100, failures)
+    call check_close('bws randomized statistic', pr%statistic, bws_ref(1), 3.0e-15_dp, failures)
+    call check_true('bws randomized pvalue range', pr%pvalue >= 0.0_dp .and. &
+        pr%pvalue <= 1.0_dp, failures)
+    random_pvalue = pr%pvalue
+    random_null = pr%null_distribution
+    call rng_seed(state, 20261003)
+    pr = bws_test(bx, by, state, n_resamples=100)
+    call check_close('bws randomized reproducible pvalue', pr%pvalue, random_pvalue, &
+        0.0_dp, failures)
+    call check_array('bws randomized reproducible null', pr%null_distribution, &
+        random_null, 0.0_dp, failures)
 
     sr = epps_singleton_2samp(xe, ye)
     call check_pair('epps default', sr, epps_ref(1:2), 3.0e-12_dp, failures)
@@ -94,6 +135,14 @@ program test_nonparametric_extended
     call check_true('epps short invalid', ieee_is_nan(sr%statistic), failures)
     sr = mood([1.0_dp], [2.0_dp], 'bad')
     call check_true('mood bad alternative', ieee_is_nan(sr%statistic), failures)
+    pr = bws_test(bx, by, state, alternative='bad')
+    call check_true('bws bad alternative', ieee_is_nan(pr%statistic), failures)
+    pr = bws_test(bx, by, state, n_resamples=0)
+    call check_true('bws bad resamples', ieee_is_nan(pr%statistic), failures)
+    pr = bws_test([real(dp) ::], by, state)
+    call check_true('bws empty sample', ieee_is_nan(pr%statistic), failures)
+    pr = bws_test([1.0_dp, ieee_value(0.0_dp, ieee_quiet_nan)], by, state)
+    call check_true('bws NaN sample', ieee_is_nan(pr%statistic), failures)
     ar = anderson_ksamp(groups2, 'bad')
     call check_true('anderson bad variant', ieee_is_nan(ar%statistic), failures)
 
@@ -118,6 +167,21 @@ contains
             25.0_dp, 25.0_dp, 33.0_dp, 34.0_dp, 34.0_dp, 40.0_dp, 45.0_dp, &
             46.0_dp, 48.0_dp, 62.0_dp, 67.0_dp, 84.0_dp])
     end subroutine set_median_groups
+
+    subroutine check_bws(name, actual, expected_value, exact_count, count)
+        character(len=*), intent(in) :: name !! check label
+        type(permutation_test_result), intent(in) :: actual !! computed BWS result
+        real(dp), intent(in) :: expected_value(2) !! SciPy statistic and exact p-value
+        integer, intent(in) :: exact_count !! number of exact partitions
+        integer, intent(inout) :: count !! accumulated failure count
+
+        call check_close(trim(name)//' statistic', actual%statistic, expected_value(1), &
+            5.0e-14_dp, count)
+        call check_close(trim(name)//' pvalue', actual%pvalue, expected_value(2), &
+            5.0e-15_dp, count)
+        call check_true(trim(name)//' exact', actual%exact, count)
+        call check_true(trim(name)//' count', actual%n_resamples == exact_count, count)
+    end subroutine check_bws
 
     subroutine check_pair(name, actual, expected_value, tolerance, count)
         character(len=*), intent(in) :: name !! check label

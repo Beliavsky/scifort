@@ -1,9 +1,12 @@
-! SPDX-License-Identifier: MIT
+! SPDX-License-Identifier: MIT AND BSD-3-Clause
 ! Copyright (c) 2026 SciFort contributors
+! Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.
 !
 ! Quasi-Monte Carlo helpers and engines corresponding to the first core slice
 ! of scipy.stats.qmc. Samples use SciPy's row-major mathematical convention:
 ! shape (n,d), with one point per row.
+! The random-CD exchange/update kernel is adapted from SciPy 1.17.0
+! scipy/stats/_qmc.py. See CODE_PROVENANCE.md and THIRD_PARTY_LICENSES.md.
 
 module scifort_qmc
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
@@ -15,6 +18,7 @@ module scifort_qmc
     use scifort_random_variates, only : normal_rvs
     use scifort_random, only : rng_state, rng_uniform
     use scifort_qmc_sobol_data, only : sobol_maxdim, sobol_poly_value, sobol_vinit_value
+    use scifort_qmc_lloyd, only : qmc_lloyd
     implicit none
     private
 
@@ -27,6 +31,8 @@ module scifort_qmc
         integer :: d = 0 !! dimension of each generated point
         integer :: num_generated = 0 !! number of sequence points already consumed
         logical :: scramble = .false. !! whether Owen-style digit permutations are active
+        logical, private :: optimize_random_cd = .false. !! apply random-CD after each draw
+        logical, private :: optimize_lloyd = .false. !! apply Lloyd post-processing after each draw
         integer, allocatable :: base(:) !! prime base associated with each coordinate
         integer, allocatable, private :: permutation_count(:)
         integer, allocatable, private :: permutations(:, :, :)
@@ -41,6 +47,8 @@ module scifort_qmc
         integer :: num_generated = 0 !! cumulative number of points returned
         integer :: strength = 1 !! orthogonal-array strength, one or two
         logical :: scramble = .true. !! randomize positions within one-dimensional strata
+        logical :: optimize_random_cd = .false. !! apply random-CD after each draw
+        logical :: optimize_lloyd = .false. !! apply Lloyd post-processing after each draw
     contains
         procedure, public :: random => qmc_latin_hypercube_random
         procedure, public :: reset => qmc_latin_hypercube_reset
@@ -51,6 +59,8 @@ module scifort_qmc
         integer :: bits = 30 !! number of direction-number bits, from one through 64
         integer(int64) :: num_generated = 0_int64 !! number of sequence points already consumed
         logical :: scramble = .true. !! whether LMS plus digital-shift scrambling is active
+        logical, private :: optimize_random_cd = .false. !! apply random-CD after each draw
+        logical, private :: optimize_lloyd = .false. !! apply Lloyd post-processing after each draw
         integer(int64), allocatable, private :: sv(:, :) !! Sobol direction numbers by dimension and bit
         integer(int64), allocatable, private :: shift(:) !! digital shift for each coordinate
         integer(int64), allocatable, private :: quasi(:) !! current integer-valued Sobol state
@@ -91,6 +101,8 @@ module scifort_qmc
         integer :: num_generated = 0 !! cumulative number of accepted points returned
         integer :: ncandidates = 30 !! candidates proposed around each active point
         logical :: surface = .false. !! sample candidate directions on a shell rather than in a ball
+        logical, private :: optimize_random_cd = .false. !! apply random-CD after each draw
+        logical, private :: optimize_lloyd = .false. !! apply Lloyd post-processing after each draw
         real(dp) :: radius = 0.05_dp !! minimum accepted pairwise distance
         real(dp) :: radius_squared = 0.0025_dp !! squared minimum distance
         real(dp) :: radius_factor = 2.0_dp !! proposal-ball radius relative to minimum distance
@@ -115,6 +127,8 @@ module scifort_qmc
     public :: qmc_multinomial_init
     public :: qmc_multivariate_normal_init
     public :: qmc_poisson_disk_init
+    public :: qmc_random_cd
+    public :: qmc_lloyd
     public :: qmc_to_integers
     public :: qmc_update_discrepancy
     public :: qmc_van_der_corput
@@ -347,6 +361,169 @@ contains
         value = initial_disc + disc1 + disc2 + disc3
     end function qmc_update_discrepancy
 
+    subroutine qmc_random_cd(sample, state, status, n_iters, n_nochange, n_accepted, n_performed)
+        real(dp), intent(inout) :: sample(:, :) !! unit-hypercube sample optimized in place
+        type(rng_state), intent(inout) :: state !! explicit RNG state advanced by swap proposals
+        integer, intent(out) :: status !! qmc_status_* result
+        integer, intent(in), optional :: n_iters !! maximum swap proposals, default 10000
+        integer, intent(in), optional :: n_nochange !! consecutive rejections before stopping, default 100
+        integer, intent(out), optional :: n_accepted !! number of accepted swaps
+        integer, intent(out), optional :: n_performed !! number of attempted swaps
+
+        integer :: accepted
+        integer :: col
+        integer :: i
+        integer :: max_iters
+        integer :: max_nochange
+        integer :: nochange
+        integer :: row1
+        integer :: row2
+        real(dp) :: best_disc
+        real(dp) :: candidate_disc
+        real(dp) :: predicted_disc
+        real(dp) :: tmp
+
+        status = qmc_status_success
+        accepted = 0
+        i = 0
+        if (present(n_accepted)) n_accepted = 0
+        if (present(n_performed)) n_performed = 0
+
+        max_iters = 10000
+        if (present(n_iters)) max_iters = n_iters
+        max_nochange = 100
+        if (present(n_nochange)) max_nochange = n_nochange
+        if (max_iters < 0 .or. max_nochange < 0) then
+            status = qmc_status_invalid_parameter
+            return
+        end if
+        if (size(sample,1) == 0 .or. size(sample,2) == 0) return
+        if (.not. all(ieee_is_finite(sample)) .or. any(sample < 0.0_dp) .or. &
+                any(sample > 1.0_dp)) then
+            status = qmc_status_out_of_bounds
+            return
+        end if
+        if (size(sample,1) == 1 .or. size(sample,2) == 1 .or. &
+                max_iters == 0 .or. max_nochange == 0) return
+
+        best_disc = qmc_discrepancy(sample, 'CD')
+        nochange = 0
+        do while (i < max_iters .and. nochange < max_nochange)
+            i = i + 1
+            col = random_index(state, size(sample,2))
+            row1 = random_index(state, size(sample,1))
+            row2 = random_index(state, size(sample,1))
+            if (row1 == row2) then
+                nochange = nochange + 1
+                cycle
+            end if
+
+            predicted_disc = random_cd_perturbed_discrepancy(sample, row1, row2, col, best_disc)
+            if (predicted_disc < best_disc) then
+                tmp = sample(row1,col)
+                sample(row1,col) = sample(row2,col)
+                sample(row2,col) = tmp
+                candidate_disc = qmc_discrepancy(sample, 'CD')
+                if (candidate_disc < best_disc) then
+                    best_disc = candidate_disc
+                    accepted = accepted + 1
+                    nochange = 0
+                else
+                    tmp = sample(row1,col)
+                    sample(row1,col) = sample(row2,col)
+                    sample(row2,col) = tmp
+                    nochange = nochange + 1
+                end if
+            else
+                nochange = nochange + 1
+            end if
+        end do
+
+        if (present(n_accepted)) n_accepted = accepted
+        if (present(n_performed)) n_performed = i
+    end subroutine qmc_random_cd
+
+    function random_cd_perturbed_discrepancy(sample, row1, row2, col, disc) result(value)
+        real(dp), intent(in) :: sample(:, :) !! unit-hypercube sample before the proposed swap
+        integer, intent(in) :: row1 !! first one-based row in the proposed swap
+        integer, intent(in) :: row2 !! second one-based row in the proposed swap
+        integer, intent(in) :: col !! one-based coordinate column in the proposed swap
+        real(dp), intent(in) :: disc !! centered discrepancy before the proposed swap
+        real(dp) :: value
+
+        integer :: i
+        integer :: j
+        integer :: n
+        real(dp) :: alpha
+        real(dp) :: beta
+        real(dp) :: c11
+        real(dp) :: c22
+        real(dp) :: cp11
+        real(dp) :: cp22
+        real(dp) :: gamma
+        real(dp) :: g1
+        real(dp) :: g2
+        real(dp) :: h1
+        real(dp) :: h2
+        real(dp) :: prod1
+        real(dp) :: prod2
+        real(dp) :: sum_change
+        real(dp) :: z1
+        real(dp) :: z2
+        real(dp) :: zi
+        real(dp) :: c1(size(sample,1))
+        real(dp) :: c2(size(sample,1))
+
+        n = size(sample,1)
+        do i = 1, n
+            prod1 = 1.0_dp
+            prod2 = 1.0_dp
+            do j = 1, size(sample,2)
+                z1 = sample(row1,j) - 0.5_dp
+                z2 = sample(row2,j) - 0.5_dp
+                zi = sample(i,j) - 0.5_dp
+                prod1 = prod1 * 0.5_dp * (2.0_dp + abs(z1) + abs(zi) - abs(z1 - zi))
+                prod2 = prod2 * 0.5_dp * (2.0_dp + abs(z2) + abs(zi) - abs(z2 - zi))
+            end do
+            c1(i) = prod1 / real(n,dp) ** 2
+            c2(i) = prod2 / real(n,dp) ** 2
+        end do
+
+        g1 = 1.0_dp
+        g2 = 1.0_dp
+        h1 = 1.0_dp
+        h2 = 1.0_dp
+        do j = 1, size(sample,2)
+            z1 = sample(row1,j) - 0.5_dp
+            z2 = sample(row2,j) - 0.5_dp
+            g1 = g1 * (1.0_dp + abs(z1))
+            g2 = g2 * (1.0_dp + abs(z2))
+            h1 = h1 * (1.0_dp + 0.5_dp * abs(z1) - 0.5_dp * z1 * z1)
+            h2 = h2 * (1.0_dp + 0.5_dp * abs(z2) - 0.5_dp * z2 * z2)
+        end do
+        c11 = g1 / real(n,dp) ** 2 - 2.0_dp * h1 / real(n,dp)
+        c22 = g2 / real(n,dp) ** 2 - 2.0_dp * h2 / real(n,dp)
+
+        z1 = sample(row1,col) - 0.5_dp
+        z2 = sample(row2,col) - 0.5_dp
+        alpha = (1.0_dp + abs(z2)) / (1.0_dp + abs(z1))
+        beta = (2.0_dp - abs(z2)) / (2.0_dp - abs(z1))
+        cp11 = g1 * alpha / real(n,dp) ** 2 - &
+            2.0_dp * alpha * beta * h1 / real(n,dp)
+        cp22 = g2 / (real(n,dp) ** 2 * alpha) - &
+            2.0_dp * h2 / (real(n,dp) * alpha * beta)
+
+        sum_change = 0.0_dp
+        do i = 1, n
+            if (i == row1 .or. i == row2) cycle
+            zi = sample(i,col) - 0.5_dp
+            gamma = (2.0_dp + abs(z2) + abs(zi) - abs(z2 - zi)) / &
+                (2.0_dp + abs(z1) + abs(zi) - abs(z1 - zi))
+            sum_change = sum_change + gamma * c1(i) - c1(i) + c2(i) / gamma - c2(i)
+        end do
+        value = disc + cp11 - c11 + cp22 - c22 + 2.0_dp * sum_change
+    end function random_cd_perturbed_discrepancy
+
     function qmc_geometric_discrepancy(sample, method, metric, status) result(value)
         real(dp), intent(in) :: sample(:, :) !! unit-hypercube sample with shape (n,d)
         character(len=*), intent(in), optional :: method !! 'mindist' or 'mst'
@@ -509,12 +686,13 @@ contains
         end do
     end subroutine qmc_van_der_corput
 
-    subroutine qmc_halton_init(engine, d, status, scramble, state)
+    subroutine qmc_halton_init(engine, d, status, scramble, state, optimization)
         type(qmc_halton), intent(out) :: engine !! initialized Halton engine
         integer, intent(in) :: d !! sequence dimension, at least one
         integer, intent(out) :: status !! qmc_status_* result
         logical, intent(in), optional :: scramble !! activate Owen-style scrambling
         type(rng_state), intent(inout), optional :: state !! explicit state used for scrambling permutations
+        character(len=*), intent(in), optional :: optimization !! 'random-cd', 'lloyd', or 'none'
 
         integer :: count
         integer :: i
@@ -531,6 +709,9 @@ contains
         engine%d = d
         engine%num_generated = 0
         engine%scramble = .false.
+        call parse_optimization(optimization, engine%optimize_random_cd, &
+            engine%optimize_lloyd, status)
+        if (status /= qmc_status_success) return
         if (present(scramble)) engine%scramble = scramble
         if (engine%scramble .and. .not. present(state)) then
             status = qmc_status_invalid_parameter
@@ -560,11 +741,12 @@ contains
         end do
     end subroutine qmc_halton_init
 
-    subroutine qmc_halton_random(self, n, sample, status)
+    subroutine qmc_halton_random(self, n, sample, status, state)
         class(qmc_halton), intent(inout) :: self !! Halton engine advanced by n points
         integer, intent(in) :: n !! number of points to generate
         real(dp), intent(out) :: sample(:, :) !! generated sample with shape (n,d)
         integer, intent(out) :: status !! qmc_status_* result
+        type(rng_state), intent(inout), optional :: state !! state used by random-CD optimization
 
         integer :: digit
         integer :: i
@@ -577,6 +759,10 @@ contains
         sample = 0.0_dp
         if (self%d < 1 .or. n < 0 .or. size(sample,1) /= n .or. size(sample,2) /= self%d) then
             status = qmc_status_invalid_shape
+            return
+        end if
+        if (self%optimize_random_cd .and. n > 1 .and. self%d > 1 .and. .not. present(state)) then
+            status = qmc_status_invalid_parameter
             return
         end if
         do i = 1, n
@@ -602,6 +788,11 @@ contains
             end do
         end do
         self%num_generated = self%num_generated + n
+        if (self%optimize_random_cd .and. n > 1 .and. self%d > 1) then
+            call qmc_random_cd(sample, state, status)
+        else if (self%optimize_lloyd .and. n > 0) then
+            call qmc_lloyd(sample, status)
+        end if
     end subroutine qmc_halton_random
 
     subroutine qmc_halton_fast_forward(self, n, status)
@@ -623,13 +814,14 @@ contains
         self%num_generated = 0
     end subroutine qmc_halton_reset
 
-    subroutine qmc_sobol_init(engine, d, status, scramble, bits, state)
+    subroutine qmc_sobol_init(engine, d, status, scramble, bits, state, optimization)
         type(qmc_sobol), intent(out) :: engine !! initialized Sobol engine
         integer, intent(in) :: d !! sequence dimension, from one through 21201
         integer, intent(out) :: status !! qmc_status_* result
         logical, intent(in), optional :: scramble !! activate LMS plus digital-shift scrambling
         integer, intent(in), optional :: bits !! number of sequence bits, from one through 64
         type(rng_state), intent(inout), optional :: state !! explicit RNG state used for scrambling
+        character(len=*), intent(in), optional :: optimization !! 'random-cd', 'lloyd', or 'none'
 
         integer :: selected_bits
 
@@ -645,6 +837,9 @@ contains
         engine%bits = selected_bits
         engine%num_generated = 0_int64
         engine%scramble = .true.
+        call parse_optimization(optimization, engine%optimize_random_cd, &
+            engine%optimize_lloyd, status)
+        if (status /= qmc_status_success) return
         if (present(scramble)) engine%scramble = scramble
         if (engine%scramble .and. .not. present(state)) then
             status = qmc_status_invalid_parameter
@@ -659,11 +854,12 @@ contains
         engine%scale_factor = scale(1.0_dp, -selected_bits)
     end subroutine qmc_sobol_init
 
-    subroutine qmc_sobol_random(self, n, sample, status)
+    subroutine qmc_sobol_random(self, n, sample, status, state)
         class(qmc_sobol), intent(inout) :: self !! Sobol engine advanced by n points
         integer, intent(in) :: n !! number of points to generate
         real(dp), intent(out) :: sample(:, :) !! generated sample with shape (n,d)
         integer, intent(out) :: status !! qmc_status_* result
+        type(rng_state), intent(inout), optional :: state !! state used by random-CD optimization
 
         integer :: i
         integer :: j
@@ -674,6 +870,10 @@ contains
         sample = 0.0_dp
         if (self%d < 1 .or. n < 0 .or. size(sample,1) /= n .or. size(sample,2) /= self%d) then
             status = qmc_status_invalid_shape
+            return
+        end if
+        if (self%optimize_random_cd .and. n > 1 .and. self%d > 1 .and. .not. present(state)) then
+            status = qmc_status_invalid_parameter
             return
         end if
         if (int(n,int64) > huge(0_int64) - self%num_generated) then
@@ -707,13 +907,19 @@ contains
                 self%num_generated = self%num_generated + 1_int64
             end if
         end do
+        if (self%optimize_random_cd .and. n > 1 .and. self%d > 1) then
+            call qmc_random_cd(sample, state, status)
+        else if (self%optimize_lloyd .and. n > 0) then
+            call qmc_lloyd(sample, status)
+        end if
     end subroutine qmc_sobol_random
 
-    subroutine qmc_sobol_random_base2(self, m, sample, status)
+    subroutine qmc_sobol_random_base2(self, m, sample, status, state)
         class(qmc_sobol), intent(inout) :: self !! Sobol engine advanced by 2**m points
         integer, intent(in) :: m !! base-two logarithm of number of requested points
         real(dp), intent(out) :: sample(:, :) !! generated sample with shape (2**m,d)
         integer, intent(out) :: status !! qmc_status_* result
+        type(rng_state), intent(inout), optional :: state !! state used by random-CD optimization
 
         integer :: n
         integer(int64) :: total
@@ -736,7 +942,11 @@ contains
             sample = 0.0_dp
             return
         end if
-        call self%random(n, sample, status)
+        if (present(state)) then
+            call self%random(n, sample, status, state)
+        else
+            call self%random(n, sample, status)
+        end if
     end subroutine qmc_sobol_random_base2
 
     subroutine qmc_sobol_fast_forward(self, n, status)
@@ -1153,7 +1363,8 @@ contains
         call self%engine%reset()
     end subroutine qmc_multivariate_normal_reset
 
-    subroutine qmc_poisson_disk_init(engine, d, status, radius, hypersphere, ncandidates, lower, upper)
+    subroutine qmc_poisson_disk_init(engine, d, status, radius, hypersphere, ncandidates, lower, upper, &
+            optimization)
         type(qmc_poisson_disk), intent(out) :: engine !! initialized Poisson-disk engine
         integer, intent(in) :: d !! sampling dimension
         integer, intent(out) :: status !! qmc_status_* result
@@ -1162,6 +1373,7 @@ contains
         integer, intent(in), optional :: ncandidates !! candidates generated per active center
         real(dp), intent(in), optional :: lower(:) !! lower bounds, default zero
         real(dp), intent(in), optional :: upper(:) !! upper bounds, default one
+        character(len=*), intent(in), optional :: optimization !! 'random-cd', 'lloyd', or 'none'
 
         character(len=:), allocatable :: method
 
@@ -1171,6 +1383,9 @@ contains
             return
         end if
         engine%d = d
+        call parse_optimization(optimization, engine%optimize_random_cd, &
+            engine%optimize_lloyd, status)
+        if (status /= qmc_status_success) return
         engine%radius = 0.05_dp
         if (present(radius)) engine%radius = radius
         engine%ncandidates = 30
@@ -1220,6 +1435,13 @@ contains
                 any(engine%upper <= engine%lower)) then
             status = qmc_status_invalid_parameter
             return
+        end if
+        if (engine%optimize_random_cd .or. engine%optimize_lloyd) then
+            if (maxval(abs(engine%lower)) > 0.0_dp .or. &
+                    maxval(abs(engine%upper - 1.0_dp)) > 0.0_dp) then
+                status = qmc_status_invalid_parameter
+                return
+            end if
         end if
         allocate(engine%pool(16,d), engine%accepted(16,d))
         engine%pool = 0.0_dp
@@ -1284,6 +1506,11 @@ contains
                 if (produced >= n) exit
             end do
         end do
+        if (self%optimize_random_cd .and. produced > 0) then
+            call qmc_random_cd(sample(1:produced,:), state, status)
+        else if (self%optimize_lloyd .and. produced > 0) then
+            call qmc_lloyd(sample(1:produced,:), status)
+        end if
         if (present(n_drawn)) n_drawn = produced
     end subroutine qmc_poisson_disk_random
 
@@ -1296,15 +1523,25 @@ contains
         integer, parameter :: block_size = 256
         integer :: got
         integer :: total
+        logical :: optimize_lloyd
+        logical :: optimize_random_cd
         real(dp), allocatable :: block(:, :)
         real(dp), allocatable :: work(:, :)
 
         status = qmc_status_success
         total = 0
+        optimize_random_cd = self%optimize_random_cd
+        optimize_lloyd = self%optimize_lloyd
+        self%optimize_random_cd = .false.
+        self%optimize_lloyd = .false.
         allocate(sample(0,self%d), block(block_size,self%d))
         do
             call self%random(state, block_size, block, status, got)
-            if (status /= qmc_status_success) return
+            if (status /= qmc_status_success) then
+                self%optimize_random_cd = optimize_random_cd
+                self%optimize_lloyd = optimize_lloyd
+                return
+            end if
             if (got > 0) then
                 allocate(work(total+got,self%d))
                 if (total > 0) work(1:total,:) = sample
@@ -1314,6 +1551,13 @@ contains
             end if
             if (self%pool_size == 0) exit
         end do
+        self%optimize_random_cd = optimize_random_cd
+        self%optimize_lloyd = optimize_lloyd
+        if (optimize_random_cd .and. total > 0) then
+            call qmc_random_cd(sample, state, status)
+        else if (optimize_lloyd .and. total > 0) then
+            call qmc_lloyd(sample, status)
+        end if
     end subroutine qmc_poisson_disk_fill_space
 
     subroutine qmc_poisson_disk_reset(self)
@@ -1422,12 +1666,13 @@ contains
         self%pool_size = self%pool_size - 1
     end subroutine poisson_remove_pool
 
-    subroutine qmc_latin_hypercube_init(engine, d, status, scramble, strength)
+    subroutine qmc_latin_hypercube_init(engine, d, status, scramble, strength, optimization)
         type(qmc_latin_hypercube), intent(out) :: engine !! initialized Latin-hypercube engine
         integer, intent(in) :: d !! design dimension, at least one
         integer, intent(out) :: status !! qmc_status_* result
         logical, intent(in), optional :: scramble !! randomize positions inside strata
         integer, intent(in), optional :: strength !! one for plain LHS or two for OA-LHS
+        character(len=*), intent(in), optional :: optimization !! 'random-cd', 'lloyd', or 'none'
 
         status = qmc_status_success
         if (d < 1) then
@@ -1437,6 +1682,9 @@ contains
         engine%d = d
         engine%num_generated = 0
         engine%scramble = .true.
+        call parse_optimization(optimization, engine%optimize_random_cd, &
+            engine%optimize_lloyd, status)
+        if (status /= qmc_status_success) return
         if (present(scramble)) engine%scramble = scramble
         engine%strength = 1
         if (present(strength)) engine%strength = strength
@@ -1465,6 +1713,11 @@ contains
         else
             sample = 0.0_dp
             status = qmc_status_invalid_parameter
+        end if
+        if (status == qmc_status_success .and. self%optimize_random_cd) then
+            call qmc_random_cd(sample, state, status)
+        else if (status == qmc_status_success .and. self%optimize_lloyd .and. n > 0) then
+            call qmc_lloyd(sample, status)
         end if
         if (status == qmc_status_success) self%num_generated = self%num_generated + n
     end subroutine qmc_latin_hypercube_random
@@ -1688,6 +1941,40 @@ contains
             values(j) = tmp
         end do
     end subroutine shuffle_zero_based
+
+    function random_index(state, n) result(index)
+        type(rng_state), intent(inout) :: state !! explicit RNG state advanced by one draw
+        integer, intent(in) :: n !! positive number of equally likely indices
+        integer :: index
+
+        index = 1 + int(floor(rng_uniform(state) * real(n,dp)))
+        index = min(n, max(1,index))
+    end function random_index
+
+    subroutine parse_optimization(optimization, random_cd, lloyd, status)
+        character(len=*), intent(in), optional :: optimization !! 'random-cd', 'lloyd', or 'none'
+        logical, intent(out) :: random_cd !! true when random-CD post-processing is requested
+        logical, intent(out) :: lloyd !! true when Lloyd post-processing is requested
+        integer, intent(out) :: status !! qmc_status_* result
+
+        character(len=:), allocatable :: selected
+
+        status = qmc_status_success
+        random_cd = .false.
+        lloyd = .false.
+        if (.not. present(optimization)) return
+        selected = lower_ascii(trim(optimization))
+        select case (selected)
+        case ('', 'none')
+            continue
+        case ('random-cd')
+            random_cd = .true.
+        case ('lloyd')
+            lloyd = .true.
+        case default
+            status = qmc_status_invalid_parameter
+        end select
+    end subroutine parse_optimization
 
     pure function point_distance(x, y, metric) result(value)
         real(dp), intent(in) :: x(:) !! first point

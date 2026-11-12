@@ -11,10 +11,12 @@
 module scifort_goodness_of_fit
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_bessel_k, only : log_besselk
+    use scifort_beta, only : beta_ppf
     use scifort_chi2, only : chi2_sf
     use scifort_constants, only : scifort_pi
     use scifort_descriptive, only : central_moment, mean, rankdata, standard_deviation
-    use scifort_exponential, only : exponential_logcdf, exponential_logsf
+    use scifort_exponential, only : exponential_cdf, exponential_logcdf, exponential_logsf, &
+        exponential_ppf
     use scifort_gumbel_l, only : gumbel_l_logcdf, gumbel_l_logsf
     use scifort_gumbel_r, only : gumbel_r_logcdf, gumbel_r_logsf
     use scifort_kinds, only : dp
@@ -23,7 +25,9 @@ module scifort_goodness_of_fit
     use scifort_kstwobign, only : kstwobign_sf
     use scifort_logistic, only : logistic_logcdf, logistic_logsf
     use scifort_math, only : quiet_nan
-    use scifort_normal, only : normal_cdf, normal_logcdf, normal_logsf, normal_sf
+    use scifort_normal, only : normal_cdf, normal_logcdf, normal_logsf, normal_ppf, normal_sf
+    use scifort_random, only : rng_state, rng_uniform
+    use scifort_uniform, only : uniform_cdf, uniform_logcdf, uniform_logsf, uniform_ppf
     implicit none
     private
 
@@ -53,6 +57,14 @@ module scifort_goodness_of_fit
         integer :: status !! 0 success, 2 n > 5000 warning, 6 zero-range data
     end type shapiro_result
 
+    type, public :: goodness_of_fit_result
+        real(dp) :: statistic !! observed EDF goodness-of-fit statistic
+        real(dp) :: pvalue !! Monte Carlo p-value with plus-one correction
+        real(dp) :: fit_params(2) !! null-distribution [loc, scale] parameters
+        real(dp), allocatable :: null_distribution(:) !! Monte Carlo statistic values
+        integer :: status !! 0 success; nonzero indicates invalid input or failed fit
+    end type goodness_of_fit_result
+
     type, public :: anderson_result
         real(dp) :: statistic !! Anderson-Darling A2 statistic
         real(dp) :: pvalue !! interpolated p-value when requested, NaN otherwise
@@ -70,6 +82,7 @@ module scifort_goodness_of_fit
     public :: anderson
     public :: cramervonmises
     public :: cramervonmises_2samp
+    public :: goodness_of_fit
     public :: jarque_bera
     public :: ks_1samp
     public :: ks_2samp
@@ -80,6 +93,374 @@ module scifort_goodness_of_fit
     public :: skewtest
 
 contains
+
+    function goodness_of_fit(data, distribution, state, statistic, n_mc_samples, &
+        known_loc, known_scale, fit_loc, fit_scale, guess_loc, guess_scale) result(res)
+        real(dp), intent(in) :: data(:) !! finite observations to compare with a distribution family
+        character(len=*), intent(in) :: distribution !! norm, expon, or uniform
+        type(rng_state), intent(inout) :: state !! explicit RNG state advanced by Monte Carlo draws
+        character(len=*), intent(in), optional :: statistic !! ad, ks, cvm, or filliben (default ad)
+        integer, intent(in), optional :: n_mc_samples !! Monte Carlo sample count (default 9999)
+        real(dp), intent(in), optional :: known_loc !! location held fixed for observed and MC fits
+        real(dp), intent(in), optional :: known_scale !! scale held fixed for observed and MC fits
+        real(dp), intent(in), optional :: fit_loc !! prefit location used for null draw, refit in MC trials
+        real(dp), intent(in), optional :: fit_scale !! prefit scale used for null draw, refit in MC trials
+        real(dp), intent(in), optional :: guess_loc !! initial location guess; accepted for API parity
+        real(dp), intent(in), optional :: guess_scale !! initial scale guess; accepted for API parity
+        type(goodness_of_fit_result) :: res
+
+        character(len=16) :: dist
+        character(len=16) :: stat
+        integer :: b
+        integer :: i
+        integer :: m
+        integer :: status
+        logical :: fixed_loc
+        logical :: fixed_scale
+        real(dp) :: gamma
+        real(dp) :: params(2)
+        real(dp) :: resample_params(2)
+        real(dp) :: statistic_params(2)
+        real(dp), allocatable :: sample(:)
+
+        call invalidate_goodness_of_fit(res)
+        dist = lowercase(adjustl(distribution))
+        stat = 'ad'
+        if (present(statistic)) stat = lowercase(adjustl(statistic))
+        m = 9999
+        if (present(n_mc_samples)) m = n_mc_samples
+
+        if (size(data) < 2 .or. .not. finite_sample(data) .or. m < 1) return
+        if (.not. valid_gof_distribution(dist) .or. .not. valid_gof_statistic(stat)) return
+        if (present(known_scale)) then
+            if (.not. ieee_is_finite(known_scale)) return
+            if (known_scale <= 0.0_dp) return
+        end if
+        if (present(fit_scale)) then
+            if (.not. ieee_is_finite(fit_scale)) return
+            if (fit_scale <= 0.0_dp) return
+        end if
+        if (present(known_loc)) then
+            if (.not. ieee_is_finite(known_loc)) return
+        end if
+        if (present(fit_loc)) then
+            if (.not. ieee_is_finite(fit_loc)) return
+        end if
+        if (present(guess_loc)) then
+            if (.not. ieee_is_finite(guess_loc)) return
+        end if
+        if (present(guess_scale)) then
+            if (.not. ieee_is_finite(guess_scale)) return
+            if (guess_scale <= 0.0_dp) return
+        end if
+
+        fixed_loc = present(known_loc) .or. present(fit_loc)
+        fixed_scale = present(known_scale) .or. present(fit_scale)
+        params = 0.0_dp
+        if (present(known_loc)) params(1) = known_loc
+        if (present(known_scale)) params(2) = known_scale
+        if (present(fit_loc)) params(1) = fit_loc
+        if (present(fit_scale)) params(2) = fit_scale
+        call fit_gof_family(data, dist, fixed_loc, fixed_scale, params, status)
+        if (status /= 0) return
+
+        res%fit_params = params
+
+        ! SciPy's fit_params define the null distribution used for draws, but
+        ! they are only starting guesses when the statistic is evaluated.
+        ! Therefore only known parameters remain fixed for the observed fit.
+        fixed_loc = present(known_loc)
+        fixed_scale = present(known_scale)
+        statistic_params = 0.0_dp
+        if (present(known_loc)) statistic_params(1) = known_loc
+        if (present(known_scale)) statistic_params(2) = known_scale
+        call fit_gof_family(data, dist, fixed_loc, fixed_scale, statistic_params, status)
+        if (status /= 0) return
+        res%statistic = gof_statistic_value(data, dist, statistic_params, stat)
+        if (ieee_is_nan(res%statistic)) return
+        allocate(res%null_distribution(m))
+        allocate(sample(size(data)))
+
+        b = 0
+        gamma = 0.0_dp
+        if (ieee_is_finite(res%statistic)) then
+            gamma = abs(100.0_dp * epsilon(1.0_dp) * res%statistic)
+        end if
+        do i = 1, m
+            call draw_gof_sample(state, dist, params, sample)
+            if (.not. finite_sample(sample)) then
+                call invalidate_goodness_of_fit(res)
+                return
+            end if
+            fixed_loc = present(known_loc)
+            fixed_scale = present(known_scale)
+            resample_params = 0.0_dp
+            if (present(known_loc)) resample_params(1) = known_loc
+            if (present(known_scale)) resample_params(2) = known_scale
+            call fit_gof_family(sample, dist, fixed_loc, fixed_scale, resample_params, status)
+            if (status /= 0) then
+                call invalidate_goodness_of_fit(res)
+                return
+            end if
+            res%null_distribution(i) = gof_statistic_value(sample, dist, resample_params, stat)
+            if (ieee_is_nan(res%null_distribution(i))) then
+                call invalidate_goodness_of_fit(res)
+                return
+            end if
+            if (trim(stat) == 'filliben') then
+                if (res%null_distribution(i) <= res%statistic + gamma) b = b + 1
+            else if (ieee_is_finite(res%statistic)) then
+                if (res%null_distribution(i) >= res%statistic - gamma) b = b + 1
+            end if
+        end do
+        res%pvalue = real(b + 1, dp) / real(m + 1, dp)
+        res%status = 0
+    end function goodness_of_fit
+
+    subroutine fit_gof_family(data, distribution, fixed_loc, fixed_scale, params, status)
+        real(dp), intent(in) :: data(:) !! sample whose free parameters are fitted
+        character(len=*), intent(in) :: distribution !! validated family name
+        logical, intent(in) :: fixed_loc !! whether params(1) is held fixed
+        logical, intent(in) :: fixed_scale !! whether params(2) is held fixed
+        real(dp), intent(inout) :: params(2) !! [loc, scale], fixed values on entry and fit on exit
+        integer, intent(out) :: status !! zero on success
+
+        real(dp) :: loc
+        real(dp) :: scale
+        real(dp) :: ss
+
+        status = 1
+        if (size(data) < 2 .or. .not. finite_sample(data)) return
+        loc = params(1)
+        scale = params(2)
+
+        select case (trim(distribution))
+        case ('norm', 'normal')
+            if (.not. fixed_loc) loc = sum(data) / real(size(data), dp)
+            if (.not. fixed_scale) then
+                ss = sum((data - loc) ** 2)
+                if (.not. fixed_loc) then
+                    scale = sqrt(ss / real(size(data) - 1, dp))
+                else
+                    scale = sqrt(ss / real(size(data), dp))
+                end if
+            end if
+        case ('expon', 'exponential')
+            if (.not. fixed_loc) loc = minval(data)
+            if (.not. fixed_scale) then
+                if (any(data < loc)) return
+                scale = sum(data - loc) / real(size(data), dp)
+            end if
+        case ('uniform')
+            if (.not. fixed_loc .and. .not. fixed_scale) then
+                loc = minval(data)
+                scale = maxval(data) - loc
+            else if (fixed_loc .and. .not. fixed_scale) then
+                if (any(data < loc)) return
+                scale = maxval(data) - loc
+            else if (.not. fixed_loc .and. fixed_scale) then
+                if (scale < maxval(data) - minval(data)) return
+                loc = minval(data)
+            end if
+            if ((.not. fixed_loc .or. .not. fixed_scale) .and. &
+                (any(data < loc) .or. any(data > loc + scale))) return
+        case default
+            return
+        end select
+
+        if (.not. ieee_is_finite(loc) .or. .not. ieee_is_finite(scale)) return
+        if (scale <= 0.0_dp) return
+        params = [loc, scale]
+        status = 0
+    end subroutine fit_gof_family
+
+    function gof_statistic_value(data, distribution, params, statistic) result(value)
+        real(dp), intent(in) :: data(:) !! finite sample
+        character(len=*), intent(in) :: distribution !! validated family name
+        real(dp), intent(in) :: params(2) !! fitted [loc, scale]
+        character(len=*), intent(in) :: statistic !! validated statistic name
+        real(dp) :: value
+
+        integer :: i
+        integer :: n
+        real(dp) :: dminus
+        real(dp) :: dplus
+        real(dp) :: f
+        real(dp) :: p
+        real(dp) :: u
+        real(dp) :: xm
+        real(dp) :: mm
+        real(dp) :: num
+        real(dp) :: denx
+        real(dp) :: denm
+        real(dp), allocatable :: x(:)
+        real(dp), allocatable :: q(:)
+
+        n = size(data)
+        allocate(x(n))
+        x = data
+        call sort_real(x)
+        select case (trim(statistic))
+        case ('ad')
+            value = -real(n, dp)
+            do i = 1, n
+                value = value - real(2 * i - 1, dp) / real(n, dp) * &
+                    (gof_logcdf(x(i), distribution, params) + &
+                    gof_logsf(x(n + 1 - i), distribution, params))
+            end do
+        case ('ks')
+            dplus = 0.0_dp
+            dminus = 0.0_dp
+            do i = 1, n
+                f = gof_cdf(x(i), distribution, params)
+                dplus = max(dplus, real(i, dp) / real(n, dp) - f)
+                dminus = max(dminus, f - real(i - 1, dp) / real(n, dp))
+            end do
+            value = max(dplus, dminus)
+        case ('cvm')
+            value = 1.0_dp / (12.0_dp * real(n, dp))
+            do i = 1, n
+                u = real(2 * i - 1, dp) / (2.0_dp * real(n, dp))
+                f = gof_cdf(x(i), distribution, params)
+                value = value + (u - f) ** 2
+            end do
+        case ('filliben')
+            allocate(q(n))
+            do i = 1, n
+                p = beta_ppf(0.5_dp, real(i, dp), real(n + 1 - i, dp))
+                q(i) = gof_ppf(p, distribution, params)
+            end do
+            xm = sum(x) / real(n, dp)
+            mm = sum(q) / real(n, dp)
+            num = sum((x - xm) * (q - mm))
+            denx = sum((x - xm) ** 2)
+            denm = sum((q - mm) ** 2)
+            if (denx <= 0.0_dp .or. denm <= 0.0_dp) then
+                value = quiet_nan(0.0_dp)
+            else
+                value = num / sqrt(denx * denm)
+            end if
+        case default
+            value = quiet_nan(0.0_dp)
+        end select
+    end function gof_statistic_value
+
+    subroutine draw_gof_sample(state, distribution, params, sample)
+        type(rng_state), intent(inout) :: state !! RNG state advanced by the generated sample
+        character(len=*), intent(in) :: distribution !! validated family name
+        real(dp), intent(in) :: params(2) !! [loc, scale] of the null distribution
+        real(dp), intent(out) :: sample(:) !! generated observations
+
+        integer :: i
+
+        do i = 1, size(sample)
+            select case (trim(distribution))
+            case ('norm', 'normal')
+                sample(i) = normal_ppf(rng_uniform(state), params(1), params(2))
+            case ('expon', 'exponential')
+                sample(i) = exponential_ppf(rng_uniform(state), params(1), params(2))
+            case ('uniform')
+                sample(i) = uniform_ppf(rng_uniform(state), params(1), params(2))
+            end select
+        end do
+    end subroutine draw_gof_sample
+
+    pure function gof_cdf(x, distribution, params) result(value)
+        real(dp), intent(in) :: x !! evaluation point
+        character(len=*), intent(in) :: distribution !! validated family name
+        real(dp), intent(in) :: params(2) !! [loc, scale]
+        real(dp) :: value
+
+        select case (trim(distribution))
+        case ('norm', 'normal')
+            value = normal_cdf(x, params(1), params(2))
+        case ('expon', 'exponential')
+            value = exponential_cdf(x, params(1), params(2))
+        case ('uniform')
+            value = uniform_cdf(x, params(1), params(2))
+        case default
+            value = quiet_nan(x)
+        end select
+    end function gof_cdf
+
+    pure function gof_logcdf(x, distribution, params) result(value)
+        real(dp), intent(in) :: x !! evaluation point
+        character(len=*), intent(in) :: distribution !! validated family name
+        real(dp), intent(in) :: params(2) !! [loc, scale]
+        real(dp) :: value
+
+        select case (trim(distribution))
+        case ('norm', 'normal')
+            value = normal_logcdf(x, params(1), params(2))
+        case ('expon', 'exponential')
+            value = exponential_logcdf(x, params(1), params(2))
+        case ('uniform')
+            value = uniform_logcdf(x, params(1), params(2))
+        case default
+            value = quiet_nan(x)
+        end select
+    end function gof_logcdf
+
+    pure function gof_logsf(x, distribution, params) result(value)
+        real(dp), intent(in) :: x !! evaluation point
+        character(len=*), intent(in) :: distribution !! validated family name
+        real(dp), intent(in) :: params(2) !! [loc, scale]
+        real(dp) :: value
+
+        select case (trim(distribution))
+        case ('norm', 'normal')
+            value = normal_logsf(x, params(1), params(2))
+        case ('expon', 'exponential')
+            value = exponential_logsf(x, params(1), params(2))
+        case ('uniform')
+            value = uniform_logsf(x, params(1), params(2))
+        case default
+            value = quiet_nan(x)
+        end select
+    end function gof_logsf
+
+    pure function gof_ppf(p, distribution, params) result(value)
+        real(dp), intent(in) :: p !! lower-tail probability
+        character(len=*), intent(in) :: distribution !! validated family name
+        real(dp), intent(in) :: params(2) !! [loc, scale]
+        real(dp) :: value
+
+        select case (trim(distribution))
+        case ('norm', 'normal')
+            value = normal_ppf(p, params(1), params(2))
+        case ('expon', 'exponential')
+            value = exponential_ppf(p, params(1), params(2))
+        case ('uniform')
+            value = uniform_ppf(p, params(1), params(2))
+        case default
+            value = quiet_nan(p)
+        end select
+    end function gof_ppf
+
+    pure logical function valid_gof_distribution(distribution) result(ok)
+        character(len=*), intent(in) :: distribution !! candidate distribution family name
+
+        ok = trim(distribution) == 'norm' .or. trim(distribution) == 'normal' .or. &
+            trim(distribution) == 'expon' .or. trim(distribution) == 'exponential' .or. &
+            trim(distribution) == 'uniform'
+    end function valid_gof_distribution
+
+    pure logical function valid_gof_statistic(statistic) result(ok)
+        character(len=*), intent(in) :: statistic !! candidate statistic name
+
+        ok = trim(statistic) == 'ad' .or. trim(statistic) == 'ks' .or. &
+            trim(statistic) == 'cvm' .or. trim(statistic) == 'filliben'
+    end function valid_gof_statistic
+
+    subroutine invalidate_goodness_of_fit(res)
+        type(goodness_of_fit_result), intent(inout) :: res !! result reset to invalid sentinels
+
+        res%statistic = quiet_nan(0.0_dp)
+        res%pvalue = quiet_nan(0.0_dp)
+        res%fit_params = quiet_nan(0.0_dp)
+        if (allocated(res%null_distribution)) deallocate(res%null_distribution)
+        res%status = 1
+    end subroutine invalidate_goodness_of_fit
 
     function skewtest(a, alternative) result(res)
         real(dp), intent(in) :: a(:) !! sample, at least eight finite observations
@@ -1607,5 +1988,21 @@ contains
         if (left < j) call quicksort_real(values, left, j)
         if (i < right) call quicksort_real(values, i, right)
     end subroutine quicksort_real
+
+    pure function lowercase(text) result(out)
+        character(len=*), intent(in) :: text !! text converted to ASCII lowercase
+        character(len=len(text)) :: out
+
+        integer :: i
+        integer :: code
+
+        out = text
+        do i = 1, len(text)
+            code = iachar(out(i:i))
+            if (code >= iachar('A') .and. code <= iachar('Z')) then
+                out(i:i) = achar(code + iachar('a') - iachar('A'))
+            end if
+        end do
+    end function lowercase
 
 end module scifort_goodness_of_fit

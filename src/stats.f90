@@ -107,8 +107,48 @@ module scifort_stats
         binomial_logsf, binomial_pmf, binomial_ppf, binomial_sf
     use scifort_cauchy, only : cauchy_cdf, cauchy_isf, cauchy_logcdf, &
         cauchy_logpdf, cauchy_logsf, cauchy_pdf, cauchy_ppf, cauchy_sf
-    use scifort_descriptive, only : central_moment, covariance, mean, median, &
-        pearson_correlation, quantile, rankdata, standard_deviation, variance
+    use scifort_descriptive, only : central_moment, covariance, gmean, gmean_keepdims, &
+        hmean, hmean_keepdims, iqr, iqr_keepdims, kurtosis, kurtosis_keepdims, mean, &
+        median, median_abs_deviation, median_abs_deviation_keepdims, moment, &
+        moment_keepdims, pearson_correlation, pmean, pmean_keepdims, quantile, &
+        rankdata, sem, sem_keepdims, skew, skew_keepdims, standard_deviation, &
+        variation, variation_keepdims, variance, zmap, zmap_all, zscore, zscore_all, &
+        gzscore, gzscore_all, gstd, gstd_all, gstd_keepdims, tmax, tmax_all, &
+        tmax_keepdims, tmean, tmean_all, tmean_keepdims, tmin, tmin_all, &
+        tmin_keepdims, tsem, tsem_all, tsem_keepdims, tstd, tstd_all, &
+        tstd_keepdims, tvar, tvar_all, tvar_keepdims, trim_mean, trim_mean_all, &
+        trim_mean_keepdims, trim1, trim1_all, trimboth, trimboth_all, kstat, &
+        kstat_all, kstat_keepdims, kstatvar, kstatvar_all, kstatvar_keepdims, &
+        circmean, circmean_all, circmean_keepdims, circvar, circvar_all, &
+        circvar_keepdims, circstd, circstd_all, circstd_keepdims, percentileofscore, &
+        scoreatpercentile, scoreatpercentile_all, cumfreq, cumfreq_result, relfreq, relfreq_result, &
+        tiecorrect, entropy, entropy_all, entropy_keepdims, differential_entropy, &
+        differential_entropy_all, differential_entropy_keepdims, describe, describe_all, &
+        mode, mode_all, mode_keepdims, expectile, sigmaclip, lmoment, lmoment_all, &
+        lmoment_keepdims
+    use scifort_power_transform, only : boxcox, boxcox_fit, boxcox_llf, &
+        boxcox_llf_all, boxcox_llf_keepdims, boxcox_normmax, boxcox_normmax_all, &
+        yeojohnson, yeojohnson_fit, yeojohnson_llf, yeojohnson_llf_all, &
+        yeojohnson_llf_keepdims, yeojohnson_normmax
+    use scifort_probability_plot, only : probplot, ppcc_max, ppcc_plot, &
+        boxcox_normplot, yeojohnson_normplot, probability_plot_ppf
+    use scifort_sample_distance, only : wasserstein_distance, wasserstein_distance_nd, energy_distance
+    use scifort_directional_stats, only : directional_stats, directional_stats_result, &
+        directional_stats_batch_result
+    use scifort_distribution_infrastructure, only : continuous_distribution, &
+        distribution_scalar_callback, distribution_status_invalid_bounds, &
+        distribution_status_invalid_support, distribution_status_success, &
+        distribution_status_zero_mass, make_distribution, truncate, truncated_distribution
+    use scifort_binned_statistic, only : binned_statistic, binned_statistic_2d, &
+        binned_statistic_dd, binned_statistic_result, binned_statistic_2d_result, &
+        binned_statistic_dd_result, binned_statistic_callback, &
+        binned_statistic_status_success, binned_statistic_status_invalid
+    use scifort_bayes_mvs, only : bayes_mvs, bayes_mvs_estimate, bayes_mvs_result, &
+        mvs_posterior, mvsdist, mvsdist_result, mvs_status_success, &
+        mvs_status_invalid_data, mvs_status_invalid_alpha
+    use scifort_empirical_distribution, only : censored_data, ecdf, ecdf_confidence_interval, &
+        ecdf_result, empirical_distribution_function, logrank, logrank_result, order_statistic, &
+        order_statistic_callback, order_statistic_distribution, quantile_test, quantile_test_result
     use scifort_chi2, only : chi2_cdf, chi2_isf, chi2_logcdf, chi2_logpdf, &
         chi2_logsf, chi2_pdf, chi2_ppf, chi2_sf
     use scifort_exponential, only : exponential_cdf, exponential_isf, &
@@ -148,21 +188,28 @@ module scifort_stats
         geometric_logpmf, geometric_logsf, geometric_pmf, geometric_ppf, geometric_sf
     use scifort_hypothesis, only : correlation_test_result, mannwhitneyu, &
         mannwhitneyu_result, pearsonr, spearmanr, ttest_1samp, ttest_ind, &
-        ttest_rel, ttest_result
+        ttest_ind_from_stats, ttest_rel, ttest_result
     use scifort_hypothesis_extended, only : bartlett, bartlett_result, &
         chi2_contingency, chi2_contingency_result, chisquare, contingency_expected_freq, &
         fisher_exact, fisher_exact_result, fligner, fligner_result, friedmanchisquare, &
         friedmanchisquare_result, f_oneway, f_oneway_result, kruskal, kruskal_result, &
         levene, levene_result, make_sample_group, power_divergence, power_divergence_named, &
-        power_divergence_result, ranksums, ranksums_result, sample_group, wilcoxon, wilcoxon_result
+        obrientransform, power_divergence_result, ranksums, ranksums_result, sample_group, &
+        wilcoxon, wilcoxon_result
     use scifort_goodness_of_fit, only : anderson, anderson_result, cramervonmises, &
-        cramervonmises_2samp, jarque_bera, ks_1samp, ks_2samp, kstest, kstest_result, &
-        kurtosistest, normaltest, shapiro, shapiro_result, significance_result, skewtest
+        cramervonmises_2samp, goodness_of_fit, goodness_of_fit_result, jarque_bera, &
+        ks_1samp, ks_2samp, kstest, kstest_result, kurtosistest, normaltest, shapiro, &
+        shapiro_result, significance_result, skewtest
+    use scifort_multiscale_graphcorr, only : mgc_distance_callback, mgc_result, multiscale_graphcorr, &
+        mgc_status_success, mgc_status_invalid_shape, mgc_status_invalid_parameter, &
+        mgc_status_nonfinite
     use scifort_nonparametric_extended, only : anderson_ksamp, anderson_ksamp_result, &
-        ansari, epps_singleton_2samp, median_test, median_test_named, median_test_result, mood
-    use scifort_association_extended, only : association_result, brunnermunzel, kendalltau, &
+        ansari, bws_test, epps_singleton_2samp, median_test, median_test_named, &
+        median_test_result, mood
+    use scifort_association_extended, only : association_result, brunnermunzel, chatterjeexi, kendalltau, &
         linregress, linregress_result, page_trend_result, page_trend_test, pointbiserialr, &
-        siegelslopes, siegelslopes_result, theilslopes, theilslopes_result
+        siegelslopes, siegelslopes_result, somersd, somersd_result, spearmanrho, theilslopes, &
+        theilslopes_result, weightedtau, weightedtau_weigher
     use scifort_contingency_meta, only : association, barnard_exact, binomtest, &
         binomtest_result, boschloo_exact, combine_pvalues, combined_pvalue_result, &
         confidence_interval, exact_2x2_result, false_discovery_control, margins, odds_ratio, &
@@ -558,11 +605,15 @@ module scifort_stats
         gaussian_kde_status_success, gaussian_kde_status_invalid_shape, &
         gaussian_kde_status_invalid_parameter, gaussian_kde_status_singular, &
         gaussian_kde_status_linalg_failure
+    use scifort_sensitivity_analysis, only : sobol_distribution, sobol_indices, sobol_result, &
+        sobol_uniform_distribution, sobol_status_success, sobol_status_invalid_shape, &
+        sobol_status_invalid_parameter, sobol_status_model_failure, sobol_status_qmc_failure
     use scifort_qmc, only : qmc_discrepancy, qmc_geometric_discrepancy, qmc_halton, &
         qmc_halton_init, qmc_latin_hypercube, qmc_latin_hypercube_init, qmc_scale, &
         qmc_sobol, qmc_sobol_init, qmc_multinomial, qmc_multinomial_init, &
         qmc_multivariate_normal, qmc_multivariate_normal_init, qmc_poisson_disk, &
-        qmc_poisson_disk_init, qmc_to_integers, qmc_update_discrepancy, qmc_van_der_corput, &
+        qmc_poisson_disk_init, qmc_lloyd, qmc_random_cd, qmc_to_integers, qmc_update_discrepancy, &
+        qmc_van_der_corput, &
         qmc_status_success, qmc_status_invalid_shape, qmc_status_invalid_parameter, &
         qmc_status_out_of_bounds
     use scifort_multivariate_t, only : multivariate_t_cdf, multivariate_t_entropy, &
@@ -869,13 +920,170 @@ module scifort_stats
     public :: cauchy_sf
     public :: central_moment
     public :: covariance
+    public :: gmean
+    public :: gmean_keepdims
+    public :: hmean
+    public :: hmean_keepdims
+    public :: iqr
+    public :: iqr_keepdims
+    public :: kurtosis
+    public :: kurtosis_keepdims
     public :: mean
     public :: median
+    public :: median_abs_deviation
+    public :: median_abs_deviation_keepdims
+    public :: moment
+    public :: moment_keepdims
     public :: pearson_correlation
+    public :: pmean
+    public :: pmean_keepdims
     public :: quantile
     public :: rankdata
+    public :: tiecorrect
+    public :: entropy
+    public :: entropy_all
+    public :: entropy_keepdims
+    public :: differential_entropy
+    public :: differential_entropy_all
+    public :: differential_entropy_keepdims
+    public :: describe
+    public :: describe_all
+    public :: mode
+    public :: mode_all
+    public :: mode_keepdims
+    public :: expectile
+    public :: sigmaclip
+    public :: lmoment
+    public :: lmoment_all
+    public :: lmoment_keepdims
+    public :: boxcox
+    public :: boxcox_fit
+    public :: boxcox_llf
+    public :: boxcox_llf_all
+    public :: boxcox_llf_keepdims
+    public :: boxcox_normmax
+    public :: boxcox_normmax_all
+    public :: yeojohnson
+    public :: yeojohnson_fit
+    public :: yeojohnson_llf
+    public :: yeojohnson_llf_all
+    public :: yeojohnson_llf_keepdims
+    public :: yeojohnson_normmax
+    public :: probplot
+    public :: ppcc_max
+    public :: ppcc_plot
+    public :: boxcox_normplot
+    public :: yeojohnson_normplot
+    public :: probability_plot_ppf
+    public :: wasserstein_distance
+    public :: wasserstein_distance_nd
+    public :: energy_distance
+    public :: censored_data
+    public :: ecdf
+    public :: logrank
+    public :: logrank_result
+    public :: ecdf_confidence_interval
+    public :: ecdf_result
+    public :: empirical_distribution_function
+    public :: order_statistic
+    public :: order_statistic_callback
+    public :: order_statistic_distribution
+    public :: quantile_test
+    public :: quantile_test_result
+    public :: sem
+    public :: sem_keepdims
+    public :: skew
+    public :: skew_keepdims
     public :: standard_deviation
+    public :: variation
+    public :: variation_keepdims
     public :: variance
+    public :: zscore
+    public :: zscore_all
+    public :: zmap
+    public :: zmap_all
+    public :: gzscore
+    public :: gzscore_all
+    public :: gstd
+    public :: gstd_all
+    public :: gstd_keepdims
+    public :: tmean
+    public :: tmean_all
+    public :: tmean_keepdims
+    public :: tvar
+    public :: tvar_all
+    public :: tvar_keepdims
+    public :: tstd
+    public :: tstd_all
+    public :: tstd_keepdims
+    public :: tsem
+    public :: tsem_all
+    public :: tsem_keepdims
+    public :: tmin
+    public :: tmin_all
+    public :: tmin_keepdims
+    public :: tmax
+    public :: tmax_all
+    public :: tmax_keepdims
+    public :: trim_mean
+    public :: trim_mean_all
+    public :: trim_mean_keepdims
+    public :: trim1
+    public :: trim1_all
+    public :: trimboth
+    public :: trimboth_all
+    public :: kstat
+    public :: kstat_all
+    public :: kstat_keepdims
+    public :: kstatvar
+    public :: kstatvar_all
+    public :: kstatvar_keepdims
+    public :: circmean
+    public :: circmean_all
+    public :: circmean_keepdims
+    public :: circvar
+    public :: circvar_all
+    public :: circvar_keepdims
+    public :: circstd
+    public :: circstd_all
+    public :: circstd_keepdims
+    public :: directional_stats
+    public :: directional_stats_result
+    public :: directional_stats_batch_result
+    public :: continuous_distribution
+    public :: distribution_scalar_callback
+    public :: distribution_status_invalid_bounds
+    public :: distribution_status_invalid_support
+    public :: distribution_status_success
+    public :: distribution_status_zero_mass
+    public :: make_distribution
+    public :: truncate
+    public :: truncated_distribution
+    public :: binned_statistic
+    public :: binned_statistic_2d
+    public :: binned_statistic_dd
+    public :: binned_statistic_result
+    public :: binned_statistic_2d_result
+    public :: binned_statistic_dd_result
+    public :: binned_statistic_callback
+    public :: binned_statistic_status_success
+    public :: binned_statistic_status_invalid
+    public :: bayes_mvs
+    public :: bayes_mvs_estimate
+    public :: bayes_mvs_result
+    public :: mvs_posterior
+    public :: mvsdist
+    public :: mvsdist_result
+    public :: mvs_status_success
+    public :: mvs_status_invalid_data
+    public :: mvs_status_invalid_alpha
+    public :: percentileofscore
+    public :: scoreatpercentile
+    public :: scoreatpercentile_all
+    public :: cumfreq
+    public :: cumfreq_result
+    public :: relfreq
+    public :: relfreq_result
     public :: chi2_cdf
     public :: chi2_isf
     public :: chi2_logcdf
@@ -1125,6 +1333,7 @@ module scifort_stats
     public :: spearmanr
     public :: ttest_1samp
     public :: ttest_ind
+    public :: ttest_ind_from_stats
     public :: ttest_rel
     public :: ttest_result
     public :: bartlett
@@ -1146,6 +1355,7 @@ module scifort_stats
     public :: levene
     public :: levene_result
     public :: make_sample_group
+    public :: obrientransform
     public :: power_divergence
     public :: power_divergence_named
     public :: power_divergence_result
@@ -1156,19 +1366,26 @@ module scifort_stats
     public :: wilcoxon_result
     public :: anderson, anderson_result
     public :: cramervonmises, cramervonmises_2samp
+    public :: goodness_of_fit, goodness_of_fit_result
+    public :: mgc_distance_callback, mgc_result, multiscale_graphcorr
+    public :: mgc_status_success, mgc_status_invalid_shape, mgc_status_invalid_parameter
+    public :: mgc_status_nonfinite
     public :: jarque_bera, ks_1samp, ks_2samp, kstest, kstest_result
     public :: kurtosistest, normaltest, shapiro, shapiro_result
-    public :: anderson_ksamp, anderson_ksamp_result, ansari, epps_singleton_2samp
+    public :: anderson_ksamp, anderson_ksamp_result, ansari, bws_test, epps_singleton_2samp
     public :: median_test, median_test_named, median_test_result, mood
     public :: alexandergovern, alexandergovern_result
     public :: dunnett, dunnett_result
     public :: matrix_confidence_interval, vector_confidence_interval
     public :: poisson_means_test, poisson_means_test_result
     public :: tukey_hsd, tukey_hsd_result
-    public :: association_result, brunnermunzel, kendalltau
+    public :: association_result, brunnermunzel, chatterjeexi, kendalltau
     public :: linregress, linregress_result, page_trend_result, page_trend_test
     public :: pointbiserialr, siegelslopes, siegelslopes_result
+    public :: somersd, somersd_result
+    public :: spearmanrho
     public :: theilslopes, theilslopes_result
+    public :: weightedtau, weightedtau_weigher
     public :: association, barnard_exact, binomtest, binomtest_result, boschloo_exact
     public :: combine_pvalues, combined_pvalue_result, confidence_interval, exact_2x2_result
     public :: false_discovery_control, margins, odds_ratio, odds_ratio_result
@@ -1919,12 +2136,15 @@ module scifort_stats
     public :: gaussian_kde_status_success, gaussian_kde_status_invalid_shape
     public :: gaussian_kde_status_invalid_parameter, gaussian_kde_status_singular
     public :: gaussian_kde_status_linalg_failure
+    public :: sobol_distribution, sobol_indices, sobol_result, sobol_uniform_distribution
+    public :: sobol_status_success, sobol_status_invalid_shape, sobol_status_invalid_parameter
+    public :: sobol_status_model_failure, sobol_status_qmc_failure
     public :: qmc_discrepancy, qmc_geometric_discrepancy, qmc_halton, qmc_halton_init
     public :: qmc_latin_hypercube, qmc_latin_hypercube_init, qmc_scale, qmc_to_integers
     public :: qmc_sobol, qmc_sobol_init, qmc_multinomial, qmc_multinomial_init
     public :: qmc_multivariate_normal, qmc_multivariate_normal_init
     public :: qmc_poisson_disk, qmc_poisson_disk_init
-    public :: qmc_update_discrepancy, qmc_van_der_corput
+    public :: qmc_lloyd, qmc_random_cd, qmc_update_discrepancy, qmc_van_der_corput
     public :: qmc_status_success, qmc_status_invalid_shape, qmc_status_invalid_parameter
     public :: qmc_status_out_of_bounds
     public :: multivariate_t_cdf, multivariate_t_entropy, multivariate_t_logpdf, multivariate_t_marginal

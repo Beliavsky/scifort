@@ -5,7 +5,7 @@ program test_hypothesis
     use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
     use scifort_stats, only : correlation_test_result, dp, mannwhitneyu, &
         mannwhitneyu_result, pearsonr, spearmanr, ttest_1samp, ttest_ind, &
-        ttest_rel, ttest_result
+        ttest_ind_from_stats, ttest_rel, ttest_result
     implicit none
 
     real(dp), parameter :: x(6) = [1.0_dp, 2.0_dp, 2.0_dp, 4.0_dp, 8.0_dp, 16.0_dp]
@@ -15,6 +15,7 @@ program test_hypothesis
 
     type(correlation_test_result) :: correlation_result
     type(mannwhitneyu_result) :: mann_whitney_result
+    type(ttest_result) :: summary_results(2)
     type(ttest_result) :: t_result
 
     t_result = ttest_1samp(x, 3.0_dp)
@@ -45,6 +46,68 @@ program test_hypothesis
         0.9567471281556149_dp, 3.0e-14_dp)
     call check_close('welch df', t_result%df, &
         9.552789170096602_dp, 2.0e-14_dp)
+
+    t_result = ttest_ind_from_stats(15.0_dp, sqrt(87.5_dp), 13, &
+        12.0_dp, sqrt(39.0_dp), 11)
+    call check_close('from stats pooled statistic', t_result%statistic, &
+        0.9051358093310269_dp, 5.0e-15_dp)
+    call check_close('from stats pooled pvalue', t_result%pvalue, &
+        0.3751996797581489_dp, 3.0e-14_dp)
+    call check_close('from stats pooled df', t_result%df, 22.0_dp, 0.0_dp)
+
+    t_result = ttest_ind_from_stats(15.0_dp, sqrt(87.5_dp), 13, &
+        12.0_dp, sqrt(39.0_dp), 11, equal_var=.false.)
+    call check_close('from stats welch statistic', t_result%statistic, &
+        0.9358461935556048_dp, 5.0e-15_dp)
+    call check_close('from stats welch pvalue', t_result%pvalue, &
+        0.35999818693244234_dp, 3.0e-14_dp)
+    call check_close('from stats welch df', t_result%df, &
+        20.984611233429924_dp, 3.0e-14_dp)
+
+    t_result = ttest_ind_from_stats(15.0_dp, sqrt(87.5_dp), 13, &
+        12.0_dp, sqrt(39.0_dp), 11, alternative='less')
+    call check_close('from stats less pvalue', t_result%pvalue, &
+        0.8124001601209255_dp, 3.0e-14_dp)
+    t_result = ttest_ind_from_stats(15.0_dp, sqrt(87.5_dp), 13, &
+        12.0_dp, sqrt(39.0_dp), 11, alternative='greater')
+    call check_close('from stats greater pvalue', t_result%pvalue, &
+        0.18759983987907444_dp, 2.0e-14_dp)
+
+    t_result = ttest_ind_from_stats(1.0_dp, -2.0_dp, 5, 2.0_dp, -3.0_dp, 7)
+    call check_close('from stats negative std statistic', t_result%statistic, &
+        -0.6454972243679028_dp, 5.0e-15_dp)
+    call check_close('from stats negative std pvalue', t_result%pvalue, &
+        0.53313536_dp, 3.0e-14_dp)
+
+    t_result = ttest_ind_from_stats(1.0_dp, 2.0_dp, 1, 2.0_dp, 3.0_dp, 5)
+    call check_close('from stats single pooled statistic', t_result%statistic, &
+        -0.3042903097250923_dp, 5.0e-15_dp)
+    call check_close('from stats single pooled pvalue', t_result%pvalue, &
+        0.7760802041073015_dp, 3.0e-14_dp)
+    call check_close('from stats single pooled df', t_result%df, 4.0_dp, 0.0_dp)
+
+    t_result = ttest_ind_from_stats(1.0_dp, 0.0_dp, 1, 2.0_dp, 3.0_dp, 5, &
+        equal_var=.false.)
+    call check_close('from stats single welch statistic', t_result%statistic, &
+        -0.7453559924999299_dp, 5.0e-15_dp)
+    call check_close('from stats single welch pvalue', t_result%pvalue, &
+        0.5922308311056679_dp, 3.0e-14_dp)
+    call check_close('from stats single welch df', t_result%df, 1.0_dp, 0.0_dp)
+
+    t_result = ttest_ind_from_stats(1.0_dp, 2.0_dp, 1, 2.0_dp, 3.0_dp, 5, &
+        equal_var=.false.)
+    call check_true('from stats undefined welch pvalue', ieee_is_nan(t_result%pvalue))
+    call check_close('from stats undefined welch df', t_result%df, 0.0_dp, 0.0_dp)
+
+    summary_results = ttest_ind_from_stats(&
+        [15.0_dp, 0.2_dp], [sqrt(87.5_dp), sqrt(0.161073_dp)], [13, 150], &
+        [12.0_dp, 0.225_dp], [sqrt(39.0_dp), sqrt(0.175251_dp)], [11, 200])
+    call check_close('from stats elemental first statistic', summary_results(1)%statistic, &
+        0.9051358093310269_dp, 5.0e-15_dp)
+    call check_close('from stats elemental second statistic', summary_results(2)%statistic, &
+        -0.5627187905196761_dp, 5.0e-15_dp)
+    call check_close('from stats elemental second pvalue', summary_results(2)%pvalue, &
+        0.5739887114209542_dp, 3.0e-14_dp)
 
     t_result = ttest_rel(x, y)
     call check_close('paired statistic', t_result%statistic, &
@@ -111,6 +174,11 @@ program test_hypothesis
 
     t_result = ttest_1samp(x, 0.0_dp, 'bad')
     call check_true('invalid t alternative', ieee_is_nan(t_result%pvalue))
+    t_result = ttest_ind_from_stats(1.0_dp, 1.0_dp, 0, 2.0_dp, 1.0_dp, 3)
+    call check_true('invalid from stats count', ieee_is_nan(t_result%statistic))
+    t_result = ttest_ind_from_stats(1.0_dp, 1.0_dp, 3, 2.0_dp, 1.0_dp, 3, &
+        alternative='bad')
+    call check_true('invalid from stats alternative', ieee_is_nan(t_result%pvalue))
     correlation_result = pearsonr(x, y(1:5))
     call check_true('mismatched pearson sizes', ieee_is_nan(correlation_result%statistic))
     correlation_result = spearmanr(x(1:2), y(1:2))

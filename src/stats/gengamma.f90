@@ -269,7 +269,13 @@ contains
         real(dp), intent(in) :: z !! nonnegative standardized quantile
         real(dp), intent(in) :: seed !! value used to construct infinity if needed
         real(dp) :: x
-        if (.not. ieee_is_finite(z) .or. z > (huge(1.0_dp) - abs(mu)) / sigma) then
+        if (.not. ieee_is_finite(z)) then
+            x = positive_infinity(seed)
+        else if (z == 0.0_dp) then
+            x = mu
+        else if (huge(1.0_dp) - abs(mu) <= 0.0_dp) then
+            x = positive_infinity(seed)
+        else if (log(z) + log(sigma) > log(huge(1.0_dp) - abs(mu))) then
             x = positive_infinity(seed)
         else
             x = mu + sigma * z

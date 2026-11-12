@@ -28,6 +28,9 @@ jobs:
       - name: Check ASCII policy
         run: python tools/check_ascii.py
 
+      - name: Check unattended test layout
+        run: python tools/check_test_inputs.py
+
       - name: Build debug
         run: fpm build --profile debug
 

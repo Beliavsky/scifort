@@ -1,0 +1,3 @@
+compiler,flags,dimension,proposed,retained,repeats,method,cpu_seconds
+GNU_Fortran_14.2,O2_fcheck_all_ffpe_trap,192,96,84,8,rebuild_each_candidate,0.55291
+GNU_Fortran_14.2,O2_fcheck_all_ffpe_trap,192,96,84,8,incremental_basis,0.01994

@@ -1,0 +1,7 @@
+n,mode,success,nit,nfev,njvp,nprecond,cpu_seconds,scaled_residual,solution_error
+256,none,F,12,13,544,0,  3.5580E-03,  8.9911E-01,  8.9911E-01
+256,diag_array,T,2,2,2,0,  2.3000E-05,  2.2204E-16,  2.2204E-16
+256,callback,T,2,2,2,1,  1.6000E-05,  2.2204E-16,  2.2204E-16
+1024,none,F,12,13,544,0,  1.1804E-02,  8.9959E-01,  8.9959E-01
+1024,diag_array,T,2,2,2,0,  6.5000E-05,  2.3315E-15,  2.3315E-15
+1024,callback,T,2,2,2,1,  1.5300E-04,  2.3315E-15,  2.3315E-15

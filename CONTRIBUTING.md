@@ -14,6 +14,25 @@ Read `AGENTS.md` before contributing.
 
 ## Definition of done
 
+### Unattended tests and reference comparisons
+
+Every program discovered under `test/` by `fpm test` must run without keyboard
+input, required command-line arguments, or files prepared by an external script.
+Standalone tests should generate their inputs or use committed fixtures.
+Optional arguments used by a test to launch its own error-path subprocesses
+are permitted when the no-argument parent runs unattended.
+
+Put programs driven by Python comparison scripts in
+`validation/reference_drivers/`. These programs may read standard input,
+accept file paths, or consume files produced by the comparison script. Compile
+and run them through their documented comparison workflow, outside `fpm test`.
+Keep the comparison scripts' source paths and any source generators in sync.
+
+Run `python tools/check_test_inputs.py` to check for explicit console reads in
+automatically discovered tests. CI runs this check before building.
+
+### Numerical contributions
+
 A numerical contribution is not complete until:
 
 - the mathematical parameterization is documented;

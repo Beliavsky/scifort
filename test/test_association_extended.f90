@@ -1,10 +1,12 @@
 program test_association_extended
-    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan, ieee_quiet_nan, ieee_value
     use association_extended_reference
     use scifort_kinds, only : dp
-    use scifort_stats, only : association_result, brunnermunzel, kendalltau, &
+    use scifort_random, only : rng_seed, rng_state
+    use scifort_stats, only : association_result, brunnermunzel, chatterjeexi, kendalltau, &
         linregress, linregress_result, page_trend_result, page_trend_test, &
-        pointbiserialr, siegelslopes, siegelslopes_result, theilslopes, theilslopes_result
+        pointbiserialr, siegelslopes, siegelslopes_result, somersd, somersd_result, &
+        spearmanrho, theilslopes, theilslopes_result, weightedtau
     implicit none
 
     real(dp), parameter :: kx_tie(5) = [12.0_dp, 2.0_dp, 1.0_dp, 12.0_dp, 2.0_dp]
@@ -21,15 +23,36 @@ program test_association_extended
         1.0_dp, 1.0_dp, 1.0_dp, 1.0_dp, 2.0_dp, 4.0_dp, 1.0_dp, 1.0_dp]
     real(dp), parameter :: by(11) = [3.0_dp, 3.0_dp, 4.0_dp, 3.0_dp, 1.0_dp, 2.0_dp, &
         3.0_dp, 1.0_dp, 1.0_dp, 5.0_dp, 4.0_dp]
+    real(dp), parameter :: cx(7) = [-3.0_dp, -2.0_dp, -1.0_dp, 0.0_dp, 1.0_dp, 2.0_dp, 3.0_dp]
+    real(dp), parameter :: cy(7) = [9.0_dp, 4.0_dp, 1.0_dp, 0.0_dp, 1.0_dp, 4.0_dp, 9.0_dp]
+    real(dp), parameter :: cnx(10) = [0.0_dp, 1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, &
+        5.0_dp, 6.0_dp, 7.0_dp, 8.0_dp, 9.0_dp]
+    real(dp), parameter :: cny(10) = [1.0_dp, 0.0_dp, 1.0_dp, 0.0_dp, 1.0_dp, &
+        0.0_dp, 1.0_dp, 0.0_dp, 1.0_dp, 0.0_dp]
+    real(dp), parameter :: sx(7) = [1.0_dp, 1.0_dp, 2.0_dp, 2.0_dp, 3.0_dp, 3.0_dp, 3.0_dp]
+    real(dp), parameter :: sy(7) = [1.0_dp, 2.0_dp, 2.0_dp, 3.0_dp, 2.0_dp, 4.0_dp, 4.0_dp]
+    real(dp), parameter :: srx(5) = [1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp]
+    real(dp), parameter :: sry(5) = [5.0_dp, 6.0_dp, 7.0_dp, 8.0_dp, 7.0_dp]
+    real(dp), parameter :: cpx(5) = [0.0_dp, 1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp]
+    real(dp), parameter :: cpy(5) = [4.0_dp, 1.0_dp, 3.0_dp, 0.0_dp, 2.0_dp]
+
+    integer, parameter :: weighted_rank(5) = [0, 3, 1, 4, 2]
+    integer, parameter :: weighted_rank_tied(5) = [5, 1, 5, 2, 1]
+    real(dp), parameter :: weighted_rank_real(5) = [0.0_dp, 30.0_dp, 10.0_dp, 40.0_dp, 20.0_dp]
 
     type(association_result) :: ar
     type(linregress_result) :: lr
     type(page_trend_result) :: pr
     type(siegelslopes_result) :: sr
+    type(somersd_result) :: sdr
+    type(rng_state) :: state
+    real(dp) :: random_pvalue
+    real(dp) :: weighted_nan_y(5)
     type(theilslopes_result) :: tr
     real(dp) :: page_data(10, 3)
     real(dp) :: page_ranked(10, 3)
     real(dp) :: page4(3, 4)
+    integer :: somers_table(3, 5)
     integer :: failures
 
     failures = 0
@@ -66,6 +89,123 @@ program test_association_extended
     ar = pointbiserialr([0.0_dp, 0.0_dp, 0.0_dp, 1.0_dp, 1.0_dp, 1.0_dp, 1.0_dp], &
         [0.0_dp, 1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp, 6.0_dp])
     call check_pair('point biserial', ar, pointbiserial_ref, 2.0e-14_dp, failures)
+
+    ar = weightedtau(kx_tie, ky_tie)
+    call check_close('weightedtau default', ar%statistic, weightedtau_ref(1), 3.0e-15_dp, failures)
+    call check_true('weightedtau pvalue unavailable', ieee_is_nan(ar%pvalue), failures)
+    ar = weightedtau(kx_tie, ky_tie, additive=.false.)
+    call check_close('weightedtau multiplicative', ar%statistic, weightedtau_ref(2), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, weigher=unit_weigher)
+    call check_close('weightedtau unit weigher', ar%statistic, weightedtau_ref(3), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, rank_mode='lexicographic')
+    call check_close('weightedtau lexicographic rank', ar%statistic, weightedtau_ref(4), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, rank_mode='index')
+    call check_close('weightedtau index rank', ar%statistic, weightedtau_ref(5), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, weighted_rank)
+    call check_close('weightedtau integer rank', ar%statistic, weightedtau_ref(6), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, weighted_rank_real)
+    call check_close('weightedtau real rank', ar%statistic, weightedtau_ref(7), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, weigher=square_hyperbolic_weigher)
+    call check_close('weightedtau custom weigher', ar%statistic, weightedtau_ref(8), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, weighted_rank, weigher=square_hyperbolic_weigher, additive=.false.)
+    call check_close('weightedtau custom multiplicative', ar%statistic, weightedtau_ref(9), 3.0e-15_dp, failures)
+    weighted_nan_y = ky_tie
+    weighted_nan_y(5) = ieee_value(0.0_dp, ieee_quiet_nan)
+    ar = weightedtau(kx_tie, weighted_nan_y)
+    call check_close('weightedtau nan is smallest', ar%statistic, weightedtau_ref(10), 3.0e-15_dp, failures)
+    ar = weightedtau(kx_tie, ky_tie, weighted_rank_tied)
+    call check_close('weightedtau tied rank', ar%statistic, weightedtau_ref(11), 3.0e-15_dp, failures)
+
+    call set_somers_table(somers_table)
+    sdr = somersd(somers_table)
+    call check_somers('somers table two-sided', sdr, somers_table_ref(1:2), 3.0e-15_dp, failures)
+    call check_somers_table('somers table preserved', sdr, real(somers_table, dp), failures)
+    sdr = somersd(somers_table, 'less')
+    call check_somers('somers table less', sdr, somers_table_ref(3:4), 3.0e-15_dp, failures)
+    sdr = somersd(somers_table, 'greater')
+    call check_somers('somers table greater', sdr, somers_table_ref(5:6), 3.0e-15_dp, failures)
+    sdr = somersd(real(somers_table, dp))
+    call check_somers('somers real table', sdr, somers_table_ref(1:2), 3.0e-15_dp, failures)
+    sdr = somersd(transpose(somers_table))
+    call check_somers('somers transpose', sdr, somers_table_ref(7:8), 3.0e-15_dp, failures)
+
+    sdr = somersd(sx, sy)
+    call check_somers('somers samples two-sided', sdr, somers_sample_ref(1:2), 3.0e-15_dp, failures)
+    call check_somers_sample_table('somers sample crosstab', sdr, failures)
+    sdr = somersd(sx, sy, 'less')
+    call check_somers('somers samples less', sdr, somers_sample_ref(3:4), 3.0e-15_dp, failures)
+    sdr = somersd(sx, sy, 'greater')
+    call check_somers('somers samples greater', sdr, somers_sample_ref(5:6), 3.0e-15_dp, failures)
+    sdr = somersd([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp], &
+        [1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp])
+    call check_close('somers perfect positive statistic', sdr%statistic, 1.0_dp, 0.0_dp, failures)
+    call check_close('somers perfect positive pvalue', sdr%pvalue, 0.0_dp, 0.0_dp, failures)
+    sdr = somersd([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp], &
+        [5.0_dp, 4.0_dp, 3.0_dp, 2.0_dp, 1.0_dp])
+    call check_close('somers perfect negative statistic', sdr%statistic, -1.0_dp, 0.0_dp, failures)
+    call check_close('somers perfect negative pvalue', sdr%pvalue, 0.0_dp, 0.0_dp, failures)
+
+    ar = spearmanrho(srx, sry)
+    call check_pair('spearmanrho asymptotic two-sided', ar, spearmanrho_ref(1:2), 3.0e-15_dp, failures)
+    ar = spearmanrho(srx, sry, alternative='less')
+    call check_pair('spearmanrho asymptotic less', ar, spearmanrho_ref(3:4), 3.0e-15_dp, failures)
+    ar = spearmanrho(srx, sry, alternative='greater')
+    call check_pair('spearmanrho asymptotic greater', ar, spearmanrho_ref(5:6), 3.0e-15_dp, failures)
+    ar = spearmanrho(srx, sry, method='permutation')
+    call check_pair('spearmanrho exact two-sided', ar, spearmanrho_ref(7:8), 3.0e-15_dp, failures)
+    ar = spearmanrho(srx, sry, alternative='less', method='permutation')
+    call check_pair('spearmanrho exact less', ar, spearmanrho_ref(9:10), 3.0e-15_dp, failures)
+    ar = spearmanrho(srx, sry, alternative='greater', method='permutation')
+    call check_pair('spearmanrho exact greater', ar, spearmanrho_ref(11:12), 3.0e-15_dp, failures)
+    ar = spearmanrho([1.0_dp, 2.0_dp], [2.0_dp, 1.0_dp])
+    call check_close('spearmanrho n2 statistic', ar%statistic, -1.0_dp, 0.0_dp, failures)
+    call check_close('spearmanrho n2 asymptotic pvalue', ar%pvalue, 1.0_dp, 0.0_dp, failures)
+
+    call rng_seed(state, 24680)
+    ar = spearmanrho([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp, 6.0_dp, 7.0_dp, 8.0_dp], &
+        [8.0_dp, 1.0_dp, 7.0_dp, 2.0_dp, 6.0_dp, 3.0_dp, 5.0_dp, 4.0_dp], &
+        method='permutation', state=state, n_resamples=31)
+    random_pvalue = ar%pvalue
+    call check_true('spearmanrho random permutation range', &
+        random_pvalue > 0.0_dp .and. random_pvalue <= 1.0_dp, failures)
+    call rng_seed(state, 24680)
+    ar = spearmanrho([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp, 6.0_dp, 7.0_dp, 8.0_dp], &
+        [8.0_dp, 1.0_dp, 7.0_dp, 2.0_dp, 6.0_dp, 3.0_dp, 5.0_dp, 4.0_dp], &
+        method='permutation', state=state, n_resamples=31)
+    call check_close('spearmanrho random permutation reproducible', &
+        ar%pvalue, random_pvalue, 0.0_dp, failures)
+
+    call rng_seed(state, 97531)
+    ar = spearmanrho(srx, sry, method='monte_carlo', state=state, n_resamples=31)
+    random_pvalue = ar%pvalue
+    call check_close('spearmanrho monte carlo statistic', &
+        ar%statistic, spearmanrho_ref(1), 3.0e-15_dp, failures)
+    call check_true('spearmanrho monte carlo range', &
+        random_pvalue > 0.0_dp .and. random_pvalue <= 1.0_dp, failures)
+    call rng_seed(state, 97531)
+    ar = spearmanrho(srx, sry, method='monte_carlo', state=state, n_resamples=31)
+    call check_close('spearmanrho monte carlo reproducible', ar%pvalue, random_pvalue, 0.0_dp, failures)
+
+    ar = chatterjeexi(cx, cy)
+    call check_pair('chatterjee tied y', ar, chatterjee_ref(1:2), 3.0e-15_dp, failures)
+    ar = chatterjeexi(cx, cy, y_continuous=.true.)
+    call check_pair('chatterjee continuous y', ar, chatterjee_ref(3:4), 3.0e-15_dp, failures)
+    ar = chatterjeexi(cnx, cny)
+    call check_pair('chatterjee negative', ar, chatterjee_ref(5:6), 3.0e-15_dp, failures)
+    ar = chatterjeexi(cnx, cny, y_continuous=.true.)
+    call check_pair('chatterjee negative continuous', ar, chatterjee_ref(7:8), 3.0e-15_dp, failures)
+
+    call rng_seed(state, 20261003)
+    ar = chatterjeexi(cpx, cpy, method='permutation', state=state)
+    call check_pair('chatterjee exact permutation', ar, chatterjee_ref(9:10), 3.0e-15_dp, failures)
+    call rng_seed(state, 20261003)
+    ar = chatterjeexi(cpx, cpy, method='permutation', state=state, n_resamples=20)
+    random_pvalue = ar%pvalue
+    call check_close('chatterjee random statistic', ar%statistic, chatterjee_ref(9), 0.0_dp, failures)
+    call check_true('chatterjee random pvalue range', ar%pvalue > 0.0_dp .and. ar%pvalue <= 1.0_dp, failures)
+    call rng_seed(state, 20261003)
+    ar = chatterjeexi(cpx, cpy, method='permutation', state=state, n_resamples=20)
+    call check_close('chatterjee random reproducible', ar%pvalue, random_pvalue, 0.0_dp, failures)
 
     lr = linregress(lx, ly)
     call check_linregress('linregress two-sided', lr, linregress_ref(1:6), failures)
@@ -117,6 +257,65 @@ program test_association_extended
     pr = page_trend_test(page4, method='asymptotic')
     call check_page('page four asymptotic', pr, page4_ref(3:4), 'asymptotic', failures)
 
+    sdr = somersd([1.0_dp, 2.0_dp], [3.0_dp])
+    call check_true('somers length mismatch', ieee_is_nan(sdr%statistic), failures)
+    sdr = somersd(sx, sy, 'bad')
+    call check_true('somers bad alternative', ieee_is_nan(sdr%pvalue), failures)
+    sdr = somersd(reshape([-1, 2, 3, 4], [2, 2]))
+    call check_true('somers negative table invalid', ieee_is_nan(sdr%statistic), failures)
+    sdr = somersd(reshape([1.5_dp, 2.0_dp, 3.0_dp, 4.0_dp], [2, 2]))
+    call check_true('somers noninteger table invalid', ieee_is_nan(sdr%statistic), failures)
+    sdr = somersd(reshape([1, 0, 0, 0], [2, 2]))
+    call check_true('somers one nonzero invalid', ieee_is_nan(sdr%statistic), failures)
+    sdr = somersd(reshape([1, 1], [1, 2]))
+    call check_true('somers one row degenerate', ieee_is_nan(sdr%statistic), failures)
+
+    ar = spearmanrho(srx, sry, method='bad')
+    call check_true('spearmanrho bad method', ieee_is_nan(ar%statistic), failures)
+    ar = spearmanrho(srx, sry, alternative='bad')
+    call check_true('spearmanrho bad alternative', ieee_is_nan(ar%pvalue), failures)
+    ar = spearmanrho([1.0_dp, 2.0_dp, 3.0_dp], [4.0_dp, 5.0_dp])
+    call check_true('spearmanrho length mismatch', ieee_is_nan(ar%statistic), failures)
+    ar = spearmanrho([1.0_dp], [2.0_dp])
+    call check_true('spearmanrho singleton invalid', ieee_is_nan(ar%statistic), failures)
+    ar = spearmanrho([1.0_dp, 1.0_dp, 1.0_dp], [1.0_dp, 2.0_dp, 3.0_dp])
+    call check_true('spearmanrho constant input invalid', ieee_is_nan(ar%statistic), failures)
+    ar = spearmanrho([1.0_dp, ieee_value(0.0_dp, ieee_quiet_nan), 3.0_dp], &
+        [1.0_dp, 2.0_dp, 3.0_dp])
+    call check_true('spearmanrho nan invalid', ieee_is_nan(ar%statistic), failures)
+    ar = spearmanrho([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp, 6.0_dp, 7.0_dp, 8.0_dp], &
+        [8.0_dp, 1.0_dp, 7.0_dp, 2.0_dp, 6.0_dp, 3.0_dp, 5.0_dp, 4.0_dp], &
+        method='permutation', n_resamples=31)
+    call check_true('spearmanrho random permutation missing rng', ieee_is_nan(ar%pvalue), failures)
+    ar = spearmanrho(srx, sry, method='monte_carlo', n_resamples=31)
+    call check_true('spearmanrho monte carlo missing rng', ieee_is_nan(ar%pvalue), failures)
+    call rng_seed(state, 1234)
+    ar = spearmanrho(srx, sry, method='permutation', state=state, n_resamples=0)
+    call check_true('spearmanrho bad resamples', ieee_is_nan(ar%pvalue), failures)
+
+    ar = chatterjeexi(cpx, cpy, method='bad')
+    call check_true('chatterjee bad method', ieee_is_nan(ar%statistic), failures)
+    ar = chatterjeexi(cpx, cpy, method='permutation')
+    call check_true('chatterjee missing rng', ieee_is_nan(ar%pvalue), failures)
+    call rng_seed(state, 20261003)
+    ar = chatterjeexi(cpx, cpy, method='permutation', state=state, n_resamples=0)
+    call check_true('chatterjee bad resamples', ieee_is_nan(ar%pvalue), failures)
+    ar = chatterjeexi([1.0_dp, 2.0_dp, 3.0_dp], [5.0_dp, 5.0_dp, 5.0_dp])
+    call check_true('chatterjee constant y invalid', ieee_is_nan(ar%statistic), failures)
+    ar = chatterjeexi([1.0_dp], [2.0_dp])
+    call check_true('chatterjee singleton invalid', ieee_is_nan(ar%statistic), failures)
+    ar = chatterjeexi([1.0_dp, 2.0_dp], [3.0_dp])
+    call check_true('chatterjee length mismatch', ieee_is_nan(ar%statistic), failures)
+
+    ar = weightedtau(kx_tie, ky_tie, rank_mode='bad')
+    call check_true('weightedtau bad rank mode', ieee_is_nan(ar%statistic), failures)
+    ar = weightedtau(kx_tie, [1.0_dp, 2.0_dp])
+    call check_true('weightedtau length mismatch', ieee_is_nan(ar%statistic), failures)
+    ar = weightedtau(kx_tie, ky_tie, [0, 1])
+    call check_true('weightedtau rank mismatch', ieee_is_nan(ar%statistic), failures)
+    ar = weightedtau(kx_tie, [5.0_dp, 5.0_dp, 5.0_dp, 5.0_dp, 5.0_dp])
+    call check_true('weightedtau constant y invalid', ieee_is_nan(ar%statistic), failures)
+
     ar = kendalltau(kx_tie, ky_tie, method='exact')
     call check_true('kendall exact tied invalid', ieee_is_nan(ar%pvalue), failures)
     lr = linregress([1.0_dp, 1.0_dp, 1.0_dp], [2.0_dp, 3.0_dp, 4.0_dp])
@@ -131,6 +330,28 @@ program test_association_extended
     print *, 'association extended tests passed'
 
 contains
+
+    function unit_weigher(rank) result(weight)
+        integer, intent(in) :: rank !! zero-based importance rank
+        real(dp) :: weight
+
+        weight = 1.0_dp
+    end function unit_weigher
+
+    function square_hyperbolic_weigher(rank) result(weight)
+        integer, intent(in) :: rank !! zero-based importance rank
+        real(dp) :: weight
+
+        weight = 1.0_dp / real(rank + 1, dp) ** 2
+    end function square_hyperbolic_weigher
+
+    subroutine set_somers_table(table)
+        integer, intent(out) :: table(3, 5) !! SciPy documentation contingency-table example
+
+        table(1, :) = [27, 25, 14, 7, 0]
+        table(2, :) = [7, 14, 18, 35, 12]
+        table(3, :) = [1, 3, 2, 7, 17]
+    end subroutine set_somers_table
 
     subroutine set_page_data(data)
         real(dp), intent(out) :: data(10, 3) !! unranked SciPy Page test example
@@ -155,6 +376,54 @@ contains
         data(2, :) = [2.0_dp, 1.0_dp, 4.0_dp, 3.0_dp]
         data(3, :) = [1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp]
     end subroutine set_page4
+
+    subroutine check_somers(name, actual, expected_value, tolerance, count)
+        character(len=*), intent(in) :: name !! check label
+        type(somersd_result), intent(in) :: actual !! Somers D result
+        real(dp), intent(in) :: expected_value(2) !! SciPy statistic and p-value
+        real(dp), intent(in) :: tolerance !! maximum absolute error
+        integer, intent(inout) :: count !! accumulated failure count
+
+        call check_close(trim(name)//' statistic', actual%statistic, expected_value(1), tolerance, count)
+        call check_close(trim(name)//' pvalue', actual%pvalue, expected_value(2), tolerance, count)
+        call check_close(trim(name)//' correlation alias', actual%correlation, actual%statistic, 0.0_dp, count)
+    end subroutine check_somers
+
+    subroutine check_somers_table(name, actual, expected_table, count)
+        character(len=*), intent(in) :: name !! check label
+        type(somersd_result), intent(in) :: actual !! Somers D result with table
+        real(dp), intent(in) :: expected_table(:, :) !! expected contingency table
+        integer, intent(inout) :: count !! accumulated failure count
+
+        if (.not. allocated(actual%table)) then
+            print *, 'FAIL ', trim(name), ' not allocated'
+            count = count + 1
+            return
+        end if
+        if (size(actual%table, 1) /= size(expected_table, 1) .or. &
+                size(actual%table, 2) /= size(expected_table, 2)) then
+            print *, 'FAIL ', trim(name), ' shape'
+            count = count + 1
+            return
+        end if
+        if (any(actual%table /= expected_table)) then
+            print *, 'FAIL ', trim(name), ' values'
+            count = count + 1
+        end if
+    end subroutine check_somers_table
+
+    subroutine check_somers_sample_table(name, actual, count)
+        character(len=*), intent(in) :: name !! check label
+        type(somersd_result), intent(in) :: actual !! Somers D result with generated table
+        integer, intent(inout) :: count !! accumulated failure count
+
+        real(dp) :: expected_table(3, 4)
+
+        expected_table(1, :) = [1.0_dp, 1.0_dp, 0.0_dp, 0.0_dp]
+        expected_table(2, :) = [0.0_dp, 1.0_dp, 1.0_dp, 0.0_dp]
+        expected_table(3, :) = [0.0_dp, 1.0_dp, 0.0_dp, 2.0_dp]
+        call check_somers_table(name, actual, expected_table, count)
+    end subroutine check_somers_sample_table
 
     subroutine check_pair(name, actual, expected_value, tolerance, count)
         character(len=*), intent(in) :: name !! check label

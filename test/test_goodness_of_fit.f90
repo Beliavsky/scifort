@@ -1,11 +1,12 @@
 program test_goodness_of_fit
-    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan, ieee_quiet_nan, ieee_value
     use goodness_of_fit_reference
     use scifort_kinds, only : dp
+    use scifort_random, only : rng_seed, rng_state
     use scifort_stats, only : anderson, anderson_result, cramervonmises, &
-        cramervonmises_2samp, jarque_bera, ks_1samp, ks_2samp, kstest, &
-        kstest_result, kurtosistest, normal_cdf, normaltest, shapiro, &
-        shapiro_result, significance_result, skewtest
+        cramervonmises_2samp, goodness_of_fit, goodness_of_fit_result, jarque_bera, &
+        ks_1samp, ks_2samp, kstest, kstest_result, kurtosistest, normal_cdf, normaltest, &
+        shapiro, shapiro_result, significance_result, skewtest
     implicit none
 
     real(dp), parameter :: a(8) = [1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, &
@@ -26,11 +27,18 @@ program test_goodness_of_fit
 
     type(anderson_result) :: adr
     type(kstest_result) :: ksr
+    type(goodness_of_fit_result) :: gofr
+    type(goodness_of_fit_result) :: gofr2
     type(shapiro_result) :: sr
     type(significance_result) :: rr
     integer :: failures
+    integer :: bcount
+    type(rng_state) :: state
+    type(rng_state) :: state2
+    real(dp) :: qnan
 
     failures = 0
+    qnan = ieee_value(0.0_dp, ieee_quiet_nan)
 
     rr = skewtest(a)
     call check_close('skewtest statistic', rr%statistic, skew_ref(1), 2.0e-15_dp, failures)
@@ -97,6 +105,71 @@ program test_goodness_of_fit
     adr = anderson(and_x, 'gumbel_l', .true.)
     call check_close('anderson gumbel l statistic', adr%statistic, and_gumbel_l_stat, 8.0e-14_dp, failures)
     call check_array('anderson gumbel l fit', adr%fit_params, and_gumbel_l_fit, 8.0e-14_dp, failures)
+
+    call rng_seed(state, 97531)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='ad', n_mc_samples=31)
+    call check_close('gof norm ad', gofr%statistic, gof_norm_stat_ref(1), 2.0e-14_dp, failures)
+    call check_array('gof norm fit', gofr%fit_params, gof_norm_fit_ref, 3.0e-15_dp, failures)
+    call check_int('gof status', gofr%status, 0, failures)
+    call check_int('gof null size', size(gofr%null_distribution), 31, failures)
+    bcount = count(gofr%null_distribution >= gofr%statistic)
+    call check_close('gof plus-one pvalue', gofr%pvalue, &
+        real(bcount + 1, dp) / 32.0_dp, 0.0_dp, failures)
+
+    call rng_seed(state, 97531)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='ks', n_mc_samples=31)
+    call check_close('gof norm ks', gofr%statistic, gof_norm_stat_ref(2), 2.0e-14_dp, failures)
+    call rng_seed(state2, 97531)
+    gofr2 = goodness_of_fit(x, 'norm', state2, statistic='ks', n_mc_samples=31)
+    call check_close('gof replay pvalue', gofr2%pvalue, gofr%pvalue, 0.0_dp, failures)
+    call check_array('gof replay null', gofr2%null_distribution, gofr%null_distribution, 0.0_dp, failures)
+
+    call rng_seed(state, 97532)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='cvm', n_mc_samples=15)
+    call check_close('gof norm cvm', gofr%statistic, gof_norm_stat_ref(3), 2.0e-14_dp, failures)
+    call rng_seed(state, 97533)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='filliben', n_mc_samples=15)
+    call check_close('gof norm filliben', gofr%statistic, gof_norm_stat_ref(4), 2.0e-13_dp, failures)
+    bcount = count(gofr%null_distribution <= gofr%statistic)
+    call check_close('gof filliben pvalue direction', gofr%pvalue, &
+        real(bcount + 1, dp) / 16.0_dp, 0.0_dp, failures)
+
+    call rng_seed(state, 97534)
+    gofr = goodness_of_fit(and_x, 'expon', state, statistic='ks', n_mc_samples=7)
+    call check_close('gof expon ks', gofr%statistic, gof_expon_stat_ref(1), 2.0e-14_dp, failures)
+    call check_array('gof expon fit', gofr%fit_params, gof_expon_fit_ref, 3.0e-15_dp, failures)
+    call rng_seed(state, 975341)
+    gofr = goodness_of_fit(and_x, 'expon', state, statistic='ad', n_mc_samples=7)
+    call check_true('gof expon ad infinity', gofr%statistic > huge(1.0_dp), failures)
+    call check_close('gof expon ad plus-one', gofr%pvalue, 0.125_dp, 0.0_dp, failures)
+
+    call rng_seed(state, 97535)
+    gofr = goodness_of_fit(and_x, 'uniform', state, statistic='cvm', n_mc_samples=7)
+    call check_close('gof uniform cvm', gofr%statistic, gof_uniform_stat_ref(2), 2.0e-14_dp, failures)
+    call check_array('gof uniform fit', gofr%fit_params, gof_uniform_fit_ref, 3.0e-15_dp, failures)
+
+    call rng_seed(state, 97536)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='ks', n_mc_samples=7, &
+        known_loc=0.0_dp, known_scale=1.0_dp)
+    call check_close('gof known statistic', gofr%statistic, gof_known_norm_ref(1), 2.0e-15_dp, failures)
+    call check_array('gof known params', gofr%fit_params, gof_known_norm_ref(2:3), 0.0_dp, failures)
+
+    call rng_seed(state, 97537)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='cvm', n_mc_samples=7, &
+        fit_loc=0.2_dp, fit_scale=1.3_dp)
+    call check_close('gof prefit statistic', gofr%statistic, gof_prefit_norm_ref(1), 2.0e-14_dp, failures)
+    call check_array('gof prefit params', gofr%fit_params, gof_prefit_norm_ref(2:3), 0.0_dp, failures)
+
+    call rng_seed(state, 97538)
+    gofr = goodness_of_fit(x, 'unsupported', state, n_mc_samples=7)
+    call check_true('gof invalid distribution', ieee_is_nan(gofr%statistic), failures)
+    call rng_seed(state, 97539)
+    gofr = goodness_of_fit(x, 'norm', state, statistic='invalid', n_mc_samples=7)
+    call check_true('gof invalid statistic', ieee_is_nan(gofr%statistic), failures)
+
+    call rng_seed(state, 97540)
+    gofr = goodness_of_fit(x, 'norm', state, n_mc_samples=7, known_scale=qnan)
+    call check_true('gof nan scale trap-safe', ieee_is_nan(gofr%statistic), failures)
 
     rr = skewtest([1.0_dp, 2.0_dp, 3.0_dp])
     call check_true('skewtest short sample invalid', ieee_is_nan(rr%statistic), failures)

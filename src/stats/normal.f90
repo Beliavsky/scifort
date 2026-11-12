@@ -220,11 +220,18 @@ contains
         real(dp) :: tail
 
         if (z < -20.0_dp) then
-            inv_z2 = 1.0_dp / (z * z)
+            if (-z > sqrt(2.0_dp) * sqrt(huge(1.0_dp))) then
+                y = negative_infinity(z)
+                return
+            else if (-z > sqrt(huge(1.0_dp))) then
+                inv_z2 = 0.0_dp
+            else
+                inv_z2 = 1.0_dp / (z * z)
+            end if
             series = 1.0_dp - inv_z2 * (1.0_dp - inv_z2 * &
                 (3.0_dp - inv_z2 * (15.0_dp - inv_z2 * &
                 (105.0_dp - inv_z2 * (945.0_dp - 10395.0_dp * inv_z2)))))
-            y = -0.5_dp * z * z - log(-z) - scifort_log_sqrt_two_pi + log(series)
+            y = (-0.5_dp * z) * z - log(-z) - scifort_log_sqrt_two_pi + log(series)
         else if (z <= 0.0_dp) then
             y = log(standard_normal_cdf(z))
         else

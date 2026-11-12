@@ -1,0 +1,5 @@
+variables,mode,peak_kib,cpu_seconds,analytic_jvp_calls,nonlinear_iterations,residual_evaluations,max_true_residual
+50000,full,56472,0.043989,26,3,3,6.10597128e-11
+50000,restart,13476,0.068296,101,4,4,0.0
+100000,full,111472,0.080037,26,3,3,6.10036466e-11
+100000,restart,25612,0.145807,101,4,4,0.0
