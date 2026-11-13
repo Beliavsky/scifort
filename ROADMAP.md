@@ -3345,3 +3345,16 @@ SciPy-coverage task. C ABI and wrapper expansion remain deferred.
   in checked and optimized builds, including signed-weight rules.
 - [ ] Reconsider a direct original Fortran import only after clear permissive
   modification and redistribution permission is established.
+
+## 2026-11-13 -- Approved native AAA approximation expansion
+
+The user approved AAA rational approximation as the next native SciPy-coverage
+task after Lebedev quadrature. C ABI and wrapper expansion remain deferred.
+
+- [x] Real/complex sample sets, greedy support selection, native SVD fitting,
+  scalar/vector evaluation, and explicit convergence diagnostics.
+- [x] Finite poles/zeros, simple-pole residues, and automatic/manual cleanup,
+  with explicit limits inherited from the current generalized-eigenvalue backend.
+- [x] Analytic and SciPy validation, scale/offset tests, and retained notices.
+- [ ] Broaden spectral calculations beyond 39 support points when a larger,
+  suitably validated generalized-eigenvalue backend becomes available.

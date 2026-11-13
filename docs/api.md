@@ -7158,3 +7158,11 @@ two-sided linear constraints and variable types 0 continuous, 1 integer,
 2 semi-continuous, 3 semi-integer. The module and result/status constants are
 re-exported by `scifort_optimize`. See the
 [detailed MILP API, limitations, and independent tests](optimize_milp.md).
+
+## AAA rational approximation (`scipy.interpolate`)
+
+`scifort_interpolate` exports `aaa`, `aaa_type`, and `complex_aaa_type` for
+real/complex scalar sampled data, adaptive support selection, scalar/vector
+evaluation, poles, zeros, simple-pole residues, and Froissart cleanup.
+See the [AAA guide](interpolate_aaa.md) for controls, statuses, convergence,
+SciPy compatibility differences, and the current 39-support-point spectral limit.

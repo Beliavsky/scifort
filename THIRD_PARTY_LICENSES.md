@@ -5,6 +5,18 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## AAA rational approximation (Oxford/Chebfun and SciPy BSD-3-Clause)
+
+`src/interpolate_aaa.f90` adapts SciPy v1.18.1's
+[`scipy/interpolate/_bary_rational.py`](https://github.com/scipy/scipy/blob/v1.18.1/scipy/interpolate/_bary_rational.py),
+which retains the 2017 University of Oxford/Chebfun copyright and license.
+Both the full Oxford/Chebfun notice and the SciPy project BSD-3-Clause notice
+are retained in
+[`LICENSES/scipy-aaa-BSD-3-Clause.txt`](LICENSES/scipy-aaa-BSD-3-Clause.txt).
+Original SciFort modifications are MIT licensed. Exact sources, modifications,
+mathematical references, and the Fortran-source search are recorded in
+`CODE_PROVENANCE.md`.
+
 ## Lebedev quadrature (getLebedevSphere / SciPy BSD-2-Clause)
 
 `src/integrate/lebedev.f90` adapts SciPy v1.18.1's

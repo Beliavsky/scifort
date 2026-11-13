@@ -1,3 +1,55 @@
+## 2026-11-13 - AAA rational approximation
+
+`src/interpolate_aaa.f90` adapts SciPy **v1.18.1**
+[`scipy/interpolate/_bary_rational.py`](https://github.com/scipy/scipy/blob/v1.18.1/scipy/interpolate/_bary_rational.py).
+The exact tagged source, its Oxford/Chebfun BSD-3-Clause header, and the
+[SciPy project license](https://github.com/scipy/scipy/blob/v1.18.1/LICENSE.txt)
+were inspected before implementation. Downloaded source SHA-256:
+`7d4cffe85836beec002e2889431370739620b78e47641b751dfaa3239c34c8ac`.
+Copyright (c) 2017, The Chancellor, Masters and Scholars of the University
+of Oxford, and the Chebfun Developers. All rights reserved.
+Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.
+Both complete upstream BSD-3-Clause notices and terms are retained in
+[`LICENSES/scipy-aaa-BSD-3-Clause.txt`](LICENSES/scipy-aaa-BSD-3-Clause.txt).
+The adapted source carries MIT AND BSD-3-Clause and both copyright notices;
+original SciFort modifications, tests, and reference drivers are MIT licensed.
+
+Adapted operations: greedy support-point selection, Loewner-matrix SVD fits,
+ill-conditioned-column equilibration, barycentric evaluation, arrowhead
+generalized-eigenvalue pencils for finite poles/zeros, quotient-derivative
+residues, and Froissart cleanup by removing nearby support points and refitting.
+Mathematical reference: Y. Nakatsukasa, O. Sete, and L. N. Trefethen (2018),
+"The AAA algorithm for rational approximation", SIAM J. Sci. Comput. 40(3),
+A1494-A1522, [DOI:10.1137/16M1106122](https://doi.org/10.1137/16M1106122),
+[author preprint](https://arxiv.org/abs/1612.00337).
+
+Significant modifications: native real/complex Fortran objects and constructor
+overloads, stable lexicographic input sorting, explicit status diagnostics,
+finite-value filtering, affine coordinate/data scaling, guarded complex
+division and rescaling, exact retention of supplied support values, scaled
+barycentric evaluation, and normalized cleanup decisions. Reuse SciFort's
+existing SVD and generalized-eigenvalue routines without new dependencies.
+Drop projective roots within `64*epsilon` of infinity, polish finite roots,
+and check normalized secular residuals. Respect the current order-40 eigenvalue
+backend limit, reporting a size diagnostic beyond 39 retained support points.
+Fit/evaluation remain available beyond that limit. Failed cleanup preserves
+the fit; successful cleanup recomputes the actual sample error and convergence.
+No raw upstream Python source, downloaded archive, or adaptation scratch files
+are vendored.
+
+A source search and the published
+[rational-approximation software catalogue](https://rationalapproximation.github.io/)
+did not identify a suitable established Fortran AAA implementation for reuse.
+SciPy's exact permissively licensed implementation was selected; this is not
+a claim that no other Fortran implementation exists. No third-party
+nonpermissive implementation was used. The paper is cited as a mathematical
+reference, not as an imported implementation source.
+
+Native analytic tests and independent public SciPy comparisons are original
+SciFort test code, not copied upstream test implementations. See
+[`validation/aaa_2026-11-13.md`](validation/aaa_2026-11-13.md) and the
+[API guide](docs/interpolate_aaa.md) for tested behavior and limitations.
+
 ## 2026-11-13 - Lebedev unit-sphere quadrature
 
 `src/integrate/lebedev.f90` adapts all 32 coefficient tables and six symmetry

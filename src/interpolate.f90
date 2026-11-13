@@ -6,6 +6,9 @@
 ! Akima (1970), and the modified Akima slope definition (Moler & Ionita).
 ! SciPy is used as a numerical test reference, not as implementation source.
 module scifort_interpolate
+    use scifort_interpolate_aaa, only : aaa,aaa_type,complex_aaa_type,aaa_success, &
+        aaa_invalid_input,aaa_max_terms,aaa_numerical_failure,aaa_spectral_size_limit, &
+        aaa_setup_failure,aaa_undefined
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, ieee_quiet_nan
     use scifort_kinds, only : dp
     use scifort_interpolate_regular_grid, only : grid_axis, regular_grid_interpolator_type, &
@@ -51,6 +54,9 @@ module scifort_interpolate
         scattered_status_success, scattered_status_invalid_input, scattered_status_degenerate, delaunay_nd
     implicit none
     private
+
+    public :: aaa,aaa_type,complex_aaa_type,aaa_success,aaa_invalid_input,aaa_max_terms
+    public :: aaa_numerical_failure,aaa_spectral_size_limit,aaa_setup_failure,aaa_undefined
 
     integer, parameter, public :: interpolate_status_success = 0
     integer, parameter, public :: interpolate_status_invalid_input = 1

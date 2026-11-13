@@ -1,3 +1,12 @@
+## 2026-11-13 - AAA rational approximation
+
+- Add real/complex `aaa` approximation objects, tolerance/support controls,
+  scalar/vector evaluation, support data, and convergence diagnostics.
+- Add finite poles, zeros, simple-pole residues, and Froissart cleanup using
+  native SVD and generalized eigenvalues, with explicit spectral size limits.
+- Preserve Oxford/Chebfun and SciPy BSD-3-Clause notices; validate rational
+  spectra, complex domains, weak-pole cleanup, scaling, and noisy data.
+
 ## 2026-11-13 - Lebedev quadrature
 
 - Add pure native `lebedev_rule` with all 32 SciPy-compatible unit-sphere
