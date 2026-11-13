@@ -1,3 +1,11 @@
+## 2026-11-13 - Rectangular spherical interpolation
+
+- Add native `rect_sphere_bivariate_spline` for `s=0`, with pole values,
+  continuity/flatness options, periodic queries, and coordinate derivatives.
+- Adapt the BSD-licensed FITPACK banded grid solver, including asymmetric
+  pole initialization, and document size limits and unsupported smoothing.
+- Validate 48 grids against SciPy and independently check pole estimation.
+
 ## 2026-11-13 - Fixed-knot spherical splines
 
 - Add `lsq_sphere_bivariate_spline` with weighted scattered-data fitting,

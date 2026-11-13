@@ -1,3 +1,57 @@
+## 2026-11-13 - Rectangular spherical grid interpolation
+
+`src/interpolate_sphere_grid_core.f90` adapts the `s=0` branches of `spgrid`
+and `fpspgr`, together with the following numerical helpers, from Federico
+Perini's modern Fortran FITPACK implementation:
+`equal`, `not_equal`, `fp_knot_interval`, `fp_rotate_2mat_stride`,
+`fp_rotate_row_block`, `fp_rotate_row_stride`, `fpback`, `fpbacp`, `fpbspl`,
+`fpcyt1`, `fpcyt2`, `fpdisc`, `fpgivs`, `fpgrsp`, `fpopsp`, `fprota`, `fpsysy`.
+The source is
+[src/fitpack_core.F90](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`.
+Source SHA-256: `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Inspected upstream `LICENSE.md` SHA-256:
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+Copyright (c) 2022, Federico Perini. All rights reserved. The upstream source
+credits Paul Dierckx's FITPACK. BSD-3-Clause notices remain in adapted source;
+full terms are retained in
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+The retained and inspected license texts agree after whitespace normalization.
+
+The new driver selects periodic longitude knots, estimates missing pole values
+and derivatives using a coarse latitude fit, then constructs the exact
+interpolating latitude knots and invokes the banded Givens solver. It does
+not expose adaptive smoothing; shared helpers retain penalty branches that
+are unreachable through the `s=0` driver. No full upstream package, downloaded
+archive, binary artifact, or mandatory dependency is included.
+
+Significant changes: SciFort binary64 kind and constants, default integers,
+private module packaging, explicit interfaces and `implicit none`, documented
+dummy arguments, and equivalent `do` loops replacing `forall`. Work arrays
+are initialized. The public wrapper in `src/interpolate_sphere.f90` validates
+inputs, bounds workspace and coordinate separation, scales grid and pole
+data, checks physical coefficient range, and reuses the existing result type
+and B-spline evaluator. Query longitude wrapping uses the grid origin.
+The banded solver does not estimate rank; the public diagnostic returns -1.
+
+The cosine/sine collocation initialization in `fpgrsp` now runs when either
+pole requests C1 continuity (`iop0/=0 .or. iop1/=0`), fixing uninitialized
+data in the south-only case. The pole-optimization step range includes both
+supplied/estimated poles and all grid values. This differs from SciPy 1.15.3's
+legacy initialization on a constant grid with an inconsistent opposite pole;
+an independent constrained cubic least-squares oracle verifies the result.
+SciPy v1.15.3 `spgrid.f`, `fpspgr.f`, `fpopsp.f`, and `fpgrsp.f` were inspected
+to diagnose the difference, not copied or adapted into this addition.
+
+Mathematical reference: P. Dierckx, *Curve and Surface Fitting with Splines*,
+Oxford University Press, 1993, Chapter 11, Section 11.2, as cited by upstream.
+The native tests and validation tools are original MIT-licensed SciFort code.
+The [validation record](validation/rect_sphere_2026-11-13.md) reports analytic,
+edge-case, independent least-squares, and SciPy numerical checks. The full
+upstream `mnspgr` interpolation fixture was also checked (11-by-14 grid);
+the full upstream package test suite was not run. No upstream test data or
+test source is redistributed. C ABI expansion remains deferred.
+
 ## 2026-11-13 - Fixed-knot spherical spline constraints
 
 `src/interpolate_sphere.f90` adapts the periodic coefficient mapping, pole

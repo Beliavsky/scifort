@@ -5,6 +5,10 @@
 using a constrained bicubic tensor B-spline, with user-supplied knots and
 positive residual weights. No optional backend or new dependency is needed.
 
+For gridded observations and `s=0`, see
+[rectangular spherical interpolation](interpolate_rect_sphere.md), which uses
+the same result type with different fitting diagnostics and pole options.
+
 ```fortran
 program example
     use scifort_kinds, only : dp
@@ -133,9 +137,9 @@ does not provide a uniform accuracy guarantee for extremely clustered knots
 or every high-order derivative. The existing B-spline and SVD kernels retain
 their numerical limits. See the [validation record](../validation/sphere_spline_2026-11-13.md).
 
-Automatic knot selection, a smoothing target `s`, and the rectangular-grid
-spherical interface remain future work. This interface fits real binary64
-data and adds no C ABI.
+Adaptive spherical smoothing remains future work. The separate rectangular
+interface supports interpolation only. Both interfaces fit real binary64
+data and add no C ABI.
 
 ## Provenance
 

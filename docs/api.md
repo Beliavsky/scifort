@@ -7177,7 +7177,16 @@ two-sided linear constraints and variable types 0 continuous, 1 integer,
 re-exported by `scifort_optimize`. See the
 [detailed MILP API, limitations, and independent tests](optimize_milp.md).
 
-## Fixed-knot spherical splines (`scipy.interpolate`)
+## Spherical splines (`scipy.interpolate`)
+
+`rect_sphere_bivariate_spline(u,v,r,s,pole_continuity,pole_values,pole_exact,pole_flat,status)`
+provides native rectangular-grid interpolation corresponding to SciPy's
+`RectSphereBivariateSpline` at `s=0`. Each coordinate axis requires at least
+four sites; pole options are north/south two-element arrays. It returns the
+same `sphere_bivariate_spline_type` described below, with residual zero and
+rank -1 (not estimated). Positive smoothing returns status 5 and an invalid
+object. See [rectangular spherical interpolation](interpolate_rect_sphere.md)
+for pole estimation, grid bounds, diagnostics, and compatibility differences.
 
 `lsq_sphere_bivariate_spline(theta,phi,r,tt,tp,w,eps,status)` returns a native
 `sphere_bivariate_spline_type`, corresponding to SciPy's

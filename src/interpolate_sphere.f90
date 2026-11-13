@@ -7,24 +7,27 @@
 ! Modernized upstream by Federico Perini from Paul Dierckx's FITPACK.
 ! Full terms: LICENSES/perazz-fitpack-BSD-3-Clause.txt.
 ! SciFort uses its own B-spline evaluators and dense minimum-norm SVD solve;
-! no adaptive knot selection or FITPACK banded solver is imported.
+! the separate grid core adapts FITPACK's s=0 banded interpolation path.
 module scifort_interpolate_sphere
     use, intrinsic :: iso_fortran_env, only : int64
-    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, &
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan, ieee_value, &
         ieee_quiet_nan, ieee_positive_inf
     use scifort_kinds, only : dp
     use scifort_constants, only : scifort_pi
     use scifort_interpolate_bspline, only : bspline_design_matrix
     use scifort_interpolate_fitpack_bivariate, only : fitpack_bivariate_tck_type, bisplev
     use scifort_linalg_svd, only : svd_lstsq
+    use scifort_interpolate_sphere_grid_core, only : fitpack_sphere_grid
     implicit none
     private
     public :: lsq_sphere_bivariate_spline, sphere_bivariate_spline_type
+    public :: rect_sphere_bivariate_spline
     integer, parameter, public :: sphere_spline_success = 0
     integer, parameter, public :: sphere_spline_invalid_input = 1
     integer, parameter, public :: sphere_spline_rank_deficient = 2
     integer, parameter, public :: sphere_spline_numerical_failure = 3
     integer, parameter, public :: sphere_spline_size_limit = 4
+    integer, parameter, public :: sphere_spline_unsupported_smoothing = 5
     real(dp), parameter :: two_pi = 2.0_dp*scifort_pi
     integer, parameter :: max_dimension = 256
     integer(int64), parameter :: max_design_entries = 2000000_int64
@@ -36,6 +39,7 @@ module scifort_interpolate_sphere
         integer :: dimension = 0
         real(dp) :: weighted_residual = 0.0_dp
         real(dp) :: value_scale = 1.0_dp
+        real(dp) :: longitude_origin = 0.0_dp
     contains
         procedure :: valid => sphere_valid
         procedure :: value => sphere_value
@@ -49,6 +53,108 @@ module scifort_interpolate_sphere
     end type sphere_bivariate_spline_type
 
 contains
+
+    function rect_sphere_bivariate_spline(u,v,r,s,pole_continuity,pole_values, &
+        pole_exact,pole_flat,status) result(fit)
+        implicit none
+        real(dp), intent(in) :: u(:) !! Strictly increasing colatitudes in (0,pi); at least four.
+        real(dp), intent(in) :: v(:) !! Increasing longitudes; v(1) in [-pi,pi), span below 2*pi.
+        real(dp), intent(in) :: r(:,:) !! Finite grid samples, shape (size(u),size(v)).
+        real(dp), intent(in), optional :: s !! Smoothing target; only zero is supported.
+        logical, intent(in), optional :: pole_continuity(:) !! Two C1 pole flags; default false.
+        real(dp), intent(in), optional :: pole_values(:) !! Two pole values; NaN means unspecified.
+        logical, intent(in), optional :: pole_exact(:) !! Two exactness flags, default false.
+        logical, intent(in), optional :: pole_flat(:) !! Two zero-slope flags; require continuity.
+        integer, intent(out), optional :: status !! 0 success; 1/3/4/5 input/range/size/smoothing.
+        type(sphere_bivariate_spline_type) :: fit
+        logical :: continuity(2),given(2),exact(2),flat(2)
+        real(dp) :: poles(2),rscale,maxcoef,separation
+        real(dp), allocatable :: tx(:),ty(:),coef(:)
+        integer :: mu,mv,i,code
+        integer(int64) :: nu64,nv64,work64
+
+        code = sphere_spline_invalid_input
+        mu = size(u)
+        mv = size(v)
+        if (mu < 4 .or. mv < 4) goto 900
+        if (size(r,1) /= mu .or. size(r,2) /= mv) goto 900
+        if (.not. all(ieee_is_finite(u)) .or. .not. all(ieee_is_finite(v))) goto 900
+        if (.not. all(ieee_is_finite(r))) goto 900
+        if (u(1) <= 0.0_dp .or. u(mu) >= scifort_pi) goto 900
+        if (any(u(2:) <= u(:mu-1)) .or. any(v(2:) <= v(:mv-1))) goto 900
+        if (v(1) < -scifort_pi .or. v(1) >= scifort_pi) goto 900
+        if (v(mv) >= v(1)+two_pi) goto 900
+        if (present(s)) then
+            if (.not. ieee_is_finite(s)) goto 900
+            if (s < 0.0_dp) goto 900
+            if (s > 0.0_dp) then
+                code = sphere_spline_unsupported_smoothing
+                goto 900
+            end if
+        end if
+        continuity = .false.
+        exact = .false.
+        flat = .false.
+        poles = 0.0_dp
+        given = .false.
+        if (present(pole_continuity)) then
+            if (size(pole_continuity) /= 2) goto 900
+            continuity = pole_continuity
+        end if
+        if (present(pole_exact)) then
+            if (size(pole_exact) /= 2) goto 900
+            exact = pole_exact
+        end if
+        if (present(pole_flat)) then
+            if (size(pole_flat) /= 2) goto 900
+            flat = pole_flat
+        end if
+        if (any(flat .and. .not. continuity)) goto 900
+        if (present(pole_values)) then
+            if (size(pole_values) /= 2) goto 900
+            given = .not. ieee_is_nan(pole_values)
+            do i = 1, 2
+                if (.not. given(i)) cycle
+                if (.not. ieee_is_finite(pole_values(i))) goto 900
+                poles(i) = pole_values(i)
+            end do
+        end if
+        code = sphere_spline_size_limit
+        nu64 = int(mu,int64)+8_int64
+        nv64 = int(mv,int64)+7_int64
+        work64 = 12+nu64*(int(mv,int64)+nv64+3)+24*nv64+4*int(mu,int64) &
+            +8*int(mv,int64)+max(nu64,int(mv,int64)+nv64)
+        if (work64+nu64*nv64+int(mu,int64)*int(mv,int64) > max_design_entries) goto 900
+        ! Keep arithmetic away from nearly coincident grid sites/endpoints.
+        code = sphere_spline_numerical_failure
+        separation = 128.0_dp*epsilon(1.0_dp)*two_pi
+        if (min(u(1),scifort_pi-u(mu),minval(u(2:)-u(:mu-1))) <= separation) goto 900
+        if (min(two_pi-(v(mv)-v(1)),minval(v(2:)-v(:mv-1))) <= separation) goto 900
+        rscale = maxval(abs(r))
+        do i = 1, 2
+            if (given(i)) rscale = max(rscale,abs(poles(i)))
+        end do
+        if (rscale == 0.0_dp) rscale = 1.0_dp
+        call fitpack_sphere_grid(u,v,r/rscale,continuity,poles/rscale,given,exact,flat, &
+            tx,ty,coef,i)
+        if (i /= 0) goto 900
+        maxcoef = maxval(abs(coef))
+        if (maxcoef > 1.0_dp) then
+            if (rscale > huge(1.0_dp)/maxcoef) goto 900
+        end if
+        fit%tck%tx = tx
+        fit%tck%ty = ty
+        fit%tck%c = coef
+        fit%tck%kx = 3
+        fit%tck%ky = 3
+        fit%value_scale = rscale
+        fit%longitude_origin = v(1)
+        fit%weighted_residual = 0.0_dp
+        fit%dimension = mu*mv+2+2*count(continuity)
+        fit%numerical_rank = -1 ! The banded FITPACK path does not estimate numerical rank.
+        code = sphere_spline_success
+900     if (present(status)) status = code
+    end function rect_sphere_bivariate_spline
 
     function lsq_sphere_bivariate_spline(theta, phi, r, tt, tp, w, eps, status) result(fit)
         implicit none
@@ -231,7 +337,7 @@ contains
         if (present(dtheta)) dt = dtheta
         if (present(dphi)) dp_order = dphi
         if (dt < 0 .or. dt > 2 .or. dp_order < 0 .or. dp_order > 2) goto 900
-        longitude = modulo(phi,two_pi)
+        longitude = self%longitude_origin+modulo(phi-self%longitude_origin,two_pi)
         value = bisplev(theta,longitude,self%tck,dx=dt,dy=dp_order,status=code)
         if (code /= 0) goto 900
         code = sphere_spline_numerical_failure

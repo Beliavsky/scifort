@@ -3,7 +3,8 @@
 - [x] Add native fixed-knot `lsq_sphere_bivariate_spline` with weighted fitting,
   periodic and polar coefficient constraints, derivatives, and rank diagnostics.
 - [x] Validate against SciPy and analytic spherical data with focused tests.
-- [ ] Add adaptive-knot smoothing and rectangular-grid spherical interfaces.
+- [x] Add native rectangular-grid spherical interpolation (`s=0`) with pole options.
+- [ ] Add adaptive-knot spherical smoothing, including rectangular-grid `s>0`.
 - [ ] Extend the dense solver limits and audit rank-deficient FITPACK parity.
 
 ## Complex Bessel Y zero coverage (2026-11-13)

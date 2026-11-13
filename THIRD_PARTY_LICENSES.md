@@ -5,7 +5,7 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
-## Spherical spline constraints (perazz/FITPACK, BSD-3-Clause)
+## Spherical spline constraints and grid solver (perazz/FITPACK, BSD-3-Clause)
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
 constraint construction from `fpsphe` and `fprpsp` in Federico Perini's
@@ -15,8 +15,13 @@ The inspected commit is `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
 The adapted source retains BSD-3-Clause and the upstream attribution; full terms
 are already retained in
 [`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
-SciFort uses its existing B-spline evaluation and dense SVD solver. No full
-FITPACK source distribution or mandatory package dependency is added.
+`src/interpolate_sphere_grid_core.f90` additionally adapts the interpolation
+branches of `spgrid`/`fpspgr` and their banded numerical helpers from the same
+pinned source. It retains the same copyright and BSD-3-Clause terms.
+SciFort uses its existing B-spline evaluation and, for scattered fitting,
+dense SVD solver. No full FITPACK source distribution or mandatory package
+dependency is added. Exact imported routines and modifications are recorded
+in `CODE_PROVENANCE.md`.
 
 ## Complex Riemann zeta (Alexey Kuznetsov, BSD-3-Clause)
 
