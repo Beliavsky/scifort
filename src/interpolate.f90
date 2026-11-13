@@ -9,7 +9,8 @@ module scifort_interpolate
     use scifort_interpolate_sphere, only : lsq_sphere_bivariate_spline, &
         sphere_bivariate_spline_type, sphere_spline_success, sphere_spline_invalid_input, &
         sphere_spline_rank_deficient, sphere_spline_numerical_failure, sphere_spline_size_limit, &
-        rect_sphere_bivariate_spline, sphere_spline_unsupported_smoothing
+        rect_sphere_bivariate_spline, sphere_spline_unsupported_smoothing, &
+        smooth_sphere_bivariate_spline
     use scifort_interpolate_aaa, only : aaa,aaa_type,complex_aaa_type,aaa_success, &
         aaa_invalid_input,aaa_max_terms,aaa_numerical_failure,aaa_spectral_size_limit, &
         aaa_setup_failure,aaa_undefined
@@ -63,6 +64,7 @@ module scifort_interpolate
     public :: sphere_spline_success, sphere_spline_invalid_input, sphere_spline_rank_deficient
     public :: sphere_spline_numerical_failure, sphere_spline_size_limit
     public :: rect_sphere_bivariate_spline, sphere_spline_unsupported_smoothing
+    public :: smooth_sphere_bivariate_spline
 
     public :: aaa,aaa_type,complex_aaa_type,aaa_success,aaa_invalid_input,aaa_max_terms
     public :: aaa_numerical_failure,aaa_spectral_size_limit,aaa_setup_failure,aaa_undefined

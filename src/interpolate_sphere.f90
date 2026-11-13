@@ -18,10 +18,11 @@ module scifort_interpolate_sphere
     use scifort_interpolate_fitpack_bivariate, only : fitpack_bivariate_tck_type, bisplev
     use scifort_linalg_svd, only : svd_lstsq
     use scifort_interpolate_sphere_grid_core, only : fitpack_sphere_grid
+    use scifort_interpolate_sphere_scattered_core, only : fitpack_sphere_scattered
     implicit none
     private
     public :: lsq_sphere_bivariate_spline, sphere_bivariate_spline_type
-    public :: rect_sphere_bivariate_spline
+    public :: rect_sphere_bivariate_spline,smooth_sphere_bivariate_spline
     integer, parameter, public :: sphere_spline_success = 0
     integer, parameter, public :: sphere_spline_invalid_input = 1
     integer, parameter, public :: sphere_spline_rank_deficient = 2
@@ -53,6 +54,110 @@ module scifort_interpolate_sphere
     end type sphere_bivariate_spline_type
 
 contains
+
+    function smooth_sphere_bivariate_spline(theta,phi,r,w,s,eps,ntest,npest,status) result(fit)
+        implicit none
+        real(dp), intent(in) :: theta(:) !! Finite scattered colatitudes in [0,pi], radians.
+        real(dp), intent(in) :: phi(:) !! Paired finite longitudes in [0,2*pi], radians.
+        real(dp), intent(in) :: r(:) !! Finite observations; at least two, in arbitrary order.
+        real(dp), intent(in), optional :: w(:) !! Positive residual weights; default all one.
+        real(dp), intent(in), optional :: s !! Nonnegative weighted residual target; default zero.
+        real(dp), intent(in), optional :: eps !! Squared relative rank threshold; default 1e-16.
+        integer, intent(in), optional :: ntest !! Latitude knot capacity, >=8; default 8+sqrt(m/2).
+        integer, intent(in), optional :: npest !! Longitude knot capacity, >=8; same default.
+        integer, intent(out), optional :: status !! 0 success, 2 rank warning; 1/3/4 failure.
+        type(sphere_bivariate_spline_type) :: fit
+        real(dp), allocatable :: weights(:),tt(:),tp(:),coef(:)
+        real(dp) :: target,threshold,rscale,wscale,scaled_target,logfp,fp,maxcoef
+        integer :: m,ntcap,npcap,code,ier,rank
+        integer(int64) :: ntt,npp,ncc,ib1,ib3,work1,work2,entries
+        code = sphere_spline_invalid_input
+        m = size(theta)
+        if (m < 2 .or. size(phi) /= m .or. size(r) /= m) goto 900
+        if (.not. all(ieee_is_finite(theta)) .or. .not. all(ieee_is_finite(phi)) &
+            .or. .not. all(ieee_is_finite(r))) goto 900
+        if (any(theta < 0.0_dp) .or. any(theta > scifort_pi)) goto 900
+        if (any(phi < 0.0_dp) .or. any(phi > two_pi)) goto 900
+        target = 0.0_dp
+        if (present(s)) target = s
+        if (.not. ieee_is_finite(target)) goto 900
+        if (target < 0.0_dp) goto 900
+        threshold = 1e-16_dp
+        if (present(eps)) threshold = eps
+        if (.not. ieee_is_finite(threshold)) goto 900
+        if (threshold <= 0.0_dp .or. threshold >= 1.0_dp) goto 900
+        if (present(w)) then
+            if (size(w) /= m) goto 900
+            if (.not. all(ieee_is_finite(w))) goto 900
+            if (any(w <= 0.0_dp)) goto 900
+        end if
+        ntcap = 8+int(sqrt(real(m/2,dp)))
+        npcap = ntcap
+        if (present(ntest)) ntcap = ntest
+        if (present(npest)) npcap = npest
+        if (ntcap < 8 .or. npcap < 8) goto 900
+        code = sphere_spline_size_limit
+        if (int(ntcap,int64)*int(npcap,int64) > max_design_entries) goto 900
+        ntt = int(ntcap,int64)-7
+        npp = int(npcap,int64)-7
+        ncc = 6+npp*(ntt-1)
+        ib1 = max(4*npp,6+3*npp)
+        ib3 = max(ib1+3,6+3*npp)
+        work1 = 185+52*npp+10*ntt+14*ntt*npp+8*(int(m,int64)+(ntt-1)*npp**2)
+        work2 = ncc*ib3+ncc+ib3
+        entries = work1+work2+int(ntcap-4,int64)*int(npcap-4,int64) &
+            +5_int64*int(m,int64)+ntt*npp+ntcap+npcap
+        if (entries > max_design_entries) goto 900
+        code = sphere_spline_numerical_failure
+        allocate(weights(m))
+        weights = 1.0_dp
+        wscale = 1.0_dp
+        if (present(w)) then
+            wscale = maxval(w)
+            weights = w/wscale
+        end if
+        if (any(weights <= 0.0_dp)) goto 900
+        rscale = maxval(abs(r))
+        if (rscale == 0.0_dp) rscale = 1.0_dp
+        scaled_target = 0.0_dp
+        if (target > 0.0_dp) then
+            logfp = log(target)-2.0_dp*(log(rscale)+log(wscale))
+            if (logfp < log(tiny(1.0_dp))) goto 900
+            scaled_target = exp(min(logfp,log(huge(1.0_dp))-1.0_dp))
+        end if
+        call fitpack_sphere_scattered(theta,phi,r/rscale,weights,scaled_target,threshold, &
+            ntcap,npcap,int(work1),int(work2),tt,tp,coef,fp,rank,ier)
+        if (ier == 1 .or. ier > 10) then
+            code = sphere_spline_size_limit
+            goto 900
+        end if
+        if (ier > 0) goto 900
+        maxcoef = maxval(abs(coef))
+        if (maxcoef > 1.0_dp) then
+            if (rscale > huge(1.0_dp)/maxcoef) goto 900
+        end if
+        fit%tck%tx = tt
+        fit%tck%ty = tp
+        fit%tck%c = coef
+        fit%tck%kx = 3
+        fit%tck%ky = 3
+        fit%value_scale = rscale
+        fit%weighted_residual = 0.0_dp
+        if (fp > 0.0_dp) then
+            logfp = log(fp)+2.0_dp*(log(rscale)+log(wscale))
+            if (logfp > log(huge(1.0_dp))) then
+                fit%weighted_residual = ieee_value(0.0_dp,ieee_positive_inf)
+            else
+                fit%weighted_residual = exp(logfp)
+            end if
+        end if
+        fit%dimension = 6+(size(tt)-8)*(size(tp)-7)
+        if (size(tt) == 8 .and. size(tp) == 8) fit%dimension = 2
+        fit%numerical_rank = rank
+        code = sphere_spline_success
+        if (rank >= 0 .and. rank < fit%dimension) code = sphere_spline_rank_deficient
+900     if (present(status)) status = code
+    end function smooth_sphere_bivariate_spline
 
     function rect_sphere_bivariate_spline(u,v,r,s,pole_continuity,pole_values, &
         pole_exact,pole_flat,status) result(fit)

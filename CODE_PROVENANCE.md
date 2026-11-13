@@ -1,3 +1,69 @@
+## 2026-11-13 - Adaptive scattered spherical smoothing
+
+`src/interpolate_sphere_scattered_core.f90` adapts `fpsphe`, `fprank`,
+`fprpsp`, `fporde`, `fp_rotate_row`, and `fp_rotate_shifted`, plus the
+workspace partition from `sphere`, in Federico Perini's perazz/FITPACK:
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`.
+The exact source and license were inspected. Source SHA-256:
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Upstream `LICENSE.md` SHA-256:
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+Copyright (c) 2022, Federico Perini. All rights reserved. Upstream credits
+Paul Dierckx's FITPACK. BSD-3-Clause notices remain in adapted source and full
+terms remain in
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+
+The new core reuses existing adapted FITPACK basis, rotation, banded solve,
+penalty, interval-search, and rational root-iteration helpers from
+`src/interpolate_sphere_grid_core.f90`. Only their internal module visibility
+changes; their numerical implementation is unchanged. The new constructor in
+`src/interpolate_sphere.f90` validates inputs, guards workspace sizes using
+bounded integer arithmetic, scales observations/weights and the residual
+target, rejects unrepresentable coefficients, and returns the shared spline
+object with physical residuals and explicit statuses. Original tests,
+reference tools, and native wrapper additions are SciFort work; adapted source
+retains its applicable third-party license.
+
+Significant adaptation changes:
+
+- Use SciFort's binary64 kind/constants, default integers, lowercase ASCII,
+  explicit interfaces, `implicit none`, and documented dummy arguments.
+- Allocate and initialize all solver state locally, including sufficient
+  secondary workspace for rank reduction. No persistent cache or warm start
+  is exposed. Optional knot capacities are SciFort extensions; defaults follow
+  SciPy 1.15.3's `spherfit_smth` wrapper.
+- Preserve `f(1:ncof)` in the first rank-deficient solve; the pinned modern
+  source instead assigns zero to the transformed right-hand side. The legacy
+  [`fpsphe.f`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/interpolate/fitpack/fpsphe.f)
+  was inspected to cross-check this correction, rather than imported.
+- Correct `fprank` dummy intents for the factor and transformed right-hand
+  side from `out` to `inout`, because they are read before being overwritten.
+- After rank reduction, recompute the actual weighted residual from the
+  physical tensor coefficients before knot selection or accepting a fit.
+  The accumulated correction underestimated it in the equatorial fixture:
+  approximately `0.00156929` versus the actual `0.003103635964350815`.
+- Expose the final factor rank, with -1 for the initial polynomial where it
+  is not estimated. Keep valid deficient fits with status 2, unlike SciPy
+  1.15.3's high-level rejection of its rank-warning codes. Positive solver
+  failures return an invalid fit; no partial solution is silently accepted.
+
+An independent constrained tensor design and NumPy dense SVD verify the
+rank-four minimum-norm fixture, including predictions away from observations;
+the existing native dense SVD supplies another check. Full-rank fits are checked
+against SciPy and polynomial limits against independent weighted least squares.
+The upstream `mnsphe` fixture is exercised with fresh smoothing fits; no
+upstream test source/data, full source distribution, archive, or binary is
+redistributed. The full upstream package suite was not run. See the
+[validation record](validation/smooth_sphere_2026-11-13.md).
+
+Mathematical references, as cited by upstream: P. Dierckx, "Algorithms for
+smoothing data on the sphere with tensor product splines", *Computing* 32
+(1984), 319-342; and *Curve and Surface Fitting with Splines* (Oxford University
+Press, 1993). The SciPy API/capacity reference inspected was
+[`dfitpack.pyf`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/interpolate/src/dfitpack.pyf).
+No dependency or C ABI is added.
+
 ## 2026-11-13 - Adaptive rectangular spherical smoothing
 
 `src/interpolate_sphere_grid_core.f90` now additionally adapts `fpspgr`,

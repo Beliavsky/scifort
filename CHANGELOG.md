@@ -1,3 +1,12 @@
+## 2026-11-13 - Scattered spherical smoothing
+
+- Add `smooth_sphere_bivariate_spline` with weighted adaptive knot selection,
+  residual targets, derivatives, rank diagnostics, and optional knot capacities.
+- Adapt the licensed FITPACK banded solver and minimum-norm rank reduction;
+  preserve transformed observations and recompute rank-reduced residuals.
+- Validate against SciPy, independent dense SVD, polynomial least squares,
+  and the upstream scattered-data fixture. C ABI work remains deferred.
+
 ## 2026-11-13 - Rectangular spherical smoothing
 
 - Extend `rect_sphere_bivariate_spline` to positive residual targets using

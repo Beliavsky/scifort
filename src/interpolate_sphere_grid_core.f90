@@ -14,6 +14,9 @@ module scifort_interpolate_sphere_grid_core
     implicit none
     private
     public :: fitpack_sphere_grid
+    ! Internal numerical helpers shared with the scattered spherical fitter.
+    public :: equal,not_equal,fp_knot_interval,fpback,fpbspl,fpdisc,fpgivs,fprota
+    public :: root_finding_iterate
     integer, parameter :: max_order = 19, degree_3 = 3, degree_4 = 4, degree_5 = 5
     real(dp), parameter :: zero = 0.0_dp, one = 1.0_dp, two = 2.0_dp
     real(dp), parameter :: three = 3.0_dp, half = 0.5_dp, pi2 = 2.0_dp*pi

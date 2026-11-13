@@ -5,7 +5,7 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
-## Spherical spline constraints and grid solver (perazz/FITPACK, BSD-3-Clause)
+## Spherical spline constraints and solvers (perazz/FITPACK, BSD-3-Clause)
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
 constraint construction from `fpsphe` and `fprpsp` in Federico Perini's
@@ -19,6 +19,9 @@ are already retained in
 and adaptive smoothing branches of `spgrid`/`fpspgr`, their knot-selection
 and root-iteration helpers, and their banded numerical helpers from the same
 pinned source. It retains the same copyright and BSD-3-Clause terms.
+`src/interpolate_sphere_scattered_core.f90` also adapts the scattered-data
+adaptive solver, rank reduction, coefficient expansion, observation ordering,
+and rotation helpers from that source. It retains the same notices and terms.
 SciFort uses its existing B-spline evaluation and, for scattered fitting,
 dense SVD solver. No full FITPACK source distribution or mandatory package
 dependency is added. Exact imported routines and modifications are recorded

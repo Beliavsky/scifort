@@ -137,9 +137,10 @@ does not provide a uniform accuracy guarantee for extremely clustered knots
 or every high-order derivative. The existing B-spline and SVD kernels retain
 their numerical limits. See the [validation record](../validation/sphere_spline_2026-11-13.md).
 
-Adaptive scattered-data spherical smoothing remains future work. The separate
-rectangular interface supports interpolation and smoothing. Both fit real binary64
-data and add no C ABI.
+For automatic knots and a residual target, use the separate
+[scattered smoothing constructor](interpolate_smooth_sphere.md). The
+rectangular interface also supports interpolation and smoothing. All fit
+real binary64 data and add no C ABI.
 
 ## Provenance
 

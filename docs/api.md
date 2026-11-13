@@ -7179,6 +7179,16 @@ re-exported by `scifort_optimize`. See the
 
 ## Spherical splines (`scipy.interpolate`)
 
+`smooth_sphere_bivariate_spline(theta,phi,r,w,s,eps,ntest,npest,status)`
+provides native weighted scattered-data smoothing corresponding to SciPy's
+`SmoothSphereBivariateSpline`. It selects knots automatically for the weighted
+squared-residual target `s`, which defaults to zero. Optional knot-capacity
+controls are SciFort extensions. The shared result type supports periodic
+queries and coordinate derivatives. Deficient fits remain valid with status 2;
+the initial polynomial has rank -1 (not estimated). See
+[scattered spherical smoothing](interpolate_smooth_sphere.md) for signatures,
+limits, rank semantics, and compatibility details.
+
 `rect_sphere_bivariate_spline(u,v,r,s,pole_continuity,pole_values,pole_exact,pole_flat,status)`
 provides native rectangular-grid interpolation (`s=0`) and adaptive smoothing
 (`s>0`) corresponding to SciPy's `RectSphereBivariateSpline`.

@@ -5,7 +5,7 @@
 - [x] Validate against SciPy and analytic spherical data with focused tests.
 - [x] Add native rectangular-grid spherical interpolation (`s=0`) with pole options.
 - [x] Add native adaptive rectangular-grid spherical smoothing (`s>0`).
-- [ ] Add adaptive scattered-data spherical smoothing (`SmoothSphereBivariateSpline`).
+- [x] Add adaptive scattered-data spherical smoothing (`SmoothSphereBivariateSpline`).
 - [ ] Extend the dense solver limits and audit rank-deficient FITPACK parity.
 
 ## Complex Bessel Y zero coverage (2026-11-13)
