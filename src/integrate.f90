@@ -2,6 +2,12 @@
 ! Copyright (c) 2026 SciFort contributors
 
 module scifort_integrate
+    use scifort_integrate_bvp, only : solve_bvp, solve_bvp_result, solve_bvp_complex_result, &
+        bvp_solution, bvp_complex_solution, bvp_status_success, bvp_status_max_nodes, &
+        bvp_status_singular, bvp_status_bc_tolerance, bvp_status_invalid_argument, &
+        bvp_status_numerical_failure, bvp_status_setup_failure, bvp_fun_real, bvp_bc_real, &
+        bvp_fun_complex, bvp_bc_complex, bvp_fun_jac_real, bvp_bc_jac_real, &
+        bvp_fun_jac_complex, bvp_bc_jac_complex
     use scifort_kinds, only : dp
     use scifort_integrate_quadrature, only : cumulative_simpson, cumulative_trapezoid, &
         fixed_quad, integrate_status_invalid_argument, integrate_status_invalid_shape, &
@@ -26,6 +32,13 @@ module scifort_integrate
         quad_status_nonconvergence, quad_status_roundoff, quad_status_success
     implicit none
     private
+
+    public :: solve_bvp, solve_bvp_result, solve_bvp_complex_result
+    public :: bvp_solution, bvp_complex_solution, bvp_status_success, bvp_status_max_nodes
+    public :: bvp_status_singular, bvp_status_bc_tolerance, bvp_status_invalid_argument
+    public :: bvp_status_numerical_failure, bvp_status_setup_failure
+    public :: bvp_fun_real, bvp_bc_real, bvp_fun_complex, bvp_bc_complex
+    public :: bvp_fun_jac_real, bvp_bc_jac_real, bvp_fun_jac_complex, bvp_bc_jac_complex
 
     interface solve_ivp
         procedure :: solve_ivp_real

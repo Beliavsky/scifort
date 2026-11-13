@@ -5521,6 +5521,12 @@ BSD-3-Clause.
 
 ## Integration
 
+The native real/complex `solve_bvp` subroutine solves two-point boundary-value
+ODEs with adaptive fourth-order collocation, unknown parameters, optional
+singular endpoint terms and analytic Jacobians, and C1 cubic dense output.
+See the [boundary-value solver guide](bvp.md) for callbacks, shapes, statuses,
+numerical contracts, and SciPy compatibility limitations.
+
 ```fortran
 use scifort_integrate
 ```

@@ -3321,3 +3321,15 @@ still required on a system with the Fortran Package Manager installed.
 - [x] Independently validate 2,400 checked/release cases against SciPy.
 - [ ] Consider blocked BLAS acceleration, selected-pivot condition diagnostics,
   and a separate factor-based solve API once numerical testing warrants it.
+
+## 2026-11-12 -- Approved native boundary-value integration expansion
+
+The user approved `solve_bvp` as the next native SciPy-coverage task after
+FFT/Hankel work, while continuing to defer C ABI and wrapper expansion.
+
+- [x] Real and complex fourth-order two-point collocation with unknown parameters.
+- [x] Optional singular endpoint term, analytic/estimated Jacobians, adaptive
+  meshes, dense cubic output, and explicit convergence diagnostics.
+- [x] Native analytic tests and checked/optimized SciPy/analytic comparisons.
+- [ ] Specialized large-system factorization and continuation interfaces, if
+  warranted by numerical and performance evidence.

@@ -5,6 +5,16 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Boundary-value ODE solver (SciPy BSD-3-Clause)
+
+`src/integrate/bvp.f90` adapts SciPy v1.15.3's
+[`scipy/integrate/_bvp.py`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/integrate/_bvp.py).
+Full required notices and terms are retained in
+[`LICENSES/scipy-bvp-BSD-3-Clause.txt`](LICENSES/scipy-bvp-BSD-3-Clause.txt).
+Original SciFort modifications are MIT licensed. Exact source version,
+modifications, mathematical references, and the reviewed Fortran alternative
+are recorded in `CODE_PROVENANCE.md`.
+
 ## Fast Hankel transforms / FFTLog (SciPy BSD-3-Clause)
 
 `src/fftlog.f90` and the coefficient-magnitude check in

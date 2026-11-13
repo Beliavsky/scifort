@@ -1,3 +1,11 @@
+## 2026-11-12 - Boundary-value ODE solver
+
+- Add native real/complex `solve_bvp`, unknown parameters, singular endpoint
+  terms, optional analytic Jacobians, adaptive collocation, and cubic output.
+- Reuse native sparse LU and retain SciPy 1.15.3 BSD-3-Clause attribution.
+- Document numerical contracts, failure diagnostics, and compatibility limits;
+  add analytic native tests and checked/optimized reference comparisons.
+
 ## 2026-11-12 - Fast Hankel transforms
 
 - Add native `fht`, `ifht`, and `fhtoffset` using FFTLog, power-law bias,

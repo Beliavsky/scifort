@@ -1,3 +1,48 @@
+## 2026-11-12 - Boundary-value ODE collocation (SciPy)
+
+`src/integrate/bvp.f90` adapts SciPy **v1.15.3**
+[`scipy/integrate/_bvp.py`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/integrate/_bvp.py).
+The exact tagged source and [license](https://github.com/scipy/scipy/blob/v1.15.3/LICENSE.txt)
+were inspected; installed SciPy 1.15.3 matched after line-ending normalization.
+SHA-256 of the downloaded tagged source:
+`d046b344a10268e12b61efcc0006e6811adb91d3a0497a709107f03cbc4fdf42`.
+Copyright (c) 2001-2002 Enthought, Inc. 2003-2024, SciPy Developers.
+Full BSD-3-Clause terms are retained in
+[`LICENSES/scipy-bvp-BSD-3-Clause.txt`](LICENSES/scipy-bvp-BSD-3-Clause.txt).
+The adapted source carries MIT AND BSD-3-Clause attribution; original SciFort
+interfaces, modifications, tests, and validation drivers are MIT licensed.
+
+Adapted operations are fourth-order Lobatto IIIA midpoint collocation,
+analytic global Jacobian blocks, forward-difference Jacobians, damped Newton
+line search, singular-term pseudoinverse projection, five-point Lobatto
+relative-defect quadrature, and two-/three-way adaptive subdivision.
+Mathematical reference: J. Kierzenka and L. F. Shampine (2001),
+"A BVP Solver Based on Residual Control and the Matlab PSE", ACM Transactions
+on Mathematical Software 27(3), 299-316,
+[DOI:10.1145/502800.502801](https://doi.org/10.1145/502800.502801).
+No article implementation code was imported.
+
+Significant modifications: native real/complex callback and result types,
+zero-length parameter conventions, direct CSC block assembly, row scaling,
+existing SciFort sparse LU/SVD reuse, Jacobian refresh on every Newton step
+(up to eight steps per mesh), real squared-magnitude complex line search,
+explicit argument/nonfinite/size/stagnation checks and statuses, independent
+cubic dense storage and derivative evaluation. No upstream Python source file
+is vendored. Validation uses public mathematical problems and independent
+SciPy calls, not copied upstream test implementation.
+See `validation/bvp_2026-11-12.md`.
+
+Established Fortran alternative reviewed before adoption:
+[Paul Muir's BVP_SOLVER page](https://cs.smu.ca/~muir/BVP_SOLVER_Webpage.shtml),
+[exact BVP_M-2.f90](https://cs.smu.ca/~muir/BVP_SOLVER-2_Files/BVP_M-2.f90),
+and [linear-algebra license notes](https://cs.smu.ca/~muir/BVP_LA_LicenseInfo.txt).
+The BVP module itself includes BSD-3-Clause terms. Its mutable module state,
+separated boundary-condition interface, and separately sourced COLROW/LINPACK
+linear algebra would require substantially more refactoring and additional
+license resolution. It was not imported; this is not a claim that its own
+BSD license is incompatible. SciFort's existing sparse LU avoids importing
+that separate linear-algebra package.
+
 ## 2026-11-12 - Fast Hankel transforms (FFTLog)
 
 `src/fftlog.f90` and the coefficient-magnitude calculation in
