@@ -2,6 +2,7 @@
 ! Copyright (c) 2026 SciFort contributors
 
 module scifort_integrate
+    use scifort_integrate_lebedev, only : lebedev_rule
     use scifort_integrate_bvp, only : solve_bvp, solve_bvp_result, solve_bvp_complex_result, &
         bvp_solution, bvp_complex_solution, bvp_status_success, bvp_status_max_nodes, &
         bvp_status_singular, bvp_status_bc_tolerance, bvp_status_invalid_argument, &
@@ -32,6 +33,8 @@ module scifort_integrate
         quad_status_nonconvergence, quad_status_roundoff, quad_status_success
     implicit none
     private
+
+    public :: lebedev_rule
 
     public :: solve_bvp, solve_bvp_result, solve_bvp_complex_result
     public :: bvp_solution, bvp_complex_solution, bvp_status_success, bvp_status_max_nodes

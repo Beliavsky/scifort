@@ -5,6 +5,17 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Lebedev quadrature (getLebedevSphere / SciPy BSD-2-Clause)
+
+`src/integrate/lebedev.f90` adapts SciPy v1.18.1's
+[`scipy/integrate/_lebedev.py`](https://github.com/scipy/scipy/blob/v1.18.1/scipy/integrate/_lebedev.py),
+Copyright (c) 2010, Robert Parrish. Complete terms are retained in
+[`LICENSES/scipy-lebedev-BSD-2-Clause.txt`](LICENSES/scipy-lebedev-BSD-2-Clause.txt).
+The source retains the Parrish / van Wuellen / Laikov attribution chain and
+requested Lebedev-Laikov citation. Original SciFort modifications are MIT
+licensed. Exact source, significant changes, and the unresolved direct CCL
+Fortran import are documented in `CODE_PROVENANCE.md`.
+
 ## Boundary-value ODE solver (SciPy BSD-3-Clause)
 
 `src/integrate/bvp.f90` adapts SciPy v1.15.3's

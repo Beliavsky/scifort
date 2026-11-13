@@ -1,3 +1,12 @@
+## 2026-11-13 - Lebedev quadrature
+
+- Add pure native `lebedev_rule` with all 32 SciPy-compatible unit-sphere
+  rules, algebraic orders 3-131, and 6-5810 Cartesian nodes.
+- Retain original surface weights, including signed weights at orders
+  13, 25, and 27; define allocation and invalid-order statuses.
+- Adapt SciPy's BSD-2-Clause tables and orbit expansion with complete credit;
+  validate all nodes, weights, symmetry, and polynomial moments.
+
 ## 2026-11-12 - Boundary-value ODE solver
 
 - Add native real/complex `solve_bvp`, unknown parameters, singular endpoint

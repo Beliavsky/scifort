@@ -17,7 +17,7 @@ was written primarily by ChatGPT with Extra High thinking effort.
 | --- | --- |
 | Statistics and probability | Continuous and discrete distributions, descriptive statistics, hypothesis tests, random sampling, and fitting. Start with the [API reference](docs/api.md). |
 | Special functions | Functions supporting distributions and numerical methods, including gamma, beta, Bessel, and related families. See the [API reference](docs/api.md). |
-| Integration | Quadrature, initial-value solvers, and adaptive real/complex [boundary-value ODEs](docs/bvp.md); see the [examples](example/) and [validation records](validation/). |
+| Integration | Quadrature including [Lebedev sphere rules](docs/lebedev.md), initial-value solvers, and adaptive real/complex [boundary-value ODEs](docs/bvp.md); see the [examples](example/) and [validation records](validation/). |
 | Interpolation | [Splines](docs/interpolate_bspline.md), [regular grids](docs/interpolate_regular_grid.md), [scattered data](docs/interpolate_scattered.md), and [radial basis functions](docs/interpolate_rbf_interp1d.md). |
 | Optimization | Root finding, local minimization, least squares, and global optimization. Guides include [linear least squares](docs/optimize_linear_least_squares.md), [differential evolution](docs/optimize_differential_evolution.md), and [SHGO](docs/optimize_shgo.md). |
 | Linear algebra | Dense and banded systems, matrix decompositions, matrix functions, and sparse solvers. See the [API reference](docs/api.md) and [banded-system guide](docs/linalg_banded.md). |

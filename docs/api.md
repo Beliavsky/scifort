@@ -5521,6 +5521,12 @@ BSD-3-Clause.
 
 ## Integration
 
+The pure `lebedev_rule(n,x,w,status)` subroutine supplies all 32 supported
+unit-sphere quadrature rules, orders 3-131, with allocatable Cartesian
+`x(3,m)` and surface weights `w(m)` summing to `4*pi`. Orders 13, 25, and 27
+contain negative weights. See the [Lebedev guide](lebedev.md) for supported
+orders, status codes, examples, and numerical limits.
+
 The native real/complex `solve_bvp` subroutine solves two-point boundary-value
 ODEs with adaptive fourth-order collocation, unknown parameters, optional
 singular endpoint terms and analytic Jacobians, and C1 cubic dense output.

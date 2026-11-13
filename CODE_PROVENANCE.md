@@ -1,3 +1,56 @@
+## 2026-11-13 - Lebedev unit-sphere quadrature
+
+`src/integrate/lebedev.f90` adapts all 32 coefficient tables and six symmetry
+orbit expansions from SciPy **v1.18.1**
+[`scipy/integrate/_lebedev.py`](https://github.com/scipy/scipy/blob/v1.18.1/scipy/integrate/_lebedev.py).
+The exact tagged file and its complete BSD-2-Clause header were inspected.
+The tagged [bundled-license inventory](https://github.com/scipy/scipy/blob/v1.18.1/LICENSES_bundled.txt)
+explicitly identifies that file as BSD-2-Clause (`getLebedevSphere`).
+Downloaded source SHA-256:
+`9dfe2476c3cece2672694bbf9dabee87a3228eccaf123cbe15f8d184198dc4dc`.
+Copyright (c) 2010, Robert Parrish. All rights reserved.
+Complete required terms are retained in
+[`LICENSES/scipy-lebedev-BSD-2-Clause.txt`](LICENSES/scipy-lebedev-BSD-2-Clause.txt).
+The adapted source carries MIT AND BSD-2-Clause and source-file attribution;
+original SciFort interfaces, tests, and validation drivers are MIT licensed.
+
+Upstream attribution chain, preserved in the source and guide:
+Robert Parrish's `getLebedevSphere` translated Christoph van Wuellen's Fortran
+translation of Dmitri Laikov's original C routines. Requested reference:
+V. I. Lebedev and D. N. Laikov, "A quadrature formula for the sphere of the
+131st algebraic order of accuracy", Doklady Mathematics 59(3), 477-481 (1999).
+The SciPy source also attributes its MATLAB origin to
+[Parrish's published package](https://www.mathworks.com/matlabcentral/fileexchange/27097-getlebedevsphere).
+
+Adaptation details: mechanically extracted the original decimal literals into
+1,287 immutable orbit records; translated the explicit point expansion with
+one-based indices while preserving its ordering and `4*pi` weight scaling.
+Replaced the Python wrapper by a pure Fortran subroutine, allocatable outputs,
+existing integration status codes, and allocation checks. No fitted, generated,
+or rounded replacement coefficients were introduced. The Fortran translation
+is lowercase, uses SciFort's `dp`, and has no I/O, global mutable state, or
+runtime data-file dependency. Raw upstream source and build-time adaptation
+scratch files are not committed. All coefficients are checked through rule
+comparison and independent polynomial moments.
+
+Established Fortran source reviewed first:
+[CCL distribution](https://www.ccl.net/cca/software/SOURCES/FORTRAN/Lebedev-Laikov-Grids/index.shtml),
+[exact source](https://www.ccl.net/cca/software/SOURCES/FORTRAN/Lebedev-Laikov-Grids/Lebedev-Laikov.F),
+and [README](https://www.ccl.net/cca/software/SOURCES/FORTRAN/Lebedev-Laikov-Grids/README.TXT).
+The README records permission to make the routines publicly available but does
+not establish clear modification/redistribution terms for a new direct import.
+That direct Fortran import is deferred pending explicit permissive permission;
+no CCL source was directly imported. This implementation instead adopts the
+explicitly BSD-2-Clause SciPy translation and retains its attribution chain.
+
+Independent moment tests use the simplex beta integral in
+[NIST DLMF 5.14.2](https://dlmf.nist.gov/5.14.E2), with squared Cartesian
+coordinates giving Dirichlet parameters `(1/2,1/2,1/2)`. Native tests evaluate
+finite product ratios; the Python oracle uses exact rational factorial ratios.
+The installed SciPy 1.15.3 rules were also compared with the inspected 1.18.1
+functions and were bitwise identical for all 32 rules. See
+[`validation/lebedev_2026-11-13.md`](validation/lebedev_2026-11-13.md).
+
 ## 2026-11-12 - Boundary-value ODE collocation (SciPy)
 
 `src/integrate/bvp.f90` adapts SciPy **v1.15.3**

@@ -1,6 +1,6 @@
 # Remaining SciPy functionality
 
-Initial inventory: 2026-11-11; coverage entries updated 2026-11-12.
+Initial inventory: 2026-11-11; coverage entries updated 2026-11-13.
 This preliminary table summarizes gaps identified from
 SciFort's current source, documentation, roadmap, and an initial API-name
 comparison. It is not an exhaustive compatibility audit. A matching name or
@@ -17,7 +17,7 @@ the [censored distribution coverage inventory](censored_distribution_gaps.md).
 | Area | Remaining functionality or compatibility |
 | --- | --- |
 | FFT | Standalone 1D, 2D, and rank 1-15 multidimensional FFT pairs, DCT/DST types I-IV, selectable axes, frequency bins, shifts, backend-specific fast-length helpers, and [FFTLog fast Hankel transforms](hankel.md) are available in [`scifort_fft`](fft.md). Remaining gaps include workers, public reusable transform plans beyond the existing 1D FFT plan, and backend/option parity. Hankel singular/range handling and wide-bias accuracy limits are documented. |
-| Integration | Lebedev quadrature and some QMC integration options. Native real/complex [`solve_bvp`](bvp.md) now covers adaptive two-point systems, unknown parameters, singular terms, analytic Jacobians, and dense output; large-system backend and iteration-path parity remain limited. |
+| Integration | Some QMC integration options. All 32 [Lebedev sphere rules](lebedev.md) are now available. Native real/complex [`solve_bvp`](bvp.md) now covers adaptive two-point systems, unknown parameters, singular terms, analytic Jacobians, and dense output; large-system backend and iteration-path parity remain limited. |
 | Interpolation | AAA rational approximation, spherical spline interfaces, and additional spline-construction APIs. Automatic-knot smoothing currently relies on the optional FITPACK backend. |
 | Optimization | Stored sparse Jacobians and worker parallelism in least squares; stronger sparse LP/MILP capabilities; SciPy-equivalent SHGO homology stopping and sampling options. |
 | Special functions | Additional complex-valued cases, including complex zeta and complex zeros of selected Bessel Y functions. |

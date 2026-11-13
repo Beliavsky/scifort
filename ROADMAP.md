@@ -3333,3 +3333,15 @@ FFT/Hankel work, while continuing to defer C ABI and wrapper expansion.
 - [x] Native analytic tests and checked/optimized SciPy/analytic comparisons.
 - [ ] Specialized large-system factorization and continuation interfaces, if
   warranted by numerical and performance evidence.
+
+## 2026-11-13 -- Approved native Lebedev quadrature expansion
+
+The user approved all 32 Lebedev unit-sphere rules as the next native
+SciPy-coverage task. C ABI and wrapper expansion remain deferred.
+
+- [x] Pure Fortran node/weight API with all algebraic orders 3-131.
+- [x] Explicit license review, preserved coefficients, attribution, and notices.
+- [x] Validate all nodes, weights, symmetry, and inequivalent polynomial moments
+  in checked and optimized builds, including signed-weight rules.
+- [ ] Reconsider a direct original Fortran import only after clear permissive
+  modification and redistribution permission is established.
