@@ -1,3 +1,35 @@
+## 2026-11-13 - Complex Riemann zeta
+
+`src/special/complex_zeta.f90` adapts `zeta_Euler_Maclaurin` and its 25
+Bernoulli coefficients from Alexey Kuznetsov's BSD-3-Clause Fortran implementation:
+[Fortran/gamma_zeta_module.f90](https://github.com/Alexey-Kuznetsov-math/Riemann_zeta-and-Gamma/blob/1f1ad8934044cfb20d6d70137868ddd0c74652c4/Fortran/gamma_zeta_module.f90),
+commit `1f1ad8934044cfb20d6d70137868ddd0c74652c4`.
+The exact source and project license were inspected before adaptation.
+Source SHA-256: `c4a8816cfb0f67bf709734000fa591b0a4bb5ec4008a1d3e4ec77749c7371315`.
+License SHA-256: `9d515bd232c7caea94e38971f278bd3bdf4325fe0fd2c42218fe892336598820`.
+Copyright (c) 2025, Alexey-Kuznetsov-math. Full terms are retained in
+[`LICENSES/kuznetsov-zeta-BSD-3-Clause.txt`](LICENSES/kuznetsov-zeta-BSD-3-Clause.txt);
+the adapted source retains BSD-3-Clause and upstream attribution.
+
+Changes: replace quadruple precision with SciFort binary64; use compensated
+direct summation instead of upstream `main_sums`; increase the shift padding
+from 20 to 32; arrange the pole term separately to avoid an unnecessary large
+intermediate; bound nonreal arguments and guard pole/result overflow. The
+upstream high-frequency approximation, exponential-sum coefficients, Taylor
+series, derivatives, gamma implementation, and STOP statements were not imported.
+Continuation uses SciFort's existing complex log-gamma and a scaled logarithmic
+sine, following [DLMF 25.4.2](https://dlmf.nist.gov/25.4.E2).
+The adapted Euler-Maclaurin formula follows
+[DLMF 25.2.10](https://dlmf.nist.gov/25.2.E10).
+
+The established Fortran-source search identified this directly reusable
+permissive kernel. SciPy's current XSF `zeta.h` was inspected for comparison
+but was not adapted. SciPy and 90-digit mpmath values are independent test
+references; all retained Bernoulli coefficients are verified against
+`bernoulli(2*k)/factorial(2*k)` at high precision. Existing real zeta/Hurwitz
+implementations remain unchanged. Tests and the generic forwarding overload
+are original MIT-licensed SciFort code. No dependency or C ABI was added.
+
 ## 2026-11-13 - AAA rational approximation
 
 `src/interpolate_aaa.f90` adapts SciPy **v1.18.1**

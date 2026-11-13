@@ -6431,15 +6431,21 @@ dilogarithm branch, combining the power series, inversion formula, and a logarit
 series around `abs(1-z)=1`. Complex negative-real arguments return the sided cut
 limit; signed zero in the imaginary component selects the upper/lower side, matching
 SciPy's complex convention. Nonfinite complex arguments return complex NaNs. No
-complex C ABI is exposed. `zeta(s)` provides the
-real Riemann zeta continuation, including exact trivial zeros and the pole
+complex C ABI is exposed. `zeta(s)` provides real and complex
+Riemann zeta continuation, including exact real-axis trivial zeros and the pole
 at `s=1`; `zetac(s)` evaluates `zeta(s)-1` directly for `s>1` so tiny positive
 values are not lost to subtraction. The optional `q` in `zeta(s,q)` exposes
 the real Hurwitz form for `s >= 1`: positive `q` uses the existing
 Euler-Maclaurin kernel, while negative noninteger `q` is supported when `s`
 is an integer by separating the finite negative-base terms from positive-q
 Hurwitz tails. Noninteger `s` with negative `q` returns NaN, and nonpositive
-integer `q` is a pole. The zeta implementation remains real-only; SciPy complex zeta is not yet provided. For large positive `s`, SciFort
+integer `q` is a pole. The pure elemental complex overload supports the
+one-argument Riemann form only. For nonreal arguments it requires
+`abs(real(s)) <= 10000` and `abs(aimag(s)) <= 100000`, and returns complex NaNs
+outside these limits or when guarded near-pole/reflection arithmetic would
+overflow. Exactly real complex inputs retain the existing real behavior.
+See [complex zeta](complex_zeta.md) for accuracy, range limits, and provenance.
+For large positive real `s`, SciFort
 `zetac` can retain representable values such as `zetac(1000)` where SciPy
 1.17.0 returns zero.
 

@@ -1,3 +1,12 @@
+## 2026-11-13 - Complex Riemann zeta
+
+- Add a pure elemental complex `zeta(s)` overload with Euler-Maclaurin
+  evaluation and logarithmic reflection; preserve all real zeta/Hurwitz APIs.
+- Adapt Alexey Kuznetsov's BSD-licensed Fortran kernel with retained notices,
+  binary64 arithmetic, compensated summation, and explicit range limits.
+- Validate complex continuation, zeros, pole behavior, and coefficients against
+  high-precision mpmath, and compare with SciPy.
+
 ## 2026-11-13 - Sparse matching compatibility name
 
 - Add `min_weight_full_bipartite_matching` using the existing sparse weighted

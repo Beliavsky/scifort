@@ -2132,8 +2132,10 @@ process are demonstrably reliable.
   `log_wright_bessel` on SciPy's nonnegative real domain;
 - [x] Jahnke-Emden Lambda sequences `lmbda`, weighted Bessel integral `besselpoly`,
   and first-quadrant complex error-function zeros `erf_zeros`;
-- [x] real/complex dilogarithm/Spence `spence`, real Riemann/Hurwitz `zeta`, and
+- [x] real/complex dilogarithm/Spence `spence`, real/complex Riemann and real Hurwitz `zeta`, and
   `zetac` with analytic continuation and stable large-positive complement;
+- [x] Add bounded-work native complex Riemann zeta with explicit binary64
+  range limits, retained upstream notices, and high-precision validation;
 - [x] one-dimensional log-sum-exp, softmax, and log-softmax reductions.
 - [x] real rank-2 through rank-15 reduction extensions: whole-array and
   single-dimension `logsumexp`/`softmax`/`log_softmax`, sign-returning

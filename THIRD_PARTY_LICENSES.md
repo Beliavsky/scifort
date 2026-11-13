@@ -5,6 +5,17 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Complex Riemann zeta (Alexey Kuznetsov, BSD-3-Clause)
+
+`src/special/complex_zeta.f90` adapts the Euler-Maclaurin kernel and Bernoulli
+coefficients from Alexey Kuznetsov's
+[Riemann_zeta-and-Gamma](https://github.com/Alexey-Kuznetsov-math/Riemann_zeta-and-Gamma),
+commit `1f1ad8934044cfb20d6d70137868ddd0c74652c4`,
+`Fortran/gamma_zeta_module.f90`. Copyright (c) 2025, Alexey-Kuznetsov-math.
+The adapted file is BSD-3-Clause licensed; complete terms are retained in
+[`LICENSES/kuznetsov-zeta-BSD-3-Clause.txt`](LICENSES/kuznetsov-zeta-BSD-3-Clause.txt).
+Exact sources, hashes, and modifications are recorded in `CODE_PROVENANCE.md`.
+
 ## AAA rational approximation (Oxford/Chebfun and SciPy BSD-3-Clause)
 
 `src/interpolate_aaa.f90` adapts SciPy v1.18.1's

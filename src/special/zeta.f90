@@ -1,17 +1,19 @@
 ! SPDX-License-Identifier: MIT
 ! Copyright (c) 2026 SciFort contributors
 
-! Real Riemann/Hurwitz zeta functions plus the exponent derivative of the
+! Real/complex Riemann and real Hurwitz zeta functions, plus the derivative of the
 ! positive-q Hurwitz zeta.  Positive-q Euler-Maclaurin evaluation follows
 ! DLMF 25.11.43.  Riemann-zeta continuation on the negative axis uses the
 ! reflection formula DLMF 25.4.2.  The implementation is independent of
-! SciPy source code.
+! SciPy source code. The complex overload uses the separately attributed
+! scifort_complex_zeta kernel; real specifics are unchanged.
 
 module scifort_zeta
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_constants, only : scifort_pi
     use scifort_kinds, only : dp
     use scifort_math, only : positive_infinity, quiet_nan
+    use scifort_complex_zeta, only : complex_zeta_value
     implicit none
     private
 
@@ -19,6 +21,10 @@ module scifort_zeta
     public :: hurwitz_zeta_derivative
     public :: zeta
     public :: zetac
+
+    interface zeta
+        module procedure zeta, zeta_complex
+    end interface zeta
 
     real(dp), parameter :: em_coeff(6) = [ &
         1.0_dp / 12.0_dp, &
@@ -33,6 +39,18 @@ module scifort_zeta
     real(dp), parameter :: log_smallest_dp = log(tiny(1.0_dp)) + log(epsilon(1.0_dp))
 
 contains
+
+    pure elemental function zeta_complex(s) result(value)
+        implicit none
+        complex(dp), intent(in) :: s !! Complex Riemann exponent; no Hurwitz shift is supported.
+        complex(dp) :: value
+
+        if (aimag(s) == 0.0_dp) then
+            value = cmplx(riemann_zeta(real(s,dp)),aimag(s),dp)
+        else
+            value = complex_zeta_value(s)
+        end if
+    end function zeta_complex
 
     pure elemental function zeta(s, q) result(value)
         real(dp), intent(in) :: s !! real zeta exponent
