@@ -79,7 +79,435 @@ module scifort_fft
         module procedure idstn_real, idstn_complex
     end interface idstn
 
+    public :: next_fast_len, prev_fast_len, fftshift_nd, ifftshift_nd
+    interface fftshift_nd
+        module procedure fftshift_nd_real, fftshift_nd_complex
+    end interface fftshift_nd
+    interface ifftshift_nd
+        module procedure ifftshift_nd_real, ifftshift_nd_complex
+    end interface ifftshift_nd
+
+    public :: fft2
+    interface fft2
+        module procedure fft2_real, fft2_complex
+    end interface fft2
+    public :: ifft2
+    interface ifft2
+        module procedure ifft2_real, ifft2_complex
+    end interface ifft2
+    public :: rfft2
+    interface rfft2
+        module procedure rfft2_real
+    end interface rfft2
+    public :: irfft2
+    interface irfft2
+        module procedure irfft2_real, irfft2_complex
+    end interface irfft2
+    public :: hfft2
+    interface hfft2
+        module procedure hfft2_real, hfft2_complex
+    end interface hfft2
+    public :: ihfft2
+    interface ihfft2
+        module procedure ihfft2_real
+    end interface ihfft2
+
 contains
+
+    subroutine fft2_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call fftn(x,y,s,selected,norm,status)
+    end subroutine fft2_real
+
+    subroutine fft2_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call fftn(x,y,s,selected,norm,status)
+    end subroutine fft2_complex
+
+    subroutine ifft2_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call ifftn(x,y,s,selected,norm,status)
+    end subroutine ifft2_real
+
+    subroutine ifft2_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call ifftn(x,y,s,selected,norm,status)
+    end subroutine ifft2_complex
+
+    subroutine rfft2_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call rfftn(x,y,s,selected,norm,status)
+    end subroutine rfft2_real
+
+    subroutine irfft2_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call irfftn(x,y,s,selected,norm,status)
+    end subroutine irfft2_real
+
+    subroutine irfft2_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call irfftn(x,y,s,selected,norm,status)
+    end subroutine irfft2_complex
+
+    subroutine hfft2_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call hfftn(x,y,s,selected,norm,status)
+    end subroutine hfft2_real
+
+    subroutine hfft2_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call hfftn(x,y,s,selected,norm,status)
+    end subroutine hfft2_complex
+
+    subroutine ihfft2_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 2-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! two positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! two distinct one-based axes; default last two
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        integer :: selected(2)
+        selected = [rank(x)-1,rank(x)]
+        if (present(axes)) then
+            selected = [0,0]
+            if (size(axes) == 2) selected = axes
+        end if
+        call ihfftn(x,y,s,selected,norm,status)
+    end subroutine ihfft2_real
+
+
+    function next_fast_len(target,real,status) result(length)
+        implicit none
+        integer, intent(in) :: target !! positive minimum FFT length
+        logical, optional, intent(in) :: real !! real transform flag; same backend radices for both
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid or no representable length
+        integer :: length
+        length = fast_length(target,.true.)
+        if (present(status)) then
+            status = fft_status_success
+            if (length == 0) status = fft_status_invalid_input
+        end if
+    end function next_fast_len
+
+    function prev_fast_len(target,real,status) result(length)
+        implicit none
+        integer, intent(in) :: target !! positive maximum FFT length
+        logical, optional, intent(in) :: real !! real transform flag; same backend radices for both
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid target
+        integer :: length
+        length = fast_length(target,.false.)
+        if (present(status)) then
+            status = fft_status_success
+            if (length == 0) status = fft_status_invalid_input
+        end if
+    end function prev_fast_len
+
+    pure function fast_length(target,upward) result(best)
+        implicit none
+        integer, intent(in) :: target !! positive search boundary
+        logical, intent(in) :: upward !! smallest length at least target, otherwise largest below
+        integer :: best, p7, p5, p3, candidate, limit
+        best = 0
+        if (target < 1) return
+        limit = target
+        if (upward) limit = huge(0)
+        ! Enumerate 7-, 5-, and 3-powers. For each base, only its closest
+        ! representable power-of-two multiple can improve the answer.
+        p7 = 1
+        do
+            p5 = p7
+            do
+                p3 = p5
+                do
+                    candidate = p3
+                    if (upward) then
+                        do while (candidate < target)
+                            if (candidate > limit/2) exit
+                            candidate = candidate*2
+                        end do
+                        if (candidate >= target) then
+                            if (best == 0) best = candidate
+                            best = min(best,candidate)
+                        end if
+                    else
+                        do while (candidate <= limit/2)
+                            candidate = candidate*2
+                        end do
+                        best = max(best,candidate)
+                    end if
+                    if (p3 > limit/3) exit
+                    p3 = p3*3
+                end do
+                if (p5 > limit/5) exit
+                p5 = p5*5
+            end do
+            if (p7 > limit/7) exit
+            p7 = p7*7
+        end do
+    end function fast_length
+
+    subroutine fftshift_nd_real(x,y,axes,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! rank 1-15 data; nonfinite entries preserved
+        real(dp), contiguous, target, intent(out) :: y(..) !! output with same shape; must not overlap x
+        integer, optional, intent(in) :: axes(:) !! distinct positive one-based axes, default all
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid shape/axes, 2 allocation failure
+        real(dp), pointer :: input(:), output(:)
+        integer, allocatable :: permutation(:)
+        integer :: code
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (any(shape(x) /= shape(y))) return
+        call shift_permutation(shape(x),axes,.false.,permutation,code)
+        if (code == fft_status_success) then
+            call c_f_pointer(c_loc(x),input,[size(x)])
+            output = input(permutation)
+        end if
+        if (present(status)) status = code
+    end subroutine fftshift_nd_real
+
+    subroutine fftshift_nd_complex(x,y,axes,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! rank 1-15 data; nonfinite entries preserved
+        complex(dp), contiguous, target, intent(out) :: y(..) !! output with same shape; must not overlap x
+        integer, optional, intent(in) :: axes(:) !! distinct positive one-based axes, default all
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid shape/axes, 2 allocation failure
+        complex(dp), pointer :: input(:), output(:)
+        integer, allocatable :: permutation(:)
+        integer :: code
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (any(shape(x) /= shape(y))) return
+        call shift_permutation(shape(x),axes,.false.,permutation,code)
+        if (code == fft_status_success) then
+            call c_f_pointer(c_loc(x),input,[size(x)])
+            output = input(permutation)
+        end if
+        if (present(status)) status = code
+    end subroutine fftshift_nd_complex
+
+    subroutine ifftshift_nd_real(x,y,axes,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! rank 1-15 data; nonfinite entries preserved
+        real(dp), contiguous, target, intent(out) :: y(..) !! output with same shape; must not overlap x
+        integer, optional, intent(in) :: axes(:) !! distinct positive one-based axes, default all
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid shape/axes, 2 allocation failure
+        real(dp), pointer :: input(:), output(:)
+        integer, allocatable :: permutation(:)
+        integer :: code
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (any(shape(x) /= shape(y))) return
+        call shift_permutation(shape(x),axes,.true.,permutation,code)
+        if (code == fft_status_success) then
+            call c_f_pointer(c_loc(x),input,[size(x)])
+            output = input(permutation)
+        end if
+        if (present(status)) status = code
+    end subroutine ifftshift_nd_real
+
+    subroutine ifftshift_nd_complex(x,y,axes,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! rank 1-15 data; nonfinite entries preserved
+        complex(dp), contiguous, target, intent(out) :: y(..) !! output with same shape; must not overlap x
+        integer, optional, intent(in) :: axes(:) !! distinct positive one-based axes, default all
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid shape/axes, 2 allocation failure
+        complex(dp), pointer :: input(:), output(:)
+        integer, allocatable :: permutation(:)
+        integer :: code
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (any(shape(x) /= shape(y))) return
+        call shift_permutation(shape(x),axes,.true.,permutation,code)
+        if (code == fft_status_success) then
+            call c_f_pointer(c_loc(x),input,[size(x)])
+            output = input(permutation)
+        end if
+        if (present(status)) status = code
+    end subroutine ifftshift_nd_complex
+
+    subroutine shift_permutation(dims,axes,inverse,permutation,code)
+        implicit none
+        integer, intent(in) :: dims(:) !! nonnegative array extents
+        integer, optional, intent(in) :: axes(:) !! distinct positive one-based axes
+        logical, intent(in) :: inverse !! inverse shift when true
+        integer, allocatable, intent(out) :: permutation(:) !! source indices in Fortran order
+        integer, intent(out) :: code !! completion status
+        logical :: selected(15)
+        integer :: r, count, i, axis, k, q, coord, source, stride, amount, ierr
+        code = fft_status_invalid_input
+        r = size(dims)
+        if (r < 1 .or. r > 15) return
+        if (.not. valid_nd_size(dims)) return
+        selected = .false.
+        count = r
+        if (present(axes)) count = size(axes)
+        if (count > r) return
+        do i = 1, count
+            axis = i
+            if (present(axes)) axis = axes(i)
+            if (axis < 1 .or. axis > r) return
+            if (selected(axis)) return
+            selected(axis) = .true.
+        end do
+        code = fft_status_setup_failure
+        if (any(dims == 0)) then
+            allocate(permutation(0),stat=ierr)
+            if (ierr == 0) code = fft_status_success
+            return
+        end if
+        allocate(permutation(product(dims)),stat=ierr)
+        if (ierr /= 0) return
+        do k = 0, size(permutation)-1
+            q = k
+            source = 0
+            stride = 1
+            do axis = 1, r
+                coord = mod(q,dims(axis))
+                q = q/dims(axis)
+                if (selected(axis)) then
+                    amount = dims(axis)/2+mod(dims(axis),2)
+                    if (inverse) amount = dims(axis)/2
+                    ! Modular addition without overflowing coord+amount.
+                    if (coord >= dims(axis)-amount) then
+                        coord = coord-(dims(axis)-amount)
+                    else
+                        coord = coord+amount
+                    end if
+                end if
+                source = source+coord*stride
+                stride = stride*dims(axis)
+            end do
+            permutation(k+1) = source+1
+        end do
+        code = fft_status_success
+    end subroutine shift_permutation
+
 
     subroutine fftn_real(x,y,s,axes,norm,status)
         implicit none

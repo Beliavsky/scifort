@@ -7,6 +7,7 @@ program fft_nd_reference_driver
     complex(dp), allocatable :: cx(:,:,:,:), cy(:,:,:,:), flat(:)
     integer, allocatable :: lengths(:), axes(:)
     integer :: op, real_input, kind, mode, orth, ns, na, xd(4), yd(4), code, ios, j
+    integer :: fast(4), fast_status(4)
     real(dp) :: re, im
     character(8), parameter :: norms(3) = [character(8) :: 'backward','forward','ortho']
     logical, allocatable :: orthogonal
@@ -95,6 +96,57 @@ program fft_nd_reference_driver
                 call idstn(cx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code,type=kind,orthogonalize=orthogonal)
             end if
             if (real_input == 1) cy = cmplx(ry,0.0_dp,dp)
+        case(11)
+            if (real_input == 1) then
+                call fft2(rx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            else
+                call fft2(cx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            end if
+        case(12)
+            if (real_input == 1) then
+                call ifft2(rx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            else
+                call ifft2(cx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            end if
+        case(13)
+            call rfft2(rx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+        case(14)
+            if (real_input == 1) then
+                call irfft2(rx,ry,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            else
+                call irfft2(cx,ry,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            end if
+            cy = cmplx(ry,0.0_dp,dp)
+        case(15)
+            if (real_input == 1) then
+                call hfft2(rx,ry,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            else
+                call hfft2(cx,ry,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+            end if
+            cy = cmplx(ry,0.0_dp,dp)
+        case(16)
+            call ihfft2(rx,cy,s=lengths,axes=axes,norm=trim(norms(mode+1)),status=code)
+        case(17)
+            if (real_input == 1) then
+                call fftshift_nd(rx,ry,axes,status=code)
+                cy = cmplx(ry,0.0_dp,dp)
+            else
+                call fftshift_nd(cx,cy,axes,status=code)
+            end if
+        case(18)
+            if (real_input == 1) then
+                call ifftshift_nd(rx,ry,axes,status=code)
+                cy = cmplx(ry,0.0_dp,dp)
+            else
+                call ifftshift_nd(cx,cy,axes,status=code)
+            end if
+        case(19)
+            fast(1) = next_fast_len(kind,status=fast_status(1))
+            fast(2) = prev_fast_len(kind,status=fast_status(2))
+            fast(3) = next_fast_len(kind,real=.true.,status=fast_status(3))
+            fast(4) = prev_fast_len(kind,real=.true.,status=fast_status(4))
+            cy(:,1,1,1) = cmplx(real(fast,dp),real(fast_status,dp),dp)
+            code = 0
         end select
         flat = reshape(cy,[size(cy)])
         write(*,'(2(i0,1x))') code,size(flat)

@@ -1,3 +1,12 @@
+## 2026-11-12 - FFT length helpers, multidimensional shifts, and 2D names
+
+- Add `next_fast_len` and `prev_fast_len` using SciFort's 2/3/5/7 radix policy
+  with guarded default-integer searches and documented SciPy differences.
+- Add real/complex `fftshift_nd` and `ifftshift_nd` for ranks 1-15.
+- Add `fft2`/`ifft2`, real, and Hermitian convenience pairs, defaulting to
+  the last two axes of rank 2-15 arrays, including batches.
+- Add native regressions, SciPy comparisons, and an independent integer oracle.
+
 ## 2026-11-12 - Multidimensional FFTs and axis selection
 
 - Add rank 1-15 native `fftn`/`ifftn`, real/Hermitian transform pairs, and

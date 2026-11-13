@@ -180,6 +180,71 @@ default-integer element count. Nonfinite values are rejected even in cropped
 regions. Zero input extents can be padded using explicit positive `s`;
 unselected zero extents give an empty batch.
 
+## Two-dimensional convenience procedures
+
+`fft2`, `ifft2`, `rfft2`, `irfft2`, `hfft2`, and `ihfft2` are subroutines
+with the same `(x,y [, s,axes,norm,status])` signature and type combinations
+as their `*fftn` counterparts. Inputs have rank 2-15, so leading dimensions
+can represent batches. They transform the **last two dimensions** by default.
+An explicit `axes` list must contain exactly two distinct positive one-based
+axes; `s`, when present, must contain exactly two positive full lengths.
+SciPy can delegate explicit axis lists of other lengths through these names;
+SciFort deliberately restricts them to two axes. Use `*fftn` for other counts.
+All other shape, half-spectrum, normalization, error, and memory contracts
+are inherited from the multidimensional routines.
+
+## Multidimensional shifts
+
+```text
+call fftshift_nd(x, y [, axes, status])
+call ifftshift_nd(x, y [, axes, status])
+```
+
+These subroutines shift real or complex arrays of rank 1-15, with a
+preallocated output of the same shape and type. Input and output must not
+overlap. They support strided sections and preserve NaNs and infinities.
+Axes are distinct positive one-based dimensions, defaulting to all.
+An empty axes list is an identity, and zero-sized arrays are valid.
+Invalid axes/rank/shape return status 1; a caught allocation failure returns
+status 2. Representable rank 1-15 outputs are filled with NaNs on failure.
+Element counts and conservative stride products must fit default integers.
+The implementation allocates one integer permutation vector of the element
+count, in addition to any compiler-managed temporaries for strided arguments.
+Array assignments can also require compiler-managed temporary storage.
+
+The forward shift moves zero frequency to the center by rolling each selected
+dimension by `extent/2`. The inverse undoes that permutation, including the
+one-element difference between forward and inverse shifts on odd extents.
+The original rank-one function signatures `fftshift(x)` and `ifftshift(x)`
+remain available.
+
+## Fast-length helpers
+
+```text
+n = next_fast_len(target [, real, status])
+n = prev_fast_len(target [, real, status])
+```
+
+`target` is a positive default integer. The next helper returns the smallest
+representable `2**a * 3**b * 5**c * 7**d >= target`; the previous helper
+returns the largest such value `<= target`, with nonnegative integer
+exponents. Length 1 is included. These radices match SciFort's mixed-radix
+FFT engine. The optional logical `real` defaults to false; both flag values
+give identical results because SciFort currently uses the same complex
+backend for real and complex transforms.
+
+This is an intentional backend-dependent difference from SciPy's helpers:
+SciFort does not promise the same integer output as SciPy, whose supported
+radices and real-transform implementation can differ. Small direct-DFT
+lengths with other factors, such as 11 and 13, are not selected by this
+smooth-length policy. The helper does not benchmark lengths or guarantee
+that the selected array can be allocated.
+
+Invalid targets return 0 and status 1. The next helper also returns 0/status 1
+if no qualifying default-integer length exists before integer overflow.
+Success gives status 0. The search uses guarded integer prime-power
+enumeration, without floating-point logarithms, cached tables, or global state.
+
 ## Errors and compatibility limits
 
 Optional `status` reports:
@@ -206,9 +271,8 @@ tested SciPy/NumPy frequency helper's `n*d` intermediate overflows. Those
 cases use independent high-precision references. Both differences are
 deliberate and covered by validation.
 
-Fast Hankel transforms, fast-length helpers, multidimensional shifts,
-two-dimensional convenience names, worker controls, vendor backends, and
-overwrite options remain open. Use `fftn` with two selected axes for a 2D FFT.
+Fast Hankel transforms, worker controls, public multidimensional plans,
+vendor backends, and overwrite options remain open.
 Negative or repeated axes and `s=-1` sentinel lengths are not accepted.
 No C ABI is added. See the [gap inventory](scipy_gaps.md) and
 [roadmap](../ROADMAP.md) for follow-up scope.
@@ -234,6 +298,14 @@ all transform families, selected and reordered axes, cropping/padding,
 all normalization/type/orthogonalization settings, singleton/empty inputs,
 and large/small amplitudes. See its
 [validation record](../validation/fft_nd_2026-11-12.md).
+
+`test/test_fft_helpers.f90` checks fast-length minimality/maximality by
+brute-force factorization, integer boundaries, multidimensional shifts,
+strided/nonfinite/empty inputs, rank 15, and 2D convenience APIs.
+`validation/check_fft_helpers.py` uses SciPy for shifts and 2D transforms
+and an independently generated priority-queue set of all representable
+7-smooth integers for fast lengths. See the
+[helper validation record](../validation/fft_helpers_2026-11-12.md).
 
 See the [dated validation record](../validation/fft_2026-11-12.md) for results
 and exact commands, and [provenance](../CODE_PROVENANCE.md) for sources.

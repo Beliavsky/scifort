@@ -1,3 +1,32 @@
+## 2026-11-12 - FFT helpers, multidimensional shifts, and 2D names
+
+The additions to `src/fft.f90`, `test/test_fft_helpers.f90`,
+`validation/fft_nd_reference_driver.f90`, and
+`validation/check_fft_helpers.py` are original MIT-licensed SciFort code.
+No upstream implementation, coefficients, dependency, binary, or archive
+was imported. The FFT implementation and existing notices are unchanged.
+
+Public specifications inspected 2026-11-12:
+
+- [SciPy next_fast_len](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.next_fast_len.html)
+  and [prev_fast_len](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.prev_fast_len.html):
+  bounding smooth-number searches and backend-dependent radix policies.
+- [SciPy fftshift](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.fftshift.html)
+  and [ifftshift](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.ifftshift.html):
+  selected-axis half-space permutations and odd/even inverse relationships.
+- [SciPy fft2](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.fft2.html)
+  and [hfft2](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.hfft2.html):
+  two-axis convenience conventions, inherited N-D definitions and half-axis rules.
+
+Fast lengths are independently enumerated as nonnegative powers of 2/3/5/7,
+matching the exact radices inspected in SciFort's existing
+`signal_spectral.f90:mixed_radix_compatible`. The real flag deliberately
+selects the same policy because both transform paths use the same backend.
+Native tests independently factor each integer for small-range searches;
+the Python oracle builds the full representable smooth set with a heap.
+Shift source indices follow modular coordinate addition in Fortran element
+order. The 2D wrappers delegate to the existing multidimensional kernels.
+
 ## 2026-11-12 - Multidimensional FFT, DCT, and DST APIs
 
 The multidimensional additions to `src/fft.f90`,
