@@ -16,7 +16,7 @@ the [censored distribution coverage inventory](censored_distribution_gaps.md).
 
 | Area | Remaining functionality or compatibility |
 | --- | --- |
-| FFT | Standalone 1D complex, real, and Hermitian FFT pairs, DCT/DST types I-IV, frequency bins, and shifts are available in [`scifort_fft`](fft.md). Remaining gaps include multidimensional transforms and axis selection, multidimensional DCT/DST, fast Hankel transforms, fast-length helpers, workers, and backend/option parity. |
+| FFT | Standalone 1D and rank 1-15 multidimensional complex, real, and Hermitian FFT pairs, DCT/DST types I-IV, selectable axes, frequency bins, and 1D shifts are available in [`scifort_fft`](fft.md). Remaining gaps include fast Hankel transforms, fast-length helpers, multidimensional shifts, 2D convenience names, workers, and backend/option parity. |
 | Integration | [`solve_bvp`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_bvp.html) for boundary-value ODEs, Lebedev quadrature, and some QMC integration options. |
 | Interpolation | AAA rational approximation, spherical spline interfaces, and additional spline-construction APIs. Automatic-knot smoothing currently relies on the optional FITPACK backend. |
 | Optimization | Stored sparse Jacobians and worker parallelism in least squares; stronger sparse LP/MILP capabilities; SciPy-equivalent SHGO homology stopping and sampling options. |

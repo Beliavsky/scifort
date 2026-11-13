@@ -1,3 +1,31 @@
+## 2026-11-12 - Multidimensional FFT, DCT, and DST APIs
+
+The multidimensional additions to `src/fft.f90`,
+`test/test_fft_nd.f90`, `validation/fft_nd_reference_driver.f90`, and
+`validation/check_fft_nd.py` are original MIT-licensed SciFort code.
+They implement separable transforms using the existing SciFort 1D kernels;
+no upstream implementation code, coefficients, binary, archive, or dependency
+was imported. Existing kernel attribution and license notices remain intact.
+
+Public specifications inspected 2026-11-12:
+
+- [SciPy fftn](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.fftn.html):
+  separability, axis selection, shape, and normalization conventions.
+- [SciPy rfftn](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.rfftn.html)
+  and [irfftn](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.irfftn.html):
+  half-spectrum dimension, stage order, and inferred full length.
+- [SciPy hfftn](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.hfftn.html)
+  and [ihfftn](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.ihfftn.html):
+  real-spectrum Hermitian pair and normalization.
+- [SciPy dctn](https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.dctn.html):
+  separable application of the 1D cosine transforms.
+  Sine transforms use the previously cited DST sums along each selected axis.
+
+The native tests evaluate a double DFT sum independently. External checks
+use public SciPy transforms, with real-component comparisons for complex
+cosine/sine transforms as described below. The native interface deliberately
+uses one-based positive axes and caller-owned output arrays.
+
 ## 2026-11-12 - Standalone FFT, DCT, and DST APIs
 
 `src/fft.f90`, `test/test_fft.f90`, `validation/fft_reference_driver.f90`, and

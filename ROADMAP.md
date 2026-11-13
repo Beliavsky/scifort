@@ -5,9 +5,10 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 
 - [x] Expose 1D complex, real, and Hermitian FFT pairs with SciPy normalization.
 - [x] Add frequency bins, FFT shifts, and FFT-backed DCT/DST types I-IV.
-- [ ] Add multidimensional transforms and axis selection, including real and
+- [x] Add multidimensional transforms and axis selection, including real and
   Hermitian pairs and multidimensional DCT/DST.
 - [ ] Add fast Hankel transforms (`fht`, `ifht`, `fhtoffset`).
+- [ ] Add multidimensional shifts and two-dimensional convenience names.
 - [ ] Audit fast-length helpers, batching, workers, and backend option parity.
 
 ## Censored distribution fitting (2026-11-12)

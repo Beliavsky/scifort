@@ -1,3 +1,12 @@
+## 2026-11-12 - Multidimensional FFTs and axis selection
+
+- Add rank 1-15 native `fftn`/`ifftn`, real/Hermitian transform pairs, and
+  `dctn`/`idctn`/`dstn`/`idstn` with selectable one-based axes.
+- Support per-axis cropping/padding, all three normalization modes, DCT/DST
+  types I-IV and orthogonalization, and caller-provided output arrays.
+- Reuse Fourier plans across lines of an axis. Preserve the existing 1D API.
+- Add independent multidimensional DFT tests and SciPy reference comparisons.
+
 ## 2026-11-12 - Standalone FFT module
 
 - Add `scifort_fft` with 1D complex, real, and Hermitian forward/inverse

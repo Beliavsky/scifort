@@ -4,7 +4,9 @@
 ! Standalone binary64 transforms from the public SciPy mathematical definitions.
 ! FFT-backed even/odd extensions implement DCT/DST types I-IV; see provenance.
 module scifort_fft
-    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, ieee_quiet_nan
+    use, intrinsic :: iso_c_binding, only : c_loc, c_f_pointer
+    use, intrinsic :: iso_fortran_env, only : int64
     use scifort_kinds, only : dp
     use scifort_signal_spectral, only : fft_plan
     implicit none
@@ -45,7 +47,747 @@ module scifort_fft
         module procedure ifftshift_real, ifftshift_complex
     end interface ifftshift
 
+    public :: fftn, ifftn, rfftn, irfftn, hfftn, ihfftn, dctn, idctn, dstn, idstn
+    interface fftn
+        module procedure fftn_real, fftn_complex
+    end interface fftn
+    interface ifftn
+        module procedure ifftn_real, ifftn_complex
+    end interface ifftn
+    interface rfftn
+        module procedure rfftn_real
+    end interface rfftn
+    interface irfftn
+        module procedure irfftn_real, irfftn_complex
+    end interface irfftn
+    interface hfftn
+        module procedure hfftn_real, hfftn_complex
+    end interface hfftn
+    interface ihfftn
+        module procedure ihfftn_real
+    end interface ihfftn
+    interface dctn
+        module procedure dctn_real, dctn_complex
+    end interface dctn
+    interface idctn
+        module procedure idctn_real, idctn_complex
+    end interface idctn
+    interface dstn
+        module procedure dstn_real, dstn_complex
+    end interface dstn
+    interface idstn
+        module procedure idstn_real, idstn_complex
+    end interface idstn
+
 contains
+
+    subroutine fftn_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            1,s,axes,norm,code)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine fftn_real
+
+    subroutine fftn_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            1,s,axes,norm,code)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine fftn_complex
+
+    subroutine ifftn_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            2,s,axes,norm,code)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine ifftn_real
+
+    subroutine ifftn_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            2,s,axes,norm,code)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine ifftn_complex
+
+    subroutine rfftn_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            3,s,axes,norm,code)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine rfftn_real
+
+    subroutine irfftn_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            4,s,axes,norm,code)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine irfftn_real
+
+    subroutine irfftn_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            4,s,axes,norm,code)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine irfftn_complex
+
+    subroutine hfftn_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            5,s,axes,norm,code)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine hfftn_real
+
+    subroutine hfftn_complex(x,y,s,axes,norm,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            5,s,axes,norm,code)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine hfftn_complex
+
+    subroutine ihfftn_real(x,y,s,axes,norm,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            6,s,axes,norm,code)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine ihfftn_real
+
+    subroutine dctn_real(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            7,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine dctn_real
+
+    subroutine dctn_complex(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            7,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine dctn_complex
+
+    subroutine idctn_real(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            8,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine idctn_real
+
+    subroutine idctn_complex(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            8,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine idctn_complex
+
+    subroutine dstn_real(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            9,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine dstn_real
+
+    subroutine dstn_complex(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            9,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine dstn_complex
+
+    subroutine idstn_real(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        real(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        real(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        real(dp), pointer :: input(:)
+        real(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = ieee_value(0.0_dp,ieee_quiet_nan)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(cmplx(input,0.0_dp,dp),shape(x),shape(y),transformed, &
+            10,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = real(transformed,dp)
+        if (present(status)) status = code
+    end subroutine idstn_real
+
+    subroutine idstn_complex(x,y,type,s,axes,norm,orthogonalize,status)
+        implicit none
+        complex(dp), contiguous, target, intent(in) :: x(..) !! finite rank 1-15 input
+        complex(dp), contiguous, target, intent(out) :: y(..) !! preallocated expected result shape
+        integer, optional, intent(in) :: type !! type 1, 2 (default), 3, or 4
+        integer, optional, intent(in) :: s(:) !! positive full lengths in axes order
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes; default last size(s) or all
+        character(*), optional, intent(in) :: norm !! backward (default), forward, or ortho
+        logical, optional, intent(in) :: orthogonalize !! default true only for norm=ortho
+        integer, optional, intent(out) :: status !! 0 success, 1 invalid input, 2 setup failure
+        complex(dp), pointer :: input(:)
+        complex(dp), pointer :: output(:)
+        complex(dp), allocatable :: transformed(:)
+        integer :: code
+
+        if (present(status)) status = fft_status_invalid_input
+        if (rank(y) < 1 .or. rank(y) > 15) return
+        if (size(y,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(y),output,[size(y)])
+        output = cmplx(ieee_value(0.0_dp,ieee_quiet_nan),0.0_dp,dp)
+        if (rank(x) /= rank(y)) return
+        if (size(x,kind=int64) > int(huge(0),int64)) return
+        call c_f_pointer(c_loc(x),input,[size(x)])
+        call nd_transform(input,shape(x),shape(y),transformed, &
+            10,s,axes,norm,code,type,orthogonalize)
+        if (code == fft_status_success) output = transformed
+        if (present(status)) status = code
+    end subroutine idstn_complex
+
+
+    subroutine nd_transform(x,xdims,ydims,y,op,s,axes,norm,code,type,orthogonalize)
+        implicit none
+        complex(dp), intent(in) :: x(:) !! flattened finite input in Fortran element order
+        integer, intent(in) :: xdims(:) !! input extents
+        integer, intent(in) :: ydims(:) !! caller-provided output extents
+        complex(dp), allocatable, intent(out) :: y(:) !! flattened result on success
+        integer, intent(in) :: op !! 1-6 Fourier pairs, 7-10 cosine/sine pairs
+        integer, optional, intent(in) :: s(:) !! positive full transform lengths
+        integer, optional, intent(in) :: axes(:) !! distinct one-based axes
+        character(*), optional, intent(in) :: norm !! normalization name
+        integer, intent(out) :: code !! completion status
+        integer, optional, intent(in) :: type !! cosine/sine type, default 2
+        logical, optional, intent(in) :: orthogonalize !! endpoint orthogonalization
+        integer :: selected(15), lengths(15), dims(15), expected(15)
+        integer :: r, count, i, j, axis, mode, kind, ierr, axis_op
+        logical :: short_half, full_half
+
+        code = fft_status_invalid_input
+        r = size(xdims)
+        if (r < 1 .or. r > 15 .or. size(ydims) /= r) return
+        mode = normalization(norm)
+        if (mode < 0 .or. .not. finite_complex(x)) return
+        count = r
+        if (present(s)) count = size(s)
+        if (present(axes)) count = size(axes)
+        if (count > r) return
+        if (present(s)) then
+            if (size(s) /= count) return
+            if (any(s < 1)) return
+        end if
+        do i = 1, count
+            selected(i) = r-count+i
+            if (present(axes)) selected(i) = axes(i)
+            axis = selected(i)
+            if (axis < 1 .or. axis > r) return
+            if (any(selected(:i-1) == axis)) return
+            lengths(i) = xdims(axis)
+            if (present(s)) lengths(i) = s(i)
+        end do
+        short_half = op == 3 .or. op == 6
+        full_half = op == 4 .or. op == 5
+        if (short_half .or. full_half) then
+            if (count == 0) return
+        end if
+        if (full_half .and. .not. present(s)) then
+            axis = selected(count)
+            if (xdims(axis) < 2 .or. xdims(axis)-1 > huge(0)/2) return
+            lengths(count) = 2*(xdims(axis)-1)
+        end if
+        if (any(lengths(:count) < 1)) return
+        kind = 2
+        if (present(type)) kind = type
+        if (op >= 7) then
+            if (kind < 1 .or. kind > 4) return
+            if (any(lengths(:count) > huge(0)/8)) return
+            if (kind == 1 .and. (op == 7 .or. op == 8)) then
+                if (any(lengths(:count) < 2)) return
+            end if
+        end if
+        expected(:r) = xdims
+        do i = 1, count
+            expected(selected(i)) = lengths(i)
+        end do
+        if (short_half) expected(selected(count)) = lengths(count)/2+1
+        if (any(expected(:r) /= ydims)) return
+        ! Limit all intermediate arrays as well as input/output to default-integer indexing.
+        dims(:r) = xdims
+        do i = 1, count
+            axis = selected(i)
+            dims(axis) = max(dims(axis),expected(axis))
+        end do
+        if (.not. valid_nd_size(dims(:r))) return
+        code = fft_status_setup_failure
+        allocate(y(size(x)),stat=ierr)
+        if (ierr /= 0) return
+        y = x
+        dims(:r) = xdims
+        ! Real-to-half transforms must precede the complex axes. Half-to-real
+        ! transforms must follow them: only then are their endpoints real.
+        if (short_half) then
+            call nd_axis(y,dims(:r),selected(count),lengths(count),op, &
+                mode,norm,kind,orthogonalize,code)
+            if (code /= fft_status_success) return
+        end if
+        do j = 1, count
+            i = j
+            if (short_half .and. i == count) cycle
+            if (full_half .and. i == count) cycle
+            axis_op = op
+            if (op == 3 .or. op == 5) axis_op = 1
+            if (op == 4 .or. op == 6) axis_op = 2
+            call nd_axis(y,dims(:r),selected(i),lengths(i),axis_op, &
+                mode,norm,kind,orthogonalize,code)
+            if (code /= fft_status_success) return
+        end do
+        if (full_half) then
+            call nd_axis(y,dims(:r),selected(count),lengths(count),op, &
+                mode,norm,kind,orthogonalize,code)
+            if (code /= fft_status_success) return
+        end if
+        code = fft_status_success
+    end subroutine nd_transform
+
+    pure logical function valid_nd_size(dims) result(valid)
+        implicit none
+        integer, intent(in) :: dims(:) !! nonnegative extents
+        integer :: total, i
+        valid = .false.
+        total = 1
+        do i = 1, size(dims)
+            if (dims(i) < 0) return
+            if (dims(i) == 0) then
+                total = 0
+            else
+                if (total > huge(0)/dims(i)) return
+                total = total*dims(i)
+            end if
+        end do
+        valid = .true.
+    end function valid_nd_size
+
+    subroutine nd_axis(values,dims,axis,n,op,mode,norm,kind,orthogonalize,code)
+        implicit none
+        complex(dp), allocatable, intent(inout) :: values(:) !! flattened input and result
+        integer, intent(inout) :: dims(:) !! extents updated after this transform
+        integer, intent(in) :: axis !! one-based transform dimension
+        integer, intent(in) :: n !! positive full transform length
+        integer, intent(in) :: op !! transform selector
+        integer, intent(in) :: mode !! validated normalization code
+        character(*), optional, intent(in) :: norm !! normalization name
+        integer, intent(in) :: kind !! validated cosine/sine type
+        logical, optional, intent(in) :: orthogonalize !! endpoint orthogonalization
+        integer, intent(out) :: code !! completion status
+        complex(dp), allocatable :: output(:), line(:), transformed(:)
+        type(fft_plan) :: plan
+        integer :: stride, blocks, oldn, newn, copied, block, offset, j, base, dest
+        integer :: ierr, setup
+        real(dp) :: factor
+        logical :: inverse, short_half, full_half
+
+        code = fft_status_setup_failure
+        oldn = dims(axis)
+        newn = n
+        short_half = op == 3 .or. op == 6
+        full_half = op == 4 .or. op == 5
+        if (short_half) newn = n/2+1
+        ! An unselected zero extent is an empty batch. Avoid stride products
+        ! and plan setup altogether, even when other extents are very large.
+        if (any(dims(:axis-1) == 0) .or. any(dims(axis+1:) == 0)) then
+            dims(axis) = newn
+            allocate(output(0),stat=ierr)
+            if (ierr /= 0) return
+            call move_alloc(output,values)
+            code = fft_status_success
+            return
+        end if
+        stride = product(dims(:axis-1))
+        blocks = product(dims(axis+1:))
+        dims(axis) = newn
+        allocate(output(product(dims)),line(n),stat=ierr)
+        if (ierr /= 0) return
+        inverse = op == 2 .or. op == 4 .or. op == 6 .or. op == 8 .or. op == 10
+        if (op <= 6) then
+            call plan%initialize(n,setup)
+            if (setup /= 0) return
+        end if
+        factor = transform_scale(real(n,dp),mode,inverse)
+        copied = min(oldn,n)
+        if (full_half) copied = min(oldn,n/2+1)
+        do block = 0, blocks-1
+            do offset = 1, stride
+                line = (0.0_dp,0.0_dp)
+                base = block*stride*oldn+offset
+                do j = 1, copied
+                    line(j) = values(base+(j-1)*stride)
+                end do
+                if (full_half) then
+                    line(1) = cmplx(real(line(1),dp),0.0_dp,dp)
+                    if (mod(n,2) == 0) line(n/2+1) = cmplx(real(line(n/2+1),dp),0.0_dp,dp)
+                    do j = 2, n/2+mod(n,2)
+                        line(n-j+2) = conjg(line(j))
+                    end do
+                end if
+                if (op <= 6) then
+                    line = line*factor
+                    if (inverse) line = conjg(line)
+                    call plan%execute(line,setup)
+                    if (setup /= 0) return
+                    if (inverse) line = conjg(line)
+                    if (full_half) line = cmplx(real(line,dp),0.0_dp,dp)
+                else
+                    transformed = r2r_transform(line,kind,n,norm,orthogonalize,op >= 9,inverse,code)
+                    if (code /= fft_status_success) return
+                    line = transformed
+                end if
+                dest = block*stride*newn+offset
+                do j = 1, newn
+                    output(dest+(j-1)*stride) = line(j)
+                end do
+            end do
+        end do
+        call move_alloc(output,values)
+        code = fft_status_success
+    end subroutine nd_axis
 
     function fft_real(x,n,norm,status) result(y)
         implicit none

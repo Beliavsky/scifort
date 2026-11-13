@@ -1,13 +1,13 @@
 # Standalone Fourier, cosine, and sine transforms
 
-`scifort_fft` provides native binary64, one-dimensional transforms using the
+`scifort_fft` provides native binary64, one-dimensional and multidimensional transforms using the
 existing SciFort mixed-radix/Bluestein FFT engine. Signal-analysis interfaces
 are unchanged. Import `dp` from `scifort_kinds` or `scifort_fft`.
 
 ## Available API
 
-All arrays have rank one. Results are allocatable arrays; inputs are read-only
-and may be noncontiguous sections.
+The one-dimensional functions below return allocatable rank-one arrays.
+Inputs are read-only and may be noncontiguous sections.
 
 | Procedure | Input | Result |
 | --- | --- | --- |
@@ -107,6 +107,79 @@ Unrepresentable frequency bins reject the call with status 1.
 permutation. Their shifts differ for odd lengths. Empty sequences are valid,
 and NaN/infinity entries are preserved by these permutations.
 
+## Multidimensional transforms and axis selection
+
+The following subroutines accept arrays of any rank from 1 through 15:
+
+```text
+call fftn(x, y [, s, axes, norm, status])
+call ifftn(x, y [, s, axes, norm, status])
+call rfftn(x, y [, s, axes, norm, status])
+call irfftn(x, y [, s, axes, norm, status])
+call hfftn(x, y [, s, axes, norm, status])
+call ihfftn(x, y [, s, axes, norm, status])
+call dctn(x, y [, type, s, axes, norm, orthogonalize, status])
+call idctn(x, y [, type, s, axes, norm, orthogonalize, status])
+call dstn(x, y [, type, s, axes, norm, orthogonalize, status])
+call idstn(x, y [, type, s, axes, norm, orthogonalize, status])
+```
+
+Input and output must have the same rank. Allocate `y` to the expected shape
+before calling; the routines do not allocate or resize it. Input and output
+must not overlap. Strided sections are supported through compiler-managed
+contiguous temporaries; large strided arrays can require additional memory.
+The real/complex combinations match the one-dimensional table. DCT/DST input
+and output have the same type.
+
+`axes` contains distinct **one-based**, positive dimension numbers in the
+requested order. With no `axes`, all dimensions are transformed, or the last
+`size(s)` dimensions when `s` is supplied. With no `s`, lengths come from the
+selected input dimensions, except for the inferred full length of
+`irfftn`/`hfftn` described below. Every supplied length must be positive.
+An empty `axes` list gives an identity for complex FFT and cosine/sine calls;
+real/Hermitian pairs require at least one axis.
+
+`s(i)` specifies the full transform length along `axes(i)`, independently
+cropping or zero-padding that dimension. Unselected dimensions retain their
+input extent. For `rfftn` and `ihfftn`, the **last selected axis** has output
+length `s(last)/2+1`; other transformed extents have their full lengths.
+For `irfftn` and `hfftn`, `s` gives full output lengths. Without `s`, the
+last selected output extent is `2*(m-1)`, where `m` is that input extent.
+Supply `s` for an odd full length or a length-one inverse.
+
+The real-to-half axis is transformed first, followed by complex transforms
+along the other selected axes. Half-to-real calls reverse these stages.
+Endpoint reality is imposed after the other axes have been transformed,
+so Hermitian symmetry couples all transformed dimensions correctly.
+Each axis receives its own normalization; the total scale is their product.
+Cosine/sine transforms apply the requested type and orthogonalization
+independently along each selected axis.
+
+```fortran
+program fft_nd_example
+    use scifort_fft, only : dp, rfftn, irfftn
+    implicit none
+    real(dp) :: image(3,5), recovered(3,5)
+    complex(dp) :: spectrum(3,3)
+    integer :: status
+
+    image = 1.0_dp
+    call rfftn(image, spectrum, axes=[1,2], norm='ortho', status=status)
+    if (status /= 0) error stop 'rfftn failed'
+    call irfftn(spectrum, recovered, s=[3,5], axes=[1,2], norm='ortho', status=status)
+    if (status /= 0) error stop 'irfftn failed'
+end program fft_nd_example
+```
+
+These routines use separability and the existing one-dimensional kernels.
+Fourier plans are reused across all lines of a given axis within a call.
+Cosine/sine calls currently set up their one-dimensional FFT extensions per
+line. There is no public multidimensional plan or thread control.
+Input, output, and conservative intermediate bounding shapes must fit the
+default-integer element count. Nonfinite values are rejected even in cropped
+regions. Zero input extents can be padded using explicit positive `s`;
+unselected zero extents give an empty batch.
+
 ## Errors and compatibility limits
 
 Optional `status` reports:
@@ -116,7 +189,10 @@ Optional `status` reports:
   type, nonfinite transform data, invalid spacing, or unrepresentable bins.
 - `fft_status_setup_failure = 2`: caught allocation or FFT plan setup failure.
 
-Rejected calls return an allocated zero-length result. Transform inputs must
+Rejected one-dimensional function calls return an allocated zero-length
+result. Multidimensional calls reject invalid axes, mismatched lengths,
+wrong output rank/shape, or invalid options with status 1. Representable
+rank 1-15 outputs are filled with NaNs on failure. Transform inputs must
 be finite, including entries beyond a requested crop; this intentionally
 differs from SciPy's propagation of NaN/infinity. Shifts only permute data and
 do not apply this restriction. Binary64 kernel range and rounding limits
@@ -130,9 +206,10 @@ tested SciPy/NumPy frequency helper's `n*d` intermediate overflows. Those
 cases use independent high-precision references. Both differences are
 deliberate and covered by validation.
 
-This first standalone API covers 1D transforms only. Multidimensional
-transforms, axis selection, `dctn`/`dstn`, fast Hankel transforms, fast-length
-helpers, worker controls, vendor backends, and overwrite options remain open.
+Fast Hankel transforms, fast-length helpers, multidimensional shifts,
+two-dimensional convenience names, worker controls, vendor backends, and
+overwrite options remain open. Use `fftn` with two selected axes for a 2D FFT.
+Negative or repeated axes and `s=-1` sentinel lengths are not accepted.
 No C ABI is added. See the [gap inventory](scipy_gaps.md) and
 [roadmap](../ROADMAP.md) for follow-up scope.
 
@@ -148,6 +225,15 @@ input, invalid options, and integer-range rejection.
 padded, and cropped lengths up to 1009, with complex and real inputs, all
 four cosine/sine types, all normalizations, explicit/default orthogonalization,
 and amplitudes `1e-100` and `1e100`. Frequency edge cases use mpmath.
+
+`test/test_fft_nd.f90` adds an independent two-dimensional DFT, real and
+Hermitian round trips, axis subsets/order, ranks 1/2/3/15, padding,
+noncontiguous input/output, and invalid/nonfinite input checks.
+`validation/check_fft_nd.py` compares rank-four batches against SciPy with
+all transform families, selected and reordered axes, cropping/padding,
+all normalization/type/orthogonalization settings, singleton/empty inputs,
+and large/small amplitudes. See its
+[validation record](../validation/fft_nd_2026-11-12.md).
 
 See the [dated validation record](../validation/fft_2026-11-12.md) for results
 and exact commands, and [provenance](../CODE_PROVENANCE.md) for sources.
