@@ -7177,6 +7177,25 @@ two-sided linear constraints and variable types 0 continuous, 1 integer,
 re-exported by `scifort_optimize`. See the
 [detailed MILP API, limitations, and independent tests](optimize_milp.md).
 
+## Fixed-knot spherical splines (`scipy.interpolate`)
+
+`lsq_sphere_bivariate_spline(theta,phi,r,tt,tp,w,eps,status)` returns a native
+`sphere_bivariate_spline_type`, corresponding to SciPy's
+`LSQSphereBivariateSpline`. The function is exported by `scifort_interpolate`
+and `scifort_interpolate_sphere`. It fits real weighted scattered data with
+bicubic periodic longitude and FITPACK pole coefficient constraints.
+Angles are in radians; `tt` and `tp` contain interior knots. At least three
+longitude knots are required. Weights and `eps` are optional.
+
+Methods provide `%value`, paired `%values`, Cartesian-product `%grid`,
+`%get_knots`, `%coefficients`, and `%residual`. Coordinate derivative orders
+`dtheta,dphi` independently range from 0 through 2. `%rank` and
+`%degrees_of_freedom` are SciFort extension diagnostics. A rank-deficient
+minimum-norm fit remains valid and returns status 2. Dense workspace and
+256-coefficient limits apply; query longitude wrapping is a SciFort extension.
+See [spherical spline fitting](interpolate_sphere.md) for exact signatures,
+status codes, solver differences, limits, and provenance.
+
 ## AAA rational approximation (`scipy.interpolate`)
 
 `scifort_interpolate` exports `aaa`, `aaa_type`, and `complex_aaa_type` for

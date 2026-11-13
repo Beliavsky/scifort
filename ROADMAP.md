@@ -1,3 +1,11 @@
+## Spherical spline interfaces (2026-11-13)
+
+- [x] Add native fixed-knot `lsq_sphere_bivariate_spline` with weighted fitting,
+  periodic and polar coefficient constraints, derivatives, and rank diagnostics.
+- [x] Validate against SciPy and analytic spherical data with focused tests.
+- [ ] Add adaptive-knot smoothing and rectangular-grid spherical interfaces.
+- [ ] Extend the dense solver limits and audit rank-deficient FITPACK parity.
+
 ## Complex Bessel Y zero coverage (2026-11-13)
 
 - [x] Add complex-output overloads of `y0_zeros`, `y1_zeros`, and `y1p_zeros`

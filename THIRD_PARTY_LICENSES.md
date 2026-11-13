@@ -5,6 +5,19 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Spherical spline constraints (perazz/FITPACK, BSD-3-Clause)
+
+`src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
+constraint construction from `fpsphe` and `fprpsp` in Federico Perini's
+[perazz/FITPACK](https://github.com/perazz/fitpack), based on Paul Dierckx's FITPACK.
+The inspected commit is `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
+`src/fitpack_core.F90`. Copyright (c) 2022, Federico Perini. All rights reserved.
+The adapted source retains BSD-3-Clause and the upstream attribution; full terms
+are already retained in
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+SciFort uses its existing B-spline evaluation and dense SVD solver. No full
+FITPACK source distribution or mandatory package dependency is added.
+
 ## Complex Riemann zeta (Alexey Kuznetsov, BSD-3-Clause)
 
 `src/special/complex_zeta.f90` adapts the Euler-Maclaurin kernel and Bernoulli
@@ -961,7 +974,8 @@ The `optional/fitpack_backend/` manifest adds a separate version/tag-pinned
 FPM dependency on Federico Perini's `perazz/fitpack` implementation of Paul
 Dierckx's FITPACK. It is licensed BSD-3-Clause. SciFort's optional adapter
 and dependency-free TCK compatibility layer are independently authored and
-MIT-licensed; **no upstream source is redistributed** in this ZIP. For clear
+MIT-licensed; the optional adapter does not vendor the full upstream library.
+The native spherical-constraint adaptation is described above. For clear
 attribution and license compliance, the upstream BSD license is reproduced
 at `LICENSES/perazz-fitpack-BSD-3-Clause.txt`. The pinned upstream package
 itself was not available for a real integration build here; mock-interface

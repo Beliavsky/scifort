@@ -1,3 +1,42 @@
+## 2026-11-13 - Fixed-knot spherical spline constraints
+
+`src/interpolate_sphere.f90` adapts the periodic coefficient mapping, pole
+constraints, and cosine/sine spline collocation from `fpsphe` and `fprpsp` in
+Federico Perini's modern Fortran FITPACK implementation:
+[src/fitpack_core.F90](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`.
+The exact source and `LICENSE.md` were inspected before adaptation.
+Source SHA-256: `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Upstream license SHA-256: `39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+Copyright (c) 2022, Federico Perini. All rights reserved. The source credits
+Paul Dierckx's original FITPACK and retains BSD-3-Clause. The full license
+terms are already retained, with whitespace differences, in
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+
+The established Fortran-source search identified perazz/FITPACK as suitable
+for reusing this fixed-knot formulation. SciFort adapts the constraint
+construction rather than importing the whole package or the large banded
+fitter and its adaptive-knot/smoothing machinery. Longitude coefficients
+repeat periodically; constant pole rows and adjacent rows expressed using
+periodic cubic representatives of cosine/sine reproduce the upstream reduced
+space. The result is converted to the standard longitude-fastest FITPACK tensor
+coefficient layout.
+
+Significant changes: use existing SciFort B-spline collocation/evaluation and
+the native dense Jacobi SVD instead of FITPACK's banded Givens/`fprank` solver;
+scale observations and weights; guard resource sizes and physical coefficient
+rescaling; return a valid reduced-coordinate minimum-norm solution and explicit
+rank warning when deficient. SVD cutoffs, rank-deficient extrapolations, dense
+size limits, and wrapping query longitudes intentionally differ from FITPACK.
+Public objects expose evaluation/derivatives and numerical diagnostics without
+a C ABI. No adaptive knot placement, smoothing algorithm, or other upstream
+routine is imported. Original tests and validation tools are MIT licensed.
+
+Mathematical reference: P. Dierckx, *Curve and Surface Fitting with Splines*,
+Oxford University Press, 1993, Chapter 11, Section 11.2, as cited by upstream
+`sphere`. SciPy `LSQSphereBivariateSpline` is an independent numerical/API
+reference. Existing SciFort numerical kernels and dependencies are unchanged.
+
 ## 2026-11-13 - Complex Bessel Y zeros
 
 The complex-output overloads and private helpers in `src/special/bessel_zeros.f90`

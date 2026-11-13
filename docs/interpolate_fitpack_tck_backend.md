@@ -13,9 +13,10 @@ at <https://github.com/perazz/fitpack>.
   `LICENSES/perazz-fitpack-BSD-3-Clause.txt` for clarity.
 - The copyright notice, license conditions and disclaimer must accompany
   redistributed source/binaries as specified. Do not imply author endorsement.
-- The upstream source is **not copied into this archive**. The optional
-  FPM package fetches it separately; SciFort's primary MIT source tree has
-  no new mandatory dependency.
+- The optional FPM package fetches the full upstream implementation separately.
+  The native [spherical least-squares interface](interpolate_sphere.md) now
+  adapts its fixed-knot periodic/pole constraints under BSD-3-Clause. This
+  adds no mandatory dependency.
 - Source references: <https://github.com/perazz/fitpack/blob/main/LICENSE.md>,
   <https://github.com/perazz/fitpack/blob/main/fpm.toml>,
   <https://perazz.github.io/fitpack/tutorial_curve.html>.

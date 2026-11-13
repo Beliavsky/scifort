@@ -1,3 +1,12 @@
+## 2026-11-13 - Fixed-knot spherical splines
+
+- Add `lsq_sphere_bivariate_spline` with weighted scattered-data fitting,
+  periodic longitude, FITPACK pole constraints, and value/derivative evaluation.
+- Expose rank, residual, knots, coefficients, paired queries, and grid queries;
+  retain valid minimum-norm solutions with a rank-deficiency warning.
+- Adapt BSD-licensed perazz/FITPACK constraints, reusing native B-spline/SVD
+  kernels without a mandatory dependency. Document solver and size limits.
+
 ## 2026-11-13 - Complex Bessel Y zeros
 
 - Add pure complex-output overloads for `y0_zeros`, `y1_zeros`, and `y1p_zeros`,
