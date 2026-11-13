@@ -187,16 +187,30 @@ of:
 Use absolute, relative, and tail-appropriate error measures. Do not use one
 blanket tolerance for every regime.
 
-For changes to library code, tests, dependencies, build configuration, or
-executable scripts, run the full test suite before reporting completion:
+Choose test scope according to the impact of the change:
+
+- For isolated module or test changes, run the focused tests for the changed
+  behavior and relevant dependent modules and integration paths. Inspect the
+  dependencies before choosing the scope. Unchanged modules do not need their
+  tests rerun unless the change can affect them.
+- Run the full test suite for changes to shared numerical code, dependencies,
+  build configuration, scripts affecting the overall build or test process,
+  broad refactoring, or changes whose effects cannot be confidently bounded.
+  For isolated executable scripts, run focused checks of the affected behavior.
+- Before a release or merge, run the full suite once on the final code state.
+  A successful full run already covering that state satisfies this requirement;
+  do not repeat it solely for subsequent documentation-only edits.
+
+The full-suite command is:
 
 ```text
 fpm test
 ```
 
-When available, also run a debug configuration with bounds and runtime checks
-for these changes. Report the exact compiler and commands used. If a required
-command could not be run, say so plainly.
+When available, also run the selected tests in a debug configuration with bounds
+and runtime checks. Report the test scope, why it covers the affected behavior,
+and the exact compiler and commands used. If a required command could not be
+run, say so plainly.
 
 Documentation-only changes, including edits to contributor or agent
 instructions, do not require `fpm build` or `fpm test`. Check the affected
@@ -212,8 +226,8 @@ behavior is also affected. Report the checks actually performed.
 2. Make the smallest coherent change that satisfies the task.
 3. Update tests before or with implementation changes.
 4. Update API documentation, changelog, and provenance when applicable.
-5. Perform the checks required by the Testing requirements section above;
-   run the full test suite for code, test, dependency, build, or script changes.
+5. Perform the checks required by the Testing requirements section above,
+   choosing focused tests or the full suite according to the change's impact.
 6. Inspect the diff for accidental generated files, build artifacts, copied
    notices, API changes, and non-ASCII text.
 7. Summarize what changed, what was tested, and any remaining numerical or
