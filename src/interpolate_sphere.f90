@@ -7,7 +7,7 @@
 ! Modernized upstream by Federico Perini from Paul Dierckx's FITPACK.
 ! Full terms: LICENSES/perazz-fitpack-BSD-3-Clause.txt.
 ! SciFort uses its own B-spline evaluators and dense minimum-norm SVD solve;
-! the separate grid core adapts FITPACK's s=0 banded interpolation path.
+! the separate grid core adapts FITPACK's banded grid interpolation/smoothing.
 module scifort_interpolate_sphere
     use, intrinsic :: iso_fortran_env, only : int64
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan, ieee_value, &
@@ -60,15 +60,15 @@ contains
         real(dp), intent(in) :: u(:) !! Strictly increasing colatitudes in (0,pi); at least four.
         real(dp), intent(in) :: v(:) !! Increasing longitudes; v(1) in [-pi,pi), span below 2*pi.
         real(dp), intent(in) :: r(:,:) !! Finite grid samples, shape (size(u),size(v)).
-        real(dp), intent(in), optional :: s !! Smoothing target; only zero is supported.
+        real(dp), intent(in), optional :: s !! Nonnegative squared-residual target; default zero.
         logical, intent(in), optional :: pole_continuity(:) !! Two C1 pole flags; default false.
         real(dp), intent(in), optional :: pole_values(:) !! Two pole values; NaN means unspecified.
         logical, intent(in), optional :: pole_exact(:) !! Two exactness flags, default false.
         logical, intent(in), optional :: pole_flat(:) !! Two zero-slope flags; require continuity.
-        integer, intent(out), optional :: status !! 0 success; 1/3/4/5 input/range/size/smoothing.
+        integer, intent(out), optional :: status !! 0 success; 1/3/4 input/numerical/size failure.
         type(sphere_bivariate_spline_type) :: fit
         logical :: continuity(2),given(2),exact(2),flat(2)
-        real(dp) :: poles(2),rscale,maxcoef,separation
+        real(dp) :: poles(2),rscale,maxcoef,separation,target,scaled_target,fp,logfp
         real(dp), allocatable :: tx(:),ty(:),coef(:)
         integer :: mu,mv,i,code
         integer(int64) :: nu64,nv64,work64
@@ -84,13 +84,11 @@ contains
         if (any(u(2:) <= u(:mu-1)) .or. any(v(2:) <= v(:mv-1))) goto 900
         if (v(1) < -scifort_pi .or. v(1) >= scifort_pi) goto 900
         if (v(mv) >= v(1)+two_pi) goto 900
+        target = 0.0_dp
         if (present(s)) then
             if (.not. ieee_is_finite(s)) goto 900
             if (s < 0.0_dp) goto 900
-            if (s > 0.0_dp) then
-                code = sphere_spline_unsupported_smoothing
-                goto 900
-            end if
+            target = s
         end if
         continuity = .false.
         exact = .false.
@@ -135,8 +133,14 @@ contains
             if (given(i)) rscale = max(rscale,abs(poles(i)))
         end do
         if (rscale == 0.0_dp) rscale = 1.0_dp
+        scaled_target = 0.0_dp
+        if (target > 0.0_dp) then
+            logfp = log(target)-2.0_dp*log(rscale)
+            if (logfp < log(tiny(1.0_dp))) goto 900
+            scaled_target = exp(min(logfp,log(huge(1.0_dp))-1.0_dp))
+        end if
         call fitpack_sphere_grid(u,v,r/rscale,continuity,poles/rscale,given,exact,flat, &
-            tx,ty,coef,i)
+            scaled_target,tx,ty,coef,fp,i)
         if (i /= 0) goto 900
         maxcoef = maxval(abs(coef))
         if (maxcoef > 1.0_dp) then
@@ -150,7 +154,17 @@ contains
         fit%value_scale = rscale
         fit%longitude_origin = v(1)
         fit%weighted_residual = 0.0_dp
-        fit%dimension = mu*mv+2+2*count(continuity)
+        if (fp > 0.0_dp) then
+            logfp = log(fp)+2.0_dp*log(rscale)
+            if (logfp > log(huge(1.0_dp))) then
+                fit%weighted_residual = ieee_value(0.0_dp,ieee_positive_inf)
+            else
+                fit%weighted_residual = exp(logfp)
+            end if
+        end if
+        fit%dimension = 2+2*count(continuity) &
+            +(size(tx)-6-count(continuity))*(size(ty)-7)
+        if (size(ty) == 8) fit%dimension = size(tx)-4-count(continuity)
         fit%numerical_rank = -1 ! The banded FITPACK path does not estimate numerical rank.
         code = sphere_spline_success
 900     if (present(status)) status = code

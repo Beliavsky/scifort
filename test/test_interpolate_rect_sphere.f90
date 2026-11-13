@@ -7,7 +7,7 @@ program test_interpolate_rect_sphere
     use scifort_constants, only : scifort_pi
     use scifort_interpolate, only : rect_sphere_bivariate_spline,sphere_bivariate_spline_type, &
         sphere_spline_success,sphere_spline_invalid_input,sphere_spline_numerical_failure, &
-        sphere_spline_size_limit,sphere_spline_unsupported_smoothing
+        sphere_spline_size_limit
     implicit none
     type(sphere_bivariate_spline_type) :: fit,other,bad
     real(dp) :: u(6),v(8),r(6,8),pi,t,q,expected,nan,inf
@@ -70,8 +70,9 @@ program test_interpolate_rect_sphere
     call near(other%value(q,0.3_dp),2.5_dp,3e-13_dp,'constant default options')
     call near(other%value(pi,0.3_dp),2.5_dp,3e-13_dp,'constant estimated pole')
 
-    bad = rect_sphere_bivariate_spline(u,v,r,s=1.0_dp,status=status)
-    call rejected(sphere_spline_unsupported_smoothing,'smoothing unsupported')
+    other = rect_sphere_bivariate_spline(u,v,r,s=1.0_dp,status=status)
+    call require(status == 0,'positive smoothing accepted')
+    call require(other%valid(),'positive smoothing valid')
     bad = rect_sphere_bivariate_spline(u,v,r,s=-1.0_dp,status=status)
     call rejected(sphere_spline_invalid_input,'negative smoothing')
     bad = rect_sphere_bivariate_spline(u,v,r,s=nan,status=status)

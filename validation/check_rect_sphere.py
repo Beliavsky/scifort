@@ -11,13 +11,14 @@ from scipy.interpolate import RectSphereBivariateSpline
 from scipy.interpolate import BSpline
 
 
-def native(exe,u,v,r,continuity,poles,exact,flat,qt,qp):
+def native(exe,u,v,r,continuity,poles,exact,flat,qt,qp,s=0.0,metadata=False):
     lines = [f"{len(u)} {len(v)} {len(qt)}"]
     for row in (u,v,*r):
         lines.append(" ".join(f"{x:.17g}" for x in row))
     lines.append(" ".join(str(int(x)) for x in (*continuity,*exact,*flat)))
     lines.append(" ".join("NaN" if x is None else f"{x:.17g}" for x in poles))
     lines += [f"{t:.17g} {p:.17g}" for t,p in zip(qt,qp)]
+    lines.append(f"{s:.17g}")
     result = subprocess.run([str(exe.resolve())],input="\n".join(lines)+"\n",
                             text=True,capture_output=True,check=True)
     out = result.stdout.splitlines()
@@ -26,6 +27,8 @@ def native(exe,u,v,r,continuity,poles,exact,flat,qt,qp):
     coef = np.fromstring(out[3],sep=" ")
     values = np.array([np.fromstring(line,sep=" ") for line in out[4:]])
     assert values.shape == (len(qt),6)
+    if metadata:
+        return knots,coef,values,np.fromstring(out[0],sep=" ")
     return knots,coef,values
 
 

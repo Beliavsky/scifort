@@ -1,3 +1,11 @@
+## 2026-11-13 - Rectangular spherical smoothing
+
+- Extend `rect_sphere_bivariate_spline` to positive residual targets using
+  FITPACK adaptive knot selection and smoothing-parameter iteration.
+- Support fixed and soft pole observations, physical residual reporting,
+  target scaling, and explicit numerical failure for nonconvergent fits.
+- Preserve interpolation behavior and document C1 differences from SciPy 1.15.3.
+
 ## 2026-11-13 - Rectangular spherical interpolation
 
 - Add native `rect_sphere_bivariate_spline` for `s=0`, with pole values,

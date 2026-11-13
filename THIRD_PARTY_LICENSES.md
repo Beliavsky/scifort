@@ -16,7 +16,8 @@ The adapted source retains BSD-3-Clause and the upstream attribution; full terms
 are already retained in
 [`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
 `src/interpolate_sphere_grid_core.f90` additionally adapts the interpolation
-branches of `spgrid`/`fpspgr` and their banded numerical helpers from the same
+and adaptive smoothing branches of `spgrid`/`fpspgr`, their knot-selection
+and root-iteration helpers, and their banded numerical helpers from the same
 pinned source. It retains the same copyright and BSD-3-Clause terms.
 SciFort uses its existing B-spline evaluation and, for scattered fitting,
 dense SVD solver. No full FITPACK source distribution or mandatory package

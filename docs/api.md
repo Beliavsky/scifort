@@ -7180,12 +7180,13 @@ re-exported by `scifort_optimize`. See the
 ## Spherical splines (`scipy.interpolate`)
 
 `rect_sphere_bivariate_spline(u,v,r,s,pole_continuity,pole_values,pole_exact,pole_flat,status)`
-provides native rectangular-grid interpolation corresponding to SciPy's
-`RectSphereBivariateSpline` at `s=0`. Each coordinate axis requires at least
+provides native rectangular-grid interpolation (`s=0`) and adaptive smoothing
+(`s>0`) corresponding to SciPy's `RectSphereBivariateSpline`.
+Each coordinate axis requires at least
 four sites; pole options are north/south two-element arrays. It returns the
-same `sphere_bivariate_spline_type` described below, with residual zero and
-rank -1 (not estimated). Positive smoothing returns status 5 and an invalid
-object. See [rectangular spherical interpolation](interpolate_rect_sphere.md)
+same `sphere_bivariate_spline_type` described below, with a squared grid
+residual and rank -1 (not estimated). Failed convergence returns status 3
+and an invalid object. See [rectangular spherical splines](interpolate_rect_sphere.md)
 for pole estimation, grid bounds, diagnostics, and compatibility differences.
 
 `lsq_sphere_bivariate_spline(theta,phi,r,tt,tp,w,eps,status)` returns a native

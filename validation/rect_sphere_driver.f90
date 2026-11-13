@@ -7,8 +7,8 @@ program rect_sphere_driver
     implicit none
     type(sphere_bivariate_spline_type) :: fit
     real(dp), allocatable :: u(:),v(:),r(:,:),qt(:),qp(:),tu(:),tv(:),c(:)
-    real(dp) :: poles(2)
-    integer :: mu,mv,nq,i,status,flags(6)
+    real(dp) :: poles(2),s
+    integer :: mu,mv,nq,i,status,flags(6),io
     read(*,*) mu,mv,nq
     allocate(u(mu),v(mv),r(mu,mv),qt(nq),qp(nq))
     read(*,*) u
@@ -21,8 +21,11 @@ program rect_sphere_driver
     do i = 1, nq
         read(*,*) qt(i),qp(i)
     end do
+    s = 0.0_dp
+    read(*,*,iostat=io) s
+    if (io /= 0) s = 0.0_dp
     fit = rect_sphere_bivariate_spline(u,v,r,pole_continuity=flags(1:2)/=0, &
-        pole_values=poles,pole_exact=flags(3:4)/=0,pole_flat=flags(5:6)/=0,status=status)
+        pole_values=poles,pole_exact=flags(3:4)/=0,pole_flat=flags(5:6)/=0,s=s,status=status)
     print '(3(i0,1x),es26.17e3)', status,fit%rank(),fit%degrees_of_freedom(),fit%residual()
     if (.not. fit%valid()) stop
     call fit%get_knots(tu,tv)

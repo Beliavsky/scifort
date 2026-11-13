@@ -16,8 +16,8 @@ at <https://github.com/perazz/fitpack>.
 - The optional FPM package fetches the full upstream implementation separately.
   The native [spherical least-squares interface](interpolate_sphere.md) now
   adapts its fixed-knot periodic/pole constraints under BSD-3-Clause. Native
-  [rectangular spherical interpolation](interpolate_rect_sphere.md) also
-  adapts the banded grid solver for `s=0`. Neither adds a mandatory dependency.
+  [rectangular spherical splines](interpolate_rect_sphere.md) also adapt
+  the banded grid solver and adaptive smoothing. Neither adds a mandatory dependency.
 - Source references: <https://github.com/perazz/fitpack/blob/main/LICENSE.md>,
   <https://github.com/perazz/fitpack/blob/main/fpm.toml>,
   <https://perazz.github.io/fitpack/tutorial_curve.html>.

@@ -1,3 +1,51 @@
+## 2026-11-13 - Adaptive rectangular spherical smoothing
+
+`src/interpolate_sphere_grid_core.f90` now additionally adapts `fpspgr`,
+`fpknot`, `fp_knots_to_add`, `new_knot_dimension`, `root_finding_iterate`, and
+`fprati` from the same inspected perazz/FITPACK source as the interpolation
+entry below: commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90).
+Source SHA-256 remains
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`;
+inspected `LICENSE.md` SHA-256 remains
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+Copyright (c) 2022, Federico Perini. All rights reserved. BSD-3-Clause source
+notices and the full retained license in
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt)
+continue to apply. Mathematical reference: Dierckx, *Curve and Surface Fitting
+with Splines* (1993), Chapter 11, Section 11.2, as cited by upstream.
+
+The interpolation path remains separate. Positive targets invoke adaptive
+axis/knot selection followed by FITPACK's rational smoothing-parameter
+iteration, with relative tolerance 0.001 and a 20-iteration limit. All mutable
+cache state is local and initialized; warm starts and persistent knot reuse
+are not exposed. Existing banded penalty calculations are now reachable.
+New helpers use SciFort's binary64 kind, default integers, lowercase ASCII,
+explicit interfaces, `implicit none`, and documented dummy arguments.
+
+The axis selector alternates equal-cost choices according to the previous
+axis, preserving the spherical FITPACK rule seen in SciPy v1.15.3's
+[`fpspgr.f`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/interpolate/fitpack/fpspgr.f).
+The inspected modern generic selector always favors longitude on ties, which
+can change the adaptive path. The previously documented south-only C1
+cosine/sine initialization correction remains. The wrapper scales the
+residual target in logarithms along with observations/poles, rejects scaled
+targets below normal binary64 range, reports physical squared grid residuals,
+and rejects unconverged or nonfinite fits with status 3. The former unsupported
+smoothing constant remains exported for source compatibility.
+
+Validation compares against SciPy C0 fits, independent constrained cubic
+least squares, and a separately compiled full pinned modern FITPACK core with
+the same two documented axis/pole corrections. This tests the extraction and
+wrapper against the established implementation; it is not an independent
+algorithmic reference for every C1 fit. SciPy 1.15.3 produced nonfinite or
+call-dependent results for some tested C1 smoothing cases. The upstream
+`mnspgr` spherical-grid fixture was also checked. See the
+[validation record](validation/rect_sphere_smoothing_2026-11-13.md).
+The full upstream package test suite was not run. Original reference drivers,
+checkers, and tests are MIT licensed. No full upstream source, test data,
+binary artifact, dependency, or C ABI is added to the repository.
+
 ## 2026-11-13 - Rectangular spherical grid interpolation
 
 `src/interpolate_sphere_grid_core.f90` adapts the `s=0` branches of `spgrid`
