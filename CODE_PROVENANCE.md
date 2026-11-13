@@ -1,3 +1,38 @@
+## 2026-11-13 - Complex Bessel Y zeros
+
+The complex-output overloads and private helpers in `src/special/bessel_zeros.f90`
+are original MIT-licensed SciFort code, independently implemented from the
+following public mathematical specifications:
+
+- [DLMF 10.6](https://dlmf.nist.gov/10.6): `Y_0'=-Y_1` and
+  `Y_1'=Y_0-Y_1/z`.
+- [DLMF 10.2.1](https://dlmf.nist.gov/10.2.E1): the Bessel differential
+  equation, used to evaluate `Y_1''` for Newton refinement of derivative roots.
+- [DLMF 10.11.6](https://dlmf.nist.gov/10.11.E6): integer-order continuation
+  across the negative-real cut, `Y_n(-w)=(-1)^n[Y_n(w)+2i J_n(w)]` on its upper side.
+- [DLMF 10.17](https://dlmf.nist.gov/10.17): leading sine/cosine phases,
+  combined with continuation to obtain real starting coordinates
+  `-(k-1/4)*pi`, `-(k-3/4)*pi`, and `-(k-5/4)*pi` for the three root strings.
+- [DLMF 10.21(ix)](https://dlmf.nist.gov/10.21#ix), especially 10.21.46:
+  complex root geometry and the asymptote `Im(z)=log(3)/2`. The exceptional
+  order-one roots start from coarse geometric guesses `-0.5+0.5i` and `0.5+1i`;
+  these are not hard-coded reference roots or fitted numerical coefficients.
+
+The solver reuses SciFort's existing complex `Y_0` and `Y_1` implementations,
+with bounded Newton steps, backtracking, root-specific boxes, finite-value
+checks, and both correction and residual convergence tests. No existing
+numerical kernel was changed. The implementation search did not identify a
+directly reusable established Fortran routine with verified suitable licensing
+and behavior; no legacy specfun, SciPy, Zhang/Jin, or other zero-finder source
+was copied or adapted. No dependency or third-party license was added.
+
+SciPy's public API documentation and numerical values were inspected to check
+the root sequence. Actual derivative values follow the DLMF identity, preserving
+SciFort's established convention even where SciPy's numerical companion has
+the opposite sign. Independent 80-digit mpmath solves start from mathematical
+phase seeds, not SciPy/SciFort roots. The native tests and reference tools are
+original SciFort code. C ABI expansion remains deferred.
+
 ## 2026-11-13 - Complex Riemann zeta
 
 `src/special/complex_zeta.f90` adapts `zeta_Euler_Maclaurin` and its 25

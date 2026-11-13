@@ -1,3 +1,10 @@
+## Complex Bessel Y zero coverage (2026-11-13)
+
+- [x] Add complex-output overloads of `y0_zeros`, `y1_zeros`, and `y1p_zeros`
+  for up to 1000 upper-half-plane roots, retaining existing real APIs.
+- [x] Validate the SciPy root sequence and actual derivative/value companions
+  against multiprecision references; document SciPy discrepancies explicitly.
+
 ## Sparse weighted matching compatibility (2026-11-13)
 
 - [x] Expose the existing sparse weighted assignment solver under the

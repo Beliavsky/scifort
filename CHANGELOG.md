@@ -1,3 +1,12 @@
+## 2026-11-13 - Complex Bessel Y zeros
+
+- Add pure complex-output overloads for `y0_zeros`, `y1_zeros`, and `y1p_zeros`,
+  using safeguarded Newton refinement over existing complex Bessel kernels.
+- Preserve the real APIs, return actual derivative companions, and document
+  the exceptional positive-real-part first `Y_1'` root and a 1000-root limit.
+- Validate against multiprecision roots and SciPy, documenting observed SciPy
+  companion-sign, accuracy, and nonfinite-table discrepancies.
+
 ## 2026-11-13 - Complex Riemann zeta
 
 - Add a pure elemental complex `zeta(s)` overload with Euler-Maclaurin

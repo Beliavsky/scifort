@@ -6269,14 +6269,18 @@ entry. SciPy's compiled routine can reverse a tied pair when its independently
 computed approximations differ by last-bit roundoff, so tie ordering is not a
 numerical compatibility requirement.
 
-`y0_zeros`, `y1_zeros`, and `y1p_zeros` implement SciPy's real branch only.
-They return positive real roots plus, respectively, `Y_0'` at the `Y_0` roots,
-`Y_1'` at the `Y_1` roots, and `Y_1` at the `Y_1'` roots. The complex branch
-selected by SciPy's `complex=True` option is not implemented. SciFort follows
-the DLMF identity `Y_0'=-Y_1`; SciPy 1.17.0's real `y0_zeros` numerical second
-array has the opposite sign even though SciPy's documentation states the same
-derivative identity. The SciFort real routines have no artificial 140-root
-ceiling and have regression coverage beyond that point.
+`y0_zeros`, `y1_zeros`, and `y1p_zeros` have real and complex overloads,
+selected by the types of both allocatable output arrays. Real outputs retain
+the positive-real-root behavior. Complex outputs return the upper-half-plane
+root sequence corresponding to SciPy's `complex=True`, requiring `1 <= nt <= 1000`.
+The associated outputs are, respectively, `Y_0'`, `Y_1'`, and `Y_1` at the roots.
+SciFort follows `Y_0'=-Y_1` for both types; SciPy's observed numerical second
+array has the opposite sign despite its documented derivative identity.
+The first complex `Y_1'` root has positive real part, as in SciPy's numerical
+output; the rest have negative real part. Complex numerical failure returns
+status 2 and two empty arrays. See [complex Bessel zeros](complex_bessel_zeros.md)
+for ordering, convergence limits, and reference discrepancies. The existing real
+routines retain their behavior without an artificial 140-root ceiling.
 
 `dawsn`, `erf`, `erfc`, `erfi`, and `erfcx` are overloaded at the top-level
 `scifort_special` API for real and complex binary64 arguments. Real arguments retain

@@ -1,7 +1,7 @@
 ! SPDX-License-Identifier: MIT
 ! Copyright (c) 2026 SciFort contributors
 !
-! Positive real zeros of integer-order cylindrical Bessel functions.  The
+! Real and selected complex zeros of integer-order cylindrical Bessel functions. The
 ! implementation is original SciFort code based on the interlacing/simple-root
 ! properties of real Bessel functions and safeguarded Newton refinement.
 
@@ -9,6 +9,7 @@ module scifort_bessel_zeros
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_bessel_derivatives, only : jvp, yvp
     use scifort_bessel_jy, only : jv, yv
+    use scifort_bessel_complex, only : yv_complex
     use scifort_constants, only : scifort_pi
     use scifort_kinds, only : dp
     use scifort_math, only : quiet_nan
@@ -24,6 +25,7 @@ module scifort_bessel_zeros
     integer, parameter :: root_y = 3
     integer, parameter :: root_yp = 4
     integer, parameter :: jnjnp_max_zeros = 1200
+    integer, parameter :: complex_y_max_zeros = 1000
 
     public :: jn_zeros
     public :: jnjnp_zeros
@@ -35,7 +37,178 @@ module scifort_bessel_zeros
     public :: yn_zeros
     public :: ynp_zeros
 
+    interface y0_zeros
+        module procedure y0_zeros, y0_zeros_complex
+    end interface y0_zeros
+    interface y1_zeros
+        module procedure y1_zeros, y1_zeros_complex
+    end interface y1_zeros
+    interface y1p_zeros
+        module procedure y1p_zeros, y1p_zeros_complex
+    end interface y1p_zeros
+
 contains
+
+    pure subroutine y0_zeros_complex(nt, zeros, derivatives, status)
+        implicit none
+        integer, intent(in) :: nt !! Number of upper-half-plane complex roots, 1..1000.
+        complex(dp), allocatable, intent(out) :: zeros(:) !! Y_0 roots, ordered toward negative Re.
+        complex(dp), allocatable, intent(out) :: derivatives(:) !! Actual Y_0'=-Y_1 at the roots.
+        integer, intent(out), optional :: status !! 0 success, 1 invalid count, 2 numerical failure.
+        integer :: info
+        call complex_y_zero_pair(0,nt,zeros,derivatives,info)
+        if (present(status)) status = info
+    end subroutine y0_zeros_complex
+
+    pure subroutine y1_zeros_complex(nt, zeros, derivatives, status)
+        implicit none
+        integer, intent(in) :: nt !! Number of upper-half-plane complex roots, 1..1000.
+        complex(dp), allocatable, intent(out) :: zeros(:) !! Y_1 roots, ordered toward negative Re.
+        complex(dp), allocatable, intent(out) :: derivatives(:) !! Y_1' at the roots.
+        integer, intent(out), optional :: status !! 0 success, 1 invalid count, 2 numerical failure.
+        integer :: info
+        call complex_y_zero_pair(1,nt,zeros,derivatives,info)
+        if (present(status)) status = info
+    end subroutine y1_zeros_complex
+
+    pure subroutine y1p_zeros_complex(nt, zeros, values, status)
+        implicit none
+        integer, intent(in) :: nt !! Number of upper-half-plane complex roots, 1..1000.
+        complex(dp), allocatable, intent(out) :: zeros(:) !! Y_1' roots; first has positive Re.
+        complex(dp), allocatable, intent(out) :: values(:) !! Y_1 at the derivative roots.
+        integer, intent(out), optional :: status !! 0 success, 1 invalid count, 2 numerical failure.
+        integer :: info
+        call complex_y_zero_pair(2,nt,zeros,values,info)
+        if (present(status)) status = info
+    end subroutine y1p_zeros_complex
+
+    ! Independent Newton refinement using DLMF 10.6, 10.17, and 10.21(ix).
+    ! The strings approach Im(z)=log(3)/2. Their phase offsets follow from
+    ! Y_n(-w)=(-1)^n [Y_n(w)+2i J_n(w)] and the leading sine/cosine expansions.
+    ! The two order-one exceptional roots use coarse geometric initial guesses.
+    pure subroutine complex_y_zero_pair(family, nt, zeros, values, status)
+        implicit none
+        integer, intent(in) :: family !! 0 for Y_0, 1 for Y_1, 2 for Y_1'.
+        integer, intent(in) :: nt !! Requested count in 1..1000.
+        complex(dp), allocatable, intent(out) :: zeros(:) !! Roots on the principal branch.
+        complex(dp), allocatable, intent(out) :: values(:) !! Derivatives or Y_1 companions.
+        integer, intent(out) :: status !! 0 success, 1 invalid input, 2 numerical failure.
+        complex(dp) :: z, trial, f, df, companion, step, tf, tdf, tc
+        real(dp) :: center, left, right, amplitude, tolerance, damping
+        integer :: k, iteration, backtrack
+        logical :: converged, accepted
+
+        allocate(zeros(0),values(0))
+        status = bessel_zeros_status_invalid_argument
+        if (nt < 1 .or. nt > complex_y_max_zeros) return
+        deallocate(zeros,values)
+        allocate(zeros(nt),values(nt))
+        zeros = cmplx(quiet_nan(0.0_dp),quiet_nan(0.0_dp),dp)
+        values = zeros
+        status = bessel_zeros_status_numerical_failure
+        do k = 1, nt
+            select case (family)
+            case (0)
+                center = -(real(k,dp)-0.25_dp)*scifort_pi
+            case (1)
+                center = -(real(k,dp)-0.75_dp)*scifort_pi
+            case default
+                center = -(real(k,dp)-1.25_dp)*scifort_pi
+            end select
+            z = cmplx(center,0.5_dp*log(3.0_dp),dp)
+            left = center-0.45_dp*scifort_pi
+            right = center+0.45_dp*scifort_pi
+            if (family == 1 .and. k == 1) then
+                z = cmplx(-0.5_dp,0.5_dp,dp)
+                left = -1.5_dp
+                right = -0.05_dp
+            else if (family == 2 .and. k == 1) then
+                z = cmplx(0.5_dp,1.0_dp,dp)
+                left = 0.05_dp
+                right = 1.5_dp
+            end if
+            converged = .false.
+            do iteration = 1, 60
+                call complex_y_equation(family,z,f,df,companion)
+                if (.not. finite_complex(f) .or. .not. finite_complex(df)) exit
+                if (abs(df) == 0.0_dp) exit
+                step = f/df
+                tolerance = 32.0_dp*epsilon(1.0_dp)*max(1.0_dp,abs(z))
+                amplitude = max(abs(companion),1.0_dp/sqrt(abs(z)))
+                if (abs(step) <= tolerance .and. abs(f) <= 4.0_dp*tolerance*amplitude) then
+                    converged = .true.
+                    exit
+                end if
+                if (abs(step) > 0.5_dp) step = step*(0.5_dp/abs(step))
+                damping = 1.0_dp
+                accepted = .false.
+                do backtrack = 1, 24
+                    trial = z-damping*step
+                    if (real(trial,dp) > left .and. real(trial,dp) < right &
+                        .and. aimag(trial) > 0.05_dp .and. aimag(trial) < 1.5_dp) then
+                        call complex_y_equation(family,trial,tf,tdf,tc)
+                        if (finite_complex(tf)) then
+                            if (abs(tf) < abs(f)) then
+                                accepted = .true.
+                                exit
+                            end if
+                        end if
+                    end if
+                    damping = 0.5_dp*damping
+                end do
+                if (.not. accepted) exit
+                z = trial
+            end do
+            if (.not. converged .or. .not. finite_complex(companion)) then
+                ! Numerical failure returns empty arrays, never a partial table.
+                deallocate(zeros,values)
+                allocate(zeros(0),values(0))
+                return
+            end if
+            if (k > 1) then
+                if (real(z,dp) >= real(zeros(k-1),dp)) then
+                    deallocate(zeros,values)
+                    allocate(zeros(0),values(0))
+                    return
+                end if
+            end if
+            zeros(k) = z
+            values(k) = companion
+        end do
+        status = bessel_zeros_status_success
+    end subroutine complex_y_zero_pair
+
+    pure subroutine complex_y_equation(family, z, f, df, companion)
+        implicit none
+        integer, intent(in) :: family !! 0 for Y_0, 1 for Y_1, 2 for Y_1'.
+        complex(dp), intent(in) :: z !! Nonzero principal-branch Bessel argument.
+        complex(dp), intent(out) :: f !! Root equation at z.
+        complex(dp), intent(out) :: df !! Derivative of the root equation.
+        complex(dp), intent(out) :: companion !! Associated derivative or Y_1 value.
+        complex(dp) :: y0, y1
+        y0 = yv_complex(0.0_dp,z)
+        y1 = yv_complex(1.0_dp,z)
+        select case (family)
+        case (0)
+            f = y0
+            df = -y1
+            companion = df
+        case (1)
+            f = y1
+            df = y0-y1/z
+            companion = df
+        case default
+            f = y0-y1/z
+            df = -f/z-(1.0_dp-1.0_dp/(z*z))*y1
+            companion = y1
+        end select
+    end subroutine complex_y_equation
+
+    pure elemental logical function finite_complex(z) result(ok)
+        implicit none
+        complex(dp), intent(in) :: z !! Value to classify without arithmetic on NaNs.
+        ok = ieee_is_finite(real(z,dp)) .and. ieee_is_finite(aimag(z))
+    end function finite_complex
 
     pure subroutine jn_zeros(n, nt, zeros, status)
         integer, intent(in) :: n !! integer Bessel order; negative orders use abs(n)
