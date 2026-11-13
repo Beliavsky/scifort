@@ -9,12 +9,15 @@ module scifort_fft
     use, intrinsic :: iso_fortran_env, only : int64
     use scifort_kinds, only : dp
     use scifort_signal_spectral, only : fft_plan
+    use scifort_fftlog, only : fht, ifht, fhtoffset, fht_nd, ifht_nd, &
+        fft_status_singular, fft_status_range_error
     implicit none
     private
     integer, parameter, public :: fft_status_success = 0
     integer, parameter, public :: fft_status_invalid_input = 1
     integer, parameter, public :: fft_status_setup_failure = 2
     public :: dp, fft_plan, fft, ifft, rfft, irfft, hfft, ihfft
+    public :: fht, ifht, fhtoffset, fht_nd, ifht_nd, fft_status_singular, fft_status_range_error
     public :: dct, idct, dst, idst, fftfreq, rfftfreq, fftshift, ifftshift
     interface fft
         module procedure fft_real, fft_complex

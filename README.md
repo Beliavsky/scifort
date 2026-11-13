@@ -21,7 +21,7 @@ was written primarily by ChatGPT with Extra High thinking effort.
 | Interpolation | [Splines](docs/interpolate_bspline.md), [regular grids](docs/interpolate_regular_grid.md), [scattered data](docs/interpolate_scattered.md), and [radial basis functions](docs/interpolate_rbf_interp1d.md). |
 | Optimization | Root finding, local minimization, least squares, and global optimization. Guides include [linear least squares](docs/optimize_linear_least_squares.md), [differential evolution](docs/optimize_differential_evolution.md), and [SHGO](docs/optimize_shgo.md). |
 | Linear algebra | Dense and banded systems, matrix decompositions, matrix functions, and sparse solvers. See the [API reference](docs/api.md) and [banded-system guide](docs/linalg_banded.md). |
-| Fourier transforms | 1D, 2D, and multidimensional complex/real/Hermitian FFTs and cosine/sine transforms, axis selection, frequency bins, shifts, and fast-length helpers. See the [FFT guide](docs/fft.md). |
+| Fourier transforms | 1D, 2D, and multidimensional FFTs and cosine/sine transforms, FFTLog fast Hankel transforms, axis selection, frequency bins, shifts, and fast-length helpers. See the [FFT guide](docs/fft.md). |
 | Signals and images | Filtering, spectral analysis, streaming transforms, and multidimensional image operations. See [signal processing](docs/signal.md) and [image filtering and morphology](docs/ndimage.md). |
 | Clustering and spatial methods | [Hierarchical clustering](docs/cluster_hierarchy.md), [vector quantization](docs/cluster_vq.md), distances, and geometric methods; see the [source modules](src/) and [examples](example/). |
 
@@ -129,7 +129,7 @@ are recorded in [code provenance](CODE_PROVENANCE.md) and
 
 | Package or source | Use in SciFort |
 | --- | --- |
-| [SciPy](https://github.com/scipy/scipy) | Selected optimization, differentiation, interpolation, sparse-solver, signal, spatial-transform, and special-function kernels. |
+| [SciPy](https://github.com/scipy/scipy) | Selected optimization, differentiation, interpolation, sparse-solver, signal, spatial-transform, special-function, and FFTLog fast Hankel kernels. |
 | [PRIMA](https://github.com/libprima/prima) | COBYLA implementation adapted primarily through SciPy's `pyprima` translation. |
 | [ODEPACK](https://github.com/jacobwilliams/odepack) | Selected LSODA operations, coefficients, and control logic. |
 | [MATH77](https://netlib.org/math/) | Selected Bessel and sine/cosine-integral kernels. |

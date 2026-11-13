@@ -5,6 +5,18 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Fast Hankel transforms / FFTLog (SciPy BSD-3-Clause)
+
+`src/fftlog.f90` and the coefficient-magnitude check in
+`validation/check_fftlog.py` adapt SciPy v1.15.3's
+[`scipy/fft/_fftlog_backend.py`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/fft/_fftlog_backend.py).
+The complete upstream BSD-3-Clause copyright, redistribution terms, and
+disclaimer are retained in
+[`LICENSES/scipy-fftlog-BSD-3-Clause.txt`](LICENSES/scipy-fftlog-BSD-3-Clause.txt).
+Original SciFort modifications are MIT licensed. Attribution to Hamilton's
+FFTLog method and the decision not to import unclear-license original
+Fortran sources are recorded in `CODE_PROVENANCE.md`.
+
 ## MINRES symmetric Krylov recurrence (SciPy BSD-3-Clause)
 
 The Paige--Saunders Lanczos/Givens recursion in
@@ -931,4 +943,3 @@ https://github.com/ian-mmm/differential-evolution_f95 . The copyright (c) 2017
 Ian Morrall and complete MIT permission and disclaimer are preserved in
 `LICENSES/ian-morrall-differential-evolution-MIT.txt`. This does not add a
 runtime dependency, and no original source file was vendored unchanged.
-

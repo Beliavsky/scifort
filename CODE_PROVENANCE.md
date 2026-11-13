@@ -1,3 +1,62 @@
+## 2026-11-12 - Fast Hankel transforms (FFTLog)
+
+`src/fftlog.f90` and the coefficient-magnitude calculation in
+`validation/check_fftlog.py` adapt SciPy **v1.15.3**
+[`scipy/fft/_fftlog_backend.py`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/fft/_fftlog_backend.py).
+The exact installed 1.15.3 source was inspected, together with its
+[tagged license](https://github.com/scipy/scipy/blob/v1.15.3/LICENSE.txt).
+The installed source matched the tagged upstream file after line-ending
+normalization. SHA-256 of the downloaded tagged source:
+`520a1e3f08683282f1bd0e6ca125199155af5964cfef2d71595003f4196b7496`.
+SciPy copyright: Copyright (c) 2001-2002 Enthought, Inc. 2003-2024,
+SciPy Developers. The full BSD-3-Clause terms are retained in
+[`LICENSES/scipy-fftlog-BSD-3-Clause.txt`](LICENSES/scipy-fftlog-BSD-3-Clause.txt).
+Adapted files carry MIT AND BSD-3-Clause SPDX identifiers and attribution;
+original SciFort modifications and tests are MIT licensed.
+
+Adapted operations: logarithmic input/output biasing, complex log-gamma
+Mellin coefficients, real Nyquist projection, reciprocal-conjugate inverse
+weights, reversal, and nearest low-ringing offset. Mathematical specification:
+A. J. S. Hamilton (2000), MNRAS 312, 257-284,
+[Appendix B](https://arxiv.org/abs/astro-ph/9905191), also published as
+[FFTLog sections 6-9](https://jila.colorado.edu/~ajsh/FFTLog/).
+The original algorithm is attributed there to J. D. Talman (1978),
+J. Comput. Phys. 29, 35-48.
+The removable simultaneous-pole limit uses the gamma residues specified in
+[DLMF 5.2(i)](https://dlmf.nist.gov/5.2#i): their ratio gives the signed
+factorial ratio used by the zero-frequency coefficient.
+
+Significant changes: use SciFort's existing FFT plans and complex log-gamma
+kernels; normalize spectra and restore amplitudes in logarithmic form;
+catch setup, singularity and range errors without library output or STOP;
+evaluate simultaneous gamma poles through their residue ratio; preserve
+well-defined zero-DC directions; reject singular directions instead of
+dropping their constant mode; reject a nearly zero even Nyquist projection;
+add rank 1-15 batches with selectable axes and per-call plan/weight reuse.
+No NCAR FFT, Ooura gamma, Python runtime, or new dependency is imported.
+
+Validation uses public SciPy calls, 90-digit direct Mellin/DFT sums, and the
+four historical Fortran-output fixtures in installed SciPy's
+[`test_fftlog.py`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/fft/tests/test_fftlog.py).
+The fixtures are read from the installed test source rather than vendored.
+Wide bias spans amplify errors in the sequence of scalings and FFTs;
+validation reports both raw errors and errors relative to a factor bound.
+
+### Documented issue: established Fortran FFTLog import deferred
+
+Inspected `emsig/fftlog` commit
+`8475c0fb40f6b0f55fa492b2db6a786464f7635e`:
+[`src/fftlog.f`](https://github.com/emsig/fftlog/blob/8475c0fb40f6b0f55fa492b2db6a786464f7635e/src/fftlog.f),
+[`README.rst`](https://github.com/emsig/fftlog/blob/8475c0fb40f6b0f55fa492b2db6a786464f7635e/README.rst),
+and [LICENSE](https://github.com/emsig/fftlog/blob/8475c0fb40f6b0f55fa492b2db6a786464f7635e/LICENSE).
+The README applies CC0 to wrapper additions and describes permission to
+distribute the original Fortran with that package. It does not clearly grant
+general adaptation rights for the original Hamilton implementation.
+Import was therefore stopped; no Fortran source from that repository is
+included. Future adoption requires a clear permissive license covering the
+original code and any retained dependencies. The SciPy BSD adaptation above
+is the implementation source for this change.
+
 ## 2026-11-12 - FFT helpers, multidimensional shifts, and 2D names
 
 The additions to `src/fft.f90`, `test/test_fft_helpers.f90`,

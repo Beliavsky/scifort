@@ -1,3 +1,13 @@
+## 2026-11-12 - Fast Hankel transforms
+
+- Add native `fht`, `ifht`, and `fhtoffset` using FFTLog, power-law bias,
+  low-ringing offsets, real Nyquist projection, and logarithmic amplitude scaling.
+- Add rank 1-15 batched `fht_nd`/`ifht_nd` with selectable axes.
+- Adapt SciPy v1.15.3 under BSD-3-Clause, reusing SciFort FFT/log-gamma kernels.
+  Retain the full license and document the deferred original Fortran import.
+- Define explicit singular/range statuses and validate against SciPy,
+  historical upstream fixtures, and independent high-precision Mellin sums.
+
 ## 2026-11-12 - FFT length helpers, multidimensional shifts, and 2D names
 
 - Add `next_fast_len` and `prev_fast_len` using SciFort's 2/3/5/7 radix policy

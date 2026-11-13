@@ -18,6 +18,7 @@ Inputs are read-only and may be noncontiguous sections.
 | `hfft(x [, n, norm, status])` | Real or complex Hermitian half sequence | Real full forward transform |
 | `ihfft(x [, n, norm, status])` | Real | Complex Hermitian half sequence |
 | `dct`, `idct`, `dst`, `idst` | Real or complex | Same type as input |
+| `fht`, `ifht`, `fhtoffset` | Real log-grid data / parameters | [Fast Hankel transforms and low-ringing offset](hankel.md) |
 | `fftfreq(n [, d, status])` | Positive length, sample spacing | Full signed frequency bins |
 | `rfftfreq(n [, d, status])` | Positive length, sample spacing | Nonnegative frequency bins |
 | `fftshift(x)`, `ifftshift(x)` | Real or complex | Shifted sequence of the same type |
@@ -253,6 +254,10 @@ Optional `status` reports:
 - `fft_status_invalid_input = 1`: invalid length, normalization, transform
   type, nonfinite transform data, invalid spacing, or unrepresentable bins.
 - `fft_status_setup_failure = 2`: caught allocation or FFT plan setup failure.
+- `fft_status_singular = 3`: singular Hankel direction or nearly zero even
+  Nyquist coefficient; see the [Hankel contract](hankel.md).
+- `fft_status_range_error = 4`: Hankel parameters/scaling exceed the guarded
+  numerical range.
 
 Rejected one-dimensional function calls return an allocated zero-length
 result. Multidimensional calls reject invalid axes, mismatched lengths,
@@ -271,7 +276,7 @@ tested SciPy/NumPy frequency helper's `n*d` intermediate overflows. Those
 cases use independent high-precision references. Both differences are
 deliberate and covered by validation.
 
-Fast Hankel transforms, worker controls, public multidimensional plans,
+Worker controls, public reusable plans beyond the existing 1D FFT plan,
 vendor backends, and overwrite options remain open.
 Negative or repeated axes and `s=-1` sentinel lengths are not accepted.
 No C ABI is added. See the [gap inventory](scipy_gaps.md) and

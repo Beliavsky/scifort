@@ -7,7 +7,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add frequency bins, FFT shifts, and FFT-backed DCT/DST types I-IV.
 - [x] Add multidimensional transforms and axis selection, including real and
   Hermitian pairs and multidimensional DCT/DST.
-- [ ] Add fast Hankel transforms (`fht`, `ifht`, `fhtoffset`).
+- [x] Add fast Hankel transforms (`fht`, `ifht`, `fhtoffset`) and axis-selectable batches.
 - [x] Add multidimensional shifts and two-dimensional convenience names.
 - [x] Add backend-specific fast-length helpers and audit batching support.
 - [ ] Add worker controls, public multidimensional plans, and backend option parity.
