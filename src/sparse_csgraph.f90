@@ -28,6 +28,7 @@ module scifort_sparse_csgraph
     public :: csr_weighted_bipartite_graph, weighted_bipartite_from_edges, &
         weighted_bipartite_from_dense, weighted_bipartite_from_csgraph, &
         valid_weighted_bipartite_graph, minimum_weight_full_bipartite_matching
+    public :: min_weight_full_bipartite_matching
     public :: laplacian_sparse, yen
 
     ! Explicit stored zero-weight arcs remain graph edges for traversal and
@@ -2098,6 +2099,22 @@ contains
             end do
         end do
     end subroutine transpose_weighted_bipartite
+
+    ! SciPy-compatible name using the existing native sparse solver. Keep the
+    ! original entry point and argument ordering for backward compatibility.
+    subroutine min_weight_full_bipartite_matching(graph, row_ind, col_ind, status, maximize, total_weight)
+        implicit none
+        type(csr_weighted_bipartite_graph), intent(in) :: graph !! Finite weighted rectangular CSR.
+        integer, allocatable, intent(out) :: row_ind(:) !! Ascending one-based matched rows.
+        integer, allocatable, intent(out) :: col_ind(:) !! Corresponding one-based matched columns.
+        integer, intent(out) :: status !! Success (0), invalid (1), or no full matching (3).
+        logical, intent(in), optional :: maximize !! Maximize total weight; default false.
+        real(dp), intent(out), optional :: total_weight !! Sum of selected original costs; 0 on failure.
+        real(dp) :: total
+
+        call minimum_weight_full_bipartite_matching(graph,row_ind,col_ind,total,status,maximize)
+        if (present(total_weight)) total_weight = total
+    end subroutine min_weight_full_bipartite_matching
 
     ! Successive shortest augmenting paths with feasible dual potentials and a
     ! binary heap. Sparse memory O(n_rows + n_cols + m), rather than building

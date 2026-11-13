@@ -22,7 +22,7 @@ the [censored distribution coverage inventory](censored_distribution_gaps.md).
 | Optimization | Stored sparse Jacobians and worker parallelism in least squares; stronger sparse LP/MILP capabilities; SciPy-equivalent SHGO homology stopping and sampling options. |
 | Special functions | Additional complex-valued cases, including complex zeta and complex zeros of selected Bessel Y functions. |
 | Statistics | Censored likelihoods and bounded fits are available for normal, exponential, Weibull, lognormal, gamma, beta, logistic, and both Gumbel distributions (lognormal/gamma fits require fixed location, beta fits require fixed location and scale, and gamma/beta fits exclude exact support endpoints); extend censoring support to other families. Observation weights and additional method/option compatibility remain. See [censored fitting](censored_fitting.md). Distribution-name coverage alone does not establish complete compatibility. |
-| Sparse graphs | Functions such as `min_weight_full_bipartite_matching` and additional graph conversion helpers. |
+| Sparse graphs | Native sparse weighted full matching is available as `min_weight_full_bipartite_matching` and the original `minimum_weight_full_bipartite_matching`; see [graph compatibility details](sparse_csgraph.md). Additional graph conversion helpers and input-format/option parity remain. |
 | Linear algebra | Broader batching, larger-problem backends, stronger conditioning/error handling, and real generalized Schur output. Most major algorithm families already exist. |
 
 C ABI coverage and the planned Python, R, MATLAB, and Octave wrappers also

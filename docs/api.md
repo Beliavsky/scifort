@@ -7139,6 +7139,14 @@ signatures, one-based index conventions, examples and limitations.
 
 ## Compressed-sparse graph algorithms (`scifort_sparse_csgraph`)
 
+`min_weight_full_bipartite_matching(graph,row_ind,col_ind,status,maximize,total_weight)`
+solves sparse rectangular weighted assignment, minimizing costs by default or
+maximizing them with `maximize=.true.`. Both final arguments are optional;
+the total-cost output is a SciFort extension. The existing
+`minimum_weight_full_bipartite_matching(graph,row_ind,col_ind,total_weight,status,maximize)`
+remains supported. Both use `csr_weighted_bipartite_graph`, return sorted
+one-based rows, and return `csgraph_no_full_matching` when infeasible.
+
 The one-based CSR graph module supports `connected_components`,
 `breadth_first_order`, `depth_first_order`, `breadth_first_tree`,
 `depth_first_tree`, single-source `dijkstra` and `bellman_ford`, all-pairs

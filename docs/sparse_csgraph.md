@@ -74,6 +74,7 @@ Let `n` be the number of vertices and `m` the number of stored arcs.
 | `laplacian` | Dense in-/out-degree, normalized, or symmetrized graph Laplacian | O(n²+m), O(n²) storage |
 | `laplacian_sparse` | Sparse CSR Laplacian with the same degree/normalization options | O(n+m), O(n+m) storage |
 | `minimum_weight_full_bipartite_matching` | Sparse rectangular min/max-cost assignment | O(k[m log(m+1)+n_rows+n_cols]) worst-case, where k=min(n_rows,n_cols) |
+| `min_weight_full_bipartite_matching` | SciPy-compatible name for the same sparse solver | Same as above |
 | `reconstruct_path` | Construct a weighted oriented CSR tree from predecessors | O(n+m) |
 | `path_from_predecessors` | **SciFort extension:** recover a source-to-target vertex list | O(n) |
 
@@ -211,6 +212,13 @@ The new **weighted** rectangular CSR representation is
   CSR graphs with their stored zero-weight edges intact.
 - `valid_weighted_bipartite_graph(graph)` to validate the weighted pattern.
 
+`call min_weight_full_bipartite_matching(graph,row_ind,col_ind,status, &
+ maximize,total_weight)` provides the SciPy-compatible name. `maximize` is
+optional (default false); `total_weight` is an optional output and is a
+**SciFort extension**. For example, omit both to request just the matching
+and status. The original entry point remains available with its original
+argument ordering and required total:
+
 `call minimum_weight_full_bipartite_matching(graph,row_ind,col_ind,&
  total_weight,status,maximize)` returns two equally sized vectors of
 **one-based** endpoints and a `real(dp)` sum of the original selected costs.
@@ -228,10 +236,21 @@ storage is O(m+n_rows+n_cols). This is a separate, independently written
 algorithm from the SciPy LAPJVsp implementation; it may have different
 runtime and tie-breaking characteristics.
 
+Compatibility differences: indices are one-based and errors are returned as
+status codes. Explicit zero-cost edges and parallel-edge selection are
+**SciFort extensions**: SciPy removes explicit zeros and its sparse matrix
+construction normally sums duplicate coordinates. To compare results, collapse
+parallel edges to the cheapest/dearest edge and shift every stored weight by
+the same constant if necessary to avoid zero weights in SciPy. As both solvers
+return full matchings, this shift does not change the optimum. SciFort accepts
+its native rectangular CSR type; SciPy's COO/CSC inputs are not native Fortran
+input types. Costs and arithmetic must remain representable in binary64;
+extreme ranges can overflow reduced costs or the total even for finite inputs.
+
 ```fortran
 use scifort_kinds, only : dp
 use scifort_sparse_csgraph, only : csr_weighted_bipartite_graph, &
-    weighted_bipartite_from_edges, minimum_weight_full_bipartite_matching
+    weighted_bipartite_from_edges, min_weight_full_bipartite_matching
 implicit none
 type(csr_weighted_bipartite_graph) :: costs
 integer, allocatable :: row_ind(:), col_ind(:)
@@ -239,7 +258,7 @@ integer :: status
 real(dp) :: total
 costs = weighted_bipartite_from_edges(2,3,[1,1,2,2],[1,2,1,3], &
     [0.0_dp,4.0_dp,3.0_dp,-1.0_dp],status)
-call minimum_weight_full_bipartite_matching(costs,row_ind,col_ind,total,status)
+call min_weight_full_bipartite_matching(costs,row_ind,col_ind,status,total_weight=total)
 ! row_ind=[1,2], col_ind=[1,3], total=-1.0_dp
 ```
 

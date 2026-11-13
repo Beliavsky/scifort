@@ -1,3 +1,11 @@
+## Sparse weighted matching compatibility (2026-11-13)
+
+- [x] Expose the existing sparse weighted assignment solver under the
+  SciPy-compatible `min_weight_full_bipartite_matching` name, retaining the
+  original public API and sparse storage.
+- [x] Validate both entry points against exhaustive small matchings, dense
+  assignment, and randomized SciPy comparisons; correct the stale gap entry.
+
 ## Standalone FFT coverage (2026-11-12)
 
 The user's request to work on FFT gaps approves this roadmap expansion beyond

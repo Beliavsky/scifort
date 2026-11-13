@@ -3,7 +3,7 @@
 program csgraph_weighted_driver
     use scifort_kinds, only : dp
     use scifort_sparse_csgraph, only : csr_graph, csr_weighted_bipartite_graph, &
-        weighted_bipartite_from_edges, minimum_weight_full_bipartite_matching, &
+        weighted_bipartite_from_edges, min_weight_full_bipartite_matching, &
         csgraph_from_edges, laplacian_sparse, csgraph_to_dense, csgraph_success
     implicit none
     type(csr_graph) :: graph, sparse_lap
@@ -23,7 +23,7 @@ program csgraph_weighted_driver
         if (kind == 'W') then
             weighted = weighted_bipartite_from_edges(nr,nc,rows,cols,values,status)
             if (status == csgraph_success) then
-                call minimum_weight_full_bipartite_matching(weighted,ri,ci,cost,status,maximize=a==1)
+                call min_weight_full_bipartite_matching(weighted,ri,ci,status,a==1,cost)
             end if
             write(*,'(i0,1x,es25.16,1x,i0)') status,cost,merge(size(ri),0,status==csgraph_success)
             if (status == csgraph_success) then

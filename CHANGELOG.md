@@ -1,3 +1,11 @@
+## 2026-11-13 - Sparse matching compatibility name
+
+- Add `min_weight_full_bipartite_matching` using the existing sparse weighted
+  assignment solver, preserving the original public entry point.
+- Make the total-cost output optional in the new entry point, document sparse
+  compatibility differences, and correct the stale SciPy gap inventory.
+- Add exhaustive sparsity-pattern tests against brute force and dense assignment.
+
 ## 2026-11-13 - AAA rational approximation
 
 - Add real/complex `aaa` approximation objects, tolerance/support controls,

@@ -2153,6 +2153,18 @@ DFS enumeration as a separate correctness oracle. New files include
 `tools/csgraph_reference/compare_csgraph_yen_scipy.py`.
 The MIT license and Fortran runtime dependency set are unchanged.
 
+## 2026-11-13 - Sparse weighted matching compatibility entry point
+
+`min_weight_full_bipartite_matching` in `src/sparse_csgraph.f90` is an original
+MIT-licensed forwarding procedure to the existing independently written sparse
+assignment solver described below. No upstream implementation was imported or
+adapted. The API contract was checked against the SciPy public specification:
+<https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csgraph.min_weight_full_bipartite_matching.html>.
+The optional total-cost output, stored zero edges, and parallel-edge selection
+are documented SciFort extensions. The new exhaustive tests independently
+enumerate matchings; the existing randomized SciPy comparison driver now uses
+the compatibility entry point. No algorithm, dependency, or license changed.
+
 ## 2026-11-03 — sparse weighted matching and CSR Laplacians
 
 The new implementation in `src/sparse_csgraph.f90`, native regression
