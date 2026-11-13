@@ -5,7 +5,7 @@ program test_interpolate_aaa
         ieee_quiet_nan,ieee_positive_inf
     use scifort_kinds, only : dp
     use scifort_interpolate, only : aaa,aaa_type,complex_aaa_type,aaa_success, &
-        aaa_invalid_input,aaa_max_terms,aaa_undefined,aaa_spectral_size_limit, &
+        aaa_invalid_input,aaa_max_terms,aaa_undefined, &
         aaa_numerical_failure
     implicit none
     type(aaa_type) :: r,other
@@ -156,18 +156,17 @@ program test_interpolate_aaa
 
     f=sin(1000.0_dp*x)
     r=aaa(x(:41),f(:41),rtol=0.0_dp,max_terms=41,clean_up=.false.,status=info)
-    call check(info==0 .and. r%converged(),'fitting beyond spectral backend limit')
+    call check(info==0 .and. r%converged(),'large retained representation')
     points=r%support_points()
     call check(size(points)>39,'large retained support set')
     poles=r%poles(info)
-    call check(info==aaa_spectral_size_limit .and. size(poles)==0,'spectral size diagnostic')
+    call check(info==0 .and. size(poles)==40,'spectrum beyond former size limit')
     removed=r%clean_up(status=info)
-    call check(info==aaa_spectral_size_limit .and. removed==0 .and. r%valid(), &
-        'cleanup size diagnostic preserves fit')
-    call check(r%cleanup_status()==aaa_spectral_size_limit,'stored cleanup diagnostic')
+    call check(info==0 .and. r%valid(),'large cleanup succeeds and preserves fit')
+    call check(r%cleanup_status()==0,'stored successful cleanup diagnostic')
     other=aaa(x(:41),f(:41),rtol=0.0_dp,max_terms=41,status=info)
-    call check(info==aaa_spectral_size_limit .and. other%valid() .and. other%converged(), &
-        'automatic cleanup limitation returns usable converged fit')
+    call check(info==0 .and. other%valid() .and. other%converged(), &
+        'automatic cleanup supports larger converged fits')
 
     f=1.0_dp/(x+3.0_dp)+1e-10_dp/(x-0.3_dp)
     other=aaa(x,f,status=info,rtol=1e-14_dp,clean_up_tol=1e-6_dp)

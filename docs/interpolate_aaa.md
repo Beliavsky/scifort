@@ -143,9 +143,10 @@ Spectral failures return empty arrays and their status, retaining the fit.
 A nonzero constant has no finite poles or zeros; the zero function has no
 poles and reports undefined zeros.
 
-**Poles, zeros, residues, and cleanup currently support at most 39 retained
-support points**, because the native generalized-eigenvalue backend limits
-the arrowhead pencil to order 40. Fitting and evaluation support larger
+**Poles, zeros, residues, and cleanup support up to 512 retained support
+points**, using an internal arrowhead backend adapted from Reference-LAPACK's
+`ZHGEQZ` and support kernels. The former 39-point ceiling is removed; the
+default 100-point fitting budget is covered. Fitting and evaluation support larger
 budgets. If automatic cleanup encounters a larger representation, constructor
 status is 4 while `valid()` and `converged()` still describe the retained fit.
 Set `clean_up=.false.` to omit automatic spectral work.
@@ -157,12 +158,24 @@ equation. Exact numerator factors at zero-valued support points are snapped
 to the corresponding support within a normalized distance of `1e-8`.
 Very distant roots, close clusters, repeated poles, and severe degree
 cancellation remain conditioning limits; the residue formula assumes simple
-poles. There is no LAPACK-grade accuracy guarantee for arbitrary pencils.
+poles. The QZ backend does not remove these conditioning limits, and it is
+restricted to normalized AAA pencils rather than arbitrary matrix pairs.
 Binary64 underflow can also erase very small normalized samples or physical
 residues after rescaling.
 
-SciFort reuses its native SVD and QZ routines, which can choose different
-supports, weights, degrees, and cleanup paths from SciPy's LAPACK backend.
+The backend reduces the arrowhead matrix to Hessenberg form by similarities
+that leave `diag(0,I)` unchanged, then runs the licensed eigenvalue-only QZ
+kernel. Its dense storage is quadratic and arithmetic cost is cubic in the
+support count. Failed QZ iteration or an unresolvable secular root returns
+status 3; the retained approximation remains valid. Status 4 now applies above
+512 retained supports. This change adds no linked LAPACK/BLAS dependency and
+does not change the order limits of other public matrix routines.
+
+SciFort's native SVD can choose different supports, weights, degrees, and
+cleanup paths from SciPy. The spectral backend is separately validated
+against SciPy and analytic roots through 512 supports; larger public real and
+complex fits also cover residues and actual cleanup removal. See the
+[larger-spectrum validation record](../validation/aaa_large_2026-11-13.md).
 Native status diagnostics replace Python warnings/exceptions. C ABI and
 wrapper expansion remain deferred.
 
@@ -174,3 +187,5 @@ wrapper expansion remain deferred.
 - [SciPy AAA API](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.AAA.html).
 - [Provenance](../CODE_PROVENANCE.md), [retained licenses](../LICENSES/scipy-aaa-BSD-3-Clause.txt),
   and [validation record](../validation/aaa_2026-11-13.md).
+- [Reference-LAPACK v3.12.1](https://github.com/Reference-LAPACK/lapack/tree/v3.12.1)
+  and its [retained license](../LICENSES/lapack-BSD-3-Clause.txt).

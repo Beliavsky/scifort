@@ -5,6 +5,19 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## AAA arrowhead spectra (Reference-LAPACK, BSD-3-Clause)
+
+`src/interpolate_aaa_spectrum.f90` adapts Reference-LAPACK v3.12.1's
+`ZHGEQZ`, `ZLARTG`, `ZROT`, `ZSCAL`, `ZLADIV`, `DLADIV`/`DLADIV1`/`DLADIV2`,
+and safe-scaling constants for an internal normalized AAA pencil backend.
+Applicable University of Tennessee / Tennessee Research Foundation,
+University of California Berkeley, and University of Colorado Denver
+copyright notices, along with upstream NAG and ZLARTG author attribution,
+are retained. Full terms are in
+[`LICENSES/lapack-BSD-3-Clause.txt`](LICENSES/lapack-BSD-3-Clause.txt).
+The exact source versions/hashes and modifications are recorded in provenance.
+This is a source adaptation with no mandatory linked LAPACK/BLAS dependency.
+
 ## Spherical spline constraints and solvers (perazz/FITPACK, BSD-3-Clause)
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole

@@ -12,8 +12,7 @@ module scifort_interpolate_aaa
         ieee_value,ieee_quiet_nan,ieee_positive_inf
     use scifort_kinds, only : dp
     use scifort_linalg_svd, only : svd
-    use scifort_linalg_generalized_eigen, only : eigvals
-    use scifort_linalg_matrix_functions, only : matrix_function_max_order
+    use scifort_interpolate_aaa_spectrum, only : aaa_arrowhead_eigenvalues,aaa_spectral_max_terms
     implicit none
     private
     integer, parameter, public :: aaa_success=0,aaa_invalid_input=1,aaa_max_terms=2
@@ -574,8 +573,9 @@ contains
         logical, intent(in) :: zeros !! numerator zeros if true; denominator poles otherwise
         integer, intent(out) :: status !! zero, invalid object, size limit, or numerical failure
         logical, intent(in), optional :: normalized !! keep normalized coordinates, default false
-        complex(dp), allocatable :: values(:),a(:,:),b(:,:),eigen(:),u(:),candidate(:)
+        complex(dp), allocatable :: values(:),eigen(:),u(:),candidate(:)
         complex(dp), allocatable :: alpha(:),beta(:)
+        logical, allocatable :: finite_root(:)
         complex(dp) :: p,delta,dv,der,temp
         complex(dp) :: d(size_if_valid(core)),terms(size_if_valid(core))
         real(dp) :: near,bound
@@ -593,12 +593,12 @@ contains
         end if
         status=aaa_success
         if (m==1) return
-        if (m+1>matrix_function_max_order) then
+        if (m>aaa_spectral_max_terms) then
             status=aaa_spectral_size_limit
             return
         end if
         n=m+1
-        allocate(a(n,n),b(n,n),eigen(n),u(m),candidate(n),alpha(n),beta(n),stat=info)
+        allocate(eigen(n),u(m),candidate(n),alpha(n),beta(n),finite_root(n),stat=info)
         if (info/=0) then
             status=aaa_setup_failure
             return
@@ -606,24 +606,26 @@ contains
         u=core%w
         if (zeros) u=u*core%v
         if (maxval(abs(u))>0.0_dp) u=u/maxval(abs(u))
-        a=cmplx(0.0_dp,0.0_dp,dp)
-        b=a
-        a(1,2:)=u
-        a(2:,1)=cmplx(1.0_dp,0.0_dp,dp)
-        do i=1,m
-            a(i+1,i+1)=core%s(i)
-            b(i+1,i+1)=cmplx(1.0_dp,0.0_dp,dp)
-        end do
-        call eigvals(a,b,eigen,info,alpha=alpha,beta=beta)
+        call aaa_arrowhead_eigenvalues(core%s,u,alpha,beta,info)
+        if (info==2) then
+            status=aaa_setup_failure
+            return
+        end if
         status=aaa_numerical_failure
         if (info/=0) return
         ! Resolve near-infinite projective roots at binary64 precision.
-        where(abs(beta)<=64.0_dp*epsilon(1.0_dp)*abs(alpha)) eigen=nan_value()
-        k=count(finite(eigen))
+        eigen=cmplx(0.0_dp,0.0_dp,dp)
+        finite_root=abs(beta)>64.0_dp*epsilon(1.0_dp)*abs(alpha)
+        do i=1,n
+            if (.not.finite_root(i)) cycle
+            eigen(i)=alpha(i)/beta(i)
+            if (.not.finite(eigen(i))) return
+        end do
+        k=count(finite_root)
         if (k>m-1) return
         k=0
         do i=1,n
-            if (.not.finite(eigen(i))) cycle
+            if (.not.finite_root(i)) cycle
             p=eigen(i)
             ! Exact numerator factors at zero-valued support points need no division.
             j=minloc(abs(p-core%s),dim=1)

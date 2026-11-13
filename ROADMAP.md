@@ -3381,7 +3381,7 @@ task after Lebedev quadrature. C ABI and wrapper expansion remain deferred.
 - [x] Real/complex sample sets, greedy support selection, native SVD fitting,
   scalar/vector evaluation, and explicit convergence diagnostics.
 - [x] Finite poles/zeros, simple-pole residues, and automatic/manual cleanup,
-  with explicit limits inherited from the current generalized-eigenvalue backend.
+  with explicit size and numerical-conditioning limits.
 - [x] Analytic and SciPy validation, scale/offset tests, and retained notices.
-- [ ] Broaden spectral calculations beyond 39 support points when a larger,
-  suitably validated generalized-eigenvalue backend becomes available.
+- [x] Broaden spectral calculations to 512 support points with a dedicated,
+  validated Reference-LAPACK QZ backend for normalized AAA arrowhead pencils.

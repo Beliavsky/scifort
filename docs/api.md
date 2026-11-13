@@ -7222,4 +7222,4 @@ status codes, solver differences, limits, and provenance.
 real/complex scalar sampled data, adaptive support selection, scalar/vector
 evaluation, poles, zeros, simple-pole residues, and Froissart cleanup.
 See the [AAA guide](interpolate_aaa.md) for controls, statuses, convergence,
-SciPy compatibility differences, and the current 39-support-point spectral limit.
+SciPy compatibility differences, and the 512-support-point spectral limit.

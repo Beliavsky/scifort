@@ -1,3 +1,78 @@
+## 2026-11-13 - Larger AAA arrowhead spectra
+
+`src/interpolate_aaa_spectrum.f90` adapts the following files from
+[Reference-LAPACK v3.12.1](https://github.com/Reference-LAPACK/lapack/tree/v3.12.1).
+The exact source and project license were inspected before adaptation.
+
+| Upstream file | Adapted routines/content | SHA-256 of inspected file |
+| --- | --- | --- |
+| `SRC/zhgeqz.f` | `ZHGEQZ` complex single-shift QZ | `8acad110608790e4348f69455f7cbed2f67a46b4a08bf8fb7c4a3e93fe14c6a4` |
+| `SRC/zlartg.f90` | Safe complex plane rotations | `d25bf2ce6839de8c73fd6825a5cad0e1c1e154fb6a20c05b91a539868732e5b4` |
+| `SRC/zrot.f` | Complex vector rotation | `1f0d5c47fc7c59dce2d8f57bf90cc1822c6489762cf51486052042350bcf4c59` |
+| `BLAS/SRC/zscal.f` | Complex vector scaling | `e510a73d828efce4525349524e3ff82ac911cbff7039e68f41a7fb3837cc14fa` |
+| `SRC/zladiv.f` | Scaled complex division wrapper | `4f7d0281958f53345cdd8d39a72be1a0f16fa71d0f152431d6c8fbe28f3dc28a` |
+| `SRC/dladiv.f` | `DLADIV`, `DLADIV1`, `DLADIV2` | `e3ee0a30d5b573425aba201c9d9d494c23849d6046a061c39b92094728ce7f5b` |
+| `SRC/la_constants.f90` | Safe-scaling constant definitions only | `1d9bdd0fad20e76f6c418b0d5405aa7a256d89cfe57eba2a36a9c301c5ce7d1b` |
+| `LICENSE` | Full retained license | `978539245c405775bf347b1256c36df4daf8b69a64b099e94b1d53742201621e` |
+
+Copyright (c) 1992-2023, University of Tennessee and the University of Tennessee
+Research Foundation; (c) 2000-2023, University of California Berkeley;
+(c) 2006-2023, University of Colorado Denver. All rights reserved. Applicable
+notices and NAG attribution remain in source, along with ZLARTG's credit to
+Weslley Pereira (2021) and Anderson's safe-scaling reference. Complete license
+conditions, patent disclaimer, and warranty disclaimer are retained verbatim
+in [`LICENSES/lapack-BSD-3-Clause.txt`](LICENSES/lapack-BSD-3-Clause.txt).
+The adapted file is marked `MIT AND BSD-3-Clause` for original SciFort wrappers
+and third-party kernels respectively. No linked LAPACK/BLAS package is required.
+
+The new backend is restricted to normalized AAA arrowhead pencils
+`A=[0,u;1,diag(s)]`, `B=diag(0,I)`, through 512 support points (pencil order
+513). Native Hessenberg reduction fixes the first coordinate, so all its
+Householder similarities commute with `B`; no separate generalized reduction
+is needed. `ZHGEQZ` is invoked only with eigenvalues requested and no Schur
+vectors. Existing public general-purpose QZ/eigenvalue/matrix-function routines
+and their size limits are unchanged.
+
+Significant modifications:
+
+- Convert fixed-form source to lowercase free-form, use SciFort's binary64
+  kind, explicit interfaces, `implicit none`, documented dummy intents, named
+  function results, and structured `do` loops while preserving jump labels.
+- Replace legacy double-specific intrinsics with kind-qualified standard
+  intrinsics and statement functions with private module functions.
+- Specialize private machine/option adapters to the internal binary64,
+  lowercase-option calls. Scaling constants follow inspected `la_constants`;
+  `INSTALL/dlamch.f` was also inspected for the E/S/O/B definitions.
+- Replace `ZLANHS` calls with direct Frobenius norms. The wrapper bounds support
+  coordinates/weights by two and count by 512, so these normalized matrix norms
+  cannot overflow. The full general-purpose norm routine is not imported.
+- Remove `XERBLA` printing; invalid calls return a code. Wrapper allocation,
+  input, convergence, and finite-output checks return explicit statuses.
+- Reuse SciFort's existing Hessenberg reducer without changing it. Retain
+  AAA's existing projective infinity filter, secular polishing/checks, physical
+  rescaling, and cleanup rules. Allocation failure maps to status 5, spectral
+  numerical failure to status 3, and support counts above 512 to status 4.
+- Track finite projective roots with an explicit logical mask rather than
+  NaN sentinels, including in optimized builds with exception traps enabled.
+
+The LAPACK `ZHGEQZ` reference is Moler and Stewart, "An Algorithm for
+Generalized Matrix Eigenvalue Problems", SIAM J. Numer. Anal. 10 (1973),
+241-256. `ZLARTG` cites Anderson, "Algorithm 978: Safe Scaling in the Level 1
+BLAS", ACM Trans. Math. Softw. 44 (2017),
+[DOI](https://doi.org/10.1145/3061665). The AAA algorithm and its original
+SciPy/Oxford adaptation remain attributed in the existing AAA entry below.
+
+Validation covers homogeneous finite/infinite spectra, clustered coordinates,
+degree cancellation, analytic roots through 512 supports, public real/complex
+spectra/residues, and actual large-representation cleanup. The full upstream
+LAPACK suite was not run; this wrapper supports a restricted pencil family,
+not the complete LAPACK interfaces. SciPy's independently compiled LAPACK
+provides numerical comparisons alongside analytic oracles. Tests and validation
+drivers/checkers are original MIT-licensed SciFort code. See the
+[validation record](validation/aaa_large_2026-11-13.md). No full upstream
+distribution, downloaded archive, binary artifact, dependency declaration,
+or C ABI is added.
+
 ## 2026-11-13 - Adaptive scattered spherical smoothing
 
 `src/interpolate_sphere_scattered_core.f90` adapts `fpsphe`, `fprank`,

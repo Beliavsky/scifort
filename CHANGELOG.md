@@ -1,3 +1,11 @@
+## 2026-11-13 - Larger AAA spectra
+
+- Raise the AAA pole/zero/residue/cleanup limit from 39 to 512 support points.
+- Adapt Reference-LAPACK's licensed complex QZ and supporting kernels for
+  normalized arrowhead pencils, reusing native Hessenberg reduction.
+- Validate larger real/complex approximations, actual cleanup removal,
+  clustered/degree-cancelled pencils, and analytic spectra through 512 supports.
+
 ## 2026-11-13 - Scattered spherical smoothing
 
 - Add `smooth_sphere_bivariate_spline` with weighted adaptive knot selection,
