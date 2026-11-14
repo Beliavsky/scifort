@@ -7242,6 +7242,17 @@ Nonclamped exterior knots and rank-deficient regularized fits use the
 explicit periodic endpoint constraints and documented dense-solver limits.
 Repeated interior knots remain invalid.
 
+### Native adaptive knot generation
+
+`generate_knots(x,y,w=...,xb=...,xe=...,k=...,s=...,nest=...,bc_type=...,status=...)`
+returns a `knot_generator_type`. Call `gen%next(t,done,status)` for successive
+full knot vectors. Scalar/shared-channel data, degrees 1-5, positive weights,
+nonperiodic/periodic selection, interpolation and soft stopping counts are
+supported within bounded dense-solver limits. Initialization and each step
+require status checks. See [adaptive knot generation](interpolate_generate_knots.md)
+for residual conventions, periodic differences and range limits. Existing
+automatic spline constructors are unchanged.
+
 ### Native scalar adaptive smoothing
 
 `make_splrep(x,y,w=...,xb=...,xe=...,k=...,s=...,t=...,nest=...,status=...)`

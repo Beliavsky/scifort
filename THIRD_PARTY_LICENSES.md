@@ -5,6 +5,15 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Adaptive knot generation (SciPy, BSD-3-Clause)
+
+`src/interpolate_generate_knots.f90` adapts selection and knot-placement logic
+from SciPy v1.18.0 `_fitpack_repro.py`, `_bsplines.py`, and `src/__fitpack.cc`.
+It retains Enthought / SciPy Developers attribution; the full terms are in
+[`LICENSES/scipy-generate-knots-BSD-3-Clause.txt`](LICENSES/scipy-generate-knots-BSD-3-Clause.txt).
+Native QR/SVD solves replace SciPy's solver calls. Exact source hashes,
+significant modifications, and validation distinctions are in provenance.
+
 ## AAA arrowhead spectra (Reference-LAPACK, BSD-3-Clause)
 
 `src/interpolate_aaa_spectrum.f90` adapts Reference-LAPACK v3.12.1's

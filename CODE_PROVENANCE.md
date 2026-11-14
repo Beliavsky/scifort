@@ -1,3 +1,48 @@
+## 2026-11-14 - Adaptive knot generator
+
+`src/interpolate_generate_knots.f90` adapts SciPy v1.18.0's
+`_generate_knots_impl` / `generate_knots` selection control flow,
+`_not_a_knot` / `_periodic_knots` knot conventions, and `_split` / `fpknot`
+residual-interval selection. Exact sources and the root BSD-3-Clause license
+were inspected before implementation:
+
+- [`scipy/interpolate/_fitpack_repro.py`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_fitpack_repro.py),
+  SHA-256 `82449ae292bb361675439b422cec6c084f9fbfa6519eabec06b1009c51a818bd`.
+- [`scipy/interpolate/_bsplines.py`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_bsplines.py),
+  SHA-256 `b099333d1dc57d0d4ad5300c04cd2767350048cac2b9dee464e40ab469510caa`.
+- [`scipy/interpolate/src/__fitpack.cc`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/src/__fitpack.cc),
+  SHA-256 `343055734b97271714f7cd7f8b62e27141eb5a1224058b38a3d47be81da0992e`.
+- [`LICENSE.txt`](https://github.com/scipy/scipy/blob/v1.18.0/LICENSE.txt),
+  SHA-256 `221e59f5e910fd7f94e44f0dac77436a11338c285c6346232e4a850a50da0e94`.
+
+Enthought and SciPy Developers copyright notices are retained in the source;
+the full upstream license is retained in
+[`LICENSES/scipy-generate-knots-BSD-3-Clause.txt`](LICENSES/scipy-generate-knots-BSD-3-Clause.txt).
+The combined source is marked `MIT AND BSD-3-Clause`; original SciFort state,
+normalization and solver-adapter code uses MIT. No new linked dependency,
+archive or binary is imported. Cached upstream source is build-only.
+
+Significant modifications are a native Fortran iterator state instead of a
+Python generator, scalar/shared-channel generic interfaces, bounded dense
+native QR/SVD residual solves, cyclic basis assembly, explicit finite/range
+checks and status cleanup, stricter site/weight validation, a documented
+periodic closure tolerance, and canonical periodic exterior knots refreshed
+after every insertion. The last modification intentionally differs from
+v1.18.0's stale within-batch/capacity-stop exteriors; exact periodic selection
+path parity is not claimed. The rank-aware fallback is a SciFort extension.
+The mathematical background is Dierckx, *Curve and Surface Fitting with
+Splines*, Oxford University Press, 1993, as cited by the adapted source.
+
+New tests and validation scripts are original MIT SciFort code. The checker
+executes hash-verified upstream Python selection functions only in validation
+and calls installed SciPy's interval selector. Nonperiodic sequences compare
+directly with SciPy 1.15.3. Periodic sequences compare with pinned v1.18.0
+control flow using an independent NumPy cyclic LSQ evaluator that refreshes
+the exteriors; stale final capacity exteriors are likewise canonicalized
+explicitly. This is not an unmodified SciPy 1.18 periodic oracle or a run of
+SciPy's upstream test suite. See the
+[validation record](validation/generate_knots_2026-11-14.md).
+
 ## 2026-11-14 - Periodic fixed-knot tuple least squares
 
 `src/interpolate_periodic_lsq.f90`, its tuple dispatch in

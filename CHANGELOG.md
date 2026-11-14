@@ -1,3 +1,12 @@
+## 2026-11-14 - Native adaptive knot generator
+
+- Add scalar/shared-channel `generate_knots` with an explicit iterator state,
+  degrees 1-5, weights, interpolation and nonperiodic/periodic refinement.
+- Support soft stopping counts and refresh periodic exterior knots at every
+  insertion; document differences from SciPy's periodic control flow.
+- Retain SciPy BSD attribution and add independent sequence/residual checks.
+- Keep constructor integration, C ABI and wrapper changes deferred.
+
 ## 2026-11-14 - Periodic fixed-knot tuple least squares
 
 - Add native `splrep` and `splprep` with `per=.true., task=-1`, degrees 1-5,

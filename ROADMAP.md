@@ -3517,3 +3517,19 @@ The user approved native periodic `task=-1` for scalar `splrep` and parametric
 - [x] Checked debug/optimized regressions and independent/SciPy comparisons.
 - [ ] `generate_knots`, modern automatic selection, soft capacities, and
   stateless alternatives to FITPACK continuation remain separate work.
+
+## 2026-11-14 -- Approved native adaptive knot generation
+
+The user approved native `generate_knots` following the periodic fixed-knot
+least-squares work. C ABI and wrappers remain deferred.
+
+- [x] Explicit scalar/shared-channel iterator state, degrees 1-5, positive
+  residual weights, interpolation and nonperiodic/periodic refinement.
+- [x] Soft generator stopping counts, canonical periodic exterior knots,
+  explicit size/range limits, and checked numerical validation.
+- [x] Retain exact upstream source/license attribution and document the
+  intentional periodic selection differences.
+- [ ] Integrate modern selection into `make_splrep` / `make_splprep` and their
+  soft-capacity behavior. Existing constructors still use their prior paths.
+- [ ] Repeated interior knots, larger dense problems and stateless alternatives
+  to FITPACK continuation remain separate work.

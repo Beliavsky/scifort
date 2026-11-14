@@ -6,6 +6,7 @@
 ! Akima (1970), and the modified Akima slope definition (Moler & Ionita).
 ! SciPy is used as a numerical test reference, not as implementation source.
 module scifort_interpolate
+    use scifort_interpolate_generate_knots, only: generate_knots,knot_generator_type
     use scifort_interpolate_sphere, only : lsq_sphere_bivariate_spline, &
         sphere_bivariate_spline_type, sphere_spline_success, sphere_spline_invalid_input, &
         sphere_spline_rank_deficient, sphere_spline_numerical_failure, sphere_spline_size_limit, &
@@ -59,6 +60,8 @@ module scifort_interpolate
         scattered_status_success, scattered_status_invalid_input, scattered_status_degenerate, delaunay_nd
     implicit none
     private
+
+    public :: generate_knots,knot_generator_type
 
     public :: lsq_sphere_bivariate_spline, sphere_bivariate_spline_type
     public :: sphere_spline_success, sphere_spline_invalid_input, sphere_spline_rank_deficient
