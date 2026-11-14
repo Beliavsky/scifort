@@ -58,7 +58,7 @@ The FITPACK relative residual tolerance is `0.001`. A sufficiently large
 target produces a weighted constant or constant vector.
 
 Optional `nest` ranges from `2*(k+1)` through `m+2*k` for periodic smoothing.
-It is a soft count within the native generator's 256-site/channel limits;
+It is a soft count within the native generator's 10,000-site and 256-channel limits;
 larger-input fallback retains a hard capacity. An infeasible final selected
 vector returns numerical status 3. See [modern selection](interpolate_modern_selection.md).
 For positive `s`, optional `t` supplies the full periodic knot vector and

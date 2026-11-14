@@ -12,6 +12,7 @@ module scifort_interpolate_curfit_core
     private
     public :: fitpack_smooth_curve, fitpack_smooth_parametric, fitpack_periodic_curve
     public :: fitpack_periodic_parametric
+    public :: fitpack_periodic_lsq
     integer, parameter :: max_order = 19, degree_5 = 5, ione = 1
     integer, parameter :: fitpack_ok = 0, fitpack_interpolating_ok = -1
     integer, parameter :: fitpack_leastsquares_ok = -2, fitpack_insufficient_storage = 1
@@ -19,6 +20,72 @@ module scifort_interpolate_curfit_core
     real(dp), parameter :: zero = 0.0_dp, one = 1.0_dp, half = 0.5_dp
     logical, parameter :: fp_true = .true., fp_false = .false.
 contains
+
+    subroutine fitpack_periodic_lsq(u,x,w,k,t,coeff,status)
+        implicit none
+        real(dp), intent(in) :: u(:) !! Normalized increasing sites, from zero to one.
+        real(dp), intent(in) :: x(:,:) !! Finite normalized coordinates; final row ignored.
+        real(dp), intent(in) :: w(:) !! Positive normalized active weights; final entry ignored.
+        integer, intent(in) :: k !! Degree one through five.
+        real(dp), intent(in) :: t(:) !! Canonical periodic full knots; independent count exceeds k.
+        real(dp), allocatable, intent(out) :: coeff(:,:) !! Unpadded cyclic coefficients on success.
+        integer, intent(out) :: status !! Zero success; three shape, rank or numerical failure.
+        real(dp), allocatable :: xx(:),ww(:),tt(:),c(:),fpint(:),z(:),q(:,:)
+        real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
+        integer, allocatable :: nrdata(:)
+        real(dp) :: fp
+        integer :: m,ndim,nest,n,ncc,ni,ncoef,info,ier,j
+        status=3
+        m=size(u)
+        ndim=size(x,2)
+        nest=size(t)
+        ni=nest-2*k-1
+        if (k<1 .or. k>5 .or. m<=k .or. ndim<1) return
+        if (size(x,1)/=m .or. size(w)/=m .or. ni<=k .or. ni>m-1) return
+        if (m>huge(m)/64 .or. nest>huge(m)/max(1,ndim)) return
+        if (ndim>huge(m)/m) return
+        if (.not.all(ieee_is_finite(u)) .or. .not.all(ieee_is_finite(t))) return
+        if (.not.all(ieee_is_finite(x(:m-1,:)))) return
+        if (.not.all(ieee_is_finite(w(:m-1)))) return
+        if (any(u(2:)<=u(:m-1)) .or. any(t(2:)<=t(:nest-1))) return
+        if (any(w(:m-1)<=zero)) return
+        if (u(1)/=zero .or. u(m)/=one) return
+        if (t(k+1)/=zero .or. t(nest-k)/=one) return
+        ncc=nest*ndim
+        allocate(xx(m*ndim),ww(m),tt(nest),c(ncc),fpint(nest),z(ncc),q(m,k+1), &
+            a1(nest,k+1),a2(nest,k),b(nest,k+2),g1(nest,k+2),g2(nest,k+1), &
+            nrdata(nest),stat=info)
+        if (info/=0) return
+        xx(:ndim*(m-1))=reshape(transpose(x(:m-1,:)),[ndim*(m-1)])
+        xx(ndim*(m-1)+1:)=xx(:ndim)
+        ww(:m-1)=w(:m-1)
+        ww(m)=ww(1)
+        tt=t
+        c=zero
+        fpint=zero
+        z=zero
+        q=zero
+        a1=zero
+        a2=zero
+        b=zero
+        g1=zero
+        g2=zero
+        nrdata=0
+        n=nest
+        fp=zero
+        ier=fitpack_ok
+        ! Task -1 returns after the existing rank-screened cyclic QR solve.
+        call fpclos(-1,ndim,m,u,m*ndim,xx,ww,k,zero,nest,0.001_dp,20,k+1,k+2,n,tt, &
+            ncc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier,fixed_knots=.true.)
+        if (ier>0 .or. .not.all(ieee_is_finite(c))) return
+        ncoef=n-k-1
+        allocate(coeff(ncoef,ndim),stat=info)
+        if (info/=0) return
+        do j=1,ndim
+            coeff(:,j)=c((j-1)*n+1:(j-1)*n+ncoef)
+        end do
+        status=0
+    end subroutine fitpack_periodic_lsq
 
     subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status,knot_capacity,full_knots)
         implicit none

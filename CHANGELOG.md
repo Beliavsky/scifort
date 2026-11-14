@@ -1,3 +1,13 @@
+## 2026-11-14 - Banded large-input modern spline selection
+
+- Extend native knot generation and modern constructor soft counts from 256
+  to 10,000 sites, retaining the 256-channel limit and public signatures.
+- Reuse nonperiodic banded QR and the attributed periodic FITPACK cyclic QR;
+  keep small-problem behavior and bound dense rank-deficient fallbacks.
+- Check large scalar/shared fits, full selected sequences, feasible soft counts,
+  cyclic rank failures and a 9,999-independent-coefficient periodic solve.
+- Document storage estimates, numerical limits and remaining larger-input gaps.
+
 ## 2026-11-14 - Modern constructor selection and soft knot counts
 
 - Use native `generate_knots` in automatic `make_splrep` / `make_splprep`

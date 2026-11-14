@@ -11,7 +11,10 @@ do not by themselves create a third-party source-code dependency.
 from SciPy v1.18.0 `_fitpack_repro.py`, `_bsplines.py`, and `src/__fitpack.cc`.
 It retains Enthought / SciPy Developers attribution; the full terms are in
 [`LICENSES/scipy-generate-knots-BSD-3-Clause.txt`](LICENSES/scipy-generate-knots-BSD-3-Clause.txt).
-Native QR/SVD solves replace SciPy's solver calls. Exact source hashes,
+Existing native banded QR and bounded QR/SVD solves replace SciPy's solver
+calls; large periodic selection reuses the already attributed perazz/FITPACK
+cyclic QR in `src/interpolate_curfit_core.f90`. Its BSD terms remain in
+`LICENSES/perazz-fitpack-BSD-3-Clause.txt`. Exact source hashes,
 significant modifications, and validation distinctions are in provenance.
 
 ## AAA arrowhead spectra (Reference-LAPACK, BSD-3-Clause)

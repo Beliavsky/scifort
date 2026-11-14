@@ -1,3 +1,33 @@
+## 2026-11-14 - Banded large-input modern selection
+
+`src/interpolate_generate_knots.f90` retains its SciPy BSD attribution and
+selection logic recorded below. Its larger residual solves now compose the
+existing original SciFort nonperiodic `make_lsq_spline` banded QR and a new
+internal adapter to the existing attributed periodic `fpclos` task -1 QR.
+`src/interpolate_fitpack_compat.f90` raises only the modern dispatch site limit.
+Small inputs retain their existing dense QR/SVD behavior. Dense rank fallback
+is bounded by 256 independent coefficients and one million active design
+entries; larger failures are explicit rather than allocating a dense matrix.
+
+The exact upstream perazz/FITPACK `fpclos` task -1 path and BSD license were
+inspected before reuse: commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
+[source](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+SHA-256 `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+The retained full BSD terms are in `LICENSES/perazz-fitpack-BSD-3-Clause.txt`;
+upstream license SHA-256 is
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+No new upstream kernel is imported or algorithmically modified. The adapter
+in `src/interpolate_curfit_core.f90` validates normalized inputs, uses the
+existing native rank screen before cyclic back substitution, and unpacks
+coefficients. The file keeps Federico Perini's copyright and BSD notice.
+
+New tests and `validation/check_large_selection.py` are original MIT work.
+The checker reuses the hash-verified SciPy control flow recorded below,
+substitutes independent SciPy banded QR / sparse LSQR residuals, and checks
+smoothing stationarity with sparse derivative-jump matrices. It does not
+claim unmodified upstream periodic selection parity or measured process RSS.
+No new runtime dependency or license text is introduced.
+
 ## 2026-11-14 - Modern constructor integration
 
 The `automatic_fit` dispatch added to `src/interpolate_fitpack_compat.f90`

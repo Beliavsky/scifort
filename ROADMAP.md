@@ -3549,3 +3549,18 @@ constructors. C ABI and wrappers remain deferred.
   residual-aware SciPy comparisons and independent smoothing equations.
 - [ ] Larger modern-selection problems, repeated interiors, exact periodic
   selection/root-iteration parity and stateless continuation remain gaps.
+
+## 2026-11-14 -- Approved banded large-input modern selection
+
+The user approved extending modern selection beyond 256 sites with banded
+least squares, thousands-of-samples checks and feasible soft counts.
+
+- [x] Reuse existing nonperiodic and attributed periodic banded QR kernels.
+- [x] Support modern generation and constructor soft counts through 10,000
+  sites and 256 channels, with bounded dense rank fallback.
+- [x] Test scalar/shared periodic/nonperiodic fits, large interpolation knot
+  vectors and a 9,999-independent-coefficient cyclic solve without dense design.
+- [ ] Modern selection above these limits, repeated interior knots, exact
+  periodic/root-iteration parity and stateless continuation remain gaps.
+
+C ABI and wrappers remain deferred. See [large selection](docs/interpolate_large_selection.md).

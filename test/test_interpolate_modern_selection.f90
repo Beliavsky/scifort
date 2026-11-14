@@ -6,7 +6,7 @@ program test_interpolate_modern_selection
         bspline_interpolator_type,bspline_array_interpolator_type,splrep,splprep,splev, &
         fitpack_tck_type,fitpack_parametric_tck_type
     implicit none
-    integer, parameter :: m=41,large=301
+    integer, parameter :: m=41,large=10001
     type(bspline_interpolator_type) :: scalar,polynomial,source
     type(bspline_array_interpolator_type) :: curve
     type(fitpack_tck_type) :: legacy
@@ -87,15 +87,15 @@ program test_interpolate_modern_selection
     xl(:,3)=-0.5_dp*yl
     do j=0,1
         if (j==0) then
-            scalar=make_splrep(ul,yl,s=0.2_dp,status=code)
-            legacy=splrep(ul,yl,s=0.2_dp)
-            curve=make_splprep(xl,u=ul,s=0.2_dp,status=code,parameters=p)
-            legacy_curve=splprep(xl,u=ul,s=0.2_dp)
+            scalar=make_splrep(ul,yl,s=1e6_dp,status=code)
+            legacy=splrep(ul,yl,s=1e6_dp)
+            curve=make_splprep(xl,u=ul,s=1e6_dp,status=code,parameters=p)
+            legacy_curve=splprep(xl,u=ul,s=1e6_dp)
         else
-            scalar=make_splrep(ul,yl,s=1000.0_dp,bc_type='periodic',status=code)
-            legacy=splrep(ul,yl,s=1000.0_dp,per=.true.)
-            curve=make_splprep(xl,u=ul,s=1000.0_dp,bc_type='periodic',status=code,parameters=p)
-            legacy_curve=splprep(xl,u=ul,s=1000.0_dp,per=.true.)
+            scalar=make_splrep(ul,yl,s=1e6_dp,bc_type='periodic',status=code)
+            legacy=splrep(ul,yl,s=1e6_dp,per=.true.)
+            curve=make_splprep(xl,u=ul,s=1e6_dp,bc_type='periodic',status=code,parameters=p)
+            legacy_curve=splprep(xl,u=ul,s=1e6_dp,per=.true.)
         end if
         call require(code==0 .and. curve%valid() .and. scalar%valid(),'large-input compatibility')
         call require(maxval(abs(scalar%evaluate(ul)-splev(ul,legacy)))<2e-12_dp,'large scalar legacy path')

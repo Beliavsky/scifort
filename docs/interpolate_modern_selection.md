@@ -1,7 +1,7 @@
 # Modern automatic selection in spline constructors
 
 For positive `s` with no supplied `t`, `make_splrep` and `make_splprep` now
-use native [`generate_knots`](interpolate_generate_knots.md) for up to 256
+use native [`generate_knots`](interpolate_generate_knots.md) for up to 10,000
 sites and 256 channels. The constructors consume the sequence, retain its
 last full knot vector, then run the existing derivative-jump smoothing solve
 on those knots. This covers scalar/shared-channel, nonperiodic/periodic fits
@@ -34,8 +34,8 @@ SciFort does not turn an infeasible bounded-error request into a successful
 approximation with an unmet residual. SciPy can instead return a spline
 after a root-search warning in such cases; failure behavior is not identical.
 
-For larger inputs, the established banded automatic path remains available
-to preserve prior coverage. That path retains its earlier hard-capacity
+Above 10,000 sites or 256 channels, the established banded automatic path
+remains available to preserve prior coverage. That path retains its earlier hard-capacity
 `nest` behavior and legacy knot selection. Modern selection and soft-count
 coverage for those larger problems remain gaps. No fallback to legacy
 selection hides a range or numerical failure for an input within the modern
@@ -76,6 +76,9 @@ differences in high derivatives or extrapolation are not a claim of strict
 numerical parity. See the
 [validation record](../validation/modern_selection_2026-11-14.md).
 
-Repeated interior knots, larger modern-selection problems, broader ill-
+See [banded large-input selection](interpolate_large_selection.md) for storage,
+rank fallback and checks through 10,000 sites.
+
+Repeated interior knots, modern selection above those limits, broader ill-
 conditioned behavior, exact root-iteration parity, C ABI and wrappers remain
 outside this addition.

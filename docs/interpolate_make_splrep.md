@@ -68,7 +68,9 @@ conditioning for all accepted problems.
 
 ## Compatibility and remaining gaps
 
-Automatic selection uses the modern generator for at most 256 sites/channels.
+Automatic selection uses the modern generator for at most 10,000 sites and 256 channels.
+See [large-input selection](interpolate_large_selection.md) for banded storage
+and bounded rank fallback.
 Nonperiodic selected knots match the independent SciPy comparison cases.
 Periodic canonicalization and root-stopping differences remain documented;
 matching knots do not promise coefficients or higher derivatives that match

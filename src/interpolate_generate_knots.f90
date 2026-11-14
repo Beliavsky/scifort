@@ -6,7 +6,9 @@
 ! LICENSES/scipy-generate-knots-BSD-3-Clause.txt.
 module scifort_interpolate_generate_knots
     use scifort_kinds, only: dp
-    use scifort_interpolate_bspline, only: bspline_design_matrix
+    use scifort_interpolate_bspline, only: bspline_design_matrix,make_lsq_spline, &
+        bspline,bspline_array_interpolator_type
+    use scifort_interpolate_curfit_core, only: fitpack_periodic_lsq
     use scifort_linalg_qr, only: lstsq
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     implicit none
@@ -29,7 +31,7 @@ module scifort_interpolate_generate_knots
 contains
     function generate_scalar(x,y,w,xb,xe,k,s,nest,bc_type,status) result(gen)
         implicit none
-        real(dp), intent(in) :: x(:) !! Finite strictly increasing sample sites, at most 256.
+        real(dp), intent(in) :: x(:) !! Finite strictly increasing sites, at most 10000.
         real(dp), intent(in) :: y(:) !! Finite observations, one per sample site.
         real(dp), intent(in), optional :: w(:) !! Positive residual weights, default one.
         real(dp), intent(in), optional :: xb,xe !! Enclosing bounds, default first/last site.
@@ -44,7 +46,7 @@ contains
 
     function generate_channels(x,y,w,xb,xe,k,s,nest,bc_type,status) result(gen)
         implicit none
-        real(dp), intent(in) :: x(:) !! Finite strictly increasing sites, at most 256.
+        real(dp), intent(in) :: x(:) !! Finite strictly increasing sites, at most 10000.
         real(dp), intent(in) :: y(:,:) !! Finite observations (sites, channels), at most 256 channels.
         real(dp), intent(in), optional :: w(:) !! Positive residual weights, default one.
         real(dp), intent(in), optional :: xb,xe !! Enclosing bounds; periodic bounds equal endpoints.
@@ -105,7 +107,7 @@ contains
             gen%nest=nest
         end if
         code=3
-        if (m>256 .or. ndim>256) goto 900
+        if (m>10000 .or. ndim>256) goto 900
         if (max(abs(left),abs(right))>huge(1.0_dp)/real(4*(gen%k+1),dp)) goto 900
         gen%origin=left
         gen%span=right-left
@@ -239,6 +241,49 @@ contains
         real(dp), allocatable, intent(out) :: residuals(:) !! Weighted squared errors by sample.
         real(dp), intent(out) :: fp !! Sum over samples and channels; periodic last row ignored.
         integer, intent(out) :: status !! 0 success; 3 numerical failure.
+        type(bspline_array_interpolator_type) :: model
+        real(dp), allocatable :: tt(:),coeff(:,:),values(:,:)
+        integer :: m,ni,info
+        m=size(gen%x)
+        ni=size(gen%t)-gen%k-1
+        if (gen%periodic) ni=ni-gen%k
+        ! Preserve small-problem minimum-norm behavior and short coefficient cycles.
+        if (m<=256 .or. (gen%periodic .and. ni<=gen%k)) then
+            call dense_residuals(gen,residuals,fp,status)
+            return
+        end if
+        tt=(gen%t-gen%origin)/gen%span
+        if (gen%periodic) then
+            call fitpack_periodic_lsq(gen%u,gen%y,gen%w,gen%k,tt,coeff,info)
+            if (info==0) model=bspline(tt,coeff,gen%k,status=info)
+            m=m-1
+        else
+            model=make_lsq_spline(gen%u,gen%y,tt,k=gen%k,w=gen%w,status=info)
+        end if
+        if (info/=0) then
+            call dense_residuals(gen,residuals,fp,status)
+            return
+        end if
+        status=3
+        fp=0.0_dp
+        coeff=model%coefficients()
+        if (maxval(abs(coeff))>1.0e100_dp) return
+        values=model%evaluate(gen%u(:m))
+        if (.not.all(ieee_is_finite(values))) return
+        allocate(residuals(size(gen%x)))
+        residuals=0.0_dp
+        residuals(:m)=sum(((values-gen%y(:m,:))*spread(gen%w(:m),2,size(gen%y,2)))**2,dim=2)
+        fp=sum(residuals)
+        if (.not.ieee_is_finite(fp)) return
+        status=0
+    end subroutine fit_residuals
+
+    subroutine dense_residuals(gen,residuals,fp,status)
+        implicit none
+        class(knot_generator_type), intent(in) :: gen !! Validated normalized samples and full knots.
+        real(dp), allocatable, intent(out) :: residuals(:) !! Weighted squared sample residuals.
+        real(dp), intent(out) :: fp !! Shared weighted residual, ignoring the periodic final row.
+        integer, intent(out) :: status !! Zero success; three rank, size or numerical failure.
         real(dp), allocatable :: a(:,:),b(:,:),c(:,:),basis(:,:),rhs(:,:),error(:,:)
         integer :: nc,ni,m,j,info
         status=3
@@ -248,6 +293,7 @@ contains
         nc=size(gen%t)-gen%k-1
         ni=nc
         if (gen%periodic) ni=nc-gen%k
+        if (ni>256 .or. m>1000000/max(1,ni)) return
         basis=bspline_design_matrix(gen%u(:m),(gen%t-gen%origin)/gen%span,gen%k,info)
         if (info/=0) return
         allocate(a(m,ni),c(ni,size(gen%y,2)))
@@ -267,7 +313,7 @@ contains
         fp=sum(residuals)
         if (.not.ieee_is_finite(fp)) return
         status=0
-    end subroutine fit_residuals
+    end subroutine dense_residuals
 
     subroutine insert_residual_knot(gen,residuals,status)
         implicit none

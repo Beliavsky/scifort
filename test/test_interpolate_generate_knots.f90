@@ -127,7 +127,7 @@ program test_interpolate_generate_knots
     end do
     call empty%next(t,done,code)
     call require(code==1 .and. done .and. size(t)==0,'default state rejected')
-    gen=generate_knots([(real(i,dp),i=1,257)],[(real(i,dp),i=1,257)],status=code)
+    gen=generate_knots([(real(i,dp),i=1,10001)],[(real(i,dp),i=1,10001)],status=code)
     call require(code==3,'sample size limit')
     gen=generate_knots(x,spread(y,2,257),status=code)
     call require(code==3,'channel size limit')

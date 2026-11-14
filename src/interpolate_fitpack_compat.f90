@@ -335,7 +335,7 @@ contains
         is_scalar=.false.
         if (present(scalar)) is_scalar=scalar
         ! Retain the established banded large-input contract beyond generator limits.
-        if (size(u)>256 .or. size(x,2)>256) then
+        if (size(u)>10000 .or. size(x,2)>256) then
             if (periodic) then
                 if (is_scalar) then
                     call fitpack_periodic_curve(u,x(:,1),w,k,s,knots,c,code,knot_capacity=nest)

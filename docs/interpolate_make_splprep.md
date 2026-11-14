@@ -86,9 +86,10 @@ this avoids overflowing intermediate basis arithmetic on subnormal intervals.
 
 ## Compatibility limits
 
-Automatic smoothing now uses native `generate_knots` for at most 256 sites
+Automatic smoothing now uses native `generate_knots` for at most 10,000 sites
 and 256 channels, followed by the existing fixed-knot solver. Larger inputs
-retain the licensed legacy banded automatic path. Root-search
+retain the licensed legacy banded automatic path. See
+[large-input selection](interpolate_large_selection.md) for storage and rank limits. Root-search
 initialization can differ from modern SciPy; the existing fixed-knot mode
 uses reciprocal-mean initialization as in the scalar solver.
 Residual tolerances can still produce differences in coefficients and

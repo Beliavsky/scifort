@@ -101,13 +101,14 @@ case with no interior knots is not accepted. See
 
 The selection control flow and knot conventions adapt the exact SciPy
 v1.18.0 implementation under BSD-3-Clause. Native least-squares evaluation
-uses SciFort QR/SVD. Nonperiodic full sequences are independently compared
-with SciPy 1.15.3; periodic checks use pinned v1.18.0 selection control flow
-and an independent NumPy cyclic residual evaluator.
+uses existing nonperiodic banded QR and the attributed periodic FITPACK QR
+for larger fits, with bounded native QR/SVD fallbacks. Nonperiodic full
+sequences are independently compared with SciPy 1.15.3; periodic checks use pinned v1.18.0 selection control flow
+and independent NumPy or sparse LSQR cyclic residual evaluators.
 
 Intentional differences and limits:
 
-- Strictly increasing sites, positive weights, degrees 1-5, at most 256
+- Strictly increasing sites, positive weights, degrees 1-5, at most 10,000
   sites and 256 channels. SciPy also admits some zero-weight and repeated-site
   cases. Those are not supported here.
 - Periodic closure uses the explicit tolerance above, rather than NumPy's
@@ -117,7 +118,10 @@ Intentional differences and limits:
   and can return stale exteriors at a capacity stop. Periodic selection paths
   can therefore differ; exact upstream periodic sequence parity is not claimed.
 - A minimum-norm QR/SVD fallback for rank-deficient intermediate fits is a
-  **SciFort extension**. Matching SciPy failure behavior is not promised.
+  **SciFort extension**. It is retained for at most 256 independent
+  coefficients and one million active sample-by-coefficient entries.
+  Larger rank failures return status 3 without an unbounded dense allocation.
+  Matching SciPy failure behavior is not promised.
 - Sites, data, weights and the target are normalized for solving. A physical
   interval must be at least `tiny(dp)`; bounds need headroom of
   `huge(dp)/(4*(k+1))`. Normalized adjacent sites must differ by at least
@@ -138,5 +142,6 @@ vector, or normal exhaustion as distinguished by `done`.
 `make_splrep` and `make_splprep` now use this generator for automatic smoothing
 within its size limits, followed by their existing fixed-knot smoothing solve.
 See [constructor integration and soft counts](interpolate_modern_selection.md)
-for larger-input fallback and infeasible-target behavior. C ABI and wrappers remain deferred. See the
-[validation record](../validation/generate_knots_2026-11-14.md).
+for larger-input fallback and infeasible-target behavior. See also
+[banded large-input selection](interpolate_large_selection.md). C ABI and
+wrappers remain deferred. See the [validation record](../validation/generate_knots_2026-11-14.md).

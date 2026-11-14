@@ -7248,7 +7248,9 @@ Repeated interior knots remain invalid.
 returns a `knot_generator_type`. Call `gen%next(t,done,status)` for successive
 full knot vectors. Scalar/shared-channel data, degrees 1-5, positive weights,
 nonperiodic/periodic selection, interpolation and soft stopping counts are
-supported within bounded dense-solver limits. Initialization and each step
+supported through 10,000 sites and 256 channels using banded QR and bounded
+dense rank fallback. See [large-input selection](interpolate_large_selection.md).
+Initialization and each step
 require status checks. See [adaptive knot generation](interpolate_generate_knots.md)
 for residual conventions, periodic differences and range limits. Both modern
 constructors now use it within these limits; see
