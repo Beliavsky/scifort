@@ -93,7 +93,7 @@ def run_test(flags, seed):
     with tempfile.TemporaryDirectory(prefix='scifort_grid_') as td:
         tmp = Path(td)
         sources = [ROOT/'src/kinds.f90', ROOT/'src/interpolate_bspline.f90',ROOT/'src/interpolate_regular_grid.f90',
-                   ROOT/'src/interpolate_piecewise.f90', ROOT/'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT/'src/interpolate_kdtree.f90', ROOT/'src/interpolate_rbf.f90', ROOT/'src/interpolate_legacy.f90', ROOT/'src/interpolate_scattered.f90', ROOT/'src/interpolate_clough_tocher.f90', ROOT/'src/interpolate_fitpack_bivariate.f90', ROOT/'src/interpolate_fitpack_compat.f90', ROOT/'src/interpolate.f90',
+                   ROOT/'src/interpolate_piecewise.f90', ROOT/'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT/'src/interpolate_kdtree.f90', ROOT/'src/interpolate_rbf.f90', ROOT/'src/interpolate_legacy.f90', ROOT/'src/interpolate_scattered.f90', ROOT/'src/interpolate_clough_tocher.f90', ROOT/'src/interpolate_fitpack_bivariate.f90', ROOT/'src/interpolate_curfit_core.f90', ROOT/'src/interpolate_fitpack_compat.f90', ROOT/'src/interpolate.f90',
                    ROOT/'tools/interpolate_reference/regular_grid_driver.f90']
         compiler = os.environ.get('FC', 'gfortran')
         cmd = [compiler, '-std=f2018', *flags, '-J'+str(tmp), '-I'+str(tmp),

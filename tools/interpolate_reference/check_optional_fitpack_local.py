@@ -38,7 +38,7 @@ TEST_MODULES = (
 SCIFORT_SOURCES = (
     ROOT / 'src/kinds.f90', ROOT / 'src/interpolate_bspline.f90',
     ROOT / 'src/interpolate_fitpack_bivariate.f90',
-    ROOT / 'src/interpolate_fitpack_compat.f90',
+    ROOT / 'src/interpolate_curfit_core.f90', ROOT / 'src/interpolate_fitpack_compat.f90',
     ROOT / 'optional/fitpack_backend/src/scifort_optional_fitpack.f90',
 )
 

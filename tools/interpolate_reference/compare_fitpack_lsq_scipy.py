@@ -14,7 +14,7 @@ import numpy as np
 from scipy.interpolate import LSQUnivariateSpline, InterpolatedUnivariateSpline
 
 ROOT=Path(__file__).resolve().parents[2]
-SOURCES=('kinds','interpolate_piecewise','interpolate_bspline','interpolate_fitpack_bivariate','interpolate_fitpack_compat','interpolate_smoothing',
+SOURCES=('kinds','interpolate_piecewise','interpolate_bspline','interpolate_fitpack_bivariate','interpolate_curfit_core', 'interpolate_fitpack_compat','interpolate_smoothing',
          'interpolate_regular_grid','interpolate_barycentric','interpolate_global',
          'interpolate_kdtree','interpolate_rbf','interpolate_legacy',
          'interpolate_scattered','interpolate_clough_tocher','interpolate')

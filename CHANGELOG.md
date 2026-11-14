@@ -1,3 +1,11 @@
+## 2026-11-13 - Native scalar automatic-knot smoothing
+
+- Add dependency-free `splrep(task=0,s>0)` for degrees 1-5, positive observation
+  weights, and enclosing support bounds, using the licensed FITPACK solver.
+- Preserve interpolation, fixed-knot fitting, default smoothing, and status names.
+- Add scaling and range checks, achieved-residual verification, native tests,
+  and comparisons with SciPy and the pinned original Fortran implementation.
+
 ## 2026-11-13 - Larger AAA spectra
 
 - Raise the AAA pole/zero/residue/cleanup limit from 39 to 512 support points.

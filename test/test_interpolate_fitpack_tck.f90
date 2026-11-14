@@ -3,7 +3,7 @@ program test_interpolate_fitpack_tck
     use scifort_kinds, only : dp
     use scifort_interpolate, only : fitpack_tck_type, splrep, splev, splint, &
         splder, splantider, spalde, fitpack_tck_success, &
-        fitpack_tck_unsupported_smoothing, fitpack_tck_out_of_bounds
+        fitpack_tck_out_of_bounds
     implicit none
     integer, parameter :: n = 14
     real(dp) :: x(n), y(n), w(n), d, val, expected
@@ -48,7 +48,7 @@ program test_interpolate_fitpack_tck
     if (status /= 0) error stop 'fixed-knot LSQ'
     if (maxval(abs(splev(x,lsq)-y)) > 1.0e-10_dp) error stop 'LSQ cubic reproduction'
     lsq=splrep(x,y,s=1.0_dp,status=status)
-    if (status /= fitpack_tck_unsupported_smoothing) error stop 'positive smoothing must be rejected'
-    if (lsq%valid()) error stop 'invalid spline should not be initialized'
+    if (status /= 0 .or. .not. lsq%valid()) error stop 'native positive smoothing'
+    if (size(lsq%t) /= 8) error stop 'polynomial smoothing limit'
     print *, 'FITPACK TCK compatibility PASS'
 end program test_interpolate_fitpack_tck

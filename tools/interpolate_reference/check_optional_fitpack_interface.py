@@ -189,7 +189,7 @@ def main():
         compiler=['gfortran','-std=f2018','-ffree-line-length-none','-O0','-g','-fcheck=all']
         sources=(ROOT/'src/kinds.f90',ROOT/'src/interpolate_bspline.f90',
                  ROOT/'src/interpolate_fitpack_bivariate.f90',
-                 ROOT/'src/interpolate_fitpack_compat.f90',work/'fitpack_mock.f90',
+                 ROOT/'src/interpolate_curfit_core.f90', ROOT/'src/interpolate_fitpack_compat.f90',work/'fitpack_mock.f90',
                  ROOT/'optional/fitpack_backend/src/scifort_optional_fitpack.f90')
         for i,source in enumerate(sources):
             cmd([*compiler,'-J'+str(work),'-I'+str(work),'-c',str(source),

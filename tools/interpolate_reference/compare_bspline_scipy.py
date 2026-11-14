@@ -177,7 +177,7 @@ def test_build(flags, seed):
     with tempfile.TemporaryDirectory(prefix='scifort_bspline_') as td:
         tmp=Path(td)
         sources=[ROOT/'src/kinds.f90',ROOT/'src/interpolate_bspline.f90',
-                 ROOT/'src/interpolate_regular_grid.f90',ROOT/'src/interpolate_piecewise.f90', ROOT/'src/interpolate_smoothing.f90', ROOT/'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT/'src/interpolate_kdtree.f90', ROOT/'src/interpolate_rbf.f90', ROOT/'src/interpolate_legacy.f90', ROOT/'src/interpolate_scattered.f90', ROOT/'src/interpolate_clough_tocher.f90', ROOT/'src/interpolate_fitpack_bivariate.f90', ROOT/'src/interpolate_fitpack_compat.f90', ROOT/'src/interpolate.f90',
+                 ROOT/'src/interpolate_regular_grid.f90',ROOT/'src/interpolate_piecewise.f90', ROOT/'src/interpolate_smoothing.f90', ROOT/'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT/'src/interpolate_kdtree.f90', ROOT/'src/interpolate_rbf.f90', ROOT/'src/interpolate_legacy.f90', ROOT/'src/interpolate_scattered.f90', ROOT/'src/interpolate_clough_tocher.f90', ROOT/'src/interpolate_fitpack_bivariate.f90', ROOT/'src/interpolate_curfit_core.f90', ROOT/'src/interpolate_fitpack_compat.f90', ROOT/'src/interpolate.f90',
                  ROOT/'tools/interpolate_reference/bspline_driver.f90']
         cmd=[os.environ.get('FC','gfortran'),'-std=f2018',*flags,
              '-J'+str(tmp),'-I'+str(tmp),*map(str,sources),'-o',str(tmp/'test_bspline')]

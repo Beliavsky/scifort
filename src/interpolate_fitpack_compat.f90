@@ -2,12 +2,11 @@
 ! Copyright (c) 2026 SciFort contributors
 !
 ! Dependency-free FITPACK TCK compatibility layer: spline representation,
-! s=0 interpolation or fixed-interior-knot LSQ, evaluation, calculus.
-! Automatic knot selection and positive smoothing target s are delegated to
-! the optional perazz/fitpack backend, not silently approximated here.
+! Interpolation, native adaptive scalar smoothing, fixed-knot LSQ and calculus.
 module scifort_interpolate_fitpack_compat
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, ieee_quiet_nan
     use scifort_kinds, only : dp
+    use scifort_interpolate_curfit_core, only : fitpack_smooth_curve
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline, &
         bspline_status_success
@@ -283,21 +282,21 @@ contains
         tck%k = s%degree()
     end function pack_tck
 
-    ! Task 0: exact interpolation at s=0. Task -1: specified knots and LSQ.
-    ! FITPACK automatic knot selection for s>0 is intentionally unsupported.
+    ! Task 0: interpolation at s=0 or automatic-knot smoothing at s>0.
+    ! Task -1: specified knots and LSQ.
     function splrep(x,y,w,k,s,task,t,bbox,status) result(tck)
         real(dp), intent(in) :: x(:) !! increasing sample abscissae
         real(dp), intent(in) :: y(:) !! scalar sample values
         real(dp), intent(in), optional :: w(:) !! positive FITPACK residual multipliers
         integer, intent(in), optional :: k !! spline degree 1..5 (default 3)
         real(dp), intent(in), optional :: s !! weighted residual target (s=0 for interpolation)
-        integer, intent(in), optional :: task !! 0 interpolation, -1 fixed knots LSQ
+        integer, intent(in), optional :: task !! 0 interpolation/smoothing, -1 fixed knots LSQ
         real(dp), intent(in), optional :: t(:) !! interior knots when task=-1
         real(dp), intent(in), optional :: bbox(:) !! left and right support bounds
         integer, intent(out), optional :: status !! success, invalid, unsupported, singular
         type(fitpack_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
-        real(dp) :: target
+        real(dp) :: target, bounds(2)
         integer :: deg, mode, code
         deg = 3
         if (present(k)) deg = k
@@ -310,15 +309,25 @@ contains
         if (any(x(2:) <= x(:size(x)-1))) goto 900
         if (present(w)) then
             if (size(w) /= size(x)) goto 900
-            if (.not. all(ieee_is_finite(w)) .or. any(w <= 0.0_dp)) goto 900
+            if (.not. all(ieee_is_finite(w))) goto 900
+            if (any(w <= 0.0_dp)) goto 900
         end if
         target = 0.0_dp
         if (present(s)) target = s
-        if (.not. ieee_is_finite(target) .or. target < 0.0_dp) goto 900
+        if (.not. ieee_is_finite(target)) goto 900
+        if (target < 0.0_dp) goto 900
+        bounds = [x(1),x(size(x))]
+        if (present(bbox)) then
+            if (size(bbox) /= 2) goto 900
+            if (.not. all(ieee_is_finite(bbox))) goto 900
+            if (bbox(1) > x(1) .or. bbox(2) < x(size(x))) goto 900
+            bounds = bbox
+        end if
         if (mode == 0) then
             if (present(t)) goto 900
             if (target > 0.0_dp) then
-                code = fitpack_tck_unsupported_smoothing
+                call fitpack_smooth_curve(x,y,w,deg,target,bounds,tck%t,tck%c,code)
+                if (code == 0) tck%k = deg
                 goto 900
             end if
             if (present(bbox)) then

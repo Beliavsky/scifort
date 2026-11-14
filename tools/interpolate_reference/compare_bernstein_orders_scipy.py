@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCES = [
     'src/kinds.f90', 'src/interpolate_piecewise.f90',
     'src/interpolate_bspline.f90', 'src/interpolate_regular_grid.f90',
-    'src/interpolate_barycentric.f90', 'src/interpolate_global.f90', 'src/interpolate_kdtree.f90', 'src/interpolate_rbf.f90', 'src/interpolate_legacy.f90', 'src/interpolate_scattered.f90', 'src/interpolate_clough_tocher.f90', 'src/interpolate_fitpack_bivariate.f90', 'src/interpolate_fitpack_compat.f90', 'src/interpolate.f90',
+    'src/interpolate_barycentric.f90', 'src/interpolate_global.f90', 'src/interpolate_kdtree.f90', 'src/interpolate_rbf.f90', 'src/interpolate_legacy.f90', 'src/interpolate_scattered.f90', 'src/interpolate_clough_tocher.f90', 'src/interpolate_fitpack_bivariate.f90', 'src/interpolate_curfit_core.f90', 'src/interpolate_fitpack_compat.f90', 'src/interpolate.f90',
 ]
 
 

@@ -71,7 +71,7 @@ def cases(seed: int):
 def run(build_dir: Path, flags: list[str], *, seed: int) -> None:
     build_dir.mkdir(parents=True, exist_ok=True)
     compiler = os.environ.get('FC', 'gfortran')
-    sources = (ROOT / 'src/kinds.f90', ROOT / 'src/interpolate_bspline.f90', ROOT / 'src/interpolate_regular_grid.f90', ROOT/'src/interpolate_piecewise.f90', ROOT / 'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT / 'src/interpolate_kdtree.f90', ROOT / 'src/interpolate_rbf.f90', ROOT / 'src/interpolate_legacy.f90', ROOT / 'src/interpolate_scattered.f90', ROOT / 'src/interpolate_clough_tocher.f90', ROOT / 'src/interpolate_fitpack_bivariate.f90', ROOT / 'src/interpolate_fitpack_compat.f90', ROOT / 'src/interpolate.f90',
+    sources = (ROOT / 'src/kinds.f90', ROOT / 'src/interpolate_bspline.f90', ROOT / 'src/interpolate_regular_grid.f90', ROOT/'src/interpolate_piecewise.f90', ROOT / 'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT / 'src/interpolate_kdtree.f90', ROOT / 'src/interpolate_rbf.f90', ROOT / 'src/interpolate_legacy.f90', ROOT / 'src/interpolate_scattered.f90', ROOT / 'src/interpolate_clough_tocher.f90', ROOT / 'src/interpolate_fitpack_bivariate.f90', ROOT / 'src/interpolate_curfit_core.f90', ROOT / 'src/interpolate_fitpack_compat.f90', ROOT / 'src/interpolate.f90',
                ROOT / 'tools/interpolate_reference/pchip_akima_driver.f90')
     proc = subprocess.run([compiler, '-std=f2018', *flags,
                            '-J' + str(build_dir), '-I' + str(build_dir),

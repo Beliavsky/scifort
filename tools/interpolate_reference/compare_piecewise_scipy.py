@@ -95,7 +95,7 @@ def run(flags, seed, count):
     with tempfile.TemporaryDirectory(prefix='scifort_piecewise_') as temp:
         wd=Path(temp)
         sources=['src/kinds.f90','src/interpolate_piecewise.f90','src/interpolate_bspline.f90',
-                 'src/interpolate_regular_grid.f90','src/interpolate_barycentric.f90', 'src/interpolate_global.f90', 'src/interpolate_kdtree.f90', 'src/interpolate_rbf.f90', 'src/interpolate_legacy.f90', 'src/interpolate_scattered.f90', 'src/interpolate_clough_tocher.f90', 'src/interpolate_fitpack_bivariate.f90', 'src/interpolate_fitpack_compat.f90', 'src/interpolate.f90',
+                 'src/interpolate_regular_grid.f90','src/interpolate_barycentric.f90', 'src/interpolate_global.f90', 'src/interpolate_kdtree.f90', 'src/interpolate_rbf.f90', 'src/interpolate_legacy.f90', 'src/interpolate_scattered.f90', 'src/interpolate_clough_tocher.f90', 'src/interpolate_fitpack_bivariate.f90', 'src/interpolate_curfit_core.f90', 'src/interpolate_fitpack_compat.f90', 'src/interpolate.f90',
                  'tools/interpolate_reference/piecewise_driver.f90']
         cmd=['gfortran','-std=f2018','-ffree-line-length-none',*flags,'-J'+str(wd),'-I'+str(wd),
              *(str(ROOT/s) for s in sources),'-o',str(wd/'piecewise')]

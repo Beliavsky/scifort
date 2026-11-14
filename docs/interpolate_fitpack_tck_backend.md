@@ -1,8 +1,8 @@
 # FITPACK TCK compatibility and optional adaptive-knot smoothing
 
 SciFort provides a new **dependency-free** `scifort_interpolate` API for
-FITPACK-style spline tuples `(t,c,k)` and a separate **optional** backend for
-the adaptive-knot FITPACK smoothing algorithm maintained by Federico Perini
+FITPACK-style spline tuples `(t,c,k)` and scalar automatic-knot smoothing,
+plus a separate **optional** backend for additional FITPACK fitting interfaces maintained by Federico Perini
 at <https://github.com/perazz/fitpack>.
 
 ## Licensing and attribution
@@ -20,6 +20,8 @@ at <https://github.com/perazz/fitpack>.
   the banded grid solver and adaptive smoothing. Native
   [scattered spherical smoothing](interpolate_smooth_sphere.md) adapts the
   scattered solver and rank reduction. These add no mandatory dependency.
+- Native scalar `splrep(s>0)` also adapts the pinned upstream `fpcurf`
+  automatic-knot and smoothing solver; the optional package is not required.
 - Source references: <https://github.com/perazz/fitpack/blob/main/LICENSE.md>,
   <https://github.com/perazz/fitpack/blob/main/fpm.toml>,
   <https://perazz.github.io/fitpack/tutorial_curve.html>.
@@ -31,6 +33,7 @@ The main public module `scifort_interpolate` exports `fitpack_tck_type` and:
 | Routine | Supported behavior |
 |---|---|
 | `splrep(x,y,k=...,s=0)` | Exact interpolation with FITPACK-compatible padded tuple |
+| `splrep(x,y,w=...,k=...,s=positive)` | Native automatic-knot scalar smoothing |
 | `splrep(x,y,task=-1,t=interior,w=...,bbox=...)` | Weighted least-squares fit with user-specified interior knots |
 | `splev(x,tck,der=...,ext=...)` | Scalar/vector evaluation and derivatives; `ext=0,1,2,3` |
 | `splint(a,b,tck)` | Analytic integral clipped to spline domain, like FITPACK |
@@ -42,11 +45,31 @@ For `splrep`, `c` is padded with `k+1` trailing zeros, as in SciPy's FITPACK
 `(t,c,k)` representation. The routine accepts degrees 1–5 and validates
 input. FITPACK residual weights `w` enter as `sum((w*(y-f(x)))**2)`.
 
-**Limitations:** `splrep(task=0,s>0)` does *not* implement FITPACK's automatic
-knot placement. It returns `fitpack_tck_unsupported_smoothing` (`status=2`)
-and an invalid result rather than silently returning a different smoother.
-`task=1`, advanced `per` periodic smoothing, and `quiet` are not included.
-The automatic-knot case is handled by the optional package described below.
+For `task=0, s>0`, `splrep` selects knots and solves FITPACK's derivative-jump
+smoothing problem with weighted residual `sum((w*(y-fit))**2)`. The residual
+target has relative tolerance `0.001`; a sufficiently large target returns
+the weighted least-squares polynomial of degree `k`. Positive smoothing may
+use an enclosing `bbox`; exact interpolation still requires the sample bounds.
+The existing default `s=0` is preserved even when weights are supplied, unlike
+SciPy's weight-dependent default in its legacy `splrep` interface.
+
+The internal solver normalizes coordinates, observations, and weights, then
+returns physical knots and padded coefficients. Numerical or allocation
+failure returns `fitpack_tck_singular` (3) and an invalid tuple. This includes
+unrepresentable scaled targets, targets below achieved rounding error, and
+conservative exponent-range guards: normalized adjacent sample gaps must be
+at least `tiny(1.0_dp)**(1.0_dp/(4*(k+1)))`, and weights divided by their maximum
+must be at least `tiny(1.0_dp)**0.125`. Normalization must preserve distinct
+sites and nonzero samples. These guards do not guarantee good conditioning
+for every accepted data set. Working storage is linear in sample count for
+the supported degrees; no new dependency or C ABI is added.
+
+**Remaining limitations:** `task=1`, periodic scalar smoothing, `quiet`, and
+the modern `make_splrep` interface are not included. Parametric smoothing is
+still provided by the optional package. See the
+[native smoothing validation](../validation/splrep_smoothing_2026-11-13.md),
+including a pinned upstream regression that fails in the older SciPy 1.15.3
+reference but succeeds in the adopted Fortran implementation.
 
 For `splev`, `ext=0` extrapolates endpoint segments, `ext=1` returns zero,
 `ext=2` returns status 4 and NaN for an out-of-range query, and `ext=3`
@@ -64,6 +87,9 @@ tck = splrep(x, y, k=3, s=0.0_dp, status=status)
 if (status /= 0) error stop 'splrep failed'
 print *, splev(0.5_dp,tck)
 print *, splint(x(1), x(size(x)), tck)
+
+tck = splrep(x, y, w=w, k=3, s=0.5_dp, status=status)
+if (status /= 0) error stop 'smoothing failed'
 ```
 
 ## Dependency-free parametric curves: `splprep` and `splev`
@@ -115,7 +141,7 @@ an exact interpolation. Explicit `u` must be finite and strictly increasing.
 interpolation currently requires the domain endpoints to coincide with
 `u(1)` and `u(n)`.
 
-**Not yet supported by the dependency-free core:** automatic knot selection for `s>0`, periodic
+**Not yet supported for parametric `splprep`:** automatic knot selection for `s>0`, periodic
 `per=.true.` interpolation, or a FITPACK task=1 continuation. Unsupported
 features return status `fitpack_tck_unsupported_smoothing` (2), rather than
 silently returning a different fit. The optional upstream backend remains
@@ -132,6 +158,9 @@ python tools/interpolate_reference/run_all_native_interpolation.py
 ```
 
 ## Optional `perazz/fitpack` backend (automatic knot selection)
+
+Scalar nonperiodic `splrep(s>0)` is now native. The optional backend remains
+useful for its separate spline-object API and broader fitting interfaces.
 
 The `optional/fitpack_backend` directory is a *separate* FPM subproject. Its
 manifest pins the **verified Git tag `1.0.0`**. Do not confuse its tag with

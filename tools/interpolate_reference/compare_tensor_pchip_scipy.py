@@ -90,7 +90,7 @@ def check(flags, seed):
     with tempfile.TemporaryDirectory(prefix='scifort_pchip_') as td:
         work = Path(td)
         sources = [ROOT / 'src/kinds.f90', ROOT / 'src/interpolate_bspline.f90',
-                   ROOT / 'src/interpolate_regular_grid.f90', ROOT/'src/interpolate_piecewise.f90', ROOT / 'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT / 'src/interpolate_kdtree.f90', ROOT / 'src/interpolate_rbf.f90', ROOT / 'src/interpolate_legacy.f90', ROOT / 'src/interpolate_scattered.f90', ROOT / 'src/interpolate_clough_tocher.f90', ROOT / 'src/interpolate_fitpack_bivariate.f90', ROOT / 'src/interpolate_fitpack_compat.f90', ROOT / 'src/interpolate.f90',
+                   ROOT / 'src/interpolate_regular_grid.f90', ROOT/'src/interpolate_piecewise.f90', ROOT / 'src/interpolate_barycentric.f90', ROOT/'src/interpolate_global.f90', ROOT / 'src/interpolate_kdtree.f90', ROOT / 'src/interpolate_rbf.f90', ROOT / 'src/interpolate_legacy.f90', ROOT / 'src/interpolate_scattered.f90', ROOT / 'src/interpolate_clough_tocher.f90', ROOT / 'src/interpolate_fitpack_bivariate.f90', ROOT / 'src/interpolate_curfit_core.f90', ROOT / 'src/interpolate_fitpack_compat.f90', ROOT / 'src/interpolate.f90',
                    ROOT / 'tools/interpolate_reference/tensor_grid_driver.f90']
         cmd = [os.environ.get('FC', 'gfortran'), '-std=f2018', *flags,
                '-J'+str(work),'-I'+str(work),*map(str,sources),'-o',str(work/'test')]

@@ -1,3 +1,58 @@
+## 2026-11-13 - Native scalar automatic-knot smoothing
+
+`src/interpolate_curfit_core.f90` adapts scalar `fpcurf` and supporting kernels
+from Federico Perini's perazz/FITPACK, based on Paul Dierckx's FITPACK:
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`. The exact source and
+[`LICENSE.md`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/LICENSE.md)
+were inspected before adaptation. Source SHA-256:
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`;
+inspected license SHA-256:
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+
+Copyright (c) 2022, Federico Perini. All rights reserved. The BSD-3-Clause
+terms and copyright are retained in
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt);
+its text differs from the inspected license only in blank-line formatting.
+The combined source is marked `MIT AND BSD-3-Clause`: the SciFort wrapper
+is original MIT code; the numerical kernels remain attributed adaptations.
+
+Adapted routines: `fpcurf`, `fpknot`, `fp_knots_to_add`, `fp_rank_deficient`,
+`fp_rotate_row`, `fp_rotate_shifted`, `fpback`, `fpbspl`, `fpdisc`, `fpgivs`,
+`fprota`, `fp_knot_interval`, `root_finding_iterate`, `fprati`, `equal`, and
+`not_equal`. The last ten reuse already adapted, attributed copies from
+SciFort's spherical grid core; they remain private copies here so scalar
+smoothing does not depend on spherical fitting. No existing shared numerical
+kernel is changed. The `curfit` workspace partition and source were inspected;
+the wrapper calls `fpcurf` directly with task zero and fully allocated arrays.
+
+Modifications include SciFort's binary64 kind, default integers/logicals,
+explicit `implicit none`, documented dummy arguments, lowercase free-form
+formatting, and a private module interface. FITPACK's relative tolerance
+`0.001`, maximum 20 smoothing iterations, derivative-jump penalty, adaptive
+knot selection, rank checks, and rational root iteration are preserved.
+Original SciFort code normalizes coordinates/values/weights, rescales knots
+and coefficients, rejects unrepresentable/range-limited inputs, verifies the
+achieved residual, pads coefficients, and maps failure to the existing status 3.
+Task-zero interpolation and fixed-knot fitting retain their former solvers.
+Standalone script source lists include the new dependency; the package
+manifest and external dependencies are unchanged.
+
+References inspected in the upstream source include de Boor (1972),
+"On calculating with b-splines", J. Approx. Theory 6, 50-62; Cox (1972),
+"The numerical evaluation of b-splines", J. Inst. Maths Applics 10, 134-149;
+and Dierckx (1993), *Curve and Surface Fitting with Splines*, Oxford.
+
+Validation compares with SciPy 1.15.3 and the original, separately compiled
+pinned Fortran core. The upstream `test_fpknot_crash` data are read from
+[`test/fitpack_curve_tests.f90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/test/fitpack_curve_tests.f90)
+(SHA-256 `0bb92548cb070e70e245b1f837fb931014e69b6f1c335f8cfdca49c514908847`)
+when that optional fixture is requested; no upstream test data are vendored.
+This exercises its data at three explicit smoothing targets rather than
+running the upstream spline-object test unchanged. The full upstream suite
+was not run. New native tests and validation drivers/checker are original MIT
+code. See the [validation record](validation/splrep_smoothing_2026-11-13.md).
+
 ## 2026-11-13 - Larger AAA arrowhead spectra
 
 `src/interpolate_aaa_spectrum.f90` adapts the following files from

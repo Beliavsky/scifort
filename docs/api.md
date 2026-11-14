@@ -7223,3 +7223,12 @@ real/complex scalar sampled data, adaptive support selection, scalar/vector
 evaluation, poles, zeros, simple-pole residues, and Froissart cleanup.
 See the [AAA guide](interpolate_aaa.md) for controls, statuses, convergence,
 SciPy compatibility differences, and the 512-support-point spectral limit.
+
+### Native scalar adaptive smoothing
+
+`splrep(x,y,w=...,k=...,s=positive)` now selects knots and fits a nonperiodic
+scalar smoothing spline without the optional FITPACK package. Degrees 1-5,
+positive residual weights, and enclosing `bbox` bounds are supported. The
+existing default `s=0`, tuple layout, evaluation/calculus routines, and status
+names are preserved. See the [TCK guide](interpolate_fitpack_tck_backend.md)
+for residual tolerance, numerical guards, and remaining parametric/periodic gaps.

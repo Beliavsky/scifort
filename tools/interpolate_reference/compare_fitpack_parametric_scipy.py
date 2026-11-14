@@ -15,7 +15,7 @@ import numpy as np
 from scipy.interpolate import splprep, splev
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCES = ('kinds', 'interpolate_bspline', 'interpolate_fitpack_compat')
+SOURCES = ('kinds', 'interpolate_bspline', 'interpolate_curfit_core', 'interpolate_fitpack_compat')
 
 def build(work: Path, flags: list[str]) -> Path:
     base=['gfortran','-std=f2018','-ffree-line-length-none',*flags]

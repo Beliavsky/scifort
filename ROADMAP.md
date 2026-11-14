@@ -3385,3 +3385,15 @@ task after Lebedev quadrature. C ABI and wrapper expansion remain deferred.
 - [x] Analytic and SciPy validation, scale/offset tests, and retained notices.
 - [x] Broaden spectral calculations to 512 support points with a dedicated,
   validated Reference-LAPACK QZ backend for normalized AAA arrowhead pencils.
+
+## 2026-11-13 -- Approved native scalar smoothing expansion
+
+The user approved native automatic-knot `splrep(s>0)` after AAA spectra.
+C ABI and wrapper expansion remain deferred.
+
+- [x] Nonperiodic scalar automatic-knot smoothing, degrees 1-5, weighted
+  residual targets, and enclosing support bounds through the existing TCK API.
+- [x] Review pinned upstream source/license, retain notices, and record adaptation.
+- [x] Validate checked/optimized native behavior against SciPy, the separately
+  compiled upstream core, and the upstream knot-insertion crash fixture.
+- [ ] Extend the foundation to parametric smoothing and modern spline constructors.

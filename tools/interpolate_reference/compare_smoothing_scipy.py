@@ -19,7 +19,7 @@ DRIVER=ROOT/'tools/interpolate_reference/smoothing_driver.f90'
 
 def build(where:Path,flags:list[str])->Path:
     common=['gfortran','-std=f2018','-ffree-line-length-none',*flags]
-    names=('kinds','interpolate_piecewise','interpolate_bspline','interpolate_fitpack_bivariate','interpolate_fitpack_compat','interpolate_smoothing',
+    names=('kinds','interpolate_piecewise','interpolate_bspline','interpolate_fitpack_bivariate','interpolate_curfit_core', 'interpolate_fitpack_compat','interpolate_smoothing',
            'interpolate_regular_grid','interpolate_barycentric','interpolate_global',
            'interpolate_kdtree','interpolate_rbf','interpolate_legacy',
            'interpolate_scattered','interpolate_clough_tocher','interpolate')

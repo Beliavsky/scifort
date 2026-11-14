@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compare dependency-free FITPACK TCK wrappers with SciPy/FITPACK.
 
-Only s=0 and task=-1 fixed knots are supported by SciFort's core TCK
-layer. Positive-s smoothing requires the optional perazz/fitpack backend.
+This checker covers s=0 and task=-1 fixed knots. Positive-s native smoothing
+is checked separately by validation/check_splrep_smoothing.py.
 """
 from __future__ import annotations
 import argparse
@@ -13,7 +13,7 @@ import numpy as np
 from scipy.interpolate import splrep, splev, splint, splder, splantider, spalde
 
 ROOT=Path(__file__).resolve().parents[2]
-SOURCES=('kinds','interpolate_bspline','interpolate_fitpack_bivariate','interpolate_fitpack_compat')
+SOURCES=('kinds','interpolate_bspline','interpolate_fitpack_bivariate','interpolate_curfit_core', 'interpolate_fitpack_compat')
 
 def run(command:list[str],cwd:Path,source:str|None=None)->str:
     p=subprocess.run(command, cwd=cwd, input=source,text=True,capture_output=True)

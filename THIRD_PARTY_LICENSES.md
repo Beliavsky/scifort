@@ -18,7 +18,15 @@ are retained. Full terms are in
 The exact source versions/hashes and modifications are recorded in provenance.
 This is a source adaptation with no mandatory linked LAPACK/BLAS dependency.
 
-## Spherical spline constraints and solvers (perazz/FITPACK, BSD-3-Clause)
+## Scalar smoothing and spherical spline solvers (perazz/FITPACK, BSD-3-Clause)
+
+`src/interpolate_curfit_core.f90` adapts the scalar `fpcurf` automatic-knot
+smoothing solver and its numerical helpers from the pinned perazz/FITPACK
+source recorded in provenance. The existing
+[`LICENSES/perazz-fitpack-BSD-3-Clause.txt`](LICENSES/perazz-fitpack-BSD-3-Clause.txt)
+retains the full BSD terms and Federico Perini copyright notice. Original
+SciFort normalization and interface code uses MIT; the combined file is
+marked `MIT AND BSD-3-Clause`. No mandatory linked FITPACK package is added.
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
 constraint construction from `fpsphe` and `fprpsp` in Federico Perini's
