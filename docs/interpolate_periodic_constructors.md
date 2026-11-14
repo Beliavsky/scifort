@@ -73,7 +73,8 @@ weighted constant on those knots. A target below the attainable residual
 beyond its tolerance returns status 3. Noncyclic exterior vectors and
 rank-deficient cases use the [rank-aware dense fallback](interpolate_fixed_general.md),
 which enforces endpoint derivatives explicitly and has documented size,
-range, and conditioning limits. This does not enable legacy periodic `task=-1`.
+range, and conditioning limits. Legacy periodic `task=-1` is separately
+available as [fixed-knot least squares](interpolate_periodic_lsq.md).
 
 ## Evaluation and numerical limits
 

@@ -1,3 +1,13 @@
+## 2026-11-14 - Periodic fixed-knot tuple least squares
+
+- Add native `splrep` and `splprep` with `per=.true., task=-1`, degrees 1-5,
+  preserving scalar interior and parametric full input knot conventions.
+- Canonicalize periodic knots, preserve ignored closing observations/weights,
+  and solve the cyclic weighted least-squares problem with native QR/SVD.
+- Document minimum-norm rank-deficient fitting as a SciFort extension, dense
+  solver limits, and the distinction from supplied-knot smoothing.
+- Add native coefficient-recovery tests and independent/SciPy comparisons.
+
 ## 2026-11-14 - Broader supplied knots and rank-aware smoothing
 
 - Accept nonclamped and partially repeated exterior knots for native scalar

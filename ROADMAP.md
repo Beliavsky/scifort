@@ -3504,3 +3504,16 @@ fitting for native constructors. C ABI and wrappers remain deferred.
   comparisons with conditioning-aware metrics.
 - [ ] Repeated interior knots, larger dense problems, exact modern selection,
   soft capacities, and legacy periodic `task=-1` remain separate gaps.
+
+## 2026-11-14 -- Approved periodic fixed-knot tuple least squares
+
+The user approved native periodic `task=-1` for scalar `splrep` and parametric
+`splprep`. C ABI and wrapper expansion remain deferred.
+
+- [x] Degrees 1-5, scalar interior and parametric full knot conventions,
+  canonical cyclic output, weights, and ignored final observations/weights.
+- [x] Supplied/chord parameters, padded/unpadded layouts, rank-aware cyclic
+  QR/SVD least squares, and explicit dense/range limits.
+- [x] Checked debug/optimized regressions and independent/SciPy comparisons.
+- [ ] `generate_knots`, modern automatic selection, soft capacities, and
+  stateless alternatives to FITPACK continuation remain separate work.

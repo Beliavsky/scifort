@@ -7267,7 +7267,8 @@ for residual tolerance, numerical guards, and remaining parametric/periodic gaps
 interpolation (`s=0`, the default) and smoothing (`s>0`) for degrees 1-5.
 The last ordinate and weight are ignored; the period comes from the first
 and last coordinates. Endpoint derivatives through order `k-1` agree.
-Periodic fixed-knot fitting and continuation are not supported. Evaluation
+Periodic fixed-knot least squares is available with `task=-1`;
+see the [fixed-knot guide](interpolate_periodic_lsq.md). Continuation remains unsupported. Evaluation
 outside the period retains the existing extrapolation/clipping conventions.
 See the [TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-scalar-fitting)
 and [validation record](../validation/splrep_periodic_2026-11-13.md).
@@ -7289,6 +7290,8 @@ It supports degrees 1-5 and both interpolation and smoothing. The final
 coordinate row and weight are ignored; automatic parameters use the closing
 leg back to the first row. Explicit `u` must include the finite period endpoint.
 Endpoint values and derivatives through order `k-1` match within conditioning
-limits. Periodic fixed knots and continuation remain unsupported. See the
+limits. Periodic fixed-knot least squares is available with `task=-1` and
+a full input knot vector; see the [fixed-knot guide](interpolate_periodic_lsq.md).
+Continuation remains unsupported. See the
 [TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-parametric-fitting)
 and [validation record](../validation/splprep_closed_2026-11-13.md).

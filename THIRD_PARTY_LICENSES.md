@@ -45,6 +45,9 @@ Optional capacity controls preserve those notices and existing default paths.
 Supplied-periodic-knot smoothing extends the same attributed `fpperi` and
 `fpclos` adaptations with fixed modes and constant-limit handling; those
 extensions retain the existing BSD notices and full license.
+The separate periodic fixed-knot tuple least-squares module is original MIT
+SciFort code using existing native B-spline and QR/SVD routines. Its FITPACK
+behavioral reference does not add another imported implementation.
 The nonperiodic fixed-knot interval-search correction also modifies those
 attributed kernels under the same notices. The separate rank-aware dense
 fallback is original MIT SciFort code composing existing native solvers; its

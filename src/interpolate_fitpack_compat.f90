@@ -9,6 +9,7 @@ module scifort_interpolate_fitpack_compat
     use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric
     use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
     use scifort_interpolate_curfit_core, only : fitpack_periodic_parametric
+    use scifort_interpolate_periodic_lsq, only: periodic_lsq
     use scifort_interpolate_fixed_smoothing, only: fixed_knots_valid,fixed_smoothing
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline,make_interp_spline, &
@@ -498,7 +499,7 @@ contains
     end function chord_difference
 
     ! SciPy splprep: interpolation (s=0), automatic-knot smoothing (s>0),
-    ! or supplied full knot vector (nonperiodic task=-1).
+    ! or supplied full knot vector (task=-1).
     ! Input ordinates are transposed relative to scipy.splprep's sequence:
     ! coordinates(sample,dimension), with up to arbitrary coordinate count.
     function splprep(x,u,w,k,s,task,t,ub,ue,per,status) result(tck)
@@ -539,10 +540,6 @@ contains
         if (.not. all(ieee_is_finite(x(:used,:)))) goto 900
         if (.not. ieee_is_finite(target)) goto 900
         if (target < 0.0_dp) goto 900
-        if (periodic .and. mode==-1) then
-            if (present(t)) code=fitpack_tck_unsupported_smoothing
-            goto 900
-        end if
         if (present(w)) then
             if (size(w) /= n) goto 900
             if (.not. all(ieee_is_finite(w(:used)))) goto 900
@@ -604,9 +601,16 @@ contains
         if (.not. ieee_is_finite(left) .or. .not. ieee_is_finite(right)) goto 900
         if (left > param(1) .or. right < param(n) .or. left >= right) goto 900
         if (periodic) then
-            if (present(t)) goto 900
             if (left/=param(1) .or. right/=param(n)) goto 900
-            call fitpack_periodic_parametric(param,x,w,deg,target,tck%t,tck%c,code)
+            if (mode==-1) then
+                if (.not.present(t)) goto 900
+                if (size(t)<2*deg+3 .or. size(t)>n+2*deg) goto 900
+                if (.not.all(ieee_is_finite(t))) goto 900
+                call periodic_lsq(param,x,w,deg,t(deg+2:size(t)-deg-1),tck%t,tck%c,code)
+            else
+                if (present(t)) goto 900
+                call fitpack_periodic_parametric(param,x,w,deg,target,tck%t,tck%c,code)
+            end if
             if (code==0) then
                 call move_alloc(param,tck%u)
                 tck%k=deg
@@ -770,6 +774,7 @@ contains
         type(fitpack_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
         real(dp) :: target, bounds(2)
+        real(dp), allocatable :: periodic_coeff(:,:)
         integer :: deg, mode, code, used
         logical :: periodic
         periodic=.false.
@@ -803,13 +808,18 @@ contains
             bounds = bbox
         end if
         if (periodic) then
-            if (mode/=0) then
-                if (mode==-1 .and. present(t)) code=fitpack_tck_unsupported_smoothing
+            if (any(bounds/=[x(1),x(size(x))])) goto 900
+            if (mode==-1) then
+                if (.not.present(t)) goto 900
+                call periodic_lsq(x,reshape(y,[size(x),1]),w,deg,t, &
+                    tck%t,periodic_coeff,code)
+                if (code==0) tck%c=[periodic_coeff(:,1),spread(0.0_dp,1,deg+1)]
+            else if (mode==0) then
+                if (present(t)) goto 900
+                call fitpack_periodic_curve(x,y,w,deg,target,tck%t,tck%c,code)
+            else
                 goto 900
             end if
-            if (present(t)) goto 900
-            if (any(bounds/=[x(1),x(size(x))])) goto 900
-            call fitpack_periodic_curve(x,y,w,deg,target,tck%t,tck%c,code)
             if (code==0) tck%k=deg
             goto 900
         end if

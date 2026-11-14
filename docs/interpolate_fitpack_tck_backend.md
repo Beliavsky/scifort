@@ -77,16 +77,21 @@ conservative exponent-range guards: normalized adjacent sample gaps must be
 at least `tiny(1.0_dp)**(1.0_dp/(4*(k+1)))`, and weights divided by their maximum
 must be at least `tiny(1.0_dp)**0.125`. Normalization must preserve distinct
 sites and nonzero samples. These guards do not guarantee good conditioning
-for every accepted data set. Working storage is linear in sample count for
+for every accepted data set. Working storage for automatic-knot fitting is linear in sample count for
 the supported degrees; no new dependency or C ABI is added.
 
-**Remaining limitations:** `task=1`, periodic fixed-knot fits, and `quiet`
+**Remaining limitations:** `task=1` and `quiet`
 are not included. A native object-returning [make_splrep constructor](interpolate_make_splrep.md)
 is available with documented knot-form, boundary, and capacity limitations. Nonperiodic parametric
 smoothing is native through `splprep`, as described below. See the
 [native smoothing validation](../validation/splrep_smoothing_2026-11-13.md),
 including a pinned upstream regression that fails in the older SciPy 1.15.3
 reference but succeeds in the adopted Fortran implementation.
+
+Periodic `task=-1` is also available for both tuple APIs; see
+[periodic fixed-knot least squares](interpolate_periodic_lsq.md) for scalar
+interior versus parametric full knot inputs, canonicalization, rank handling,
+and dense-solver limits.
 
 ### Native periodic scalar fitting
 
@@ -108,7 +113,8 @@ least-squares constant. Periodicity constrains the fit, but does not change
 not automatically wrapped. Existing derivative and integral operations work
 within the base period.
 
-Periodic `task=-1` with supplied knots returns status 2 and an invalid tuple;
+Periodic `task=-1` now performs native
+[fixed-knot least squares](interpolate_periodic_lsq.md) on interior knots.
 `task=1` remains invalid (status 1). Numerical/allocation failures return 3.
 The normalized gap and weight guards above also apply. Additionally,
 `maxval(abs(x)) <= huge(1.0_dp)/(4*(k+1))`, the physical period and every
@@ -182,7 +188,7 @@ Call `curve%valid()` to check initialization, or `curve%channels()` to get the
 coordinate count. `splev` accepts scalar and vector queries, derivative
 orders, and the four FITPACK extrapolation policies.
 
-For `task=-1`, pass **the full knot vector** `t`, including `k+1` repetitions
+For nonperiodic `task=-1`, pass **the full knot vector** `t`, including `k+1` repetitions
 of each endpoint; this is SciPy `splprep`'s convention and is *different*
 from SciPy `splrep(task=-1)`, where `t` contains only interior knots:
 
@@ -258,8 +264,9 @@ automatically wrap out-of-period queries.
 
 If supplied, `ub` and `ue` must equal the parameter endpoints. This deliberate
 validation differs from SciPy's periodic path, which ignores these bounds.
-Periodic `task=-1` with supplied knots returns status 2 and an invalid tuple;
-`task=1` and malformed input return status 1. Numerical/range/allocation
+Periodic `task=-1` with supplied knots now supports native
+[fixed-knot least squares](interpolate_periodic_lsq.md). `task=1` and
+malformed input return status 1. Numerical/range/allocation
 failures return status 3. The normalized gap and relative-weight guards
 described above apply. As with periodic scalar fits, parameter magnitudes
 reserve headroom for exterior knots: `maxval(abs(u)) <= huge(1.0_dp)/(4*(k+1))`.
@@ -274,8 +281,8 @@ for original-core and SciPy comparisons, independent cyclic normal equations,
 and the remaining conditioning limitations. Exact adaptive paths and
 high-derivative accuracy are not guaranteed for every accepted problem.
 
-**Not yet supported for parametric `splprep`:** periodic fixed-knot fits,
-FITPACK `task=1` continuation, and the modern `make_splprep` constructor.
+**Not yet supported for parametric `splprep`:** FITPACK `task=1` continuation.
+Native modern [`make_splprep`](interpolate_make_splprep.md) is available.
 
 The independent regression compares `splprep` parameters, knots,
 coefficients, fitted points and first through third derivatives against

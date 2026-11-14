@@ -97,7 +97,7 @@ program test_interpolate_fitpack_closed
     fit=splprep(x,u=u,ub=-1.0_dp,per=.true.,status=status)
     call require(status==1,'periodic bounds must match parameter endpoints')
     fit=splprep(x,u=u,task=-1,t=[0.0_dp,1.0_dp],per=.true.,status=status)
-    call require(status==2,'periodic fixed knots explicitly unsupported')
+    call require(status==1,'periodic full knot vector too short')
     fit=splprep(x,u=u,task=1,per=.true.,status=status)
     call require(status==1,'stateless continuation rejected')
     copy=x

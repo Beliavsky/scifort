@@ -1,3 +1,39 @@
+## 2026-11-14 - Periodic fixed-knot tuple least squares
+
+`src/interpolate_periodic_lsq.f90`, its tuple dispatch in
+`src/interpolate_fitpack_compat.f90`, and new tests/validation are original MIT
+SciFort code. The implementation composes existing native B-spline evaluation
+and QR/SVD least-squares routines on a cyclic coefficient basis. No external
+implementation, dependency, binary, or vendored archive is imported.
+
+The mathematical specification is the periodic weighted least-squares
+B-spline problem described by P. Dierckx, *Curve and Surface Fitting with
+Splines*, Oxford University Press, 1993, and the public SciPy
+[`splrep`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splrep.html)
+and [`splprep`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splprep.html)
+contracts. Canonical knots satisfy `t(i+ni)=t(i)+period` and coefficients
+satisfy `c(i+ni)=c(i)`. The cyclic design, normalization, and minimum-norm
+solve are independently assembled using existing SciFort components.
+
+The exact cached perazz/FITPACK `percur` and `clocur` input-validation and
+periodic knot-canonicalization blocks were inspected, together with the
+BSD-3-Clause license, at commit
+`1907c7bad9f5c4557970e906bdd4909eb52b2d4c`:
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90).
+Its source SHA-256 is
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+That source serves as a behavioral reference; the new solve does not translate
+or call its fixed-knot QR implementation. Existing attributed automatic and
+smoothing kernels retain their notices and full licenses unchanged.
+
+The wrapper preserves scalar interior versus parametric full knot inputs,
+ignored closing data/weights, and padded versus unpadded tuple layouts.
+The rank-deficient minimum-norm solve for independent cyclic coefficients is
+documented as a SciFort extension; no matching SciPy failure behavior is
+claimed. The independent checker uses NumPy cyclic-basis least squares and
+SciPy 1.15.3 legacy FITPACK references for full-rank cases. See the
+[validation record](validation/periodic_lsq_2026-11-14.md).
+
 ## 2026-11-14 - Broader supplied knots and rank-aware smoothing
 
 `src/interpolate_fixed_smoothing.f90`, its constructor dispatch in

@@ -75,7 +75,7 @@ program test_interpolate_fitpack_periodic
     fit=splrep(x,y,bbox=[-1.0_dp,7.0_dp],per=.true.,status=code)
     call require(code==1,'period fixes the bounds')
     fit=splrep(x,y,task=-1,t=[1.0_dp],per=.true.,status=code)
-    call require(code==2,'periodic fixed knots explicitly unsupported')
+    call require(code==0 .and. fit%valid(),'periodic fixed knots least squares')
     fit=splrep(x,y,task=1,per=.true.,status=code)
     call require(code==1,'stateless continuation rejected')
     bad=x
