@@ -3439,3 +3439,15 @@ C ABI and wrapper expansion remain deferred.
 - [x] Checked/optimized native regressions, pinned original core and closed
   curve data, SciPy comparisons, and independent cyclic normal equations.
 - [ ] Periodic fixed knots, continuation, and modern spline constructors.
+
+## 2026-11-13 -- Approved modern scalar constructor
+
+The user approved `make_splrep` after native periodic parametric fitting.
+
+- [x] Native B-spline object result, default interpolation, automatic smoothing,
+  positive weights, and supplied full clamped knots with simple interiors.
+- [x] Fixed-knot smoothing, polynomial limits retaining knots, physical residual
+  verification, and explicit capacity/invalid-input/numerical statuses.
+- [x] Checked/optimized native and independent reference/equation validation.
+- [ ] `make_splprep`, periodic constructor boundaries, broader knot forms,
+  and modern SciPy automatic-selection/soft-capacity parity.

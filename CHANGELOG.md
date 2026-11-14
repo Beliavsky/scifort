@@ -1,3 +1,12 @@
+## 2026-11-13 - Native scalar smoothing constructor
+
+- Add object-returning `make_splrep` with interpolation, automatic smoothing,
+  supplied full clamped knots, validated bounds, and hard knot capacities.
+- Extend the licensed scalar kernel to smooth on fixed knots and represent
+  polynomial limits without dropping supplied knots; preserve legacy defaults.
+- Check physical residuals after shifted normalization and document differences
+  from modern SciPy knot selection, soft capacities, and periodic boundaries.
+
 ## 2026-11-13 - Native periodic parametric spline fitting
 
 - Add native `splprep(per=.true.)` closed-curve interpolation and smoothing,

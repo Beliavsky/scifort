@@ -10,7 +10,7 @@ module scifort_interpolate_fitpack_compat
     use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
     use scifort_interpolate_curfit_core, only : fitpack_periodic_parametric
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
-        interpolated_univariate_spline, lsq_univariate_spline, &
+        interpolated_univariate_spline, lsq_univariate_spline,make_interp_spline, &
         bspline_status_success
     implicit none
     private
@@ -45,12 +45,88 @@ module scifort_interpolate_fitpack_compat
     end type fitpack_parametric_tck_type
 
     public :: splrep, splprep, splev, splint, splder, splantider, spalde
+    public :: make_splrep
     interface splev
         module procedure splev_scalar, splev_array
         module procedure splev_parametric_scalar, splev_parametric_array
     end interface
 
 contains
+
+    function make_splrep(x,y,w,xb,xe,k,s,t,nest,status,bc_type) result(fit)
+        implicit none
+        real(dp), intent(in) :: x(:) !! Finite strictly increasing sample abscissae.
+        real(dp), intent(in) :: y(:) !! Finite ordinates, one per abscissa.
+        real(dp), intent(in), optional :: w(:) !! Positive residual multipliers, default one.
+        real(dp), intent(in), optional :: xb !! Left enclosing bound, default x(1).
+        real(dp), intent(in), optional :: xe !! Right enclosing bound, default x(m).
+        integer, intent(in), optional :: k !! Degree one through five, default three.
+        real(dp), intent(in), optional :: s !! Nonnegative squared-residual target, default zero.
+        real(dp), intent(in), optional :: t(:) !! Full clamped knots; positive s only.
+        integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
+        integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical
+        character(*), intent(in), optional :: bc_type !! 'not-a-knot' default; periodic unsupported.
+        type(bspline_interpolator_type) :: fit
+        real(dp), allocatable :: knots(:),coeff(:)
+        real(dp) :: target,bounds(2)
+        integer :: degree,code,local_code,m,nt
+        code=fitpack_tck_invalid_input
+        m=size(x)
+        degree=3
+        if (present(k)) degree=k
+        if (degree<1 .or. degree>5) goto 900
+        if (m<=degree .or. size(y)/=m) goto 900
+        if (.not.all(ieee_is_finite(x))) goto 900
+        if (.not.all(ieee_is_finite(y))) goto 900
+        if (any(x(2:)<=x(:m-1))) goto 900
+        if (present(bc_type)) then
+            if (trim(bc_type)=='periodic') then
+                code=fitpack_tck_unsupported_smoothing
+                goto 900
+            end if
+            if (trim(bc_type)/='not-a-knot') goto 900
+        end if
+        target=0.0_dp
+        if (present(s)) target=s
+        if (.not.ieee_is_finite(target)) goto 900
+        if (target<0.0_dp) goto 900
+        bounds=[x(1),x(m)]
+        if (present(xb)) bounds(1)=xb
+        if (present(xe)) bounds(2)=xe
+        if (.not.all(ieee_is_finite(bounds))) goto 900
+        if (bounds(1)>x(1) .or. bounds(2)<x(m)) goto 900
+        if (target==0.0_dp) then
+            if (present(w) .or. present(t) .or. present(nest)) goto 900
+            if (any(bounds/=[x(1),x(m)])) goto 900
+            fit=make_interp_spline(x,y,k=degree,status=local_code)
+            code=fitpack_tck_success
+            if (local_code/=0) code=fitpack_tck_singular
+            goto 900
+        end if
+        if (present(w)) then
+            if (size(w)/=m) goto 900
+            if (.not.all(ieee_is_finite(w))) goto 900
+            if (any(w<=0.0_dp)) goto 900
+        end if
+        if (present(t) .and. present(nest)) goto 900
+        if (present(nest)) then
+            if (nest<2*(degree+1) .or. nest>m+degree+1) goto 900
+        end if
+        if (present(t)) then
+            nt=size(t)
+            if (nt<2*(degree+1) .or. nt>m+degree+1) goto 900
+            if (.not.all(ieee_is_finite(t))) goto 900
+            if (any(t(:degree+1)/=bounds(1))) goto 900
+            if (any(t(nt-degree:)/=bounds(2))) goto 900
+            if (any(t(degree+2:nt-degree)<=t(degree+1:nt-degree-1))) goto 900
+        end if
+        call fitpack_smooth_curve(x,y,w,degree,target,bounds,knots,coeff,code, &
+            full_knots=t,knot_capacity=nest,shift_origin=.true.)
+        if (code/=0) goto 900
+        fit=bspline(knots,coeff,degree,status=local_code)
+        if (local_code/=0) code=fitpack_tck_singular
+900     if (present(status)) status=code
+    end function make_splrep
 
     pure logical function parametric_tck_valid(self) result(ok)
         class(fitpack_parametric_tck_type), intent(in) :: self !! parametric spline

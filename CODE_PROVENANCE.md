@@ -1,3 +1,34 @@
+## 2026-11-13 - Native scalar smoothing constructor
+
+`make_splrep` in `src/interpolate_fitpack_compat.f90` is an original MIT
+SciFort wrapper around existing native interpolation and the attributed
+scalar FITPACK kernel in `src/interpolate_curfit_core.f90`. No new
+third-party implementation is imported. The existing `fpcurf` adaptation
+is extended with optional fixed-knot and polynomial-only modes, retaining
+its original defaults, derivative-jump penalty, banded QR, and root search.
+Polynomial limits on supplied knots are represented by fitting values of
+the already computed polynomial. A shifted-normalization option and
+physical residual verification apply to the new constructor.
+
+The adapted kernel remains attributed to perazz/FITPACK at commit
+`1907c7bad9f5c4557970e906bdd4909eb52b2d4c`, source
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+SHA-256 `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+The retained [BSD-3-Clause license](LICENSES/perazz-fitpack-BSD-3-Clause.txt),
+Copyright (c) 2022 Federico Perini, and source `MIT AND BSD-3-Clause` notice
+are unchanged. The mathematical reference is P. Dierckx, *Curve and Surface
+Fitting with Splines*, Oxford University Press, 1993, derivative-jump
+smoothing under a weighted residual constraint.
+
+SciPy's official `make_splrep` documentation and the exact installed
+SciPy 1.15.3 public constructor and helper source were inspected for
+interface semantics and independent comparison, not copied or translated.
+The modern automatic knot-selection implementation is not adopted; native
+automatic fits retain the existing FITPACK path. Hard capacity, limited
+knot forms, and unsupported periodic constructor boundaries are documented
+compatibility limits. The new tests and validation programs are original
+MIT code. See [the validation record](validation/make_splrep_2026-11-13.md).
+
 ## 2026-11-13 - Native periodic parametric spline fitting
 
 `src/interpolate_curfit_core.f90` also adapts `fpclos`,

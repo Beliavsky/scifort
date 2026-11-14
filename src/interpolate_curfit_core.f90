@@ -243,7 +243,8 @@ contains
         status=0
     end subroutine fitpack_periodic_curve
 
-    subroutine fitpack_smooth_curve(x, y, w, k, s, bounds, knots, coeff, status)
+    subroutine fitpack_smooth_curve(x, y, w, k, s, bounds, knots, coeff, status, &
+                                   full_knots, knot_capacity,shift_origin)
         implicit none
         real(dp), intent(in) :: x(:) !! Finite strictly increasing sample coordinates.
         real(dp), intent(in) :: y(:) !! Finite sample values, length size(x).
@@ -254,16 +255,27 @@ contains
         real(dp), allocatable, intent(out) :: knots(:) !! Full active knots on success.
         real(dp), allocatable, intent(out) :: coeff(:) !! Coefficients padded to knot count.
         integer, intent(out) :: status !! Zero success, three numerical/allocation failure.
+        real(dp), intent(in), optional :: full_knots(:) !! Full clamped knots for fixed smoothing.
+        integer, intent(in), optional :: knot_capacity !! Hard knot limit, default size(x)+k+1.
+        logical, intent(in), optional :: shift_origin !! Shift before scaling, default false.
         real(dp), allocatable :: xx(:), yy(:), ww(:), t(:), c(:), a(:, :), b(:, :), g(:, :)
         real(dp), allocatable :: q(:, :), z(:), fpint(:)
         integer, allocatable :: nrdata(:)
         real(dp) :: ax, lo, span, yscale, wscale, target, logtarget, fp, residual
-        real(dp) :: basis(max_order+1)
-        integer :: m, nest, n, ier, info, nc, i, l
+        real(dp) :: basis(max_order+1),polynomial(degree_5+1),poly_fp
+        logical :: shifted
+        integer :: m, nest, n, ier, info, nc, i, l,poly_n
         status = 3
+        shifted=.false.
+        if (present(shift_origin)) shifted=shift_origin
         m = size(x)
         if (m > huge(m)/32) return
         nest = m + k + 1
+        if (present(knot_capacity)) nest=min(nest,knot_capacity)
+        if (nest<2*(k+1)) return
+        if (present(full_knots)) then
+            if (size(full_knots)>nest .or. size(full_knots)<2*(k+1)) return
+        end if
         allocate (xx(m), yy(m), ww(m), t(nest), c(nest), a(nest, k + 1), b(nest, k + 2), &
                   g(nest, k + 2), q(m, k + 1), z(nest), fpint(nest), nrdata(nest), stat=info)
         if (info /= 0) return
@@ -271,6 +283,14 @@ contains
         if (ax == zero) return
         lo = bounds(1)/ax
         span = bounds(2)/ax - lo
+        if (shifted) then
+            if (bounds(1)<zero .and. bounds(2)>zero) then
+                if (bounds(2)>huge(one)+bounds(1)) return
+            end if
+            ax=one
+            lo=bounds(1)
+            span=bounds(2)-bounds(1)
+        end if
         if (span <= zero) return
         xx = (x/ax - lo)/span
         if (any(xx(2:) <= xx(:m - 1))) return
@@ -305,7 +325,33 @@ contains
         nrdata = 0
         n = 2*(k + 1)
         call fpcurf(0, xx, yy, ww, m, zero, one, k, target, nest, 0.001_dp, 20, k + 1, k + 2, &
-                    n, t, c, fp, fpint, z, a, b, g, q, nrdata, ier)
+                    n, t, c, fp, fpint, z, a, b, g, q, nrdata, ier, &
+                    polynomial_only=present(full_knots))
+        if (present(full_knots)) then
+            if (ier>0) return
+            poly_fp=fp
+            poly_n=n
+            polynomial(:k+1)=c(:k+1)
+            if (poly_fp<=target) then
+                ! A zero-jump polynomial already meets the constraint. Represent it
+                ! on the supplied knots by fitting its values, rather than discarding t.
+                l=k+1
+                do i=1,m
+                    basis=fpbspl(t,poly_n,k,xx(i),l)
+                    yy(i)=dot_product(polynomial(:k+1),basis(:k+1))
+                end do
+            end if
+            n=size(full_knots)
+            t(:n)=(full_knots/ax-lo)/span
+            t(:k+1)=zero
+            t(n-k:n)=one
+            if (any(t(k+2:n-k)-t(k+1:n-k-1) < &
+                tiny(one)**(one/real(4*(k+1),dp)))) return
+            call fpcurf(0,xx,yy,ww,m,zero,one,k,target,nest,0.001_dp,20,k+1,k+2, &
+                n,t,c,fp,fpint,z,a,b,g,q,nrdata,ier, &
+                fixed_knots=.true.,polynomial_residual=poly_fp)
+            yy=y/yscale
+        end if
         if (ier > 0) return
         nc = n - k - 1
         if (.not. all(ieee_is_finite(c(:nc)))) return
@@ -335,15 +381,42 @@ contains
         knots(n - k:) = bounds(2)
         coeff = zero
         coeff(:nc) = c(:nc)
+        if (shifted) knots=bounds(1)+t(:n)*span
+        if (present(full_knots)) knots=full_knots
+        knots(:k+1)=bounds(1)
+        knots(n-k:)=bounds(2)
         if (.not. all(ieee_is_finite(knots))) then
             deallocate (knots, coeff)
             return
+        end if
+        if (shifted) then
+            if (minval(knots(k+2:n-k)-knots(k+1:n-k-1))<tiny(one)) then
+                deallocate(knots,coeff)
+                return
+            end if
+            fp=zero
+            l=k+1
+            do i=1,m
+                l=fp_knot_interval(knots,x(i),l,nc)
+                basis=fpbspl(knots,n,k,x(i),l)
+                residual=ww(i)*(dot_product(coeff(l-k:l)/yscale,basis(:k+1))-yy(i))
+                if (abs(residual)>sqrt(huge(one)/real(m,dp))) then
+                    deallocate(knots,coeff)
+                    return
+                end if
+                fp=fp+residual**2
+            end do
+            if (fp>1.0011_dp*target) then
+                deallocate(knots,coeff)
+                return
+            end if
         end if
         status = 0
     end subroutine fitpack_smooth_curve
 
     pure subroutine fpcurf(iopt, x, y, w, m, xb, xe, k, s, nest, tol, &
-                           maxit, k1, k2, n, t, c, fp, fpint, z, a, b, g, q, nrdata, ier)
+                           maxit, k1, k2, n, t, c, fp, fpint, z, a, b, g, q, nrdata, ier, &
+                           fixed_knots,polynomial_residual,polynomial_only)
         implicit none
 
         !  ..
@@ -362,6 +435,9 @@ contains
         integer, intent(in) :: k2 !! Degree plus two.
         integer, intent(inout) :: n !! Active knot count, updated during automatic refinement.
         integer, intent(out) :: ier !! FITPACK success codes <=0, positive numerical failure.
+        logical, intent(in), optional :: fixed_knots !! Keep the initial knots, default false.
+        real(dp), intent(in), optional :: polynomial_residual !! Unpenalized polynomial residual.
+        logical, intent(in), optional :: polynomial_only !! Polynomial fit only, default false.
 
         !  ..array arguments..
         real(dp), intent(in) :: x(m) !! Strictly increasing normalized sample coordinates.
@@ -385,12 +461,17 @@ contains
         integer :: i, it, iter, j, k3, l, l0, mk1, nk1, nmax, nmin, nplus, npl1, nrint, n8
         !  ..local arrays..
         real(dp) :: h(max_order + 1)
-        logical :: new, check1, check3, success, accepted
+        logical :: new, check1, check3, success, accepted, fixed,poly_only
 
         ier = fitpack_ok
         accepted = fp_false
         fpold = zero
         fp0 = zero
+        fixed=.false.
+        if (present(fixed_knots)) fixed=fixed_knots
+        poly_only=.false.
+        if (present(polynomial_only)) poly_only=polynomial_only
+        if (present(polynomial_residual)) fp0=polynomial_residual
         nplus = 0
         fpms = huge(zero)
         nk1 = n - k1
@@ -422,7 +503,7 @@ contains
 
         !  determine nmin, the number of knots for polynomial approximation.
         nmin = 2*k1
-        bootstrap: if (iopt >= 0) then
+        bootstrap: if (iopt >= 0 .and. .not.fixed) then
 
             interpolating: if (s <= zero) then
 
@@ -534,6 +615,15 @@ contains
             ! backward substitution to obtain the b-spline coefficients.
             c(:nk1) = fpback(a, z, nk1, k1, nest)
 
+            if (poly_only) then
+                accepted=.true.
+                exit main_loop
+            end if
+            if (fixed .and. fp0<=s) then
+                accepted=.true.
+                exit main_loop
+            end if
+
             ! test whether the approximation sinf(x) is an acceptable solution. the three acceptance
             ! exits leave through the epilogue below, which screens the accepted factor once.
             if (iopt < 0) then
@@ -549,6 +639,11 @@ contains
 
             ! if f(p=inf) < s accept the choice of knots and go on to the smoothing spline.
             if (fpms < zero) exit main_loop
+
+            if (fixed) then
+                ier=fitpack_s_too_small
+                return
+            end if
 
             ! if n = nmax, sinf(x) is an interpolating spline.
             if (n == nmax) then

@@ -71,8 +71,9 @@ sites and nonzero samples. These guards do not guarantee good conditioning
 for every accepted data set. Working storage is linear in sample count for
 the supported degrees; no new dependency or C ABI is added.
 
-**Remaining limitations:** `task=1`, periodic fixed-knot fits, `quiet`, and
-the modern `make_splrep` interface are not included. Nonperiodic parametric
+**Remaining limitations:** `task=1`, periodic fixed-knot fits, and `quiet`
+are not included. A native object-returning [make_splrep constructor](interpolate_make_splrep.md)
+is available with documented knot-form, boundary, and capacity limitations. Nonperiodic parametric
 smoothing is native through `splprep`, as described below. See the
 [native smoothing validation](../validation/splrep_smoothing_2026-11-13.md),
 including a pinned upstream regression that fails in the older SciPy 1.15.3

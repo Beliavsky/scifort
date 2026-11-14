@@ -7226,6 +7226,15 @@ SciPy compatibility differences, and the 512-support-point spectral limit.
 
 ### Native scalar adaptive smoothing
 
+`make_splrep(x,y,w=...,xb=...,xe=...,k=...,s=...,t=...,nest=...,status=...)`
+returns a native `bspline_interpolator_type` for interpolation or smoothing.
+It supports automatic knots or a supplied full clamped knot vector with
+simple interiors. Supplied knots still request derivative-jump smoothing;
+`nest` is a hard capacity, with explicit failure for infeasible targets.
+The default is `s=0`; weights, knots, and capacity are rejected in that mode.
+Periodic boundary selection and modern SciPy automatic-knot parity remain
+unsupported. See the [constructor guide](interpolate_make_splrep.md).
+
 `splrep(x,y,w=...,k=...,s=positive)` now selects knots and fits a nonperiodic
 scalar smoothing spline without the optional FITPACK package. Degrees 1-5,
 positive residual weights, and enclosing `bbox` bounds are supported. The
