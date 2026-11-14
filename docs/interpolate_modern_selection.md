@@ -79,6 +79,8 @@ numerical parity. See the
 See [banded large-input selection](interpolate_large_selection.md) for storage,
 rank fallback and checks through 10,000 sites.
 
-Repeated interior knots, modern selection above those limits, broader ill-
+Repeated supplied interiors are now a separate
+[SciFort extension](interpolate_repeated_knots.md). Modern selection above
+those limits, broader ill-
 conditioned behavior, exact root-iteration parity, C ABI and wrappers remain
 outside this addition.

@@ -13,7 +13,7 @@ module scifort_interpolate_fixed_smoothing
 contains
     logical function fixed_knots_valid(t,k,m,bounds,periodic) result(ok)
         implicit none
-        real(dp), intent(in) :: t(:) !! Full finite knots, simple on the base interval.
+        real(dp), intent(in) :: t(:) !! Full finite knots; interior multiplicity at most k+1.
         integer, intent(in) :: k !! Degree, one through five.
         integer, intent(in) :: m !! Number of sites, including any closing site.
         real(dp), intent(in) :: bounds(2) !! Required base interval endpoints.
@@ -27,7 +27,9 @@ contains
         if (.not.all(ieee_is_finite(t))) return
         if (any(t(2:)<t(:n-1))) return
         if (t(k+1)/=bounds(1) .or. t(n-k)/=bounds(2)) return
-        if (any(t(k+2:n-k)<=t(k+1:n-k-1))) return
+        if (any(t(k+2:n-k-1)<=bounds(1))) return
+        if (any(t(k+2:n-k-1)>=bounds(2))) return
+        if (any(t(k+2:)<=t(:n-k-1))) return
         ok=.true.
     end function fixed_knots_valid
 
@@ -66,10 +68,11 @@ contains
         real(dp), allocatable :: tt(:),uu(:),weights(:),identity(:,:),z(:,:),constraints(:,:)
         real(dp), allocatable :: design(:,:),rhs(:,:),jumps(:,:),a(:,:),d(:,:),v(:,:),c(:,:)
         real(dp), allocatable :: polynomial(:,:),aug(:,:),brhs(:,:),trial(:,:),values(:,:)
+        real(dp), allocatable :: kernel(:,:),breaks(:)
         real(dp) :: span,xscale,wscale,logtarget,target,fp,limit,mu,lo,hi,scale
         integer :: m,n,ndim,active,nj,i,j,r,info,iteration,terms
         real(dp) :: elementary(0:5),choose
-        logical :: limited
+        logical :: limited,repeated
         status=3
         m=size(u)
         n=size(t)-k-1
@@ -133,13 +136,14 @@ contains
             design(i,:)=design(i,:)*weights(i)
         end do
         rhs=x(:active,:)/xscale*spread(weights(:active),2,ndim)
-        nj=size(t)-2*k-2
+        repeated=any(t(k+2:n+1)==t(k+1:n))
+        breaks=pack(tt(k+1:n+1),[.true.,tt(k+2:n+1)>tt(k+1:n)])
+        nj=size(breaks)-2
         allocate(jumps(nj,n),stat=info)
         if (info/=0) return
         do i=1,nj
-            j=k+1+i
-            jumps(i,:)=basis%derivative((tt(j)+tt(j+1))/2,k)- &
-                basis%derivative((tt(j-1)+tt(j))/2,k)
+            jumps(i,:)=basis%derivative((breaks(i+1)+breaks(i+2))/2,k)- &
+                basis%derivative((breaks(i)+breaks(i+1))/2,k)
         end do
         a=matmul(design,z)
         d=matmul(jumps,z)
@@ -149,27 +153,37 @@ contains
         end if
         allocate(v(size(z,2),ndim),stat=info)
         if (info/=0) return
-        ! Marsden's identity gives polynomial coefficients without a numerical null space.
-        terms=k+1
-        if (periodic) terms=1
-        allocate(polynomial(n,terms),trial(terms,ndim),stat=info)
-        if (info/=0) return
-        polynomial(:,1)=1.0_dp
-        if (.not.periodic) then
-            do i=1,n
-                elementary=0.0_dp
-                elementary(0)=1.0_dp
-                do j=1,k
-                    do r=j,1,-1
-                        elementary(r)=elementary(r)+tt(i+j)*elementary(r-1)
+        ! Repeats enlarge the zero-jump space beyond global polynomials.
+        if (repeated) then
+            call null_basis(d,kernel,info)
+            if (info/=0) return
+            polynomial=matmul(z,kernel)
+            terms=size(polynomial,2)
+            allocate(trial(terms,ndim),stat=info)
+            if (info/=0) return
+        else
+            ! Marsden's identity gives polynomial coefficients without a numerical null space.
+            terms=k+1
+            if (periodic) terms=1
+            allocate(polynomial(n,terms),trial(terms,ndim),stat=info)
+            if (info/=0) return
+            polynomial(:,1)=1.0_dp
+            if (.not.periodic) then
+                do i=1,n
+                    elementary=0.0_dp
+                    elementary(0)=1.0_dp
+                    do j=1,k
+                        do r=j,1,-1
+                            elementary(r)=elementary(r)+tt(i+j)*elementary(r-1)
+                        end do
+                    end do
+                    choose=1.0_dp
+                    do r=1,k
+                        choose=choose*real(k-r+1,dp)/real(r,dp)
+                        polynomial(i,r+1)=elementary(r)/choose
                     end do
                 end do
-                choose=1.0_dp
-                do r=1,k
-                    choose=choose*real(k-r+1,dp)/real(r,dp)
-                    polynomial(i,r+1)=elementary(r)/choose
-                end do
-            end do
+            end if
         end if
         call lstsq(matmul(design,polynomial),rhs,trial,info)
         if (info/=0) return

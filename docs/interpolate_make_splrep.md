@@ -25,7 +25,7 @@ fit = make_splrep(x, y, w=w, s=0.15_dp, status=status)
 | `xb, xe` | Finite enclosing interval; default first/last x |
 | `k` | Polynomial degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Full nondecreasing knots with simple interiors; positive `s` only |
+| `t(:)` | Full nondecreasing knots; interior multiplicity up to `k+1` (SciFort extension for repeats); positive `s` only |
 | `nest` | Soft modern knot-count target; upper bound `size(x)+k+1`, or `size(x)+2*k` for periodic fits; large-input fallback retains a hard capacity |
 | `status` | Existing FITPACK status convention: 0 success, 1 invalid, 2 unsupported, 3 numerical failure |
 | `bc_type` | Default or explicit `'not-a-knot'`, or `'periodic'` |
@@ -42,15 +42,18 @@ the existing fixed-knot smoothing solver. Larger inputs retain legacy banded sel
 Coefficients are unpadded: `size(c) = size(knots)-k-1`.
 
 When `t` is supplied, its base interval endpoints equal the bounds,
-its exterior knots are nondecreasing, and its interior knots are simple. Its length must be between `2*(k+1)`
+its exterior knots are nondecreasing, and interior multiplicities are at most
+`k+1`. Its length must be between `2*(k+1)`
 and `size(x)+k+1`. The constructor retains that full knot vector and solves
 the smoothing problem on it. This is **not** a call to `make_lsq_spline`:
 the latter minimizes residual without penalizing derivative jumps. If the
-target exceeds the polynomial residual, a polynomial is represented on the
-supplied knots. If the least-squares residual already exceeds the target,
+target exceeds the zero-penalty residual, the zero-penalty fit is represented
+on the supplied knots. With simple interiors this is a polynomial. If the
+least-squares residual already exceeds the target,
 status 3 and an invalid object are returned. Nonclamped exterior knots and
 rank-deficient regularized fits use a [documented dense fallback](interpolate_fixed_general.md).
-Repeated interior knots remain invalid.
+Repeated interiors are a **SciFort extension** with a larger zero-penalty
+space; see [the repeated-knot contract](interpolate_repeated_knots.md).
 
 `t` and `nest` are mutually exclusive. Modern selection can exceed `nest`;
 if the last selected vector still cannot meet the residual bound, status 3

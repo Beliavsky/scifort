@@ -27,7 +27,7 @@ curve = make_splprep(x, s=0.15_dp, parameters=parameters, status=status)
 | `ub, ue` | Finite enclosing parameter bounds; default first/last parameter |
 | `k` | Degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Full nondecreasing knots with simple interiors; positive `s` only |
+| `t(:)` | Full nondecreasing knots; multiplicity up to `k+1` (SciFort extension for repeats); positive `s` only |
 | `nest` | Soft modern knot-count target; upper bound `size(x,1)+k+1`, or `size(x,1)+2*k` for periodic fits; large-input fallback retains a hard capacity |
 | `status` | 0 success, 1 invalid input, 2 unsupported option, 3 numerical/allocation failure |
 | `parameters(:)` | Optional allocatable output, allocated only on success; receives supplied or calculated sites |
@@ -58,13 +58,16 @@ derivative over all channels, subject to
 `sum((spread(w,2,channels)*(curve(u)-x))**2) <= s`. The FITPACK relative
 residual tolerance is `0.001`. This is one shared constraint, not a separate
 target for each channel. A sufficiently large target yields a degree-k
-least-squares polynomial in each coordinate.
+least-squares polynomial in each coordinate for simple interior knots.
+
+Repeated supplied interiors are a **SciFort extension** with a larger zero-jump
+space; see [the repeated-knot contract](interpolate_repeated_knots.md).
 
 Supplied `t` has nondecreasing exterior knots, exact base endpoints, and
-strictly increasing simple interior knots; its length lies between `2*(k+1)` and
+interior multiplicities at most `k+1`; its length lies between `2*(k+1)` and
 `size(x,1)+k+1`. It requests derivative-jump smoothing on those knots,
-not unconstrained least squares. A polynomial limit retains the supplied
-full knots. Nonclamped exterior knots and rank-deficient regularized fits
+not unconstrained least squares. The zero-penalty limit retains the supplied
+full knots. For repeated interiors that limit need not be a polynomial. Nonclamped exterior knots and rank-deficient regularized fits
 use a [documented dense fallback](interpolate_fixed_general.md). A target below
 the achievable residual, failed numerical checks, or insufficient `nest`
 returns status 3 and an invalid object.

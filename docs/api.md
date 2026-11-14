@@ -7232,7 +7232,8 @@ returns a native `bspline_array_interpolator_type`. Coordinates have shape
 target. Optional allocatable `parameters` returns supplied or chord-length
 sites. Default `s=0` interpolates; `w`, `t`, and `nest` are invalid in that mode.
 Positive nonperiodic `s` supports automatic knots or full supplied
-knots with simple interiors and nondecreasing exterior knots. Periodic interpolation and automatic/supplied-knot smoothing
+knots with nondecreasing exterior knots and interior multiplicities up to `k+1`.
+Periodic interpolation and automatic/supplied-knot smoothing
 are available with `bc_type='periodic'`. Accepted full periodic knot forms,
 soft modern `nest`, large-input legacy fallback, numerical guards and selection differences are
 documented in the [parametric constructor guide](interpolate_make_splprep.md).
@@ -7240,7 +7241,8 @@ documented in the [parametric constructor guide](interpolate_make_splprep.md).
 Nonclamped exterior knots and rank-deficient regularized fits use the
 [rank-aware supplied-knot fallback](interpolate_fixed_general.md), with
 explicit periodic endpoint constraints and documented dense-solver limits.
-Repeated interior knots remain invalid.
+Repeated interior knots in these constructors are a
+[SciFort extension](interpolate_repeated_knots.md), with a larger zero-penalty space.
 
 ### Native adaptive knot generation
 
@@ -7261,7 +7263,9 @@ constructors now use it within these limits; see
 `make_splrep(x,y,w=...,xb=...,xe=...,k=...,s=...,t=...,nest=...,status=...)`
 returns a native `bspline_interpolator_type` for interpolation or smoothing.
 It supports automatic knots or a supplied full knot vector with
-simple interiors and nondecreasing exterior knots. Supplied knots still request derivative-jump smoothing;
+nondecreasing exterior knots and interior multiplicities up to `k+1`.
+Repeated interiors are a [SciFort extension](interpolate_repeated_knots.md).
+Supplied knots still request derivative-jump smoothing;
 `nest` is a soft count within modern selection limits; larger-input legacy
 fallback retains its earlier hard capacity. Infeasible residuals fail explicitly.
 The default is `s=0`; weights, knots, and capacity are rejected in that mode.

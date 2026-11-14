@@ -65,7 +65,7 @@ contains
         real(dp), intent(in), optional :: ue !! Right enclosing bound, default last parameter.
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative total residual target, default zero.
-        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; simple interiors.
+        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; interior multiplicity at most k+1.
         integer, intent(in), optional :: nest !! Knot-count target; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical.
         real(dp), allocatable, intent(out), optional :: parameters(:) !! Sites on success only.
@@ -209,7 +209,7 @@ contains
         real(dp), intent(in), optional :: xe !! Right enclosing bound, default x(m).
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative squared-residual target, default zero.
-        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; simple interiors.
+        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; interior multiplicity at most k+1.
         integer, intent(in), optional :: nest !! Knot-count target; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical
         character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
@@ -397,6 +397,7 @@ contains
         else
             classic=all(t(:k+1)==bounds(1)) .and. all(t(nt-k:)==bounds(2))
         end if
+        classic=classic .and. all(t(k+2:nt-k)>t(k+1:nt-k-1))
         code=3
         if (classic) then
             if (periodic) then

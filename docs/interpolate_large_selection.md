@@ -42,6 +42,7 @@ band can still produce different coefficients and higher derivatives.
 The [validation record](../validation/large_selection_2026-11-14.md) includes
 301-10,000-site scalar/shared fits, complete independent knot sequences,
 soft-count overshoots, cyclic rank failures and a periodic solve with 9,999
-independent coefficients. Modern selection beyond the size limits, repeated
-interiors, broader conditioning guarantees and exact periodic/root-iteration
+independent coefficients. Repeated supplied interiors are a separate
+[SciFort extension](interpolate_repeated_knots.md). Modern selection beyond
+the size limits, broader conditioning guarantees and exact periodic/root-iteration
 parity remain gaps. C ABI and wrappers remain deferred.

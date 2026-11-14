@@ -1,3 +1,14 @@
+## 2026-11-14 - Repeated supplied interior knots (SciFort extension)
+
+- Support multiplicities through k+1 in positive-target scalar/shared spline
+  constructors with ordinary or periodic endpoint constraints.
+- Count kth-derivative jumps once per distinct knot and solve the enlarged
+  zero-penalty space without assuming a global polynomial/constant limit.
+- Preserve simple-knot paths and reject excessive multiplicity; document
+  piecewise derivatives, discontinuities and dense-solver limits.
+- Correct the gaps inventory: SciPy smoothing constructors reject repeats;
+  this addition is an extension, not missing shared SciPy behavior.
+
 ## 2026-11-14 - Banded large-input modern spline selection
 
 - Extend native knot generation and modern constructor soft counts from 256

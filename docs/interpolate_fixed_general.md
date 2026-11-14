@@ -9,9 +9,10 @@ derivative-jump smoothing problem can be solved numerically.
 
 The full vector `t` must be finite and nondecreasing, with
 `t(k+1)` equal to the left bound and `t(size(t)-k)` equal to the right bound.
-The base interval, from the first bound through the last, must have strictly
-increasing knots: repeated interior knots remain invalid. Exterior knots may
-be distinct, partially repeated, or clamped. Periodic exterior knots need not
+Interior knots lie strictly between the bounds and may have multiplicity
+up to `k+1`. Repeated interior knots in these smoothing constructors are a
+**SciFort extension**; see the [repeated-knot contract](interpolate_repeated_knots.md).
+Exterior knots may be distinct, partially repeated, or clamped. Periodic exterior knots need not
 be cyclic extensions. The supplied vector is returned exactly.
 
 Lengths remain `2*(k+1)` through `m+k+1` for ordinary fits and through
@@ -34,14 +35,14 @@ copying alone would not enforce those conditions for arbitrary exterior knots.
 
 ## Solver and numerical contract
 
-Conventional clamped or cyclic knots first use the existing attributed banded
-FITPACK solver. Other exterior forms and numerical failures of that path use
-a dense fallback built from existing native B-spline, QR, and SVD procedures.
+Conventional clamped or cyclic knots with simple interiors first use the
+existing attributed banded FITPACK solver. Repeated interiors, other exterior
+forms and numerical failures of that path use a dense fallback built from existing native B-spline, QR, and SVD procedures.
 No new dependency is required. Automatic knot selection is unchanged.
 
 The fallback projects onto the null space of the periodic endpoint constraints
-when applicable. It minimizes squared kth-derivative jumps at the interior
-knots, subject to the existing weighted squared-residual bound, with one shared
+when applicable. It minimizes squared kth-derivative jumps once at each
+distinct interior knot, subject to the existing weighted squared-residual bound, with one shared
 multiplier across all coordinates. Augmented least-squares systems avoid
 forming normal equations. Numerical rank uses the existing QR/SVD relative
 cutoff `max(rows,columns)*epsilon`.
@@ -53,9 +54,11 @@ extension** to the shared smoothing interface; exact SciPy failure behavior
 on rank-deficient inputs is not reproduced. SVD least-squares steps use
 minimum coefficient norm to resolve numerical null directions.
 
-The large-target limit is a degree-k polynomial for ordinary fits and a
-weighted constant for periodic fits. Polynomial B-spline coefficients come
-from Marsden's identity, rather than an ill-conditioned numerical penalty
+With simple interior knots, the large-target limit is a degree-k polynomial
+for ordinary fits and a weighted constant for periodic fits. With repeated
+interiors it is the least-squares fit in the full zero-jump space, which can
+retain lower-order corners and discontinuities. For simple interiors,
+polynomial B-spline coefficients come from Marsden's identity, rather than an ill-conditioned numerical penalty
 null space. Supplied knots are retained even at those limits. Infeasible
 residual targets and failed numerical checks return status 3.
 

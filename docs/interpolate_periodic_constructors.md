@@ -65,14 +65,16 @@ For positive `s`, optional `t` supplies the full periodic knot vector and
 excludes `nest`. No knots are added or removed, including at the constant
 limit. Accepted knots are finite and nondecreasing, with
 `2*(k+1) <= size(t) <= m+2*k`, `t(k+1)` equal to the first site, and
-`t(size(t)-k)` equal to the closing site. The base interval knots must be
-strictly increasing. Repeated interiors are invalid. Exterior knots may be
+`t(size(t)-k)` equal to the closing site. Interior multiplicities may be at most `k+1`; repeats are a
+**SciFort extension**, with the [repeated-knot contract](interpolate_repeated_knots.md). Exterior knots may be
 cyclic, noncyclic, partially repeated, or clamped.
 
 The solver minimizes squared jumps of the kth derivative at interior knots
-under the same residual constraint. A sufficiently large target gives the
-weighted constant on those knots. A target below the attainable residual
-beyond its tolerance returns status 3. Noncyclic exterior vectors and
+under the same residual constraint. For simple interiors, a sufficiently large
+target gives the
+weighted constant on those knots. Repeated interiors use the full zero-jump
+space while retaining endpoint constraints, so that limit may be nonconstant. A target below the attainable residual
+beyond its tolerance returns status 3. Repeated interiors, noncyclic exterior vectors and
 rank-deficient cases use the [rank-aware dense fallback](interpolate_fixed_general.md),
 which enforces endpoint derivatives explicitly and has documented size,
 range, and conditioning limits. Legacy periodic `task=-1` is separately

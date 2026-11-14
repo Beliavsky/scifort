@@ -3564,3 +3564,23 @@ least squares, thousands-of-samples checks and feasible soft counts.
   periodic/root-iteration parity and stateless continuation remain gaps.
 
 C ABI and wrappers remain deferred. See [large selection](docs/interpolate_large_selection.md).
+
+## 2026-11-14 -- Approved repeated supplied interior knots
+
+The user approved auditing upstream knot multiplicities and extending native
+fixed-knot scalar/parametric fits with continuity and smoothing contracts.
+
+- [x] Inspect exact SciPy v1.18.0 `fpcheck`, smoothing dispatch and `disc`:
+  smoothing requires simple interiors. Repeated interiors are therefore a
+  SciFort extension, correcting their earlier classification as a shared gap.
+- [x] Accept interior multiplicity through k+1 with ordinary/periodic boundaries;
+  retain kth-piecewise-derivative jumps once per distinct interior knot.
+- [x] Compute the enlarged zero-jump space and preserve endpoint constraints,
+  minimum-norm rank handling and explicit infeasible-target failures.
+- [x] Native and independent tests for active/limit fits, corners, discontinuous
+  pieces, right-sided knot values and rank-deficient observations.
+- [ ] Banded repeated-knot smoothing beyond the dense limits, stronger
+  conditioning guarantees, exact shared root-iteration parity and stateless
+  continuation remain separate work. C ABI and wrappers remain deferred.
+
+See [repeated-knot contract](docs/interpolate_repeated_knots.md).

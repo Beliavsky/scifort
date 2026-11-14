@@ -85,7 +85,7 @@ program test_interpolate_periodic_fixed
         call invalid(bad,k,'incorrect endpoint')
         bad=t
         bad(k+2)=bad(k+1)
-        call invalid(bad,k,'repeated knot')
+        call invalid(bad,k,'extra base endpoint knot')
         bad=t
         bad(1)=nan
         call invalid(bad,k,'nan knot')

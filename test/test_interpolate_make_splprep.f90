@@ -138,8 +138,8 @@ program test_interpolate_make_splprep
     fit=make_splprep(x,s=0.15_dp,t=[0.0_dp,1.0_dp],status=code)
     call invalid('short knots')
     fit=make_splprep(x,u=u,s=0.15_dp, &
-        t=[(0.0_dp,i=1,4),0.4_dp,0.4_dp,(1.0_dp,i=1,4)],status=code)
-    call invalid('repeated interior knot')
+        t=[(0.0_dp,i=1,4),(0.4_dp,i=1,5),(1.0_dp,i=1,4)],status=code)
+    call invalid('excess interior multiplicity')
     fit=make_splprep(x,u=u,s=0.15_dp, &
         t=[(0.0_dp,i=1,4),nan,(1.0_dp,i=1,4)],status=code)
     call invalid('nonfinite knot')

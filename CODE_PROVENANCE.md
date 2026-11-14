@@ -1,3 +1,43 @@
+## 2026-11-14 - Repeated supplied interior knots
+
+The repeated-knot extension in `src/interpolate_fixed_smoothing.f90` and its
+routing in `src/interpolate_fitpack_compat.f90` are original MIT SciFort code.
+They compose existing native B-spline piecewise derivatives, SVD null spaces
+and augmented QR/SVD least-squares solvers. No third-party implementation
+was imported or adapted for this change, and existing notices remain intact.
+
+The mathematical specification retains the documented residual-constrained
+kth-derivative-jump objective, counting jumps once at each distinct interior
+knot. When multiplicities exceed one, the zero-jump space can contain lower-
+order corners and discontinuities; the implementation now obtains that space
+from the projected jump matrix. Periodic endpoint derivative constraints and
+minimum-norm resolution of numerical null directions remain explicit.
+Simple-interior polynomial limits still use the existing Marsden formula.
+
+Sources inspected before implementation:
+
+- SciPy v1.18.0 [`_bsplines.py`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_bsplines.py),
+  `fpcheck` strict-interior validation and `make_lsq_spline` validation;
+  SHA-256 `b099333d1dc57d0d4ad5300c04cd2767350048cac2b9dee464e40ab469510caa`.
+- SciPy v1.18.0 [`_fitpack_repro.py`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_fitpack_repro.py),
+  `_make_splrep_impl` dispatch and `disc` simple-knot assumption;
+  SHA-256 `82449ae292bb361675439b422cec6c084f9fbfa6519eabec06b1009c51a818bd`.
+  The exact BSD root license was inspected and is already retained in
+  `LICENSES/scipy-generate-knots-BSD-3-Clause.txt`. These files are behavioral
+  references here; this change does not translate their implementation.
+- Carl de Boor, [*B(asic)-Spline Basics*](https://ftp.cs.wisc.edu/Approx/bsplbasic.pdf),
+  for multiplicity, piecewise differentiation and continuity. The objective
+  remains SciFort's documented generalization of the derivative-jump problem
+  cited in the existing Dierckx (1993) smoothing provenance.
+
+SciPy smoothing constructors reject repeated interiors. The addition is
+explicitly labelled a SciFort extension, correcting its earlier listing as
+missing shared functionality. New tests and `validation/check_repeated_knots.py`
+are original MIT work. The independent checker extracts jumps from SciPy
+piecewise-polynomial coefficients and solves constrained systems with NumPy /
+SciPy; it does not claim repeated-knot SciPy smoothing API parity. No new
+runtime dependency or third-party license text is required.
+
 ## 2026-11-14 - Banded large-input modern selection
 
 `src/interpolate_generate_knots.f90` retains its SciPy BSD attribution and
