@@ -63,8 +63,8 @@ program test_interpolate_fitpack_parametric
         error stop 'chord length eval'
 
     bad=splprep(x,u=u,s=1.0_dp,status=code)
-    if (code /= fitpack_tck_unsupported_smoothing .or. bad%valid()) &
-        error stop 'positive smoothing must not be approximated'
+    if (code /= 0 .or. .not.bad%valid()) error stop 'native positive smoothing'
+    if (size(bad%t) /= 8) error stop 'parametric polynomial limit'
     bad=splprep(x,u=u,per=.true.,status=code)
     if (code /= fitpack_tck_unsupported_smoothing .or. bad%valid()) &
         error stop 'periodic fit must not be approximated'

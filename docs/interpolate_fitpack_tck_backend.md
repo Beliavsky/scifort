@@ -1,7 +1,7 @@
 # FITPACK TCK compatibility and optional adaptive-knot smoothing
 
 SciFort provides a new **dependency-free** `scifort_interpolate` API for
-FITPACK-style spline tuples `(t,c,k)` and scalar automatic-knot smoothing,
+FITPACK-style spline tuples `(t,c,k)` and scalar/parametric automatic-knot smoothing,
 plus a separate **optional** backend for additional FITPACK fitting interfaces maintained by Federico Perini
 at <https://github.com/perazz/fitpack>.
 
@@ -22,6 +22,8 @@ at <https://github.com/perazz/fitpack>.
   scattered solver and rank reduction. These add no mandatory dependency.
 - Native scalar `splrep(s>0)` also adapts the pinned upstream `fpcurf`
   automatic-knot and smoothing solver; the optional package is not required.
+- Native nonperiodic `splprep(s>0)` adapts `fppara` and its vector Givens
+  helpers from the same licensed source.
 - Source references: <https://github.com/perazz/fitpack/blob/main/LICENSE.md>,
   <https://github.com/perazz/fitpack/blob/main/fpm.toml>,
   <https://perazz.github.io/fitpack/tutorial_curve.html>.
@@ -65,8 +67,8 @@ for every accepted data set. Working storage is linear in sample count for
 the supported degrees; no new dependency or C ABI is added.
 
 **Remaining limitations:** `task=1`, periodic scalar smoothing, `quiet`, and
-the modern `make_splrep` interface are not included. Parametric smoothing is
-still provided by the optional package. See the
+the modern `make_splrep` interface are not included. Nonperiodic parametric
+smoothing is native through `splprep`, as described below. See the
 [native smoothing validation](../validation/splrep_smoothing_2026-11-13.md),
 including a pinned upstream regression that fails in the older SciPy 1.15.3
 reference but succeeds in the adopted Fortran implementation.
@@ -96,10 +98,13 @@ if (status /= 0) error stop 'smoothing failed'
 
 The public `scifort_interpolate` module also exports
 `fitpack_parametric_tck_type` and `splprep`. This implements SciPy's
-**nonperiodic parametric** `splprep` for exact interpolation (`s=0`) and for
-fixed-knot weighted least squares (`task=-1`), with degrees 1–5 and an
-arbitrary positive number of coordinate channels. This is new SciFort code
-using existing B-spline solvers, not copied from FITPACK or SciPy.
+**nonperiodic parametric** `splprep` for exact interpolation (`s=0`),
+automatic-knot smoothing (`s>0`), and fixed-knot weighted least squares
+(`task=-1`), with degrees 1-5 and an arbitrary positive number of coordinate
+channels within storage limits. Interpolation and fixed-knot paths use
+original SciFort B-spline code; the positive-s path adapts the licensed
+perazz/FITPACK `fppara` solver. Support for more than ten channels is a
+**SciFort extension** to the legacy SciPy `splprep` interface.
 
 ```fortran
 use scifort_kinds, only : dp
@@ -114,6 +119,9 @@ curve = splprep(points, k=3, s=0.0_dp, status=status)
 if (status /= 0) error stop 'splprep failed'
 values = splev([0.25_dp, 0.50_dp, 0.75_dp], curve)
 ! values(query,coordinate); scalar splev returns a coordinate vector.
+
+curve = splprep(points, w=w, k=3, s=0.25_dp, status=status)
+if (status /= 0) error stop 'parametric smoothing failed'
 ```
 
 `curve%t(:)` is the shared knot vector; `curve%c(:,coordinate)` stores **unpadded**
@@ -137,15 +145,46 @@ curve = splprep(points, u=u, w=w, k=3, task=-1, &
 Weighted fits minimize the sum over observation sites and coordinate
 components of `(w(i) * residual(i,j))**2`. For `s=0`, weights do not change
 an exact interpolation. Explicit `u` must be finite and strictly increasing.
-`ub`/`ue` may enlarge the domain for a fixed-knot least-squares fit; exact
+`ub`/`ue` may enlarge the domain for fixed-knot or positive-s smoothing fits; exact
 interpolation currently requires the domain endpoints to coincide with
 `u(1)` and `u(n)`.
 
-**Not yet supported for parametric `splprep`:** automatic knot selection for `s>0`, periodic
-`per=.true.` interpolation, or a FITPACK task=1 continuation. Unsupported
-features return status `fitpack_tck_unsupported_smoothing` (2), rather than
-silently returning a different fit. The optional upstream backend remains
-the intended extension for these cases, now that the user-supplied FITPACK 2.0.0 adapter has been compiled and tested offline.
+For `task=0,s>0`, one shared knot vector and one smoothing parameter serve all
+channels. The total target is `sum_i sum_j (w(i)*residual(i,j))**2 <= s`,
+with FITPACK relative target tolerance `0.001`. A sufficiently large target
+returns the weighted least-squares polynomial curve. The existing default
+`s=0` is retained; SciPy's legacy routine has a different omitted-s default.
+Coefficients remain unpadded, with shape `(size(t)-k-1,channels)`.
+
+Positive-s chord lengths subtract coordinates first when the difference is
+representable, preserving spacing at large offsets. They scale first when
+subtraction would overflow. One common coordinate scale preserves the joint
+geometry across channels. The solver normalizes the
+parameter domain, coordinates, and weights, then restores physical knots
+and coefficients. Parameters are shifted before scaling to preserve spacing
+at large offsets; the final tuple's residual is checked in physical coordinates.
+The physical parameter span must be representable, and distinct physical
+knot intervals must be at least `tiny(1.0_dp)`. It uses the scalar solver's
+normalized parameter-gap/relative-weight
+exponent guards and returns status 3 with an invalid tuple for numerical or
+allocation failure, unrepresentable targets, or unmet residuals. Storage is
+linear in sample count and channel count for degrees 1-5. There is no new
+linked dependency or C ABI.
+
+The perazz and SciPy smoothing iterations use different initial guesses;
+normalization can also change the iteration path. Coefficients and derivatives,
+especially higher derivatives of noisy curves, can differ substantially even
+when both fits meet the target. Residual tolerance is not a derivative-error
+bound. Independent validation checks the weighted residual and penalized
+normal equations, as well as agreement with the pinned original core and
+evaluation of the native tuple by SciPy. See the
+[parametric smoothing validation](../validation/splprep_smoothing_2026-11-13.md).
+
+**Not yet supported for parametric `splprep`:** periodic `per=.true.` fits,
+FITPACK `task=1` continuation, and the modern `make_splprep` constructor.
+Periodic fits return `fitpack_tck_unsupported_smoothing` (2); `task=1` retains
+the existing invalid-input status (1). The optional backend continues to
+provide periodic parametric smoothing.
 
 The independent regression compares `splprep` parameters, knots,
 coefficients, fitted points and first through third derivatives against
@@ -159,7 +198,8 @@ python tools/interpolate_reference/run_all_native_interpolation.py
 
 ## Optional `perazz/fitpack` backend (automatic knot selection)
 
-Scalar nonperiodic `splrep(s>0)` is now native. The optional backend remains
+Scalar and parametric nonperiodic `splrep(s>0)` / `splprep(s>0)` are native.
+The optional backend remains
 useful for its separate spline-object API and broader fitting interfaces.
 
 The `optional/fitpack_backend` directory is a *separate* FPM subproject. Its

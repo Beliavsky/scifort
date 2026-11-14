@@ -7232,3 +7232,14 @@ positive residual weights, and enclosing `bbox` bounds are supported. The
 existing default `s=0`, tuple layout, evaluation/calculus routines, and status
 names are preserved. See the [TCK guide](interpolate_fitpack_tck_backend.md)
 for residual tolerance, numerical guards, and remaining parametric/periodic gaps.
+
+### Native parametric adaptive smoothing
+
+`splprep(points,u=...,w=...,k=...,s=positive)` now fits a nonperiodic curve
+with shared automatic knots and one total weighted residual target across
+channels. Parameters may be supplied or generated from chord lengths. Degrees
+1-5 and enclosing `ub`/`ue` bounds are supported; unpadded coefficient storage,
+default `s=0`, and existing status names are preserved. More than ten coordinate
+channels remain supported as a SciFort extension. See the
+[TCK guide](interpolate_fitpack_tck_backend.md) for scaling, conditioning,
+iteration-path differences from SciPy, and remaining periodic/modern-interface gaps.

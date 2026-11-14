@@ -1,10 +1,15 @@
 # Periodic and parametric FITPACK smoothing (optional backend)
 
+Nonperiodic automatic-knot smoothing is also available natively through
+`splprep(points,s=positive)`; see the [TCK guide](interpolate_fitpack_tck_backend.md).
+The optional interface documented here remains available, including periodic fits.
+
 SciFort now wraps **genuine `perazz/fitpack`** for scalar periodic splines and
 adaptive-knot parametric smoothing in the separate
 `optional/fitpack_backend` FPM subproject. The main SciFort library does **not**
-depend on FITPACK, BLAS, or LAPACK. Neither FITPACK source nor built libraries
-are vendored in this repository.
+depend on FITPACK, BLAS, or LAPACK. No complete FITPACK distribution or built
+third-party libraries are vendored in this repository. Selected
+licensed numerical kernels are adapted in the native library with provenance.
 
 ## Fortran API
 

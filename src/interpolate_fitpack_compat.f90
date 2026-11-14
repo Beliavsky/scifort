@@ -2,11 +2,11 @@
 ! Copyright (c) 2026 SciFort contributors
 !
 ! Dependency-free FITPACK TCK compatibility layer: spline representation,
-! Interpolation, native adaptive scalar smoothing, fixed-knot LSQ and calculus.
+! Interpolation, native scalar/parametric smoothing, fixed-knot LSQ and calculus.
 module scifort_interpolate_fitpack_compat
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, ieee_quiet_nan
     use scifort_kinds, only : dp
-    use scifort_interpolate_curfit_core, only : fitpack_smooth_curve
+    use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline, &
         bspline_status_success
@@ -78,9 +78,30 @@ contains
         if (self%valid()) n = size(self%c,2)
     end function parametric_tck_channels
 
-    ! SciPy splprep, exact interpolating case (s=0) or supplied full knot
-    ! vector (task=-1). Positive-s automatic-knot smoothing and periodic
-    ! constraints use the separately packaged optional FITPACK backend.
+    pure elemental function chord_difference(a,b,scale) result(delta)
+        implicit none
+        real(dp), intent(in) :: a !! Finite current coordinate component.
+        real(dp), intent(in) :: b !! Finite preceding coordinate component.
+        real(dp), intent(in) :: scale !! Common positive finite coordinate scale.
+        real(dp) :: delta
+        ! Subtract first for nearby large values; divide first only to avoid overflow.
+        if (a>=0.0_dp .and. b<0.0_dp) then
+            if (a>huge(a)+b) then
+                delta=a/scale-b/scale
+                return
+            end if
+        else if (a<0.0_dp .and. b>=0.0_dp) then
+            if (b>huge(a)+a) then
+                delta=a/scale-b/scale
+                return
+            end if
+        end if
+        delta=(a-b)/scale
+    end function chord_difference
+
+    ! SciPy splprep: interpolation (s=0), automatic-knot smoothing (s>0),
+    ! or supplied full knot vector (task=-1). Periodic constraints still
+    ! use the separately packaged optional FITPACK backend.
     ! Input ordinates are transposed relative to scipy.splprep's sequence:
     ! coordinates(sample,dimension), with up to arbitrary coordinate count.
     function splprep(x,u,w,k,s,task,t,ub,ue,per,status) result(tck)
@@ -88,8 +109,8 @@ contains
         real(dp), intent(in), optional :: u(:) !! strictly increasing parameter
         real(dp), intent(in), optional :: w(:) !! positive FITPACK residual multipliers
         integer, intent(in), optional :: k !! degree 1:5 (default 3)
-        real(dp), intent(in), optional :: s !! smoothing target (supported: zero)
-        integer, intent(in), optional :: task !! 0=interpolation, -1=fixed knots
+        real(dp), intent(in), optional :: s !! total weighted squared-residual target, default zero
+        integer, intent(in), optional :: task !! 0=interpolation/smoothing, -1=fixed knots
         real(dp), intent(in), optional :: t(:) !! *complete* FITPACK knots if task=-1
         real(dp), intent(in), optional :: ub !! left parameter domain bound
         real(dp), intent(in), optional :: ue !! right parameter domain bound
@@ -97,8 +118,9 @@ contains
         integer, intent(out), optional :: status !! 0=success, 1=invalid, 2=unsupported, 3=singular
         type(fitpack_parametric_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
-        real(dp), allocatable :: param(:), distances(:), coefficients(:), knots(:), interior(:)
-        real(dp) :: left, right, total, target
+        real(dp), allocatable :: param(:),distances(:),coefficients(:),knots(:),interior(:)
+        real(dp), allocatable :: delta(:)
+        real(dp) :: left, right, total, target, coordinate_scale
         integer :: n, ndim, deg, mode, code, fitcode, j, nc
         code = fitpack_tck_invalid_input
         n = size(x,1)
@@ -112,7 +134,8 @@ contains
         if (deg < 1 .or. deg > 5 .or. n <= deg .or. ndim < 1) goto 900
         if (mode /= 0 .and. mode /= -1) goto 900
         if (.not. all(ieee_is_finite(x))) goto 900
-        if (.not. ieee_is_finite(target) .or. target < 0.0_dp) goto 900
+        if (.not. ieee_is_finite(target)) goto 900
+        if (target < 0.0_dp) goto 900
         if (present(per)) then
             if (per) then
                 code = fitpack_tck_unsupported_smoothing
@@ -121,23 +144,46 @@ contains
         end if
         if (present(w)) then
             if (size(w) /= n) goto 900
-            if (.not. all(ieee_is_finite(w)) .or. any(w <= 0.0_dp)) goto 900
+            if (.not. all(ieee_is_finite(w))) goto 900
+            if (any(w <= 0.0_dp)) goto 900
         end if
-        allocate(param(n))
+        allocate(param(n),stat=fitcode)
+        if (fitcode /= 0) then
+            code=fitpack_tck_singular
+            goto 900
+        end if
         if (present(u)) then
             if (size(u) /= n) goto 900
             if (.not. all(ieee_is_finite(u))) goto 900
             param = u
             if (any(param(2:) <= param(:n-1))) goto 900
         else
-            allocate(distances(n))
+            allocate(distances(n),delta(ndim),stat=fitcode)
+            if (fitcode /= 0) then
+                code=fitpack_tck_singular
+                goto 900
+            end if
+            coordinate_scale=1.0_dp
+            if (mode == 0 .and. target > 0.0_dp) then
+                coordinate_scale=maxval(abs(x))
+                if (coordinate_scale == 0.0_dp) goto 900
+            end if
             distances(1) = 0.0_dp
             do j=2,n
-                ! Scaling prevents overflow in sum-of-squares for ordinary
-                ! large but finite coordinates.
-                total = maxval(abs(x(j,:)-x(j-1,:)))
+                ! Common scaling preserves Euclidean chord lengths up to a constant
+                ! while preventing overflow before subtracting large coordinates.
+                if (mode == 0 .and. target > 0.0_dp) then
+                    delta=chord_difference(x(j,:),x(j-1,:),coordinate_scale)
+                else
+                    delta=x(j,:)-x(j-1,:)
+                end if
+                total = maxval(abs(delta))
+                if (total == 0.0_dp .and. any(x(j,:) /= x(j-1,:))) then
+                    code=fitpack_tck_singular
+                    goto 900
+                end if
                 if (total <= 0.0_dp .or. .not. ieee_is_finite(total)) goto 900
-                distances(j) = distances(j-1)+total*sqrt(sum(((x(j,:)-x(j-1,:))/total)**2))
+                distances(j)=distances(j-1)+total*sqrt(sum((delta/total)**2))
             end do
             total = distances(n)
             if (total <= 0.0_dp .or. .not. ieee_is_finite(total)) goto 900
@@ -152,7 +198,13 @@ contains
         if (mode == 0) then
             if (present(t)) goto 900
             if (target > 0.0_dp) then
-                code = fitpack_tck_unsupported_smoothing
+                call fitpack_smooth_parametric(param,x,w,deg,target,[left,right], &
+                    tck%t,tck%c,code)
+                if (code == 0) then
+                    call move_alloc(param,tck%u)
+                    tck%k=deg
+                    if (.not.tck%valid()) code=fitpack_tck_singular
+                end if
                 goto 900
             end if
             if (left /= param(1) .or. right /= param(n)) then

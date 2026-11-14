@@ -1,3 +1,12 @@
+## 2026-11-13 - Native parametric automatic-knot smoothing
+
+- Add dependency-free nonperiodic `splprep(s>0)` using the licensed FITPACK
+  vector solver with shared knots, weights, degrees 1-5, and supplied or
+  chord-length parameters. Preserve unpadded tuples and higher channel counts.
+- Add scaled chord lengths, normalized fitting, rank/residual checks, native
+  regressions, and independent upstream, SciPy, and stationarity checks.
+- Document smoothing-iteration differences and derivative conditioning limits.
+
 ## 2026-11-13 - Native scalar automatic-knot smoothing
 
 - Add dependency-free `splrep(task=0,s>0)` for degrees 1-5, positive observation

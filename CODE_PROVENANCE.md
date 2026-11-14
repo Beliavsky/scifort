@@ -1,3 +1,69 @@
+## 2026-11-13 - Native parametric automatic-knot smoothing
+
+`src/interpolate_curfit_core.f90` now also adapts `fppara`,
+`fp_rotate_row_vec`, and `fp_rotate_shifted_vec` from Federico Perini's
+perazz/FITPACK, based on Paul Dierckx's FITPACK:
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`. The source and
+[license](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/LICENSE.md)
+were inspected; source SHA-256 is
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`,
+and license SHA-256 is
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+The existing [retained BSD license](LICENSES/perazz-fitpack-BSD-3-Clause.txt)
+contains the full terms and Copyright (c) 2022 Federico Perini notice;
+only blank-line formatting differs. The combined source retains
+`MIT AND BSD-3-Clause` for original wrappers and adapted numerical kernels.
+
+Adaptation changes include SciFort's binary64 kind and default integers/
+logicals, lowercase free-form formatting, explicit `implicit none`, documented
+dummy arguments, and one statement per line. The existing attributed private
+B-spline, triangular-band, knot-insertion, Givens, and root-iteration helpers
+are reused without changing their numerical implementations. The parametric
+kernel retains shared-knot selection, a single penalty parameter across all
+coordinate channels, its mean-diagonal initial guess, relative residual
+tolerance 0.001, and a maximum of 20 smoothing iterations. The surrounding
+upstream `parcur` routine was inspected; SciFort calls `fppara` directly
+with task zero, explicit workspace, and supplied normalized parameters.
+
+Original SciFort integration adds a normalized wrapper, coordinate-fastest
+input packing/channel-major output unpacking, active-factor rank checks,
+achieved-residual verification, finite/range checks, status mapping, and
+scaled chord lengths that avoid overflowing the physical coordinate difference.
+Chord differences are formed before scaling when representable, preserving
+geometry at large common offsets, and before-subtraction scaling is used only
+where needed to avoid overflow.
+Origin-first parameter normalization preserves large-offset spacing, and a
+second residual check validates physical knots and rounded/rescaled coefficients.
+Unrepresentable physical spans or unresolved physical knot intervals fail explicitly.
+The existing public signature, default s=0, unpadded coefficient shape,
+interpolation/fixed-knot paths, periodic failure status, and arbitrary positive
+channel-count commitment are preserved. More than ten channels are documented
+as a SciFort extension to legacy SciPy splprep. There is no new package,
+external linked dependency, or C ABI.
+
+The inspected mathematical references include Dierckx, "Algorithms for
+smoothing data with periodic and parametric splines", Computer Graphics and
+Image Processing 20 (1982), 171-184, and *Curve and Surface Fitting with
+Splines* (Oxford, 1993). Validation independently forms B-spline design and
+kth-derivative-jump matrices to check the penalized normal equations. It also
+compares the separately compiled original pinned core and SciPy's residual
+contracts. SciPy 1.15.3's
+[`fppara.f`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/interpolate/fitpack/fppara.f)
+was inspected to confirm its reciprocal-mean initial guess differs from the
+adopted mean-diagonal guess; no SciPy implementation code was imported for
+this change. Iteration-path and high-derivative differences are documented.
+
+Optional upstream fixture input is read from `test_parametric_fit` in
+[`test/fitpack_curve_tests.f90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/test/fitpack_curve_tests.f90)
+(SHA-256 `0bb92548cb070e70e245b1f837fb931014e69b6f1c335f8cfdca49c514908847`).
+The checker preserves default-real literal rounding and exercises six fresh
+fits drawn from that test's settings, rather than its stateful continuation
+sequence. Upstream data are not vendored and the full upstream suite was not
+run. New native tests, validation drivers, checker, and wrapper code are
+original MIT-licensed SciFort contributions. See the
+[validation record](validation/splprep_smoothing_2026-11-13.md).
+
 ## 2026-11-13 - Native scalar automatic-knot smoothing
 
 `src/interpolate_curfit_core.f90` adapts scalar `fpcurf` and supporting kernels

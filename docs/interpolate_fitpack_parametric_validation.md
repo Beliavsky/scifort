@@ -2,6 +2,10 @@
 
 ## Scope
 
+This historical record covers interpolation and fixed-knot fitting. Native
+positive-s smoothing was added later; see its
+[validation record](../validation/splprep_smoothing_2026-11-13.md).
+
 New independent SciFort `scifort_interpolate` features:
 
 - `fitpack_parametric_tck_type` and `splprep` for nonperiodic parametric

@@ -3396,4 +3396,17 @@ C ABI and wrapper expansion remain deferred.
 - [x] Review pinned upstream source/license, retain notices, and record adaptation.
 - [x] Validate checked/optimized native behavior against SciPy, the separately
   compiled upstream core, and the upstream knot-insertion crash fixture.
-- [ ] Extend the foundation to parametric smoothing and modern spline constructors.
+- [x] Extend the foundation to native nonperiodic parametric smoothing.
+- [ ] Add periodic curve smoothing and modern spline constructors.
+
+## 2026-11-13 -- Approved native parametric smoothing expansion
+
+The user approved nonperiodic automatic-knot `splprep(s>0)` after scalar smoothing.
+
+- [x] Shared knots and total weighted residual across channels, degrees 1-5,
+  supplied/chord-length parameters, enlarged bounds, and existing tuple layout.
+- [x] Preserve higher channel counts, add scaling/range/residual diagnostics,
+  and retain upstream source/license attribution.
+- [x] Validate checked/optimized behavior against the pinned core, upstream
+  parametric data, SciPy residual contracts, and independent normal equations.
+- [ ] Periodic parametric smoothing, continuation, and modern constructors.
