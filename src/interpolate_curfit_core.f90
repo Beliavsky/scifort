@@ -20,7 +20,7 @@ module scifort_interpolate_curfit_core
     logical, parameter :: fp_true = .true., fp_false = .false.
 contains
 
-    subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status,knot_capacity)
+    subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status,knot_capacity,full_knots)
         implicit none
         real(dp), intent(in) :: u(:) !! Finite increasing sites, including the closing endpoint.
         real(dp), intent(in) :: x(:,:) !! Coordinates (sites,channels); final row is ignored.
@@ -31,11 +31,14 @@ contains
         real(dp), allocatable, intent(out) :: coeff(:,:) !! Unpadded coefficients by channel.
         integer, intent(out) :: status !! Zero success, three numerical or allocation failure.
         integer, intent(in), optional :: knot_capacity !! Hard knot capacity, default m+2*k.
+        real(dp), intent(in), optional :: full_knots(:) !! Fixed full periodic knots; positive s.
         real(dp), allocatable :: uu(:),xx(:),ww(:),t(:),c(:),fpint(:),z(:),q(:,:)
         real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
         integer, allocatable :: nrdata(:)
         real(dp) :: span,xscale,wscale,target,logtarget,fp,residual,limit,basis(max_order+1)
         integer :: m,ndim,nest,ncc,n,ncoef,info,ier,i,j,l,offset
+        real(dp) :: constant_fp,weight_sum
+        real(dp), allocatable :: constant(:)
         status=3
         m=size(u)
         ndim=size(x,2)
@@ -43,6 +46,10 @@ contains
         nest=m+2*k
         if (present(knot_capacity)) nest=min(nest,knot_capacity)
         if (nest<2*(k+1)) return
+        if (present(full_knots)) then
+            if (s<=zero) return
+            if (size(full_knots)>nest .or. size(full_knots)<2*(k+1)) return
+        end if
         if (ndim>huge(m)/max(m,nest)) return
         ncc=nest*ndim
         if (maxval(abs(u))>huge(one)/real(4*(k+1),dp)) return
@@ -91,8 +98,35 @@ contains
         n=2*(k+1)
         fp=zero
         ier=fitpack_ok
-        call fpclos(0,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
-            ncc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
+        if (present(full_knots)) then
+            n=size(full_knots)
+            t(:n)=(full_knots-u(1))/span
+            if (minval(t(2:n)-t(:n-1)) < &
+                tiny(one)**(one/real(4*(k+1),dp))) return
+            weight_sum=sum(ww(:m-1)**2)
+            allocate(constant(ndim),stat=info)
+            if (info/=0) return
+            do j=1,ndim
+                constant(j)=sum(ww(:m-1)**2*xx(j:(m-1)*ndim:ndim))/weight_sum
+            end do
+            constant_fp=zero
+            do i=1,m-1
+                constant_fp=constant_fp+sum((ww(i)*(constant-xx((i-1)*ndim+1:i*ndim)))**2)
+            end do
+            if (constant_fp<=target) then
+                do j=1,ndim
+                    c((j-1)*n+1:(j-1)*n+n-k-1)=constant(j)
+                end do
+            else
+                if (n==2*(k+1)) return
+                call fpclos(0,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
+                    ncc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier, &
+                    fixed_knots=.true.,constant_residual=constant_fp)
+            end if
+        else
+            call fpclos(0,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
+                ncc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
+        end if
         if (ier>0) return
         ncoef=n-k-1
         if (.not.all(ieee_is_finite(c))) return
@@ -100,6 +134,7 @@ contains
             if (maxval(abs(c))>huge(one)/xscale) return
         end if
         t(:n)=u(1)+t(:n)*span
+        if (present(full_knots)) t(:n)=full_knots
         t(k+1)=u(1)
         t(n-k)=u(m)
         if (.not.all(ieee_is_finite(t(:n)))) return
@@ -139,7 +174,7 @@ contains
         status=0
     end subroutine fitpack_periodic_parametric
 
-    subroutine fitpack_periodic_curve(x,y,w,k,s,knots,coeff,status,knot_capacity)
+    subroutine fitpack_periodic_curve(x,y,w,k,s,knots,coeff,status,knot_capacity,full_knots)
         implicit none
         real(dp), intent(in) :: x(:) !! Finite increasing coordinates, including period endpoint.
         real(dp), intent(in) :: y(:) !! Observations; the final entry is ignored.
@@ -150,11 +185,14 @@ contains
         real(dp), allocatable, intent(out) :: coeff(:) !! Coefficients padded to knot count.
         integer, intent(out) :: status !! Zero success, three numerical or allocation failure.
         integer, intent(in), optional :: knot_capacity !! Hard knot capacity, default m+2*k.
+        real(dp), intent(in), optional :: full_knots(:) !! Fixed full periodic knots; positive s.
         real(dp), allocatable :: xx(:),yy(:),ww(:),t(:),c(:),fpint(:),z(:),q(:,:)
         real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
         integer, allocatable :: nrdata(:)
         real(dp) :: span,yscale,wscale,target,logtarget,fp,residual,basis(max_order+1)
         integer :: m,nest,n,nc,info,ier,i,l
+        real(dp) :: constant_fp,weight_sum
+        real(dp) :: constant
         status=3
         m=size(x)
         if (m>huge(m)/64) return
@@ -165,6 +203,10 @@ contains
         nest=m+2*k
         if (present(knot_capacity)) nest=min(nest,knot_capacity)
         if (nest<2*(k+1)) return
+        if (present(full_knots)) then
+            if (s<=zero) return
+            if (size(full_knots)>nest .or. size(full_knots)<2*(k+1)) return
+        end if
         allocate(xx(m),yy(m),ww(m),t(nest),c(nest),fpint(nest),z(nest),q(m,k+1), &
             a1(nest,k+1),a2(nest,k),b(nest,k+2),g1(nest,k+2),g2(nest,k+1), &
             nrdata(nest),stat=info)
@@ -207,8 +249,26 @@ contains
         n=2*(k+1)
         fp=zero
         ier=0
-        call fpperi(0,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
-            fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
+        if (present(full_knots)) then
+            n=size(full_knots)
+            t(:n)=(full_knots-x(1))/span
+            if (minval(t(2:n)-t(:n-1)) < &
+                tiny(one)**(one/real(4*(k+1),dp))) return
+            weight_sum=sum(ww(:m-1)**2)
+            constant=sum(ww(:m-1)**2*yy(:m-1))/weight_sum
+            constant_fp=sum((ww(:m-1)*(constant-yy(:m-1)))**2)
+            if (constant_fp<=target) then
+                c(:n-k-1)=constant
+            else
+                if (n==2*(k+1)) return
+                call fpperi(0,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
+                    fpint,z,a1,a2,b,g1,g2,q,nrdata,ier, &
+                    fixed_knots=.true.,constant_residual=constant_fp)
+            end if
+        else
+            call fpperi(0,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
+                fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
+        end if
         if (ier>0) return
         nc=n-k-1
         if (.not.all(ieee_is_finite(c(:nc)))) return
@@ -217,6 +277,7 @@ contains
         end if
         ! Validate the actual physical knots and rescaled coefficients, not just work arrays.
         t(:n)=x(1)+t(:n)*span
+        if (present(full_knots)) t(:n)=full_knots
         t(k+1)=x(1)
         t(n-k)=x(m)
         if (.not.all(ieee_is_finite(t(:n)))) return
@@ -2029,7 +2090,8 @@ contains
 
 
       pure subroutine fpperi(iopt,x,y,w,m,k,s,nest,tol,maxit, &
-                            k1,k2,n,t,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
+                            k1,k2,n,t,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier, &
+          fixed_knots,constant_residual)
           implicit none
 
       !  ..scalar arguments..
@@ -2045,6 +2107,9 @@ contains
       integer, intent(in) :: maxit !! Maximum smoothing iterations, 20.
       integer, intent(inout) :: n !! Active knot or triangular-system size.
       integer, intent(inout) :: ier !! FITPACK success <=0 or failure >0.
+
+      logical, intent(in), optional :: fixed_knots !! Retain supplied knots, default false.
+      real(dp), intent(in), optional :: constant_residual !! Weighted constant-fit residual.
 
       !  ..array arguments..
       real(dp), intent(in) :: &
@@ -2072,10 +2137,13 @@ contains
                  nk1,nk2,nmax,nmin,nplus,npl1,nrint,n10,n11,n7,n8
       !  ..local arrays..
       real(dp) :: h(max_order+1),h1(degree_5+2),h2(degree_5+1)
-      logical :: done,check1,check3,success
+      logical :: done,check1,check3,success,fixed
 
       fpold = zero
       fp0   = zero
+      fixed=.false.
+      if (present(fixed_knots)) fixed=fixed_knots
+      if (present(constant_residual)) fp0=constant_residual
       nplus = 0
       fpms  = huge(zero)
 
@@ -2107,7 +2175,7 @@ contains
 
       ! determine the length of the period of s(x).
       per = x(m)-x(1)
-      if (iopt>=0) then
+      if (iopt>=0 .and. .not.fixed) then
 
          interp_or_fit: if (s<=zero .and. nmax/=nmin) then
 
@@ -2334,7 +2402,13 @@ contains
         c(1:n7) = fpbacp(a1,a2,z,n7,kk,kk1,nest)
 
         ! calculate from condition (**) the coefficients c(j+n7),j=1,2,...k.
-        c(n7+1:n7+k) = c(1:k)
+        if (fixed) then
+            do i=1,k
+                c(n7+i)=c(i)
+            end do
+        else
+            c(n7+1:n7+k)=c(1:k)
+        end if
 
         ! success! if the approximation sinf(x) is an acceptable solution.
         fpms = fp-s
@@ -2342,6 +2416,10 @@ contains
 
         ! if f(p=inf) < s accept the choice of knots.
         if (fpms<zero) exit update_knots
+        if (fixed) then
+            ier=fitpack_s_too_small
+            return
+        end if
 
         ! if n=nmax, sinf(x) is an interpolating spline.
         if (n==nmax) then
@@ -2543,14 +2621,25 @@ contains
          c(:n7) = fpbacp(g1,g2,c,n7,k1,k2,nest)
 
          ! calculate from condition (**) the b-spline coefficients c(n7+j),j=1,.
-         c(n7+1:n7+k) = c(1:k)
+         if (fixed) then
+             do i=1,k
+                 c(n7+i)=c(i)
+             end do
+         else
+             c(n7+1:n7+k)=c(1:k)
+         end if
 
          ! computation of f(p).
          fp = zero
          l = k1
          do it=1,m1
-            if (x(it)>=t(l)) l = l+1
-            l0 = l-k2
+            if (fixed) then
+                l=fp_knot_interval(t,x(it),l,nk1)
+                l0=l-k1
+            else
+                if (x(it)>=t(l)) l=l+1
+                l0=l-k2
+            end if
             term = dot_product(c(l0+1:l0+k1),q(it,1:k1))
             fp = fp+(w(it)*(term-y(it)))**2
          end do
@@ -2784,7 +2873,8 @@ contains
         singular=.false.
     end function fp_periodic_rank_deficient
       pure subroutine fpclos(iopt,idim,m,u,mx,x,w,k,s,nest,tol,  maxit,k1,k2,n,t,nc,c,fp,fpint, &
-          z,a1,a2,b,g1,g2,q,nrdata,ier)
+          z,a1,a2,b,g1,g2,q,nrdata,ier, &
+          fixed_knots,constant_residual)
           implicit none
 
       ! ..
@@ -2805,6 +2895,9 @@ contains
       integer, intent(inout) :: &
           n !! Active full knot count and leading dimension of channel right-hand sides.
       integer, intent(inout) :: ier !! Success <=0 or numerical failure >0.
+
+      logical, intent(in), optional :: fixed_knots !! Retain supplied knots, default false.
+      real(dp), intent(in), optional :: constant_residual !! Weighted constant-fit residual.
 
       ! ..array arguments..
       real(dp),    intent(in) :: &
@@ -2833,13 +2926,17 @@ contains
           nmax,nmin,nplus,npl1,nrint,n10,n11,n7,n8
       ! ..local arrays..
       real(dp) :: h(max_order+1),h1(degree_5+2),h2(degree_5+1),xi(idim)
-      logical :: done,check1,check3,success
+      logical :: done,check1,check3,success,fixed
 
       fpold = zero
       fp0   = zero
+      fixed=.false.
+      if (present(fixed_knots)) fixed=fixed_knots
+      if (present(constant_residual)) fp0=constant_residual
       nplus = 0
       nmax  = 0
       acc   = epsilon(zero)
+      if (fixed) acc=tol*s
 
       ! ******************************************************************************************
       ! ****
@@ -2870,7 +2967,7 @@ contains
 
       ! determine the length of the period of the splines.
       per = u(m)-u(1)
-      if (iopt>=0) then
+      if (iopt>=0 .and. .not.fixed) then
 
           ! calculation of acc, the absolute tolerance for the root of f(p)=s.
           acc = tol*s
@@ -3145,6 +3242,10 @@ contains
 
           ! if f(p=inf)<s accept the choice of knots.
           if (fpms<zero) exit find_knots
+          if (fixed) then
+              ier=fitpack_s_too_small
+              return
+          end if
 
           ! if n=nmax, sinf(u) is an interpolating curve.
           if (n==nmax) then
@@ -3379,8 +3480,13 @@ contains
         l  = k1
         jj = 0
         do it=1,m1
-           if (u(it)>=t(l)) l = l+1
-           l0 = l-k2
+            if (fixed) then
+                l=fp_knot_interval(t,u(it),l,nk1)
+                l0=l-k1
+            else
+                if (u(it)>=t(l)) l=l+1
+                l0=l-k2
+            end if
            term = zero
            do j2=1,idim
              fac = zero

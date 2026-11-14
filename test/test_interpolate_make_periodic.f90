@@ -97,8 +97,8 @@ program test_interpolate_make_periodic
         curve=make_splprep(x,u=u,w=w,k=k,s=0.05_dp,nest=m+2*k, &
             bc_type='periodic',status=code)
         call require(code==0 .and. curve%valid(),'full periodic capacity')
-        curve=make_splprep(x,u=u,s=0.05_dp,k=k,t=t,bc_type='periodic',status=code)
-        call require(code==2 .and. .not.curve%valid(),'periodic supplied knots unsupported')
+        curve=make_splprep(x,u=u,w=w,s=0.05_dp,k=k,t=t,bc_type='periodic',status=code)
+        call require(code==0 .and. curve%valid(),'periodic supplied knots smoothing')
     end do
     bad=y
     bad(m)=bad(1)+0.01_dp
@@ -131,7 +131,7 @@ program test_interpolate_make_periodic
     curve=make_splprep(x,s=0.05_dp,nest=m+7,bc_type='periodic',status=code)
     call require(code==1 .and. .not.curve%valid(),'excess periodic capacity')
     fit=make_splrep(u,y,s=0.03_dp,t=t,bc_type='periodic',status=code)
-    call require(code==2 .and. .not.fit%valid(),'scalar periodic fixed knots unsupported')
+    call require(code==1 .and. .not.fit%valid(),'scalar inconsistent periodic knot degree')
     fit=make_splrep(u*1e-310_dp,y,bc_type='periodic',status=code)
     call require(code==3 .and. .not.fit%valid(),'periodic subnormal span')
     curve=make_splprep(x,u=u*1e-310_dp,bc_type='periodic',status=code)

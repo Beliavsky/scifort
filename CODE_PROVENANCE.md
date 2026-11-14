@@ -1,3 +1,30 @@
+## 2026-11-14 - Supplied periodic constructor knots
+
+The validation and constructor dispatch in `src/interpolate_fitpack_compat.f90`
+are original MIT SciFort code. Fixed-knot modes, constant residual brackets,
+sequential cyclic coefficient extension, and observation-interval searches
+extend the existing attributed `fpperi`/`fpclos` adaptations in
+`src/interpolate_curfit_core.f90`; they do not turn those kernels into original
+SciFort implementations. No new upstream implementation or dependency is imported.
+
+The exact cached source and BSD-3-Clause license were inspected again:
+[perazz/FITPACK `src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`, source SHA-256
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Copyright (c) 2022 Federico Perini, the combined `MIT AND BSD-3-Clause`
+notice, and [full retained license](LICENSES/perazz-fitpack-BSD-3-Clause.txt) remain.
+The mathematical reference is P. Dierckx, *Curve and Surface Fitting with
+Splines*, Oxford University Press, 1993: periodic derivative-jump smoothing
+subject to a weighted residual bound.
+
+SciPy v1.18.0 `_fitpack_repro.py` and
+[`_bsplines.py`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_bsplines.py)
+(including `fpcheck`) were inspected for public knot/interface contracts;
+no SciPy implementation was translated. SciFort explicitly restricts the
+accepted supplied vector to strict periodic extensions. New tests and the
+independent cyclic-basis/augmented-least-squares validation are original MIT
+code. See the [validation record](validation/periodic_fixed_2026-11-14.md).
+
 ## 2026-11-14 - Periodic native spline constructors
 
 The `bc_type='periodic'` branches in `make_splrep` and `make_splprep` and

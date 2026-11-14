@@ -3,7 +3,7 @@
 `make_splrep` and `make_splprep` in `scifort_interpolate` accept
 `bc_type='periodic'` for degrees 1-5. They return the existing scalar and
 array B-spline objects, respectively, and support interpolation (`s=0`)
-and automatic-knot smoothing (`s>0`) without an optional dependency.
+and automatic- or supplied-knot smoothing (`s>0`) without an optional dependency.
 
 ```fortran
 use scifort_kinds, only: dp
@@ -59,8 +59,23 @@ target produces a weighted constant or constant vector.
 
 Optional `nest` is a hard capacity from `2*(k+1)` through `m+2*k` for
 periodic smoothing. An infeasible capacity returns numerical status 3.
-Supplied periodic knots `t` remain unsupported and return status 2 for
-positive `s`. Nonperiodic fixed-knot smoothing remains available.
+For positive `s`, optional `t` supplies the full periodic knot vector and
+excludes `nest`. No knots are added or removed, including at the constant
+limit. The accepted form is finite and strictly increasing, with
+`2*(k+1) <= size(t) <= m+2*k`, `t(k+1)` equal to the first site, and
+`t(size(t)-k)` equal to the closing site. With `ni=size(t)-2*k-1`, the
+extension must satisfy `t(i+ni)=t(i)+period`; this is checked after interval
+normalization within `64*epsilon`. Repeated, clamped, and nonperiodically
+extended knot vectors are outside this supported form and return status 1.
+
+The solver minimizes squared jumps of the kth derivative at interior knots
+under the same residual constraint. It returns the supplied vector exactly.
+A sufficiently large target gives the weighted constant on those knots.
+A target below the fixed space's attainable least-squares residual returns
+status 3. Rank-deficient observation factors also return status 3; general
+rank-deficient regularized fits remain a gap. Only a constant can be fitted
+with the minimum `2*(k+1)` full knots. This supplied-knot path does not enable
+legacy `splrep`/`splprep` periodic `task=-1`.
 
 ## Evaluation and numerical limits
 
@@ -76,7 +91,7 @@ object methods and policies.
 Periodic fitting needs headroom for extended exterior knots. The existing
 periodic smoothing guards apply: site magnitudes at most
 `huge/(4*(k+1))`, physical span and distinct knot gaps at least `tiny`,
-normalized sample gaps at least `tiny**(1/(4*(k+1)))`, and relative active
+normalized sample and supplied-knot gaps at least `tiny**(1/(4*(k+1)))`, and relative active
 weights at least `tiny**0.125`. Normalization uses one coordinate scale,
 preserving the Euclidean geometry. Unrepresentable targets, unresolved rank,
 allocation failures, or a failed physical residual check return status 3.
@@ -89,6 +104,10 @@ range guards, described in its guide. Dense periodic collocation targets
 moderate sample counts; no large-problem performance parity is claimed.
 These checks do not guarantee good conditioning for all accepted problems.
 
+The supplied-knot path is also checked against an independent cyclic
+B-spline basis and augmented least-squares constrained solve; see its
+[validation record](../validation/periodic_fixed_2026-11-14.md).
+
 ## Compatibility and references
 
 The inspected SciPy 1.18.0 public `make_splprep` interpolation shortcut omits
@@ -98,7 +117,7 @@ forwarding `bc_type`. SciFort applies periodic boundaries also for parametric
 
 Automatic smoothing retains the attributed native legacy FITPACK path.
 Exact modern knot-selection and iteration parity remain gaps, as do SciPy's
-soft capacity behavior and supplied periodic knots. Numerical validation
+soft capacity behavior and broader supplied-knot forms. Numerical validation
 checks unwrapped endpoint derivatives, independent B-spline evaluation,
 weighted residuals, and cyclic normal equations with a shared nonnegative
 multiplier. See the [validation record](../validation/periodic_constructors_2026-11-14.md).

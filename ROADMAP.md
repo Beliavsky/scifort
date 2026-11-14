@@ -3476,5 +3476,17 @@ C ABI and wrapper expansion remain deferred.
   for both constructors, degrees 1-5, shared knots, and hard capacities.
 - [x] Normalized interpolation, physical verification, checked/optimized
   regressions, SciPy interpolation and independent cyclic equation checks.
-- [ ] Supplied periodic knots, broader forms, exact modern automatic-selection
-  parity, and soft capacities remain gaps.
+- [x] Supplied periodic knots for both modern constructors; see below.
+- [ ] Broader forms, exact modern automatic-selection parity, and soft capacities.
+
+## 2026-11-14 -- Approved supplied periodic constructor knots
+
+The user approved full supplied periodic knots for native `make_splrep` and
+`make_splprep`. C ABI and wrappers remain deferred.
+
+- [x] Strict full periodic knot validation, fixed-knot smoothing, constant
+  limits retaining supplied knots, and infeasible-target handling.
+- [x] Scalar/shared parametric residuals, short coefficient cycles, and
+  arbitrary observation intervals in the existing attributed periodic kernels.
+- [ ] Legacy periodic `task=-1`, repeated/broader knot forms, rank-deficient
+  regularized fits, and modern automatic-selection/soft-capacity parity.

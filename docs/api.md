@@ -7232,9 +7232,9 @@ returns a native `bspline_array_interpolator_type`. Coordinates have shape
 target. Optional allocatable `parameters` returns supplied or chord-length
 sites. Default `s=0` interpolates; `w`, `t`, and `nest` are invalid in that mode.
 Positive nonperiodic `s` supports automatic knots or full clamped supplied
-knots with simple interiors. Periodic interpolation and automatic smoothing
-are available with `bc_type='periodic'`. Hard `nest`, numerical guards,
-unsupported periodic supplied knots, and modern automatic-selection differences are
+knots with simple interiors. Periodic interpolation and automatic/supplied-knot smoothing
+are available with `bc_type='periodic'`. Accepted full periodic knot forms,
+hard `nest`, numerical guards, and modern automatic-selection differences are
 documented in the [parametric constructor guide](interpolate_make_splprep.md).
 
 ### Native scalar adaptive smoothing
@@ -7245,10 +7245,10 @@ It supports automatic knots or a supplied full clamped knot vector with
 simple interiors. Supplied knots still request derivative-jump smoothing;
 `nest` is a hard capacity, with explicit failure for infeasible targets.
 The default is `s=0`; weights, knots, and capacity are rejected in that mode.
-Periodic interpolation and automatic smoothing use `bc_type='periodic'`;
+Periodic interpolation and automatic/supplied-knot smoothing use `bc_type='periodic'`;
 see the [periodic guide](interpolate_periodic_constructors.md) for closed input,
-residuals, capacities, and extrapolation policies. Periodic supplied knots
-and modern SciPy automatic-knot parity remain unsupported.
+residuals, accepted full periodic knots, capacities, and extrapolation policies.
+Exact modern SciPy automatic-knot parity remains unsupported.
 See the [constructor guide](interpolate_make_splrep.md).
 
 `splrep(x,y,w=...,k=...,s=positive)` now selects knots and fits a nonperiodic

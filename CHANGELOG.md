@@ -1,3 +1,12 @@
+## 2026-11-14 - Supplied periodic constructor knots
+
+- Add fixed full periodic knot vectors to native `make_splrep` and
+  `make_splprep` smoothing, degrees 1-5, retaining supplied knots exactly.
+- Support constant limits on those knots, shared coordinate residuals, and
+  explicit invalid-form, rank, and unattainable-target failures.
+- Check short periodic coefficient cycles, clustered knots, endpoint
+  continuity, and independent constrained least-squares solutions.
+
 ## 2026-11-14 - Periodic native spline constructors
 
 - Add `bc_type='periodic'` interpolation and automatic smoothing to native

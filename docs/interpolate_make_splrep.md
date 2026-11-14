@@ -25,7 +25,7 @@ fit = make_splrep(x, y, w=w, s=0.15_dp, status=status)
 | `xb, xe` | Finite enclosing interval; default first/last x |
 | `k` | Polynomial degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Optional **full clamped** knots with simple interiors; nonperiodic smoothing only |
+| `t(:)` | Full clamped simple-interior or full periodic knots; positive `s` only |
 | `nest` | Hard knot capacity; upper bound `size(x)+k+1`, or `size(x)+2*k` for periodic fits |
 | `status` | Existing FITPACK status convention: 0 success, 1 invalid, 2 unsupported, 3 numerical failure |
 | `bc_type` | Default or explicit `'not-a-knot'`, or `'periodic'` |
@@ -75,10 +75,9 @@ and interpolation behavior are independently checked against modern SciPy;
 automatic fits are checked against legacy FITPACK and the smoothing equations.
 See the [validation record](../validation/make_splrep_2026-11-13.md).
 
-Periodic interpolation and automatic smoothing are supported; see the
+Periodic interpolation and automatic/supplied-knot smoothing are supported; see the
 [periodic constructor guide](interpolate_periodic_constructors.md) for closed
-input, residual, capacity, numerical, and extrapolation contracts. Supplied
-periodic knots remain unsupported. The native parametric counterpart
+input, residual, capacity, numerical, and extrapolation contracts and accepted full periodic knot forms. The native parametric counterpart
 [`make_splprep`](interpolate_make_splprep.md) is also available. Broader knot
 forms and SciPy's soft `nest` behavior remain gaps. See
 [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html)

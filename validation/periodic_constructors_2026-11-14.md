@@ -7,7 +7,8 @@ Python **3.13**, SciPy **1.15.3**, binary64.
 
 Both `make_splrep` and `make_splprep` now accept `bc_type='periodic'`
 for closed-input interpolation and automatic smoothing, degrees 1-5.
-Periodic supplied knots remain unsupported. Positive smoothing targets use
+Supplied knots were outside this initial change; see the subsequent
+[supplied-knot validation](periodic_fixed_2026-11-14.md). Positive smoothing targets use
 the first `m-1` sites, with one shared constraint for parametric coordinates.
 Modern constructors validate all final observations and weights; the legacy
 tuple APIs' ignored-final-observation behavior is preserved.

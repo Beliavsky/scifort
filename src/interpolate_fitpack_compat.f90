@@ -62,7 +62,7 @@ contains
         real(dp), intent(in), optional :: ue !! Right enclosing bound, default last parameter.
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative total residual target, default zero.
-        real(dp), intent(in), optional :: t(:) !! Full clamped knots; positive s only.
+        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; clamped or periodic.
         integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical.
         real(dp), allocatable, intent(out), optional :: parameters(:) !! Sites on success only.
@@ -132,9 +132,9 @@ contains
         if (bounds(1)>param(1) .or. bounds(2)<param(m)) goto 900
         if (periodic) then
             if (any(bounds/=[param(1),param(m)])) goto 900
-            if (target>0.0_dp .and. present(t)) then
-                code=fitpack_tck_unsupported_smoothing
-                goto 900
+            if (present(t)) then
+                if (present(nest)) goto 900
+                if (.not.periodic_knots_valid(t,degree,m,bounds)) goto 900
             end if
         end if
         if (target==0.0_dp) then
@@ -163,7 +163,7 @@ contains
                     if (nest<2*(degree+1) .or. nest>m+2*degree) goto 900
                 end if
                 call fitpack_periodic_parametric(param,x,w,degree,target,knots,coeff,code, &
-                    knot_capacity=nest)
+                    knot_capacity=nest,full_knots=t)
                 if (code/=0) goto 900
                 fit=bspline(knots,coeff,degree,status=local_code)
                 if (local_code/=0) code=fitpack_tck_singular
@@ -201,7 +201,7 @@ contains
         real(dp), intent(in), optional :: xe !! Right enclosing bound, default x(m).
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative squared-residual target, default zero.
-        real(dp), intent(in), optional :: t(:) !! Full clamped knots; positive s only.
+        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; clamped or periodic.
         integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical
         character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
@@ -238,9 +238,9 @@ contains
         if (bounds(1)>x(1) .or. bounds(2)<x(m)) goto 900
         if (periodic) then
             if (any(bounds/=[x(1),x(m)])) goto 900
-            if (target>0.0_dp .and. present(t)) then
-                code=fitpack_tck_unsupported_smoothing
-                goto 900
+            if (present(t)) then
+                if (present(nest)) goto 900
+                if (.not.periodic_knots_valid(t,degree,m,bounds)) goto 900
             end if
         end if
         if (target==0.0_dp) then
@@ -266,7 +266,8 @@ contains
             if (present(nest)) then
                 if (nest<2*(degree+1) .or. nest>m+2*degree) goto 900
             end if
-            call fitpack_periodic_curve(x,y,w,degree,target,knots,coeff,code,knot_capacity=nest)
+            call fitpack_periodic_curve(x,y,w,degree,target,knots,coeff,code, &
+                knot_capacity=nest,full_knots=t)
             if (code/=0) goto 900
             fit=bspline(knots,coeff,degree,status=local_code)
             if (local_code/=0) code=fitpack_tck_singular
@@ -291,6 +292,38 @@ contains
         if (local_code/=0) code=fitpack_tck_singular
 900     if (present(status)) status=code
     end function make_splrep
+
+    logical function periodic_knots_valid(t,k,m,bounds) result(ok)
+        implicit none
+        real(dp), intent(in) :: t(:) !! Full finite strictly increasing periodic knots.
+        integer, intent(in) :: k !! Degree one through five.
+        integer, intent(in) :: m !! Sample count including the closing endpoint.
+        real(dp), intent(in) :: bounds(2) !! First and final parameter sites.
+        real(dp), allocatable :: normalized(:)
+        real(dp) :: span
+        integer :: n,independent,info
+        ok=.false.
+        n=size(t)
+        if (n<2*(k+1) .or. n>m+2*k) return
+        if (.not.all(ieee_is_finite(t))) return
+        if (any(t(2:)<=t(:n-1))) return
+        if (t(k+1)/=bounds(1) .or. t(n-k)/=bounds(2)) return
+        if (maxval(abs(t))>huge(1.0_dp)/real(4*(k+1),dp)) return
+        span=bounds(2)-bounds(1)
+        if (span<tiny(1.0_dp)) return
+        allocate(normalized(n),stat=info)
+        if (info/=0) return
+        normalized=t-bounds(1)
+        if (span<1.0_dp) then
+            if (maxval(abs(normalized))>huge(1.0_dp)*span) return
+        end if
+        normalized=normalized/span
+        if (maxval(abs(normalized))>real(k+2,dp)) return
+        independent=n-2*k-1
+        if (any(abs(normalized(independent+1:)-normalized(:n-independent)-1.0_dp) > &
+            64*epsilon(1.0_dp))) return
+        ok=.true.
+    end function periodic_knots_valid
 
     subroutine periodic_interpolation(u,x,k,knots,coeff,code)
         implicit none

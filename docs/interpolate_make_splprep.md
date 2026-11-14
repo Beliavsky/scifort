@@ -27,7 +27,7 @@ curve = make_splprep(x, s=0.15_dp, parameters=parameters, status=status)
 | `ub, ue` | Finite enclosing parameter bounds; default first/last parameter |
 | `k` | Degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Full clamped knots with simple interiors; nonperiodic positive `s` only |
+| `t(:)` | Full clamped simple-interior or full periodic knots; positive `s` only |
 | `nest` | Hard knot capacity; upper bound `size(x,1)+k+1`, or `size(x,1)+2*k` for periodic fits |
 | `status` | 0 success, 1 invalid input, 2 unsupported option, 3 numerical/allocation failure |
 | `parameters(:)` | Optional allocatable output, allocated only on success; receives supplied or calculated sites |
@@ -95,10 +95,10 @@ B-spline evaluation, residuals, and shared-multiplier smoothing equations.
 See the [validation record](../validation/make_splprep_2026-11-14.md).
 
 `nest` is a hard capacity in SciFort; SciPy treats it as a target that may
-be exceeded. Periodic interpolation and automatic smoothing are supported;
+be exceeded. Periodic interpolation and automatic/supplied-knot smoothing are supported;
 see the [periodic constructor guide](interpolate_periodic_constructors.md)
 for closed input, residual, capacity, numerical, and extrapolation contracts.
-Supplied periodic knots, broader knot forms, exact modern automatic selection,
+Broader knot forms, exact modern automatic selection,
 and soft capacities remain gaps. Legacy periodic fitting remains available
 through `splprep(per=.true.)`.
 
