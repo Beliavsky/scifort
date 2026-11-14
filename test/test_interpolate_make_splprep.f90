@@ -152,7 +152,7 @@ program test_interpolate_make_splprep
     fit=make_splprep(x,s=0.15_dp,bc_type='natural',status=code)
     call invalid('invalid boundary name')
     fit=make_splprep(x,bc_type='periodic',status=code)
-    call require(code==2 .and. .not.fit%valid(),'periodic unsupported')
+    call invalid('periodic endpoints must match')
     fit=make_splprep(x,u=u,w=w,s=1e-12_dp,t=[(0.0_dp,i=1,4),(1.0_dp,i=1,4)],status=code)
     call require(code==3 .and. .not.fit%valid(),'fixed knots cannot satisfy target')
     fit=make_splprep(x,u=u,s=0.15_dp, &

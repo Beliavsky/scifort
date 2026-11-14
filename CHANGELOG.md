@@ -1,3 +1,12 @@
+## 2026-11-14 - Periodic native spline constructors
+
+- Add `bc_type='periodic'` interpolation and automatic smoothing to native
+  `make_splrep` and `make_splprep`, degrees 1-5, with validated closed input.
+- Normalize periodic interpolation and verify physical sample values; support
+  hard periodic capacities through the existing attributed smoothing kernels.
+- Add endpoint, residual, capacity, scaling, and independent cyclic-equation
+  checks; document extrapolation policies and remaining periodic fixed knots.
+
 ## 2026-11-14 - Native parametric smoothing constructor
 
 - Add native `make_splprep` with interpolation, automatic/fixed-knot smoothing,

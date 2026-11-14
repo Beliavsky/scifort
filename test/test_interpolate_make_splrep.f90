@@ -97,7 +97,7 @@ program test_interpolate_make_splrep
     fit=make_splrep(x,y,s=0.15_dp,bc_type='natural',status=code)
     call invalid('unsupported boundary name')
     fit=make_splrep(x,y,s=0.15_dp,bc_type='periodic',status=code)
-    call require(code==2 .and. .not.fit%valid(),'periodic boundary explicitly unsupported')
+    call invalid('periodic endpoints must match')
     fit=make_splrep(x,y,s=0.15_dp,bc_type='not-a-knot',status=code)
     call require(code==0 .and. fit%valid(),'explicit default boundary')
     t=[spread(0.0_dp,1,4),0.5_dp,spread(1.0_dp,1,4)]

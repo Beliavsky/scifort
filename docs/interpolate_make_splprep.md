@@ -27,11 +27,11 @@ curve = make_splprep(x, s=0.15_dp, parameters=parameters, status=status)
 | `ub, ue` | Finite enclosing parameter bounds; default first/last parameter |
 | `k` | Degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Full clamped knot vector with simple interior knots; positive `s` only |
-| `nest` | Hard knot capacity, `2*(k+1)` through `size(x,1)+k+1`; excludes `t` |
-| `status` | 0 success, 1 invalid input, 2 unsupported boundary, 3 numerical/allocation failure |
+| `t(:)` | Full clamped knots with simple interiors; nonperiodic positive `s` only |
+| `nest` | Hard knot capacity; upper bound `size(x,1)+k+1`, or `size(x,1)+2*k` for periodic fits |
+| `status` | 0 success, 1 invalid input, 2 unsupported option, 3 numerical/allocation failure |
 | `parameters(:)` | Optional allocatable output, allocated only on success; receives supplied or calculated sites |
-| `bc_type` | Default or `'not-a-knot'`; `'periodic'` returns unsupported status 2 |
+| `bc_type` | Default or `'not-a-knot'`, or `'periodic'` |
 
 The `parameters` output is the Fortran equivalent of SciPy's second return
 value. It is separate from the read-only optional `u` input. Inputs are never
@@ -46,14 +46,14 @@ preserves the existing SciFort extension to legacy FITPACK's channel limit.
 
 ## Interpolation and smoothing
 
-For `s=0`, the constructor uses native not-a-knot interpolation. As in SciPy
+For `s=0`, the constructor uses native interpolation with the selected boundary. As in SciPy
 1.15.3, supplying `w`, `t`, or `nest` is invalid in this mode. Interpolation
 bounds must equal the parameter endpoints; SciPy's interpolation shortcut
 ignores supplied bounds. Consecutive coincident samples cannot supply an
 automatic parameterization, but are allowed with strictly increasing `u`.
 Automatic chord lengths use common coordinate scaling and a stable norm.
 
-For `s>0`, the solver minimizes the sum of squared jumps of the kth
+For nonperiodic `s>0`, the solver minimizes the sum of squared jumps of the kth
 derivative over all channels, subject to
 `sum((spread(w,2,channels)*(curve(u)-x))**2) <= s`. The FITPACK relative
 residual tolerance is `0.001`. This is one shared constraint, not a separate
@@ -95,9 +95,12 @@ B-spline evaluation, residuals, and shared-multiplier smoothing equations.
 See the [validation record](../validation/make_splprep_2026-11-14.md).
 
 `nest` is a hard capacity in SciFort; SciPy treats it as a target that may
-be exceeded. Periodic constructor boundaries, broader knot forms, exact
-modern automatic selection, and soft capacities remain gaps. Periodic
-fitting is available through `splprep(per=.true.)`.
+be exceeded. Periodic interpolation and automatic smoothing are supported;
+see the [periodic constructor guide](interpolate_periodic_constructors.md)
+for closed input, residual, capacity, numerical, and extrapolation contracts.
+Supplied periodic knots, broader knot forms, exact modern automatic selection,
+and soft capacities remain gaps. Legacy periodic fitting remains available
+through `splprep(per=.true.)`.
 
 See [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splprep.html),
 the [scalar constructor](interpolate_make_splrep.md), and the

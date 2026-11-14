@@ -25,17 +25,17 @@ fit = make_splrep(x, y, w=w, s=0.15_dp, status=status)
 | `xb, xe` | Finite enclosing interval; default first/last x |
 | `k` | Polynomial degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Optional **full clamped** knot vector with simple interior knots |
-| `nest` | Optional hard knot capacity, from `2*(k+1)` through `size(x)+k+1` |
+| `t(:)` | Optional **full clamped** knots with simple interiors; nonperiodic smoothing only |
+| `nest` | Hard knot capacity; upper bound `size(x)+k+1`, or `size(x)+2*k` for periodic fits |
 | `status` | Existing FITPACK status convention: 0 success, 1 invalid, 2 unsupported, 3 numerical failure |
-| `bc_type` | Default or explicit `'not-a-knot'`; `'periodic'` returns unsupported status 2 |
+| `bc_type` | Default or explicit `'not-a-knot'`, or `'periodic'` |
 
-For `s=0`, the constructor calls the native not-a-knot interpolator. As in
+For `s=0`, the constructor calls the native interpolator with the selected boundary. As in
 SciPy 1.15.3, supplying `w`, `t`, or `nest` with `s=0` is invalid, even when
 the supplied weights are ones. Bounds must equal the sample endpoints for
 interpolation; unlike SciPy's interpolation shortcut, they are validated.
 
-For `s>0`, the fit minimizes squared jumps of the kth derivative subject
+For nonperiodic `s>0`, the fit minimizes squared jumps of the kth derivative subject
 to `sum((w*(fit(x)-y))**2) <= s`, with FITPACK relative tolerance `0.001`.
 Automatic fitting chooses knots through the licensed native FITPACK solver.
 Coefficients are unpadded: `size(c) = size(knots)-k-1`.
@@ -75,9 +75,10 @@ and interpolation behavior are independently checked against modern SciPy;
 automatic fits are checked against legacy FITPACK and the smoothing equations.
 See the [validation record](../validation/make_splrep_2026-11-13.md).
 
-The current SciPy interface also supports periodic boundary selection;
-this constructor does not yet implement it. Native periodic fitting remains
-available through `splrep(per=.true.)`. The native parametric counterpart
+Periodic interpolation and automatic smoothing are supported; see the
+[periodic constructor guide](interpolate_periodic_constructors.md) for closed
+input, residual, capacity, numerical, and extrapolation contracts. Supplied
+periodic knots remain unsupported. The native parametric counterpart
 [`make_splprep`](interpolate_make_splprep.md) is also available. Broader knot
 forms and SciPy's soft `nest` behavior remain gaps. See
 [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html)

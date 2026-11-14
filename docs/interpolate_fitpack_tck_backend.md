@@ -10,6 +10,9 @@ Native object-returning constructors are also available:
 [`make_splprep`](interpolate_make_splprep.md) for curves with shared knots.
 Both support interpolation and automatic/fixed-knot smoothing within their
 documented capacity, knot-form, and boundary limits.
+Both also support [periodic constructor boundaries](interpolate_periodic_constructors.md)
+for closed-input interpolation and automatic smoothing. Their input validation
+is separate from the legacy tuple APIs' ignored-final-observation behavior.
 
 ## Licensing and attribution
 

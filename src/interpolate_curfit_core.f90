@@ -20,7 +20,7 @@ module scifort_interpolate_curfit_core
     logical, parameter :: fp_true = .true., fp_false = .false.
 contains
 
-    subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status)
+    subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status,knot_capacity)
         implicit none
         real(dp), intent(in) :: u(:) !! Finite increasing sites, including the closing endpoint.
         real(dp), intent(in) :: x(:,:) !! Coordinates (sites,channels); final row is ignored.
@@ -30,6 +30,7 @@ contains
         real(dp), allocatable, intent(out) :: knots(:) !! Full periodic knots on success.
         real(dp), allocatable, intent(out) :: coeff(:,:) !! Unpadded coefficients by channel.
         integer, intent(out) :: status !! Zero success, three numerical or allocation failure.
+        integer, intent(in), optional :: knot_capacity !! Hard knot capacity, default m+2*k.
         real(dp), allocatable :: uu(:),xx(:),ww(:),t(:),c(:),fpint(:),z(:),q(:,:)
         real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
         integer, allocatable :: nrdata(:)
@@ -40,7 +41,9 @@ contains
         ndim=size(x,2)
         if (m>huge(m)/64) return
         nest=m+2*k
-        if (ndim>huge(m)/nest) return
+        if (present(knot_capacity)) nest=min(nest,knot_capacity)
+        if (nest<2*(k+1)) return
+        if (ndim>huge(m)/max(m,nest)) return
         ncc=nest*ndim
         if (maxval(abs(u))>huge(one)/real(4*(k+1),dp)) return
         span=u(m)-u(1)
@@ -136,7 +139,7 @@ contains
         status=0
     end subroutine fitpack_periodic_parametric
 
-    subroutine fitpack_periodic_curve(x,y,w,k,s,knots,coeff,status)
+    subroutine fitpack_periodic_curve(x,y,w,k,s,knots,coeff,status,knot_capacity)
         implicit none
         real(dp), intent(in) :: x(:) !! Finite increasing coordinates, including period endpoint.
         real(dp), intent(in) :: y(:) !! Observations; the final entry is ignored.
@@ -146,6 +149,7 @@ contains
         real(dp), allocatable, intent(out) :: knots(:) !! Full periodic knots on success.
         real(dp), allocatable, intent(out) :: coeff(:) !! Coefficients padded to knot count.
         integer, intent(out) :: status !! Zero success, three numerical or allocation failure.
+        integer, intent(in), optional :: knot_capacity !! Hard knot capacity, default m+2*k.
         real(dp), allocatable :: xx(:),yy(:),ww(:),t(:),c(:),fpint(:),z(:),q(:,:)
         real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
         integer, allocatable :: nrdata(:)
@@ -159,6 +163,8 @@ contains
         span=x(m)-x(1)
         if (span<tiny(one)) return
         nest=m+2*k
+        if (present(knot_capacity)) nest=min(nest,knot_capacity)
+        if (nest<2*(k+1)) return
         allocate(xx(m),yy(m),ww(m),t(nest),c(nest),fpint(nest),z(nest),q(m,k+1), &
             a1(nest,k+1),a2(nest,k),b(nest,k+2),g1(nest,k+2),g2(nest,k+1), &
             nrdata(nest),stat=info)

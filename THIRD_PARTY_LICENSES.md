@@ -39,6 +39,9 @@ the combined-file `MIT AND BSD-3-Clause` declaration are retained.
 The native `make_splprep` wrapper similarly reuses the attributed parametric
 solver, extended with fixed-knot/polynomial modes and triangular factor checks.
 Its upstream BSD notices and license remain applicable to those adaptations.
+Periodic native constructor branches also reuse those periodic smoothing
+kernels and the existing attributed SciPy periodic interpolation kernel.
+Optional capacity controls preserve those notices and existing default paths.
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
 constraint construction from `fpsphe` and `fprpsp` in Federico Perini's

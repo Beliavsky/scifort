@@ -66,11 +66,12 @@ contains
         integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical.
         real(dp), allocatable, intent(out), optional :: parameters(:) !! Sites on success only.
-        character(*), intent(in), optional :: bc_type !! 'not-a-knot' default; periodic unsupported.
+        character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
         type(bspline_array_interpolator_type) :: fit
         real(dp), allocatable :: param(:),delta(:),knots(:),coeff(:,:)
         real(dp) :: target,bounds(2),scale,length,span
         integer :: degree,m,ndim,code,local_code,j,nt
+        logical :: periodic
         code=fitpack_tck_invalid_input
         m=size(x,1)
         ndim=size(x,2)
@@ -79,12 +80,10 @@ contains
         if (degree<1 .or. degree>5) goto 900
         if (m<=degree .or. ndim<1) goto 900
         if (.not.all(ieee_is_finite(x))) goto 900
+        periodic=.false.
         if (present(bc_type)) then
-            if (trim(bc_type)=='periodic') then
-                code=fitpack_tck_unsupported_smoothing
-                goto 900
-            end if
-            if (trim(bc_type)/='not-a-knot') goto 900
+            periodic=trim(bc_type)=='periodic'
+            if (.not.periodic .and. trim(bc_type)/='not-a-knot') goto 900
         end if
         target=0.0_dp
         if (present(s)) target=s
@@ -97,6 +96,9 @@ contains
             if (size(w)/=m) goto 900
             if (.not.all(ieee_is_finite(w))) goto 900
             if (any(w<=0.0_dp)) goto 900
+        end if
+        if (periodic) then
+            if (.not.all(closed_endpoint(x(1,:),x(m,:)))) goto 900
         end if
         allocate(param(m),delta(ndim),stat=local_code)
         if (local_code/=0) then
@@ -128,6 +130,13 @@ contains
         if (present(ue)) bounds(2)=ue
         if (.not.all(ieee_is_finite(bounds))) goto 900
         if (bounds(1)>param(1) .or. bounds(2)<param(m)) goto 900
+        if (periodic) then
+            if (any(bounds/=[param(1),param(m)])) goto 900
+            if (target>0.0_dp .and. present(t)) then
+                code=fitpack_tck_unsupported_smoothing
+                goto 900
+            end if
+        end if
         if (target==0.0_dp) then
             if (any(bounds/=[param(1),param(m)])) goto 900
             ! Keep the existing interpolator's midpoint and elimination arithmetic in range.
@@ -139,10 +148,28 @@ contains
             if (minval((param(2:)-param(:m-1))/span) < &
                 tiny(1.0_dp)**(1.0_dp/real(4*(degree+1),dp))) goto 900
             if (maxval(abs(x))>huge(1.0_dp)/(4.0_dp*real(m,dp)*real(degree+1,dp))) goto 900
-            fit=make_interp_spline(param,x,k=degree,status=local_code)
+            if (periodic) then
+                call periodic_interpolation(param,x,degree,knots,coeff,code)
+                if (code/=0) goto 900
+                fit=bspline(knots,coeff,degree,status=local_code,periodic=degree>1)
+            else
+                fit=make_interp_spline(param,x,k=degree,status=local_code)
+            end if
             code=fitpack_tck_success
             if (local_code/=0) code=fitpack_tck_singular
         else
+            if (periodic) then
+                if (present(nest)) then
+                    if (nest<2*(degree+1) .or. nest>m+2*degree) goto 900
+                end if
+                call fitpack_periodic_parametric(param,x,w,degree,target,knots,coeff,code, &
+                    knot_capacity=nest)
+                if (code/=0) goto 900
+                fit=bspline(knots,coeff,degree,status=local_code)
+                if (local_code/=0) code=fitpack_tck_singular
+                if (code==0 .and. present(parameters)) call move_alloc(param,parameters)
+                goto 900
+            end if
             if (present(t) .and. present(nest)) goto 900
             if (present(nest)) then
                 if (nest<2*(degree+1) .or. nest>m+degree+1) goto 900
@@ -177,11 +204,12 @@ contains
         real(dp), intent(in), optional :: t(:) !! Full clamped knots; positive s only.
         integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical
-        character(*), intent(in), optional :: bc_type !! 'not-a-knot' default; periodic unsupported.
+        character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
         type(bspline_interpolator_type) :: fit
-        real(dp), allocatable :: knots(:),coeff(:)
+        real(dp), allocatable :: knots(:),coeff(:),periodic_coeff(:,:)
         real(dp) :: target,bounds(2)
         integer :: degree,code,local_code,m,nt
+        logical :: periodic
         code=fitpack_tck_invalid_input
         m=size(x)
         degree=3
@@ -191,12 +219,13 @@ contains
         if (.not.all(ieee_is_finite(x))) goto 900
         if (.not.all(ieee_is_finite(y))) goto 900
         if (any(x(2:)<=x(:m-1))) goto 900
+        periodic=.false.
         if (present(bc_type)) then
-            if (trim(bc_type)=='periodic') then
-                code=fitpack_tck_unsupported_smoothing
-                goto 900
-            end if
-            if (trim(bc_type)/='not-a-knot') goto 900
+            periodic=trim(bc_type)=='periodic'
+            if (.not.periodic .and. trim(bc_type)/='not-a-knot') goto 900
+        end if
+        if (periodic) then
+            if (.not.closed_endpoint(y(1),y(m))) goto 900
         end if
         target=0.0_dp
         if (present(s)) target=s
@@ -207,10 +236,23 @@ contains
         if (present(xe)) bounds(2)=xe
         if (.not.all(ieee_is_finite(bounds))) goto 900
         if (bounds(1)>x(1) .or. bounds(2)<x(m)) goto 900
+        if (periodic) then
+            if (any(bounds/=[x(1),x(m)])) goto 900
+            if (target>0.0_dp .and. present(t)) then
+                code=fitpack_tck_unsupported_smoothing
+                goto 900
+            end if
+        end if
         if (target==0.0_dp) then
             if (present(w) .or. present(t) .or. present(nest)) goto 900
             if (any(bounds/=[x(1),x(m)])) goto 900
-            fit=make_interp_spline(x,y,k=degree,status=local_code)
+            if (periodic) then
+                call periodic_interpolation(x,reshape(y,[m,1]),degree,knots,periodic_coeff,code)
+                if (code/=0) goto 900
+                fit=bspline(knots,periodic_coeff(:,1),degree,status=local_code,periodic=degree>1)
+            else
+                fit=make_interp_spline(x,y,k=degree,status=local_code)
+            end if
             code=fitpack_tck_success
             if (local_code/=0) code=fitpack_tck_singular
             goto 900
@@ -219,6 +261,16 @@ contains
             if (size(w)/=m) goto 900
             if (.not.all(ieee_is_finite(w))) goto 900
             if (any(w<=0.0_dp)) goto 900
+        end if
+        if (periodic) then
+            if (present(nest)) then
+                if (nest<2*(degree+1) .or. nest>m+2*degree) goto 900
+            end if
+            call fitpack_periodic_curve(x,y,w,degree,target,knots,coeff,code,knot_capacity=nest)
+            if (code/=0) goto 900
+            fit=bspline(knots,coeff,degree,status=local_code)
+            if (local_code/=0) code=fitpack_tck_singular
+            goto 900
         end if
         if (present(t) .and. present(nest)) goto 900
         if (present(nest)) then
@@ -239,6 +291,64 @@ contains
         if (local_code/=0) code=fitpack_tck_singular
 900     if (present(status)) status=code
     end function make_splrep
+
+    subroutine periodic_interpolation(u,x,k,knots,coeff,code)
+        implicit none
+        real(dp), intent(in) :: u(:) !! Finite strictly increasing sites, including both endpoints.
+        real(dp), intent(in) :: x(:,:) !! Finite closed coordinates (samples,channels).
+        integer, intent(in) :: k !! Degree one through five.
+        real(dp), allocatable, intent(out) :: knots(:) !! Full physical knots on success.
+        real(dp), allocatable, intent(out) :: coeff(:,:) !! Unpadded coefficients by channel.
+        integer, intent(out) :: code !! Zero success, three numerical failure.
+        type(bspline_array_interpolator_type) :: normalized,physical
+        real(dp), allocatable :: uu(:),t(:),c(:,:),prediction(:,:)
+        real(dp) :: span,scale
+        integer :: m,local_code
+        code=fitpack_tck_singular
+        m=size(u)
+        if (maxval(abs(u))>huge(1.0_dp)/real(4*(k+1),dp)) return
+        span=u(m)-u(1)
+        if (span<tiny(1.0_dp)) return
+        uu=(u-u(1))/span
+        if (minval(uu(2:)-uu(:m-1)) < &
+            tiny(1.0_dp)**(1.0_dp/real(4*(k+1),dp))) return
+        scale=maxval(abs(x))
+        if (scale==0.0_dp) scale=1.0_dp
+        if (any(x/=0.0_dp .and. x/scale==0.0_dp)) return
+        normalized=make_interp_spline(uu,x/scale,k=k,bc_type='periodic',status=local_code)
+        if (local_code/=0) return
+        t=normalized%knots()
+        c=normalized%coefficients()
+        if (scale>1.0_dp) then
+            if (maxval(abs(c))>huge(1.0_dp)/scale) return
+        end if
+        t=u(1)+t*span
+        t(k+1)=u(1)
+        t(size(t)-k)=u(m)
+        if (.not.all(ieee_is_finite(t))) return
+        if (any(t(2:)<t(:size(t)-1))) return
+        if (k>1) then
+            if (any(t(2:)<=t(:size(t)-1))) return
+        end if
+        if (any(t(2:)>t(:size(t)-1) .and. &
+            t(2:)-t(:size(t)-1)<tiny(1.0_dp))) return
+        physical=bspline(t,c*scale,k,status=local_code)
+        if (local_code/=0) return
+        prediction=physical%evaluate(u(:m-1))
+        if (maxval(abs(prediction/scale-x(:m-1,:)/scale))>512*epsilon(1.0_dp)) return
+        call move_alloc(t,knots)
+        coeff=c*scale
+        code=fitpack_tck_success
+    end subroutine periodic_interpolation
+
+    pure elemental logical function closed_endpoint(a,b) result(matches)
+        implicit none
+        real(dp), intent(in) :: a !! Finite first ordinate or coordinate component.
+        real(dp), intent(in) :: b !! Finite final ordinate or coordinate component.
+        real(dp) :: scale
+        scale=max(1.0_dp,abs(a),abs(b))
+        matches=abs(chord_difference(a,b,scale))<=1e-12_dp
+    end function closed_endpoint
 
     pure logical function parametric_tck_valid(self) result(ok)
         class(fitpack_parametric_tck_type), intent(in) :: self !! parametric spline

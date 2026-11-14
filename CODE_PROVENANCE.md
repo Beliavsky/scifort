@@ -1,3 +1,35 @@
+## 2026-11-14 - Periodic native spline constructors
+
+The `bc_type='periodic'` branches in `make_splrep` and `make_splprep` and
+the private normalization/physical-validation wrapper in
+`src/interpolate_fitpack_compat.f90` are original MIT SciFort code. They
+reuse existing periodic native interpolation and the already attributed
+`fpperi`/`fpclos` smoothing adaptations. No new third-party implementation
+or linked dependency is introduced. The interpolation kernel retains its
+existing SciPy 1.17.0 provenance recorded below; it is not rewritten here.
+
+`src/interpolate_curfit_core.f90` gains trailing optional hard knot capacities
+in its two periodic entry points and an integer-product guard for limited
+parametric capacities. Default allocation, knot selection, QR factors,
+penalties, root searches, and legacy tuple behavior are preserved. The exact
+cached upstream `fpperi` and `fpclos` source and license were inspected again:
+perazz/FITPACK commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+SHA-256 `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+The `MIT AND BSD-3-Clause` notice, Copyright (c) 2022 Federico Perini,
+and [full retained license](LICENSES/perazz-fitpack-BSD-3-Clause.txt) remain.
+
+The public mathematical reference is P. Dierckx, *Curve and Surface Fitting
+with Splines*, Oxford University Press, 1993, periodic interpolation and
+derivative-jump smoothing under a weighted residual constraint. Exact SciPy
+v1.18.0 [`_fitpack_repro.py`](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_fitpack_repro.py),
+its BSD-3-Clause license, and official constructor documentation were inspected
+for interface contracts and differences; no new SciPy code was translated.
+The new tests and validation driver/checker are original MIT code. See
+[validation](validation/periodic_constructors_2026-11-14.md) for strict
+periodic interpolation comparisons, smoothing-equation checks, and
+automatic-path limitations.
+
 ## 2026-11-14 - Native parametric smoothing constructor
 
 `make_splprep` in `src/interpolate_fitpack_compat.f90` is an original MIT

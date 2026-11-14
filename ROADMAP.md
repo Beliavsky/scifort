@@ -3425,7 +3425,7 @@ smoothing. C ABI and wrapper expansion remain deferred.
 - [x] Check original upstream, its analytic sine/cosine fixture, SciPy
   contracts, independent normal equations, and checked/optimized builds.
 - [x] Periodic parametric fitting.
-- [ ] Periodic fixed knots and modern constructors.
+- [ ] Periodic fixed knots and remaining modern selection/capacity options.
 
 ## 2026-11-13 -- Approved native periodic parametric fitting
 
@@ -3438,7 +3438,7 @@ C ABI and wrapper expansion remain deferred.
   endpoint derivatives, range/residual checks, and retained BSD attribution.
 - [x] Checked/optimized native regressions, pinned original core and closed
   curve data, SciPy comparisons, and independent cyclic normal equations.
-- [ ] Periodic fixed knots, continuation, and modern spline constructors.
+- [ ] Periodic fixed knots, continuation, and remaining modern selection/capacity options.
 
 ## 2026-11-13 -- Approved modern scalar constructor
 
@@ -3450,7 +3450,8 @@ The user approved `make_splrep` after native periodic parametric fitting.
   verification, and explicit capacity/invalid-input/numerical statuses.
 - [x] Checked/optimized native and independent reference/equation validation.
 - [x] Native `make_splprep`; see the approved parametric constructor below.
-- [ ] Periodic constructor boundaries, broader knot forms,
+- [x] Periodic constructor interpolation and automatic smoothing.
+- [ ] Broader knot forms,
   and modern SciPy automatic-selection/soft-capacity parity.
 
 ## 2026-11-14 -- Approved modern parametric constructor
@@ -3462,5 +3463,18 @@ C ABI and wrapper expansion remain deferred.
   automatic/fixed-knot smoothing, shared knots, and one residual target.
 - [x] Polynomial limits retaining supplied knots, explicit hard capacity,
   numerical guards, and checked/optimized numerical validation.
-- [ ] Periodic constructor boundaries, broader knot forms, exact modern
+- [x] Periodic constructor interpolation and automatic smoothing.
+- [ ] Broader knot forms, exact modern
   automatic selection, and soft capacities remain separate gaps.
+
+## 2026-11-14 -- Approved periodic native constructors
+
+The user requested continued native SciPy gap work after `make_splprep`.
+C ABI and wrapper expansion remain deferred.
+
+- [x] Closed-input `bc_type='periodic'` interpolation and automatic smoothing
+  for both constructors, degrees 1-5, shared knots, and hard capacities.
+- [x] Normalized interpolation, physical verification, checked/optimized
+  regressions, SciPy interpolation and independent cyclic equation checks.
+- [ ] Supplied periodic knots, broader forms, exact modern automatic-selection
+  parity, and soft capacities remain gaps.
