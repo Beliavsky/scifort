@@ -8,6 +8,7 @@ module scifort_interpolate_fitpack_compat
     use scifort_kinds, only : dp
     use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric
     use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
+    use scifort_interpolate_curfit_core, only : fitpack_periodic_parametric
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline, &
         bspline_status_success
@@ -101,11 +102,11 @@ contains
     end function chord_difference
 
     ! SciPy splprep: interpolation (s=0), automatic-knot smoothing (s>0),
-    ! or supplied full knot vector (task=-1). Periodic constraints still
-    ! use the separately packaged optional FITPACK backend.
+    ! or supplied full knot vector (nonperiodic task=-1).
     ! Input ordinates are transposed relative to scipy.splprep's sequence:
     ! coordinates(sample,dimension), with up to arbitrary coordinate count.
     function splprep(x,u,w,k,s,task,t,ub,ue,per,status) result(tck)
+        implicit none
         real(dp), intent(in) :: x(:,:) !! curve coordinates (samples, dimensions)
         real(dp), intent(in), optional :: u(:) !! strictly increasing parameter
         real(dp), intent(in), optional :: w(:) !! positive FITPACK residual multipliers
@@ -115,17 +116,20 @@ contains
         real(dp), intent(in), optional :: t(:) !! *complete* FITPACK knots if task=-1
         real(dp), intent(in), optional :: ub !! left parameter domain bound
         real(dp), intent(in), optional :: ue !! right parameter domain bound
-        logical, intent(in), optional :: per !! periodic FITPACK curve (unsupported)
+        logical, intent(in), optional :: per !! Closed periodic curve, default false.
         integer, intent(out), optional :: status !! 0=success, 1=invalid, 2=unsupported, 3=singular
         type(fitpack_parametric_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
         real(dp), allocatable :: param(:),distances(:),coefficients(:),knots(:),interior(:)
         real(dp), allocatable :: delta(:)
         real(dp) :: left, right, total, target, coordinate_scale
-        integer :: n, ndim, deg, mode, code, fitcode, j, nc
+        integer :: n, ndim, deg, mode, code, fitcode, j, nc, used
+        logical :: periodic,scaled_chords
         code = fitpack_tck_invalid_input
         n = size(x,1)
         ndim = size(x,2)
+        periodic=.false.
+        if (present(per)) periodic=per
         deg = 3
         if (present(k)) deg = k
         mode = 0
@@ -134,19 +138,19 @@ contains
         if (present(s)) target = s
         if (deg < 1 .or. deg > 5 .or. n <= deg .or. ndim < 1) goto 900
         if (mode /= 0 .and. mode /= -1) goto 900
-        if (.not. all(ieee_is_finite(x))) goto 900
+        used=n
+        if (periodic) used=n-1
+        if (.not. all(ieee_is_finite(x(:used,:)))) goto 900
         if (.not. ieee_is_finite(target)) goto 900
         if (target < 0.0_dp) goto 900
-        if (present(per)) then
-            if (per) then
-                code = fitpack_tck_unsupported_smoothing
-                goto 900
-            end if
+        if (periodic .and. mode==-1) then
+            if (present(t)) code=fitpack_tck_unsupported_smoothing
+            goto 900
         end if
         if (present(w)) then
             if (size(w) /= n) goto 900
-            if (.not. all(ieee_is_finite(w))) goto 900
-            if (any(w <= 0.0_dp)) goto 900
+            if (.not. all(ieee_is_finite(w(:used)))) goto 900
+            if (any(w(:used) <= 0.0_dp)) goto 900
         end if
         allocate(param(n),stat=fitcode)
         if (fitcode /= 0) then
@@ -165,22 +169,29 @@ contains
                 goto 900
             end if
             coordinate_scale=1.0_dp
-            if (mode == 0 .and. target > 0.0_dp) then
-                coordinate_scale=maxval(abs(x))
+            scaled_chords=periodic .or. (mode==0 .and. target>0.0_dp)
+            if (scaled_chords) then
+                coordinate_scale=maxval(abs(x(:used,:)))
                 if (coordinate_scale == 0.0_dp) goto 900
             end if
             distances(1) = 0.0_dp
             do j=2,n
                 ! Common scaling preserves Euclidean chord lengths up to a constant
                 ! while preventing overflow before subtracting large coordinates.
-                if (mode == 0 .and. target > 0.0_dp) then
+                if (periodic .and. j==n) then
+                    delta=chord_difference(x(1,:),x(n-1,:),coordinate_scale)
+                else if (scaled_chords) then
                     delta=chord_difference(x(j,:),x(j-1,:),coordinate_scale)
                 else
                     delta=x(j,:)-x(j-1,:)
                 end if
                 total = maxval(abs(delta))
-                if (total == 0.0_dp .and. any(x(j,:) /= x(j-1,:))) then
-                    code=fitpack_tck_singular
+                if (total == 0.0_dp) then
+                    if (periodic .and. j==n) then
+                        if (any(x(1,:)/=x(n-1,:))) code=fitpack_tck_singular
+                    else
+                        if (any(x(j,:)/=x(j-1,:))) code=fitpack_tck_singular
+                    end if
                     goto 900
                 end if
                 if (total <= 0.0_dp .or. .not. ieee_is_finite(total)) goto 900
@@ -196,6 +207,17 @@ contains
         if (present(ue)) right = ue
         if (.not. ieee_is_finite(left) .or. .not. ieee_is_finite(right)) goto 900
         if (left > param(1) .or. right < param(n) .or. left >= right) goto 900
+        if (periodic) then
+            if (present(t)) goto 900
+            if (left/=param(1) .or. right/=param(n)) goto 900
+            call fitpack_periodic_parametric(param,x,w,deg,target,tck%t,tck%c,code)
+            if (code==0) then
+                call move_alloc(param,tck%u)
+                tck%k=deg
+                if (.not.tck%valid()) code=fitpack_tck_singular
+            end if
+            goto 900
+        end if
         if (mode == 0) then
             if (present(t)) goto 900
             if (target > 0.0_dp) then

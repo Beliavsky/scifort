@@ -3,7 +3,7 @@
 program test_interpolate_fitpack_parametric_smoothing
     use scifort_kinds, only : dp
     use scifort_interpolate, only : splprep,splev,fitpack_parametric_tck_type, &
-        fitpack_tck_invalid_input,fitpack_tck_singular,fitpack_tck_unsupported_smoothing
+        fitpack_tck_invalid_input,fitpack_tck_singular
     use, intrinsic :: ieee_arithmetic, only : ieee_value,ieee_quiet_nan,ieee_positive_inf
     implicit none
     integer, parameter :: n=61
@@ -154,8 +154,8 @@ program test_interpolate_fitpack_parametric_smoothing
     fit=splprep(x,u=u,s=target,t=[0.4_dp],status=status)
     call invalid('knots with automatic task')
     fit=splprep(x,u=u,s=target,per=.true.,status=status)
-    call require(status==fitpack_tck_unsupported_smoothing .and. .not.fit%valid(), &
-        'periodic behavior preserved')
+    call require(status==0 .and. fit%valid(), &
+        'native periodic smoothing')
     fit=splprep(x,u=u,s=1e-100_dp,status=status)
     call numerical('unattainable residual')
     bad_w=w

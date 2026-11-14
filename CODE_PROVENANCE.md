@@ -1,3 +1,45 @@
+## 2026-11-13 - Native periodic parametric spline fitting
+
+`src/interpolate_curfit_core.f90` also adapts `fpclos`,
+`fpclos_reset_interp`, and `fp_rotate_row_2mat_vec` from Federico Perini's
+perazz/FITPACK, based on Paul Dierckx's FITPACK. The inspected source is
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`, SHA-256
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+The inspected [upstream license](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/LICENSE.md)
+has SHA-256 `39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+Full BSD-3-Clause terms and Copyright (c) 2022 Federico Perini are retained
+in [the existing license file](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+The adapted file retains source attribution and `MIT AND BSD-3-Clause`.
+
+Changes are binary64/default integer/logical kinds, lowercase free form,
+explicit `implicit none`, documented dummy arguments, wrapped comments,
+ordinary loops replacing `forall`, a channel-sized working vector replacing
+the upstream fixed maximum, and existing periodic factor checks before
+wrapped back substitution. Existing attributed basis, knot insertion, vector
+Givens, wrapped solve, and root-iteration helpers are reused unchanged.
+Original SciFort MIT wrappers validate active entries, compute scaled closed
+chord lengths, normalize coordinates/weights/parameters, restore unpadded
+physical tuples, and verify physical residuals. The public `splprep` signature
+and existing nonperiodic behavior are preserved. No dependency is added.
+
+Validation independently compiles the unchanged pinned original core and
+compares 187 fresh fits, including seven fresh-fit cases using coordinates
+read from upstream `test_closed_fit` in `test/fitpack_curve_tests.f90`
+(inspected SHA-256
+`0bb92548cb070e70e245b1f837fb931014e69b6f1c335f8cfdca49c514908847`).
+Those upstream literals are read from an optional reference file at run time,
+not copied into native tests or vendored. Their default-real rounding is
+preserved before promotion to binary64. The full upstream object-oriented
+and continuation sequence is not run. SciPy is a comparison reference only;
+no new SciPy implementation is imported. See the
+[validation record](validation/splprep_closed_2026-11-13.md).
+
+Mathematical references: P. Dierckx, "Algorithms for smoothing data with
+periodic and parametric splines", *Computer Graphics and Image Processing*
+20 (1982), 171-184; and *Curve and Surface Fitting with Splines*, Oxford
+University Press, 1993, periodic spline fitting.
+
 ## 2026-11-13 - Native periodic scalar spline fitting
 
 `src/interpolate_curfit_core.f90` also adapts `fpperi`,

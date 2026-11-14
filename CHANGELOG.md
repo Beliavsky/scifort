@@ -1,3 +1,12 @@
+## 2026-11-13 - Native periodic parametric spline fitting
+
+- Add native `splprep(per=.true.)` closed-curve interpolation and smoothing,
+  degrees 1-5, shared knots, total weighted residuals, and unpadded tuples.
+- Preserve supplied parameters and higher channel counts; compute automatic
+  parameters with the closing leg and ignore the final coordinate row/weight.
+- Add range, factor, and physical residual checks, native regressions,
+  original-upstream and SciPy comparisons, and independent normal equations.
+
 ## 2026-11-13 - Native periodic scalar spline fitting
 
 - Add native `splrep(per=.true.)` interpolation and automatic-knot smoothing

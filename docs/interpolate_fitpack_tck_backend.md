@@ -26,6 +26,8 @@ at <https://github.com/perazz/fitpack>.
   helpers from the same licensed source.
 - Native periodic `splrep(per=.true.)` adapts `fpperi`, its interpolation
   initializer, wrapped triangular solve, and two-part Givens helper.
+- Native periodic `splprep(per=.true.)` adapts `fpclos`, its interpolation
+  initializer, and the vector two-part Givens helper, reusing those factors.
 - Source references: <https://github.com/perazz/fitpack/blob/main/LICENSE.md>,
   <https://github.com/perazz/fitpack/blob/main/fpm.toml>,
   <https://perazz.github.io/fitpack/tutorial_curve.html>.
@@ -183,11 +185,11 @@ curve = splprep(points, u=u, w=w, k=3, task=-1, &
 Weighted fits minimize the sum over observation sites and coordinate
 components of `(w(i) * residual(i,j))**2`. For `s=0`, weights do not change
 an exact interpolation. Explicit `u` must be finite and strictly increasing.
-`ub`/`ue` may enlarge the domain for fixed-knot or positive-s smoothing fits; exact
+For nonperiodic fits, `ub`/`ue` may enlarge the fixed-knot or positive-s domain; exact
 interpolation currently requires the domain endpoints to coincide with
 `u(1)` and `u(n)`.
 
-For `task=0,s>0`, one shared knot vector and one smoothing parameter serve all
+For nonperiodic `task=0,s>0`, one shared knot vector and one smoothing parameter serve all
 channels. The total target is `sum_i sum_j (w(i)*residual(i,j))**2 <= s`,
 with FITPACK relative target tolerance `0.001`. A sufficiently large target
 returns the weighted least-squares polynomial curve. The existing default
@@ -209,7 +211,7 @@ allocation failure, unrepresentable targets, or unmet residuals. Storage is
 linear in sample count and channel count for degrees 1-5. There is no new
 linked dependency or C ABI.
 
-The perazz and SciPy smoothing iterations use different initial guesses;
+The nonperiodic perazz and SciPy smoothing iterations use different initial guesses;
 normalization can also change the iteration path. Coefficients and derivatives,
 especially higher derivatives of noisy curves, can differ substantially even
 when both fits meet the target. Residual tolerance is not a derivative-error
@@ -218,11 +220,52 @@ normal equations, as well as agreement with the pinned original core and
 evaluation of the native tuple by SciPy. See the
 [parametric smoothing validation](../validation/splprep_smoothing_2026-11-13.md).
 
-**Not yet supported for parametric `splprep`:** periodic `per=.true.` fits,
+### Native periodic parametric fitting
+
+`splprep(points,u=...,w=...,k=...,s=...,per=.true.)` fits a closed curve with
+one shared knot vector and one total weighted residual over all channels.
+Degrees 1-5, `m > k` sites, and any positive channel count within storage
+limits are supported. The existing signature, unpadded coefficient layout,
+and default `s=0` are preserved. `s=0` interpolates the first `m-1` rows;
+positive `s` smooths to relative residual tolerance `0.001`. A large target
+returns a constant vector whose components are weighted means. Support for
+more than ten channels remains a **SciFort extension** to legacy `splprep`.
+
+The final coordinate row and weight are ignored, even if nonfinite or
+nonpositive. The input arrays are not modified. The final point is treated
+as a copy of the first when computing automatic chord lengths, so the
+closing leg runs from row `m-1` to row 1. Zero-length successive or closing
+legs make automatic parameters invalid; supplied strictly increasing `u`
+allows repeated coordinate points. With supplied `u`, all `m` parameter
+values, including the final one, must be finite and strictly increasing.
+The period is `u(m)-u(1)`; automatic parameters span `[0,1]`.
+
+The fitted values and derivatives through order `k-1` match at the seam,
+subject to floating-point conditioning. The knots extend beyond both
+endpoints, and the channel coefficients wrap periodically. This constrains
+the fit; `splev` keeps its existing extrapolation policies and does not
+automatically wrap out-of-period queries.
+
+If supplied, `ub` and `ue` must equal the parameter endpoints. This deliberate
+validation differs from SciPy's periodic path, which ignores these bounds.
+Periodic `task=-1` with supplied knots returns status 2 and an invalid tuple;
+`task=1` and malformed input return status 1. Numerical/range/allocation
+failures return status 3. The normalized gap and relative-weight guards
+described above apply. As with periodic scalar fits, parameter magnitudes
+reserve headroom for exterior knots: `maxval(abs(u)) <= huge(1.0_dp)/(4*(k+1))`.
+The physical span and all physical knot gaps must be at least `tiny(1.0_dp)`;
+rounding must preserve distinct knots. The actual physical representation's
+residual is verified before returning success. Interpolation admits a
+normalized squared-residual rounding allowance of
+`m*channels*(128*epsilon(1.0_dp))**2`.
+
+See the [closed-curve validation](../validation/splprep_closed_2026-11-13.md)
+for original-core and SciPy comparisons, independent cyclic normal equations,
+and the remaining conditioning limitations. Exact adaptive paths and
+high-derivative accuracy are not guaranteed for every accepted problem.
+
+**Not yet supported for parametric `splprep`:** periodic fixed-knot fits,
 FITPACK `task=1` continuation, and the modern `make_splprep` constructor.
-Periodic fits return `fitpack_tck_unsupported_smoothing` (2); `task=1` retains
-the existing invalid-input status (1). The optional backend continues to
-provide periodic parametric smoothing.
 
 The independent regression compares `splprep` parameters, knots,
 coefficients, fitted points and first through third derivatives against
@@ -237,6 +280,8 @@ python tools/interpolate_reference/run_all_native_interpolation.py
 ## Optional `perazz/fitpack` backend (automatic knot selection)
 
 Scalar and parametric nonperiodic `splrep(s>0)` / `splprep(s>0)` are native.
+Periodic scalar and parametric interpolation/smoothing are also native via
+`per=.true.`; the optional package is not required for these paths.
 The optional backend remains
 useful for its separate spline-object API and broader fitting interfaces.
 

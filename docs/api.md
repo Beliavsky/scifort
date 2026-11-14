@@ -7252,3 +7252,13 @@ default `s=0`, and existing status names are preserved. More than ten coordinate
 channels remain supported as a SciFort extension. See the
 [TCK guide](interpolate_fitpack_tck_backend.md) for scaling, conditioning,
 iteration-path differences from SciPy, and remaining periodic/modern-interface gaps.
+
+`splprep(points,u=...,w=...,k=...,s=...,per=.true.)` now also fits closed
+parametric curves natively, with shared knots and one total weighted residual.
+It supports degrees 1-5 and both interpolation and smoothing. The final
+coordinate row and weight are ignored; automatic parameters use the closing
+leg back to the first row. Explicit `u` must include the finite period endpoint.
+Endpoint values and derivatives through order `k-1` match within conditioning
+limits. Periodic fixed knots and continuation remain unsupported. See the
+[TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-parametric-fitting)
+and [validation record](../validation/splprep_closed_2026-11-13.md).

@@ -3397,7 +3397,8 @@ C ABI and wrapper expansion remain deferred.
 - [x] Validate checked/optimized native behavior against SciPy, the separately
   compiled upstream core, and the upstream knot-insertion crash fixture.
 - [x] Extend the foundation to native nonperiodic parametric smoothing.
-- [ ] Add periodic curve smoothing and modern spline constructors.
+- [x] Add periodic scalar and parametric interpolation/smoothing.
+- [ ] Add modern spline constructors.
 
 ## 2026-11-13 -- Approved native parametric smoothing expansion
 
@@ -3409,7 +3410,8 @@ The user approved nonperiodic automatic-knot `splprep(s>0)` after scalar smoothi
   and retain upstream source/license attribution.
 - [x] Validate checked/optimized behavior against the pinned core, upstream
   parametric data, SciPy residual contracts, and independent normal equations.
-- [ ] Periodic parametric smoothing, continuation, and modern constructors.
+- [x] Periodic parametric interpolation and smoothing.
+- [ ] Continuation and modern constructors.
 
 ## 2026-11-13 -- Approved native periodic scalar fitting
 
@@ -3422,4 +3424,18 @@ smoothing. C ABI and wrapper expansion remain deferred.
   physical residuals, seam continuity, ranges, and existing dependent APIs.
 - [x] Check original upstream, its analytic sine/cosine fixture, SciPy
   contracts, independent normal equations, and checked/optimized builds.
-- [ ] Periodic parametric fitting, periodic fixed knots, and modern constructors.
+- [x] Periodic parametric fitting.
+- [ ] Periodic fixed knots and modern constructors.
+
+## 2026-11-13 -- Approved native periodic parametric fitting
+
+The user approved native `splprep(per=.true.)` after periodic scalar fitting.
+C ABI and wrapper expansion remain deferred.
+
+- [x] Closed-curve interpolation and automatic-knot smoothing, degrees 1-5,
+  shared knots, weighted total residuals, and preserved higher channel counts.
+- [x] Supplied/chord-length parameters, ignored closing row/weight, periodic
+  endpoint derivatives, range/residual checks, and retained BSD attribution.
+- [x] Checked/optimized native regressions, pinned original core and closed
+  curve data, SciPy comparisons, and independent cyclic normal equations.
+- [ ] Periodic fixed knots, continuation, and modern spline constructors.

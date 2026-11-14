@@ -5,6 +5,8 @@
 This historical record covers interpolation and fixed-knot fitting. Native
 positive-s smoothing was added later; see its
 [validation record](../validation/splprep_smoothing_2026-11-13.md).
+Native periodic interpolation and smoothing were also added later; see the
+[closed-curve record](../validation/splprep_closed_2026-11-13.md).
 
 New independent SciFort `scifort_interpolate` features:
 

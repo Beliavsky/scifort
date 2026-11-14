@@ -3,7 +3,7 @@
 program test_interpolate_fitpack_parametric
     use scifort_kinds, only : dp
     use scifort_interpolate, only : splprep, splev, fitpack_parametric_tck_type, &
-        fitpack_tck_success, fitpack_tck_invalid_input, fitpack_tck_unsupported_smoothing, &
+        fitpack_tck_success, fitpack_tck_invalid_input, &
         fitpack_tck_out_of_bounds
     implicit none
     integer, parameter :: n=25
@@ -66,8 +66,8 @@ program test_interpolate_fitpack_parametric
     if (code /= 0 .or. .not.bad%valid()) error stop 'native positive smoothing'
     if (size(bad%t) /= 8) error stop 'parametric polynomial limit'
     bad=splprep(x,u=u,per=.true.,status=code)
-    if (code /= fitpack_tck_unsupported_smoothing .or. bad%valid()) &
-        error stop 'periodic fit must not be approximated'
+    if (code /= fitpack_tck_success .or. .not.bad%valid()) &
+        error stop 'native periodic interpolation'
     bad=splprep(x,u=u,k=6,status=code)
     if (code /= fitpack_tck_invalid_input .or. bad%valid()) error stop 'invalid degree'
     bad=splprep(x,u=u,w=w(:n-1),status=code)
