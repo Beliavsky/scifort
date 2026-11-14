@@ -27,7 +27,7 @@ curve = make_splprep(x, s=0.15_dp, parameters=parameters, status=status)
 | `ub, ue` | Finite enclosing parameter bounds; default first/last parameter |
 | `k` | Degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Full clamped simple-interior or full periodic knots; positive `s` only |
+| `t(:)` | Full nondecreasing knots with simple interiors; positive `s` only |
 | `nest` | Hard knot capacity; upper bound `size(x,1)+k+1`, or `size(x,1)+2*k` for periodic fits |
 | `status` | 0 success, 1 invalid input, 2 unsupported option, 3 numerical/allocation failure |
 | `parameters(:)` | Optional allocatable output, allocated only on success; receives supplied or calculated sites |
@@ -60,12 +60,14 @@ residual tolerance is `0.001`. This is one shared constraint, not a separate
 target for each channel. A sufficiently large target yields a degree-k
 least-squares polynomial in each coordinate.
 
-Supplied `t` must include exactly `k+1` copies of each bound and strictly
-increasing simple interior knots; its length lies between `2*(k+1)` and
+Supplied `t` has nondecreasing exterior knots, exact base endpoints, and
+strictly increasing simple interior knots; its length lies between `2*(k+1)` and
 `size(x,1)+k+1`. It requests derivative-jump smoothing on those knots,
 not unconstrained least squares. A polynomial limit retains the supplied
-full knots. A target below the achievable least-squares residual, unresolved
-rank, or insufficient `nest` returns status 3 and an invalid object.
+full knots. Nonclamped exterior knots and rank-deficient regularized fits
+use a [documented dense fallback](interpolate_fixed_general.md). A target below
+the achievable residual, failed numerical checks, or insufficient `nest`
+returns status 3 and an invalid object.
 
 Smoothing shifts parameters before scaling and normalizes all coordinates
 by one common factor, preserving the Euclidean geometry. Weights are
@@ -98,7 +100,7 @@ See the [validation record](../validation/make_splprep_2026-11-14.md).
 be exceeded. Periodic interpolation and automatic/supplied-knot smoothing are supported;
 see the [periodic constructor guide](interpolate_periodic_constructors.md)
 for closed input, residual, capacity, numerical, and extrapolation contracts.
-Broader knot forms, exact modern automatic selection,
+Repeated interior knots, exact modern automatic selection,
 and soft capacities remain gaps. Legacy periodic fitting remains available
 through `splprep(per=.true.)`.
 

@@ -1,3 +1,14 @@
+## 2026-11-14 - Broader supplied knots and rank-aware smoothing
+
+- Accept nonclamped and partially repeated exterior knots for native scalar
+  and parametric smoothing, including explicit periodic endpoint constraints.
+- Add a bounded dense QR/SVD fallback for rank-deficient observation matrices,
+  with shared residual targets and exact polynomial/constant limits.
+- Fix nonperiodic fixed-knot residual checks when several knots lie between
+  sample sites; retain automatic paths and third-party notices.
+- Add native and independent constrained-fit validation, including explicit
+  conditioning-aware accuracy limits for clustered degree-five knots.
+
 ## 2026-11-14 - Supplied periodic constructor knots
 
 - Add fixed full periodic knot vectors to native `make_splrep` and

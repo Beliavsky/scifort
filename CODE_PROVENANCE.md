@@ -1,3 +1,46 @@
+## 2026-11-14 - Broader supplied knots and rank-aware smoothing
+
+`src/interpolate_fixed_smoothing.f90`, its constructor dispatch in
+`src/interpolate_fitpack_compat.f90`, and new tests/validation are original MIT
+SciFort code. The new module composes existing native B-spline evaluation,
+Householder QR, and Jacobi SVD routines; no external implementation, package,
+or binary is imported. It builds explicit endpoint constraints, projects onto
+their numerical null space, and solves augmented derivative-jump least-squares
+systems with one shared residual multiplier. Rank-deficient data fitting is
+explicitly documented as a SciFort extension, without claiming SciPy failure
+or iteration-path parity.
+
+The mathematical objective is P. Dierckx, *Curve and Surface Fitting with
+Splines*, Oxford University Press, 1993, and the public
+[SciPy smoothing specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html).
+Polynomial B-spline coefficients are derived independently from Marsden's
+identity and polynomial coefficient functionals in Carl de Boor,
+[*B(asic)-Spline Basics*, Section 4, Theorem 4 and equations (4.1)-(4.6)](https://ftp.cs.wisc.edu/Approx/bsplbasic.pdf).
+The polynomial reproduction implementation evaluates elementary symmetric
+polynomials of the k inner knots, divided by binomial coefficients. The
+paper supplies a mathematical specification, not implementation code.
+Existing SciFort SVD/QR routines supply numerical rank and minimum-norm solves.
+
+SciPy v1.18.0 `_bsplines.py` (`fpcheck`) and `_fitpack_repro.py`, already
+inspected and hashed in the previous records, supply interface and
+simple-interior/exterior-ordering context. No new SciPy code is translated.
+General noncyclic periodic exterior knots use endpoint constraints rather
+than assuming coefficient wrapping suffices. The existing accepted automatic
+and well-conditioned conventional fixed-knot paths are retained.
+
+The two fixed-knot residual checks in `src/interpolate_curfit_core.f90` now
+reuse the existing general interval search for multiple knots between sites.
+These are modifications to the already attributed perazz/FITPACK adaptation,
+not original replacements. The pinned source remains
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`; source SHA-256
+`02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Copyright (c) 2022 Federico Perini, `MIT AND BSD-3-Clause`, and the
+[full retained license](LICENSES/perazz-fitpack-BSD-3-Clause.txt) remain.
+The independent comparison constructs its reference polynomial limit through
+collocation of global monomials, separately from the production coefficient
+formula. See the [validation record](validation/fixed_general_2026-11-14.md).
+
 ## 2026-11-14 - Supplied periodic constructor knots
 
 The validation and constructor dispatch in `src/interpolate_fitpack_compat.f90`

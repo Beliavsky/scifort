@@ -147,8 +147,8 @@ program test_interpolate_make_splprep
         t=[(0.0_dp,i=1,4),nan,(1.0_dp,i=1,4)],status=code)
     call invalid('nonfinite knot')
     fit=make_splprep(x,u=u,s=0.15_dp, &
-        t=[-0.1_dp,(0.0_dp,i=1,3),(1.0_dp,i=1,4)],status=code)
-    call invalid('nonclamped knot')
+        t=[0.1_dp,(0.0_dp,i=1,3),(1.0_dp,i=1,4)],status=code)
+    call invalid('unordered exterior knot')
     fit=make_splprep(x,s=0.15_dp,bc_type='natural',status=code)
     call invalid('invalid boundary name')
     fit=make_splprep(x,bc_type='periodic',status=code)
@@ -157,7 +157,7 @@ program test_interpolate_make_splprep
     call require(code==3 .and. .not.fit%valid(),'fixed knots cannot satisfy target')
     fit=make_splprep(x,u=u,s=0.15_dp, &
         t=[(0.0_dp,i=1,4),0.00001_dp,0.00002_dp,(1.0_dp,i=1,4)],status=code)
-    call require(code==3 .and. .not.fit%valid(),'rank-deficient fixed collocation')
+    call require(code==3 .and. .not.fit%valid(),'unattainable clustered fixed target')
     block
         real(dp) :: high(m,12)
         do j=1,12

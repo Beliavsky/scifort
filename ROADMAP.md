@@ -3490,3 +3490,17 @@ The user approved full supplied periodic knots for native `make_splrep` and
   arbitrary observation intervals in the existing attributed periodic kernels.
 - [ ] Legacy periodic `task=-1`, repeated/broader knot forms, rank-deficient
   regularized fits, and modern automatic-selection/soft-capacity parity.
+
+## 2026-11-14 -- Approved broader knots and rank-aware regularized fits
+
+The user approved broader supplied-knot forms and rank-deficient regularized
+fitting for native constructors. C ABI and wrappers remain deferred.
+
+- [x] Ordered nonclamped/partially repeated exterior knots, simple interiors,
+  and explicit periodic endpoint derivative constraints.
+- [x] Bounded dense QR/SVD fallback, rank-deficient regularized fits, shared
+  residuals, polynomial reproduction limits, and general interval searches.
+- [x] Checked debug/optimized native regressions and independent constrained
+  comparisons with conditioning-aware metrics.
+- [ ] Repeated interior knots, larger dense problems, exact modern selection,
+  soft capacities, and legacy periodic `task=-1` remain separate gaps.

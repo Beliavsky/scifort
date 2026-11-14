@@ -25,7 +25,7 @@ fit = make_splrep(x, y, w=w, s=0.15_dp, status=status)
 | `xb, xe` | Finite enclosing interval; default first/last x |
 | `k` | Polynomial degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
-| `t(:)` | Full clamped simple-interior or full periodic knots; positive `s` only |
+| `t(:)` | Full nondecreasing knots with simple interiors; positive `s` only |
 | `nest` | Hard knot capacity; upper bound `size(x)+k+1`, or `size(x)+2*k` for periodic fits |
 | `status` | Existing FITPACK status convention: 0 success, 1 invalid, 2 unsupported, 3 numerical failure |
 | `bc_type` | Default or explicit `'not-a-knot'`, or `'periodic'` |
@@ -40,15 +40,16 @@ to `sum((w*(fit(x)-y))**2) <= s`, with FITPACK relative tolerance `0.001`.
 Automatic fitting chooses knots through the licensed native FITPACK solver.
 Coefficients are unpadded: `size(c) = size(knots)-k-1`.
 
-When `t` is supplied, it includes exactly `k+1` copies of each bound and
-strictly increasing interior knots. Its length must be between `2*(k+1)`
+When `t` is supplied, its base interval endpoints equal the bounds,
+its exterior knots are nondecreasing, and its interior knots are simple. Its length must be between `2*(k+1)`
 and `size(x)+k+1`. The constructor retains that full knot vector and solves
 the smoothing problem on it. This is **not** a call to `make_lsq_spline`:
 the latter minimizes residual without penalizing derivative jumps. If the
 target exceeds the polynomial residual, a polynomial is represented on the
 supplied knots. If the least-squares residual already exceeds the target,
-status 3 and an invalid object are returned. Nonclamped knots and repeated
-interior knots are outside this constructor's supported knot forms.
+status 3 and an invalid object are returned. Nonclamped exterior knots and
+rank-deficient regularized fits use a [documented dense fallback](interpolate_fixed_general.md).
+Repeated interior knots remain invalid.
 
 `t` and `nest` are mutually exclusive. `nest` is a hard capacity in SciFort;
 if it prevents meeting the target, status 3 is returned. SciPy instead
@@ -78,7 +79,7 @@ See the [validation record](../validation/make_splrep_2026-11-13.md).
 Periodic interpolation and automatic/supplied-knot smoothing are supported; see the
 [periodic constructor guide](interpolate_periodic_constructors.md) for closed
 input, residual, capacity, numerical, and extrapolation contracts and accepted full periodic knot forms. The native parametric counterpart
-[`make_splprep`](interpolate_make_splprep.md) is also available. Broader knot
-forms and SciPy's soft `nest` behavior remain gaps. See
+[`make_splprep`](interpolate_make_splprep.md) is also available. Repeated
+interior knots and SciPy's soft `nest` behavior remain gaps. See
 [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html)
 and the [native TCK guide](interpolate_fitpack_tck_backend.md).

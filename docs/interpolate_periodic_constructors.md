@@ -61,21 +61,19 @@ Optional `nest` is a hard capacity from `2*(k+1)` through `m+2*k` for
 periodic smoothing. An infeasible capacity returns numerical status 3.
 For positive `s`, optional `t` supplies the full periodic knot vector and
 excludes `nest`. No knots are added or removed, including at the constant
-limit. The accepted form is finite and strictly increasing, with
+limit. Accepted knots are finite and nondecreasing, with
 `2*(k+1) <= size(t) <= m+2*k`, `t(k+1)` equal to the first site, and
-`t(size(t)-k)` equal to the closing site. With `ni=size(t)-2*k-1`, the
-extension must satisfy `t(i+ni)=t(i)+period`; this is checked after interval
-normalization within `64*epsilon`. Repeated, clamped, and nonperiodically
-extended knot vectors are outside this supported form and return status 1.
+`t(size(t)-k)` equal to the closing site. The base interval knots must be
+strictly increasing. Repeated interiors are invalid. Exterior knots may be
+cyclic, noncyclic, partially repeated, or clamped.
 
 The solver minimizes squared jumps of the kth derivative at interior knots
-under the same residual constraint. It returns the supplied vector exactly.
-A sufficiently large target gives the weighted constant on those knots.
-A target below the fixed space's attainable least-squares residual returns
-status 3. Rank-deficient observation factors also return status 3; general
-rank-deficient regularized fits remain a gap. Only a constant can be fitted
-with the minimum `2*(k+1)` full knots. This supplied-knot path does not enable
-legacy `splrep`/`splprep` periodic `task=-1`.
+under the same residual constraint. A sufficiently large target gives the
+weighted constant on those knots. A target below the attainable residual
+beyond its tolerance returns status 3. Noncyclic exterior vectors and
+rank-deficient cases use the [rank-aware dense fallback](interpolate_fixed_general.md),
+which enforces endpoint derivatives explicitly and has documented size,
+range, and conditioning limits. This does not enable legacy periodic `task=-1`.
 
 ## Evaluation and numerical limits
 
@@ -117,7 +115,7 @@ forwarding `bc_type`. SciFort applies periodic boundaries also for parametric
 
 Automatic smoothing retains the attributed native legacy FITPACK path.
 Exact modern knot-selection and iteration parity remain gaps, as do SciPy's
-soft capacity behavior and broader supplied-knot forms. Numerical validation
+soft capacity behavior and repeated interior knots. Numerical validation
 checks unwrapped endpoint derivatives, independent B-spline evaluation,
 weighted residuals, and cyclic normal equations with a shared nonnegative
 multiplier. See the [validation record](../validation/periodic_constructors_2026-11-14.md).

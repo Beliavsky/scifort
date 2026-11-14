@@ -9,6 +9,7 @@ module scifort_interpolate_fitpack_compat
     use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric
     use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
     use scifort_interpolate_curfit_core, only : fitpack_periodic_parametric
+    use scifort_interpolate_fixed_smoothing, only: fixed_knots_valid,fixed_smoothing
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline,make_interp_spline, &
         bspline_status_success,bspline_array_interpolator_type
@@ -62,7 +63,7 @@ contains
         real(dp), intent(in), optional :: ue !! Right enclosing bound, default last parameter.
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative total residual target, default zero.
-        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; clamped or periodic.
+        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; simple interiors.
         integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical.
         real(dp), allocatable, intent(out), optional :: parameters(:) !! Sites on success only.
@@ -134,7 +135,7 @@ contains
             if (any(bounds/=[param(1),param(m)])) goto 900
             if (present(t)) then
                 if (present(nest)) goto 900
-                if (.not.periodic_knots_valid(t,degree,m,bounds)) goto 900
+                if (.not.fixed_knots_valid(t,degree,m,bounds,.true.)) goto 900
             end if
         end if
         if (target==0.0_dp) then
@@ -162,8 +163,12 @@ contains
                 if (present(nest)) then
                     if (nest<2*(degree+1) .or. nest>m+2*degree) goto 900
                 end if
-                call fitpack_periodic_parametric(param,x,w,degree,target,knots,coeff,code, &
-                    knot_capacity=nest,full_knots=t)
+                if (present(t)) then
+                    call supplied_fit(param,x,w,degree,target,t,bounds,.true.,knots,coeff,code)
+                else
+                    call fitpack_periodic_parametric(param,x,w,degree,target,knots,coeff,code, &
+                        knot_capacity=nest)
+                end if
                 if (code/=0) goto 900
                 fit=bspline(knots,coeff,degree,status=local_code)
                 if (local_code/=0) code=fitpack_tck_singular
@@ -178,12 +183,14 @@ contains
                 nt=size(t)
                 if (nt<2*(degree+1) .or. nt>m+degree+1) goto 900
                 if (.not.all(ieee_is_finite(t))) goto 900
-                if (any(t(:degree+1)/=bounds(1))) goto 900
-                if (any(t(nt-degree:)/=bounds(2))) goto 900
-                if (any(t(degree+2:nt-degree)<=t(degree+1:nt-degree-1))) goto 900
+                if (.not.fixed_knots_valid(t,degree,m,bounds,.false.)) goto 900
             end if
-            call fitpack_smooth_parametric(param,x,w,degree,target,bounds,knots,coeff,code, &
-                full_knots=t,knot_capacity=nest)
+            if (present(t)) then
+                call supplied_fit(param,x,w,degree,target,t,bounds,.false.,knots,coeff,code)
+            else
+                call fitpack_smooth_parametric(param,x,w,degree,target,bounds,knots,coeff,code, &
+                    knot_capacity=nest)
+            end if
             if (code/=0) goto 900
             fit=bspline(knots,coeff,degree,status=local_code)
             if (local_code/=0) code=fitpack_tck_singular
@@ -201,7 +208,7 @@ contains
         real(dp), intent(in), optional :: xe !! Right enclosing bound, default x(m).
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative squared-residual target, default zero.
-        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; clamped or periodic.
+        real(dp), intent(in), optional :: t(:) !! Full knots for positive s; simple interiors.
         integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical
         character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
@@ -240,7 +247,7 @@ contains
             if (any(bounds/=[x(1),x(m)])) goto 900
             if (present(t)) then
                 if (present(nest)) goto 900
-                if (.not.periodic_knots_valid(t,degree,m,bounds)) goto 900
+                if (.not.fixed_knots_valid(t,degree,m,bounds,.true.)) goto 900
             end if
         end if
         if (target==0.0_dp) then
@@ -266,8 +273,14 @@ contains
             if (present(nest)) then
                 if (nest<2*(degree+1) .or. nest>m+2*degree) goto 900
             end if
-            call fitpack_periodic_curve(x,y,w,degree,target,knots,coeff,code, &
-                knot_capacity=nest,full_knots=t)
+            if (present(t)) then
+                call supplied_fit(x,reshape(y,[m,1]),w,degree,target,t,bounds,.true., &
+                    knots,periodic_coeff,code,scalar=.true.)
+                if (code==0) coeff=periodic_coeff(:,1)
+            else
+                call fitpack_periodic_curve(x,y,w,degree,target,knots,coeff,code, &
+                    knot_capacity=nest)
+            end if
             if (code/=0) goto 900
             fit=bspline(knots,coeff,degree,status=local_code)
             if (local_code/=0) code=fitpack_tck_singular
@@ -281,17 +294,69 @@ contains
             nt=size(t)
             if (nt<2*(degree+1) .or. nt>m+degree+1) goto 900
             if (.not.all(ieee_is_finite(t))) goto 900
-            if (any(t(:degree+1)/=bounds(1))) goto 900
-            if (any(t(nt-degree:)/=bounds(2))) goto 900
-            if (any(t(degree+2:nt-degree)<=t(degree+1:nt-degree-1))) goto 900
+            if (.not.fixed_knots_valid(t,degree,m,bounds,.false.)) goto 900
         end if
-        call fitpack_smooth_curve(x,y,w,degree,target,bounds,knots,coeff,code, &
-            full_knots=t,knot_capacity=nest,shift_origin=.true.)
+        if (present(t)) then
+            call supplied_fit(x,reshape(y,[m,1]),w,degree,target,t,bounds,.false., &
+                knots,periodic_coeff,code,scalar=.true.)
+            if (code==0) coeff=periodic_coeff(:,1)
+        else
+            call fitpack_smooth_curve(x,y,w,degree,target,bounds,knots,coeff,code, &
+                knot_capacity=nest,shift_origin=.true.)
+        end if
         if (code/=0) goto 900
         fit=bspline(knots,coeff,degree,status=local_code)
         if (local_code/=0) code=fitpack_tck_singular
 900     if (present(status)) status=code
     end function make_splrep
+
+    subroutine supplied_fit(u,x,w,k,s,t,bounds,periodic,knots,coeff,code,scalar)
+        implicit none
+        real(dp), intent(in) :: u(:) !! Increasing physical parameter sites.
+        real(dp), intent(in) :: x(:,:) !! Finite sample coordinates by channel.
+        real(dp), intent(in), optional :: w(:) !! Positive residual multipliers, default one.
+        integer, intent(in) :: k !! Degree, one through five.
+        real(dp), intent(in) :: s !! Positive shared squared-residual bound.
+        real(dp), intent(in) :: t(:) !! Validated full supplied knot vector.
+        real(dp), intent(in) :: bounds(2) !! Physical base interval endpoints.
+        logical, intent(in) :: periodic !! Match endpoint derivatives through order k-1.
+        real(dp), allocatable, intent(out) :: knots(:) !! Full supplied knots on success.
+        real(dp), allocatable, intent(out) :: coeff(:,:) !! Unpadded physical coefficients.
+        integer, intent(out) :: code !! Zero success; three numerical failure.
+        logical, intent(in), optional :: scalar !! Retain the established scalar kernel if true.
+        real(dp), allocatable :: c(:)
+        logical :: classic,is_scalar
+        integer :: nt
+        nt=size(t)
+        is_scalar=.false.
+        if (present(scalar)) is_scalar=scalar
+        if (periodic) then
+            classic=periodic_knots_valid(t,k,size(u),bounds)
+        else
+            classic=all(t(:k+1)==bounds(1)) .and. all(t(nt-k:)==bounds(2))
+        end if
+        code=3
+        if (classic) then
+            if (periodic) then
+                if (is_scalar) then
+                    call fitpack_periodic_curve(u,x(:,1),w,k,s,knots,c,code,full_knots=t)
+                else
+                    call fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,code,full_knots=t)
+                end if
+            else
+                if (is_scalar) then
+                    call fitpack_smooth_curve(u,x(:,1),w,k,s,bounds,knots,c,code, &
+                        full_knots=t,shift_origin=.true.)
+                else
+                    call fitpack_smooth_parametric(u,x,w,k,s,bounds,knots,coeff,code,full_knots=t)
+                end if
+            end if
+            if (code==0 .and. is_scalar) coeff=reshape(c(:nt-k-1),[nt-k-1,1])
+        end if
+        if (code==0) return
+        call fixed_smoothing(u,x,w,k,s,t,bounds,periodic,coeff,code)
+        if (code==0) knots=t
+    end subroutine supplied_fit
 
     logical function periodic_knots_valid(t,k,m,bounds) result(ok)
         implicit none

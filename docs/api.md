@@ -7231,18 +7231,23 @@ returns a native `bspline_array_interpolator_type`. Coordinates have shape
 `(samples,channels)` with shared knots and one total weighted squared-residual
 target. Optional allocatable `parameters` returns supplied or chord-length
 sites. Default `s=0` interpolates; `w`, `t`, and `nest` are invalid in that mode.
-Positive nonperiodic `s` supports automatic knots or full clamped supplied
-knots with simple interiors. Periodic interpolation and automatic/supplied-knot smoothing
+Positive nonperiodic `s` supports automatic knots or full supplied
+knots with simple interiors and nondecreasing exterior knots. Periodic interpolation and automatic/supplied-knot smoothing
 are available with `bc_type='periodic'`. Accepted full periodic knot forms,
 hard `nest`, numerical guards, and modern automatic-selection differences are
 documented in the [parametric constructor guide](interpolate_make_splprep.md).
+
+Nonclamped exterior knots and rank-deficient regularized fits use the
+[rank-aware supplied-knot fallback](interpolate_fixed_general.md), with
+explicit periodic endpoint constraints and documented dense-solver limits.
+Repeated interior knots remain invalid.
 
 ### Native scalar adaptive smoothing
 
 `make_splrep(x,y,w=...,xb=...,xe=...,k=...,s=...,t=...,nest=...,status=...)`
 returns a native `bspline_interpolator_type` for interpolation or smoothing.
-It supports automatic knots or a supplied full clamped knot vector with
-simple interiors. Supplied knots still request derivative-jump smoothing;
+It supports automatic knots or a supplied full knot vector with
+simple interiors and nondecreasing exterior knots. Supplied knots still request derivative-jump smoothing;
 `nest` is a hard capacity, with explicit failure for infeasible targets.
 The default is `s=0`; weights, knots, and capacity are rejected in that mode.
 Periodic interpolation and automatic/supplied-knot smoothing use `bc_type='periodic'`;

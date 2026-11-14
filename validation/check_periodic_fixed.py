@@ -41,7 +41,7 @@ def main():
                 targets = [2*high] if ni == 1 else [low+.45*(high-low), 2*high]
                 for target in targets:
                     cases.append((k, scalar, x, w, u, target, q, t, a, rhs, mean,
-                                  3 if target < high and np.linalg.matrix_rank(a) < ni else 0))
+                                  int(np.linalg.matrix_rank(a) < ni)))
     lines = []
     for k, scalar, x, w, u, target, q, t, *_ in cases:
         lines.append(f'{len(u)} {x.shape[1]} {k} {int(scalar)} 1 {len(q)} 0 {len(t)}')
@@ -51,13 +51,11 @@ def main():
                           capture_output=True, text=True, check=True)
     rows = iter(proc.stdout.splitlines())
     coefficient_max = residual_max = seam_max = representation_max = 0.
-    active = rejected = 0
-    for index, (k, scalar, x, w, u, target, q, t, a, rhs, mean, expected_code) in enumerate(cases):
+    active = rank_deficient = 0
+    for index, (k, scalar, x, w, u, target, q, t, a, rhs, mean, deficient) in enumerate(cases):
         code = int(next(rows))
-        assert code == expected_code, (index, k, len(t)-2*k-1, scalar, code, expected_code)
-        if code:
-            rejected += 1
-            continue
+        assert code == 0, (index, k, len(t)-2*k-1, scalar, code)
+        rank_deficient += deficient
         assert int(next(rows)) == len(t)
         p = np.fromstring(next(rows), sep=' ')
         actual_t = np.fromstring(next(rows), sep=' ')
@@ -115,7 +113,7 @@ def main():
         assert error < 2e-7, (index, 'independent constrained coefficients', error)
     assert next(rows, None) is None
     print(f'PASS: {len(cases)} fixed periodic cases; {active} active constraints; '
-          f'{rejected} expected rank failures; '
+          f'{rank_deficient} rank-deficient fits; '
           f'SciPy {scipy.__version__} independent cyclic basis and constrained solve')
     print(f'Max normalized coefficient error {coefficient_max:.6g}; '
           f'representation {representation_max:.6g}; seam {seam_max:.6g}; '

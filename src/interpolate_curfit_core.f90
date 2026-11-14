@@ -876,9 +876,15 @@ contains
             fp = zero
             l = k2
 
+            if (fixed) l=k1
             get_fp: do it = 1, m
-                if (x(it) >= t(l) .and. l <= nk1) l = l + 1
-                l0 = l - k2
+                if (fixed) then
+                    l=fp_knot_interval(t,x(it),l,nk1)
+                    l0=l-k1
+                else
+                    if (x(it)>=t(l) .and. l<=nk1) l=l+1
+                    l0=l-k2
+                end if
                 term = dot_product(c(l0 + 1:l0 + k1), q(it, :))
                 fp = fp + (w(it)*(term - y(it)))**2
             end do get_fp
@@ -1989,9 +1995,15 @@ contains
             fp = zero
             l = k2
             jj = 0
+            if (fixed) l=k1
             get_fp: do it = 1, m
-                if (u(it) >= t(l) .and. l <= nk1) l = l + 1
-                l0 = l - k2
+                if (fixed) then
+                    l=fp_knot_interval(t,u(it),l,nk1)
+                    l0=l-k1
+                else
+                    if (u(it)>=t(l) .and. l<=nk1) l=l+1
+                    l0=l-k2
+                end if
                 term = zero
                 do j2 = 1, idim
                     fac = dot_product(c(l0 + 1:l0 + k1), q(it, 1:k1))

@@ -78,8 +78,8 @@ program test_interpolate_periodic_fixed
         fit=make_splrep(u,y,k=k,t=t,bc_type='periodic',status=code)
         call require(code==1 .and. .not.fit%valid(),'s zero rejects knots')
         bad=t
-        bad(1)=bad(1)-0.01_dp
-        call invalid(bad,k,'nonperiodic exterior')
+        bad(1)=bad(2)+0.01_dp
+        call invalid(bad,k,'unordered exterior')
         bad=t
         bad(k+1)=0.001_dp
         call invalid(bad,k,'incorrect endpoint')
@@ -96,9 +96,9 @@ program test_interpolate_periodic_fixed
     ! Linear cyclic basis with no observations in two narrow knot spans.
     t=[-0.998_dp,0.0_dp,0.001_dp,0.002_dp,1.0_dp,1.001_dp]
     fit=make_splrep(u,y,k=1,s=1.0_dp,t=t,bc_type='periodic',status=code)
-    call require(code==3 .and. .not.fit%valid(),'rank-deficient fixed observation factor')
+    call require(code==3 .and. .not.fit%valid(),'unattainable rank-deficient scalar target')
     curve=make_splprep(x,u=u,k=1,s=1.0_dp,t=t,bc_type='periodic',status=code)
-    call require(code==3 .and. .not.curve%valid(),'rank-deficient shared observation factor')
+    call require(code==3 .and. .not.curve%valid(),'unattainable rank-deficient shared target')
     t=[(real(j-4,dp)/5,j=1,12)]
     fit=make_splrep(u,y,w=w,k=3,s=0.7_dp*constant_fp,t=t, &
         bc_type='periodic',status=code)

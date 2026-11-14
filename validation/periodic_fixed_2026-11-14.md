@@ -3,6 +3,10 @@
 Environment: Windows, GNU Fortran (GCC) **17.0.0 20260510 (experimental)**,
 Python **3.13**, SciPy **1.15.3**, binary64.
 
+The subsequent [general fixed-knot change](fixed_general_2026-11-14.md)
+extends exterior forms and resolves the rank-deficient regularized cases
+reported as expected failures in this initial record.
+
 ## Scope and checked results
 
 Native `make_splrep` and `make_splprep`, degrees 1-5, accept full strict
