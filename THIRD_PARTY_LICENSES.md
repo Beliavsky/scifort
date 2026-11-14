@@ -36,6 +36,9 @@ Periodic parametric `fpclos`, `fpclos_reset_interp`, and
 The native `make_splrep` wrapper reuses that scalar solver, extended with
 fixed-knot smoothing and polynomial-only modes. Existing attribution and
 the combined-file `MIT AND BSD-3-Clause` declaration are retained.
+The native `make_splprep` wrapper similarly reuses the attributed parametric
+solver, extended with fixed-knot/polynomial modes and triangular factor checks.
+Its upstream BSD notices and license remain applicable to those adaptations.
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
 constraint construction from `fpsphe` and `fprpsp` in Federico Perini's

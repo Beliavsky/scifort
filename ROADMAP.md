@@ -3449,5 +3449,18 @@ The user approved `make_splrep` after native periodic parametric fitting.
 - [x] Fixed-knot smoothing, polynomial limits retaining knots, physical residual
   verification, and explicit capacity/invalid-input/numerical statuses.
 - [x] Checked/optimized native and independent reference/equation validation.
-- [ ] `make_splprep`, periodic constructor boundaries, broader knot forms,
+- [x] Native `make_splprep`; see the approved parametric constructor below.
+- [ ] Periodic constructor boundaries, broader knot forms,
   and modern SciPy automatic-selection/soft-capacity parity.
+
+## 2026-11-14 -- Approved modern parametric constructor
+
+The user approved native `make_splprep` after the scalar constructor.
+C ABI and wrapper expansion remain deferred.
+
+- [x] Native array B-spline, supplied/chord-length parameters, interpolation,
+  automatic/fixed-knot smoothing, shared knots, and one residual target.
+- [x] Polynomial limits retaining supplied knots, explicit hard capacity,
+  numerical guards, and checked/optimized numerical validation.
+- [ ] Periodic constructor boundaries, broader knot forms, exact modern
+  automatic selection, and soft capacities remain separate gaps.

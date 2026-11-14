@@ -7224,6 +7224,18 @@ evaluation, poles, zeros, simple-pole residues, and Froissart cleanup.
 See the [AAA guide](interpolate_aaa.md) for controls, statuses, convergence,
 SciPy compatibility differences, and the 512-support-point spectral limit.
 
+### Native parametric constructor
+
+`make_splprep(x,w=...,u=...,ub=...,ue=...,k=...,s=...,t=...,nest=...,status=...,parameters=...)`
+returns a native `bspline_array_interpolator_type`. Coordinates have shape
+`(samples,channels)` with shared knots and one total weighted squared-residual
+target. Optional allocatable `parameters` returns supplied or chord-length
+sites. Default `s=0` interpolates; `w`, `t`, and `nest` are invalid in that mode.
+Positive `s` supports automatic knots or full clamped supplied knots with
+simple interiors. Hard `nest`, numerical guards, unsupported periodic
+constructor boundaries, and modern automatic-selection differences are
+documented in the [parametric constructor guide](interpolate_make_splprep.md).
+
 ### Native scalar adaptive smoothing
 
 `make_splrep(x,y,w=...,xb=...,xe=...,k=...,s=...,t=...,nest=...,status=...)`

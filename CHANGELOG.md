@@ -1,3 +1,12 @@
+## 2026-11-14 - Native parametric smoothing constructor
+
+- Add native `make_splprep` with interpolation, automatic/fixed-knot smoothing,
+  shared knots, one weighted residual target, and supplied/chord parameters.
+- Return the native array B-spline and optional parameter sites; preserve
+  supplied knots at polynomial limits and report hard-capacity failures.
+- Extend the attributed parametric core with fixed/polynomial modes and
+  factor checks; document remaining modern selection and boundary gaps.
+
 ## 2026-11-13 - Native scalar smoothing constructor
 
 - Add object-returning `make_splrep` with interpolation, automatic smoothing,

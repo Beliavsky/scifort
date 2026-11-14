@@ -77,7 +77,8 @@ See the [validation record](../validation/make_splrep_2026-11-13.md).
 
 The current SciPy interface also supports periodic boundary selection;
 this constructor does not yet implement it. Native periodic fitting remains
-available through `splrep(per=.true.)`. Modern `make_splprep`, broader knot
-forms, and SciPy's soft `nest` behavior remain gaps. See
+available through `splrep(per=.true.)`. The native parametric counterpart
+[`make_splprep`](interpolate_make_splprep.md) is also available. Broader knot
+forms and SciPy's soft `nest` behavior remain gaps. See
 [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html)
 and the [native TCK guide](interpolate_fitpack_tck_backend.md).

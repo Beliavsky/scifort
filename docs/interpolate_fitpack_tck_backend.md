@@ -5,6 +5,12 @@ FITPACK-style spline tuples `(t,c,k)` and scalar/parametric automatic-knot smoot
 plus a separate **optional** backend for additional FITPACK fitting interfaces maintained by Federico Perini
 at <https://github.com/perazz/fitpack>.
 
+Native object-returning constructors are also available:
+[`make_splrep`](interpolate_make_splrep.md) for scalar functions and
+[`make_splprep`](interpolate_make_splprep.md) for curves with shared knots.
+Both support interpolation and automatic/fixed-knot smoothing within their
+documented capacity, knot-form, and boundary limits.
+
 ## Licensing and attribution
 
 - Upstream: Federico Perini, `perazz/fitpack`, a modernization of Paul

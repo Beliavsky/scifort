@@ -1,3 +1,37 @@
+## 2026-11-14 - Native parametric smoothing constructor
+
+`make_splprep` in `src/interpolate_fitpack_compat.f90` is an original MIT
+SciFort wrapper around native array interpolation and the existing attributed
+parametric FITPACK solver in `src/interpolate_curfit_core.f90`. Its chord
+parameter calculation reuses the existing SciFort stable coordinate-difference
+helper. The new wrapper, tests, and validation programs are original MIT code.
+No new third-party implementation or dependency is imported.
+
+The existing `fppara` adaptation gains optional fixed-knot and polynomial-only
+modes, full-knot polynomial representation, hard capacities, and factor checks
+before back substitution. The new fixed mode uses reciprocal-mean triangular
+diagonal initialization, as in the scalar solver; legacy automatic calls
+retain their mean initialization and knot/root search. Existing normalization,
+shared residuals, dynamic channel storage, and physical checks are reused.
+
+The exact pinned perazz/FITPACK source and BSD license were inspected again:
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+SHA-256 `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Copyright (c) 2022 Federico Perini and the `MIT AND BSD-3-Clause` file notice
+remain. Full terms remain in
+[the retained license](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+The mathematical reference is P. Dierckx, *Curve and Surface Fitting with
+Splines*, Oxford University Press, 1993, derivative-jump smoothing with one
+weighted residual constraint across coordinates.
+
+The exact installed SciPy 1.15.3 `make_splprep` and `_make_splrep_impl`
+sources and current official constructor documentation were inspected for
+interface semantics and independent validation. They were not copied or
+translated. Modern automatic knot selection is not adopted. Hard capacities,
+limited knot forms, and unsupported periodic constructor boundaries are
+documented. See [the validation record](validation/make_splprep_2026-11-14.md).
+
 ## 2026-11-13 - Native scalar smoothing constructor
 
 `make_splrep` in `src/interpolate_fitpack_compat.f90` is an original MIT

@@ -1351,7 +1351,8 @@ contains
         return
     end subroutine fprati
 
-    subroutine fitpack_smooth_parametric(u, x, w, k, s, bounds, knots, coeff, status)
+    subroutine fitpack_smooth_parametric(u, x, w, k, s, bounds, knots, coeff, status, &
+                                         full_knots,knot_capacity)
         implicit none
         real(dp), intent(in) :: u(:) !! Finite strictly increasing parameter sites.
         real(dp), intent(in) :: x(:, :) !! Finite coordinates, shape (size(u),channels).
@@ -1362,18 +1363,26 @@ contains
         real(dp), allocatable, intent(out) :: knots(:) !! Full active knots on success.
         real(dp), allocatable, intent(out) :: coeff(:, :) !! Unpadded coefficients by channel.
         integer, intent(out) :: status !! Zero success, three numerical/allocation failure.
+        real(dp), intent(in), optional :: full_knots(:) !! Full clamped knots for fixed smoothing.
+        integer, intent(in), optional :: knot_capacity !! Hard knot limit, default size(u)+k+1.
         real(dp), allocatable :: uu(:), xx(:), ww(:), t(:), c(:), a(:, :), b(:, :), g(:, :)
         real(dp), allocatable :: q(:, :), z(:), fpint(:)
         integer, allocatable :: nrdata(:)
         real(dp) :: span, xscale, wscale, target, logtarget, fp, residual, limit
-        real(dp) :: basis(max_order + 1)
+        real(dp) :: basis(max_order + 1),poly_fp
+        real(dp), allocatable :: polynomial(:,:)
         integer :: m, ndim, nest, ncc, n, ncoef, ier, info, i, j, l, offset
         status = 3
         m = size(u)
         ndim = size(x, 2)
         if (m > huge(m)/32) return
         nest = m + k + 1
-        if (ndim > huge(m)/nest) return
+        if (present(knot_capacity)) nest=min(nest,knot_capacity)
+        if (nest<2*(k+1)) return
+        if (present(full_knots)) then
+            if (size(full_knots)>nest .or. size(full_knots)<2*(k+1)) return
+        end if
+        if (ndim > huge(m)/max(nest,m)) return
         ncc = nest*ndim
         allocate (uu(m), xx(m*ndim), ww(m), t(nest), c(ncc), a(nest, k + 1), b(nest, k + 2), &
                   g(nest, k + 2), q(m, k + 1), z(ncc), fpint(nest), nrdata(nest), stat=info)
@@ -1417,7 +1426,38 @@ contains
         ier = fitpack_ok
         fp = zero
         call fppara(0, ndim, m, uu, m*ndim, xx, ww, zero, one, k, target, nest, 0.001_dp, 20, &
-                    k + 1, k + 2, n, t, ncc, c, fp, fpint, z, a, b, g, q, nrdata, ier)
+                    k + 1, k + 2, n, t, ncc, c, fp, fpint, z, a, b, g, q, nrdata, ier, &
+                    polynomial_only=present(full_knots))
+        if (present(full_knots)) then
+            if (ier>0) return
+            poly_fp=fp
+            allocate(polynomial(k+1,ndim),stat=info)
+            if (info/=0) return
+            do j=1,ndim
+                offset=(j-1)*n
+                polynomial(:,j)=c(offset+1:offset+k+1)
+            end do
+            if (poly_fp<=target) then
+                ! Represent the zero-jump polynomial on the requested full knots.
+                l=k+1
+                do i=1,m
+                    basis=fpbspl(t,n,k,uu(i),l)
+                    do j=1,ndim
+                        xx((i-1)*ndim+j)=dot_product(polynomial(:,j),basis(:k+1))
+                    end do
+                end do
+            end if
+            n=size(full_knots)
+            t(:n)=(full_knots-bounds(1))/span
+            t(:k+1)=zero
+            t(n-k:n)=one
+            if (any(t(k+2:n-k)-t(k+1:n-k-1) < &
+                tiny(one)**(one/real(4*(k+1),dp)))) return
+            call fppara(0,ndim,m,uu,m*ndim,xx,ww,zero,one,k,target,nest,0.001_dp,20, &
+                k+1,k+2,n,t,ncc,c,fp,fpint,z,a,b,g,q,nrdata,ier, &
+                fixed_knots=.true.,polynomial_residual=poly_fp)
+            xx=reshape(transpose(x/xscale),[m*ndim])
+        end if
         if (ier > 0) return
         ncoef = n - k - 1
         if (any(g(:ncoef, 1) /= zero)) then
@@ -1451,6 +1491,7 @@ contains
             return
         end if
         knots = bounds(1)+t(:n)*span
+        if (present(full_knots)) knots=full_knots
         knots(:k + 1) = bounds(1)
         knots(n - k:) = bounds(2)
         do j = 1, ndim
@@ -1489,7 +1530,8 @@ contains
     end subroutine fitpack_smooth_parametric
 
     pure subroutine fppara(iopt, idim, m, u, mx, x, w, ub, ue, k, s, nest, tol, maxit, &
-                           k1, k2, n, t, nc, c, fp, fpint, z, a, b, g, q, nrdata, ier)
+                           k1, k2, n, t, nc, c, fp, fpint, z, a, b, g, q, nrdata, ier, &
+                           fixed_knots,polynomial_residual,polynomial_only)
         implicit none
         !  ..
         !  ..scalar arguments..
@@ -1510,6 +1552,9 @@ contains
         integer, intent(inout) :: n !! Active full knot count, updated by refinement.
         integer, intent(inout) :: nc !! Allocated flattened coefficient capacity.
         integer, intent(inout) :: ier !! FITPACK success codes <=0 or positive numerical failure.
+        logical, intent(in), optional :: fixed_knots !! Keep initial knots, default false.
+        real(dp), intent(in), optional :: polynomial_residual !! Unpenalized polynomial residual.
+        logical, intent(in), optional :: polynomial_only !! Polynomial fit only, default false.
         !  ..array arguments..
         real(dp), intent(in) :: u(m) !! Normalized strictly increasing parameter sites.
         real(dp), intent(in) :: x(mx) !! Normalized coordinate-fastest flattened observations.
@@ -1532,12 +1577,18 @@ contains
         !  ..local scalars..
         real(dp) :: acc,fac,fpart,fpms,fpold,fp0,f1,f2,f3,p,pinv,p1,p2,p3,rn,store,term,ui,wi
   integer :: i, it, iter, j, jj, j1, j2, k3, l, l0, mk1, nk1, nmax, nmin, nplus, npl1, nrint, n8
-        logical :: new, check1, check3, success
+        logical :: new, check1, check3, success,fixed,poly_only
         !  ..local arrays..
         real(dp) :: h(max_order + 1), xi(idim)
 
+        ier = fitpack_ok
         fpold = zero
         fp0 = zero
+        fixed=.false.
+        if (present(fixed_knots)) fixed=fixed_knots
+        poly_only=.false.
+        if (present(polynomial_only)) poly_only=polynomial_only
+        if (present(polynomial_residual)) fp0=polynomial_residual
         nplus = 0
         fpms = huge(zero)
 
@@ -1569,7 +1620,7 @@ contains
 
         !  determine nmin, the number of knots for polynomial approximation.
         nmin = 2*k1
-        bootstrap: if (iopt >= 0) then
+        bootstrap: if (iopt >= 0 .and. .not.fixed) then
 
             interpolating: if (s <= zero) then
 
@@ -1625,7 +1676,7 @@ contains
 
             iter = iter + 1
 
-            if (n == nmin) ier = fitpack_leastsquares_ok
+            if (n == nmin .and. .not.fixed) ier = fitpack_leastsquares_ok
 
             ! find nrint, tne number of knot intervals.
             nrint = n - nmin + 1
@@ -1673,12 +1724,18 @@ contains
             nrdata(n) = nplus
 
             ! backward substitution to obtain the b-spline coefficients.
+            if (fp_rank_deficient(a,nk1,nest)) then
+                ier=fitpack_s_too_small
+                return
+            end if
             j1 = 1
             do j2 = 1, idim
                 c(j1:j1 + nk1 - 1) = fpback(a, z(j1), nk1, k1, nest)
                 j1 = j1 + n
             end do
 
+            if (poly_only) return
+            if (fixed .and. fp0<=s) return
             ! test whether the approximation sinf(u) is an acceptable solution.
             if (iopt < 0) return ! was done already
 
@@ -1687,6 +1744,10 @@ contains
 
             ! if f(p=inf) < s accept the choice of knots.
             if (fpms < zero) exit main_loop
+            if (fixed) then
+                ier=fitpack_s_too_small
+                return
+            end if
 
             ! if n = nmax, sinf(u) is an interpolating spline curve.
             if (n == nmax) then
@@ -1821,6 +1882,8 @@ contains
         p3 = -one
         f3 = fpms
         p = sum(a(1:nk1, 1))/nk1
+        ! Match the scalar smoothing initialization for the new fixed-knot mode.
+        if (fixed) p=one/p
         check1 = fp_false
         check3 = fp_false
         n8 = n - nmin
@@ -1845,6 +1908,10 @@ contains
             end do b_rows
 
             ! backward substitution to obtain the b-spline coefficients.
+            if (fp_rank_deficient(g,nk1,nest)) then
+                ier=fitpack_s_too_small
+                return
+            end if
             j1 = 1
             do j2 = 1, idim
                 c(j1:j1 + nk1 - 1) = fpback(g, c(j1), nk1, k2, nest)
