@@ -7,6 +7,7 @@ module scifort_interpolate_fitpack_compat
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, ieee_quiet_nan
     use scifort_kinds, only : dp
     use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric
+    use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline, &
         bspline_status_success
@@ -336,7 +337,8 @@ contains
 
     ! Task 0: interpolation at s=0 or automatic-knot smoothing at s>0.
     ! Task -1: specified knots and LSQ.
-    function splrep(x,y,w,k,s,task,t,bbox,status) result(tck)
+    function splrep(x,y,w,k,s,task,t,bbox,status,per) result(tck)
+        implicit none
         real(dp), intent(in) :: x(:) !! increasing sample abscissae
         real(dp), intent(in) :: y(:) !! scalar sample values
         real(dp), intent(in), optional :: w(:) !! positive FITPACK residual multipliers
@@ -346,23 +348,30 @@ contains
         real(dp), intent(in), optional :: t(:) !! interior knots when task=-1
         real(dp), intent(in), optional :: bbox(:) !! left and right support bounds
         integer, intent(out), optional :: status !! success, invalid, unsupported, singular
+        logical, intent(in), optional :: per !! Periodic fit over x(1):x(m), default false.
         type(fitpack_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
         real(dp) :: target, bounds(2)
-        integer :: deg, mode, code
+        integer :: deg, mode, code, used
+        logical :: periodic
+        periodic=.false.
+        if (present(per)) periodic=per
         deg = 3
         if (present(k)) deg = k
         mode = 0
         if (present(task)) mode = task
         code = fitpack_tck_invalid_input
         if (deg < 1 .or. deg > 5) goto 900
-        if (size(x) < deg+1 .or. size(y) /= size(x)) goto 900
-        if (.not. all(ieee_is_finite(x)) .or. .not. all(ieee_is_finite(y))) goto 900
+        if (size(x)<deg+1 .or. size(y)/=size(x)) goto 900
+        used=size(x)
+        if (periodic) used=used-1
+        if (.not.all(ieee_is_finite(x))) goto 900
+        if (.not.all(ieee_is_finite(y(:used)))) goto 900
         if (any(x(2:) <= x(:size(x)-1))) goto 900
         if (present(w)) then
             if (size(w) /= size(x)) goto 900
-            if (.not. all(ieee_is_finite(w))) goto 900
-            if (any(w <= 0.0_dp)) goto 900
+            if (.not. all(ieee_is_finite(w(:used)))) goto 900
+            if (any(w(:used) <= 0.0_dp)) goto 900
         end if
         target = 0.0_dp
         if (present(s)) target = s
@@ -374,6 +383,17 @@ contains
             if (.not. all(ieee_is_finite(bbox))) goto 900
             if (bbox(1) > x(1) .or. bbox(2) < x(size(x))) goto 900
             bounds = bbox
+        end if
+        if (periodic) then
+            if (mode/=0) then
+                if (mode==-1 .and. present(t)) code=fitpack_tck_unsupported_smoothing
+                goto 900
+            end if
+            if (present(t)) goto 900
+            if (any(bounds/=[x(1),x(size(x))])) goto 900
+            call fitpack_periodic_curve(x,y,w,deg,target,tck%t,tck%c,code)
+            if (code==0) tck%k=deg
+            goto 900
         end if
         if (mode == 0) then
             if (present(t)) goto 900

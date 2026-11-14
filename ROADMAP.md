@@ -3410,3 +3410,16 @@ The user approved nonperiodic automatic-knot `splprep(s>0)` after scalar smoothi
 - [x] Validate checked/optimized behavior against the pinned core, upstream
   parametric data, SciPy residual contracts, and independent normal equations.
 - [ ] Periodic parametric smoothing, continuation, and modern constructors.
+
+## 2026-11-13 -- Approved native periodic scalar fitting
+
+The user approved native `splrep(per=.true.)` after nonperiodic parametric
+smoothing. C ABI and wrapper expansion remain deferred.
+
+- [x] Periodic interpolation and automatic-knot smoothing for degrees 1-5,
+  weights, ignored closing ordinate/weight, and existing padded tuples.
+- [x] Adapt pinned licensed periodic kernels, retain notices, and validate
+  physical residuals, seam continuity, ranges, and existing dependent APIs.
+- [x] Check original upstream, its analytic sine/cosine fixture, SciPy
+  contracts, independent normal equations, and checked/optimized builds.
+- [ ] Periodic parametric fitting, periodic fixed knots, and modern constructors.

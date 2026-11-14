@@ -29,6 +29,8 @@ helpers. The existing
 retains the full BSD terms and Federico Perini copyright notice. Original
 SciFort normalization and interface code uses MIT; the combined file is
 marked `MIT AND BSD-3-Clause`. No mandatory linked FITPACK package is added.
+The same file also adapts periodic `fpperi`, `fpperi_reset_interp`, `fpbacp`,
+and `fp_rotate_row_2mat`, covered by the same retained BSD license and notices.
 
 `src/interpolate_sphere.f90` adapts the fixed-knot periodic coefficient and pole
 constraint construction from `fpsphe` and `fprpsp` in Federico Perini's

@@ -3,6 +3,9 @@
 Nonperiodic automatic-knot smoothing is also available natively through
 `splprep(points,s=positive)`; see the [TCK guide](interpolate_fitpack_tck_backend.md).
 The optional interface documented here remains available, including periodic fits.
+Scalar periodic interpolation and smoothing are now also native through
+`splrep(x,y,s=...,per=.true.)`; see the same TCK guide for its contract and
+limitations. Periodic parametric smoothing still requires this optional backend.
 
 SciFort now wraps **genuine `perazz/fitpack`** for scalar periodic splines and
 adaptive-knot parametric smoothing in the separate

@@ -7233,6 +7233,15 @@ existing default `s=0`, tuple layout, evaluation/calculus routines, and status
 names are preserved. See the [TCK guide](interpolate_fitpack_tck_backend.md)
 for residual tolerance, numerical guards, and remaining parametric/periodic gaps.
 
+`splrep(x,y,w=...,k=...,s=...,per=.true.)` also supports native periodic
+interpolation (`s=0`, the default) and smoothing (`s>0`) for degrees 1-5.
+The last ordinate and weight are ignored; the period comes from the first
+and last coordinates. Endpoint derivatives through order `k-1` agree.
+Periodic fixed-knot fitting and continuation are not supported. Evaluation
+outside the period retains the existing extrapolation/clipping conventions.
+See the [TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-scalar-fitting)
+and [validation record](../validation/splrep_periodic_2026-11-13.md).
+
 ### Native parametric adaptive smoothing
 
 `splprep(points,u=...,w=...,k=...,s=positive)` now fits a nonperiodic curve

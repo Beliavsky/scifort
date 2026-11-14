@@ -24,6 +24,8 @@ at <https://github.com/perazz/fitpack>.
   automatic-knot and smoothing solver; the optional package is not required.
 - Native nonperiodic `splprep(s>0)` adapts `fppara` and its vector Givens
   helpers from the same licensed source.
+- Native periodic `splrep(per=.true.)` adapts `fpperi`, its interpolation
+  initializer, wrapped triangular solve, and two-part Givens helper.
 - Source references: <https://github.com/perazz/fitpack/blob/main/LICENSE.md>,
   <https://github.com/perazz/fitpack/blob/main/fpm.toml>,
   <https://perazz.github.io/fitpack/tutorial_curve.html>.
@@ -36,6 +38,7 @@ The main public module `scifort_interpolate` exports `fitpack_tck_type` and:
 |---|---|
 | `splrep(x,y,k=...,s=0)` | Exact interpolation with FITPACK-compatible padded tuple |
 | `splrep(x,y,w=...,k=...,s=positive)` | Native automatic-knot scalar smoothing |
+| `splrep(x,y,w=...,k=...,s=...,per=.true.)` | Native periodic interpolation or smoothing |
 | `splrep(x,y,task=-1,t=interior,w=...,bbox=...)` | Weighted least-squares fit with user-specified interior knots |
 | `splev(x,tck,der=...,ext=...)` | Scalar/vector evaluation and derivatives; `ext=0,1,2,3` |
 | `splint(a,b,tck)` | Analytic integral clipped to spline domain, like FITPACK |
@@ -47,7 +50,7 @@ For `splrep`, `c` is padded with `k+1` trailing zeros, as in SciPy's FITPACK
 `(t,c,k)` representation. The routine accepts degrees 1–5 and validates
 input. FITPACK residual weights `w` enter as `sum((w*(y-f(x)))**2)`.
 
-For `task=0, s>0`, `splrep` selects knots and solves FITPACK's derivative-jump
+For nonperiodic `task=0, s>0`, `splrep` selects knots and solves FITPACK's derivative-jump
 smoothing problem with weighted residual `sum((w*(y-fit))**2)`. The residual
 target has relative tolerance `0.001`; a sufficiently large target returns
 the weighted least-squares polynomial of degree `k`. Positive smoothing may
@@ -66,12 +69,47 @@ sites and nonzero samples. These guards do not guarantee good conditioning
 for every accepted data set. Working storage is linear in sample count for
 the supported degrees; no new dependency or C ABI is added.
 
-**Remaining limitations:** `task=1`, periodic scalar smoothing, `quiet`, and
+**Remaining limitations:** `task=1`, periodic fixed-knot fits, `quiet`, and
 the modern `make_splrep` interface are not included. Nonperiodic parametric
 smoothing is native through `splprep`, as described below. See the
 [native smoothing validation](../validation/splrep_smoothing_2026-11-13.md),
 including a pinned upstream regression that fails in the older SciPy 1.15.3
 reference but succeeds in the adopted Fortran implementation.
+
+### Native periodic scalar fitting
+
+`splrep(x,y,w=...,k=...,s=...,per=.true.)` fits a periodic scalar curve of
+degree 1-5 over `[x(1),x(m)]`, with `m > k`. Omitted `per` is false; omitted
+`s` remains zero. `per` follows `status` in the argument list, preserving
+existing positional calls. `s=0` interpolates the first `m-1` ordinates;
+`s>0` selects knots and smooths with relative residual tolerance `0.001`.
+The last ordinate and last weight are ignored, including their finiteness
+and positivity checks. All coordinates must be finite and strictly increasing;
+the first `m-1` ordinates must be finite and active weights finite and positive.
+The period is `x(m)-x(1)`. A supplied `bbox` must equal these endpoints.
+
+The fit matches endpoint values and derivatives through order `k-1`.
+Knots extend beyond both endpoints and the active coefficients obey periodic
+wrapping; `c` still has `k+1` trailing zeros. Large targets yield the weighted
+least-squares constant. Periodicity constrains the fit, but does not change
+`splev` extrapolation or `splint` clipping: queries outside the period are
+not automatically wrapped. Existing derivative and integral operations work
+within the base period.
+
+Periodic `task=-1` with supplied knots returns status 2 and an invalid tuple;
+`task=1` remains invalid (status 1). Numerical/allocation failures return 3.
+The normalized gap and weight guards above also apply. Additionally,
+`maxval(abs(x)) <= huge(1.0_dp)/(4*(k+1))`, the physical period and every
+physical knot gap must be at least `tiny(1.0_dp)`, and physical knots must
+remain distinct after rescaling. These conservative guards reserve range
+for the exterior knots. The returned physical representation is checked
+against the residual target; interpolation allows normalized rounding error
+of `m*(128*epsilon(1.0_dp))**2` in squared weighted residual.
+
+Exact SciPy knot selection, coefficients, and higher derivatives are not
+guaranteed. The pinned modernized FITPACK core can follow a different
+adaptive path while satisfying the same smoothing equations and residual
+contract. See the [periodic validation record](../validation/splrep_periodic_2026-11-13.md).
 
 For `splev`, `ext=0` extrapolates endpoint segments, `ext=1` returns zero,
 `ext=2` returns status 4 and NaN for an out-of-range query, and `ext=3`

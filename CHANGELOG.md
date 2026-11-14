@@ -1,3 +1,12 @@
+## 2026-11-13 - Native periodic scalar spline fitting
+
+- Add native `splrep(per=.true.)` interpolation and automatic-knot smoothing
+  for degrees 1-5, weights, periodic endpoint continuity, and padded tuples.
+- Preserve existing calls; ignore the closing ordinate and weight, validate
+  physical residuals and scaling, and report unsupported periodic fixed knots.
+- Add checked/optimized tests, original-upstream and SciPy validation, and
+  document adaptive-path compatibility and extrapolation limits.
+
 ## 2026-11-13 - Native parametric automatic-knot smoothing
 
 - Add dependency-free nonperiodic `splprep(s>0)` using the licensed FITPACK

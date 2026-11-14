@@ -1,3 +1,38 @@
+## 2026-11-13 - Native periodic scalar spline fitting
+
+`src/interpolate_curfit_core.f90` also adapts `fpperi`,
+`fpperi_reset_interp`, `fpbacp`, and `fp_rotate_row_2mat` from Federico
+Perini's perazz/FITPACK, based on Paul Dierckx's FITPACK. The exact source is
+[`src/fitpack_core.F90`](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`. The inspected source
+SHA-256 is `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`;
+the inspected upstream `LICENSE.md` SHA-256 is
+`39fbeb302cce5182528712269832f82d356e684b9a3a11dc6949a79ef64781b8`.
+Full BSD-3-Clause terms and Copyright (c) 2022 Federico Perini are retained
+in [the existing license file](LICENSES/perazz-fitpack-BSD-3-Clause.txt).
+The combined file retains `MIT AND BSD-3-Clause` and source attribution.
+
+Changes are binary64/default integer/logical kinds, lowercase free form,
+explicit `implicit none`, documented dummy arguments, reuse of the existing
+attributed basis/knot/Givens/root helpers, and factor-diagonal checks before
+wrapped back substitution. Original MIT SciFort wrappers normalize inputs,
+validate ignored/active entries separately, guard ranges and allocation,
+restore physical tuples, and verify actual physical residuals. Fresh
+interpolation and smoothing are supported; upstream continuation state and
+fixed-knot validation are not imported. No build dependency is added.
+
+The original core was compiled separately and compared on 181 fresh fits.
+The sine/cosine geometry and analytic tolerance of upstream
+`test_periodic_fit` were inspected in pinned `test/fitpack_curve_tests.f90`
+(SHA-256 `0bb92548cb070e70e245b1f837fb931014e69b6f1c335f8cfdca49c514908847`)
+and reproduced mathematically in the original validation checker. This does
+not claim that the complete upstream object-oriented or continuation test
+suite was run. SciPy 1.15.3 `fpperi.f` was inspected for comparison only;
+no new SciPy source is imported. Adaptive paths can differ; see the
+[validation record](validation/splrep_periodic_2026-11-13.md).
+The mathematical reference is P. Dierckx, *Curve and Surface Fitting with
+Splines*, Oxford University Press, 1993, periodic spline fitting.
+
 ## 2026-11-13 - Native parametric automatic-knot smoothing
 
 `src/interpolate_curfit_core.f90` now also adapts `fppara`,
