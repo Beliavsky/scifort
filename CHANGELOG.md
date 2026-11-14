@@ -1,3 +1,14 @@
+## 2026-11-14 - Modern constructor selection and soft knot counts
+
+- Use native `generate_knots` in automatic `make_splrep` / `make_splprep`
+  smoothing within its size limits, then reuse fixed-knot smoothing solvers.
+- Permit feasible soft `nest` overshoots while retaining explicit failure
+  for unattainable residuals and cleanup of returned parameter arrays.
+- Preserve larger-input legacy banded coverage, supplied knots, interpolation
+  and legacy tuples; document remaining large-input hard capacities.
+- Check modern selected knots, periodic constraints, root-stopping differences
+  and scalar/shared residuals with native and independent tests.
+
 ## 2026-11-14 - Native adaptive knot generator
 
 - Add scalar/shared-channel `generate_knots` with an explicit iterator state,

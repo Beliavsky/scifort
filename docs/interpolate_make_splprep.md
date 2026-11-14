@@ -28,7 +28,7 @@ curve = make_splprep(x, s=0.15_dp, parameters=parameters, status=status)
 | `k` | Degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
 | `t(:)` | Full nondecreasing knots with simple interiors; positive `s` only |
-| `nest` | Hard knot capacity; upper bound `size(x,1)+k+1`, or `size(x,1)+2*k` for periodic fits |
+| `nest` | Soft modern knot-count target; upper bound `size(x,1)+k+1`, or `size(x,1)+2*k` for periodic fits; large-input fallback retains a hard capacity |
 | `status` | 0 success, 1 invalid input, 2 unsupported option, 3 numerical/allocation failure |
 | `parameters(:)` | Optional allocatable output, allocated only on success; receives supplied or calculated sites |
 | `bc_type` | Default or `'not-a-knot'`, or `'periodic'` |
@@ -86,22 +86,26 @@ this avoids overflowing intermediate basis arithmetic on subnormal intervals.
 
 ## Compatibility limits
 
-Automatic smoothing uses the existing licensed FITPACK parametric solver.
-Modern SciPy's knot generator can choose different knots. Its root-search
-initialization also differs from the legacy parametric path; the new
-fixed-knot mode uses reciprocal-mean initialization as in the scalar solver.
+Automatic smoothing now uses native `generate_knots` for at most 256 sites
+and 256 channels, followed by the existing fixed-knot solver. Larger inputs
+retain the licensed legacy banded automatic path. Root-search
+initialization can differ from modern SciPy; the existing fixed-knot mode
+uses reciprocal-mean initialization as in the scalar solver.
 Residual tolerances can still produce differences in coefficients and
 especially higher derivatives. Exact modern numerical parity is not claimed.
 Validation checks interpolation against SciPy and verifies independent
 B-spline evaluation, residuals, and shared-multiplier smoothing equations.
-See the [validation record](../validation/make_splprep_2026-11-14.md).
+See [modern selection validation](../validation/modern_selection_2026-11-14.md)
+and the earlier [validation record](../validation/make_splprep_2026-11-14.md).
 
-`nest` is a hard capacity in SciFort; SciPy treats it as a target that may
-be exceeded. Periodic interpolation and automatic/supplied-knot smoothing are supported;
+Modern selection can exceed `nest`; infeasible residual targets still fail
+explicitly. Large-input legacy fallback retains its hard capacity. See
+[modern selection and soft counts](interpolate_modern_selection.md).
+Periodic interpolation and automatic/supplied-knot smoothing are supported;
 see the [periodic constructor guide](interpolate_periodic_constructors.md)
 for closed input, residual, capacity, numerical, and extrapolation contracts.
-Repeated interior knots, exact modern automatic selection,
-and soft capacities remain gaps. Legacy periodic fitting remains available
+Repeated interior knots, exact periodic selection/iteration parity,
+and larger-input modern selection/soft counts remain gaps. Legacy periodic fitting remains available
 through `splprep(per=.true.)`.
 
 See [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splprep.html),

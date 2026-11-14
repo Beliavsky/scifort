@@ -57,8 +57,10 @@ residual across all coordinates with one common smoothing constraint.
 The FITPACK relative residual tolerance is `0.001`. A sufficiently large
 target produces a weighted constant or constant vector.
 
-Optional `nest` is a hard capacity from `2*(k+1)` through `m+2*k` for
-periodic smoothing. An infeasible capacity returns numerical status 3.
+Optional `nest` ranges from `2*(k+1)` through `m+2*k` for periodic smoothing.
+It is a soft count within the native generator's 256-site/channel limits;
+larger-input fallback retains a hard capacity. An infeasible final selected
+vector returns numerical status 3. See [modern selection](interpolate_modern_selection.md).
 For positive `s`, optional `t` supplies the full periodic knot vector and
 excludes `nest`. No knots are added or removed, including at the constant
 limit. Accepted knots are finite and nondecreasing, with
@@ -114,12 +116,16 @@ forwarding `bc_type`. SciFort applies periodic boundaries also for parametric
 `s=0`; interpolation comparisons therefore use SciPy's explicit
 `make_interp_spline(...,bc_type='periodic')` mathematical counterpart.
 
-Automatic smoothing retains the attributed native legacy FITPACK path.
-Exact modern knot-selection and iteration parity remain gaps, as do SciPy's
-soft capacity behavior and repeated interior knots. Numerical validation
+Automatic smoothing now composes native knot generation and the existing
+fixed-knot solver within the generator's size limits. Larger inputs retain
+the attributed legacy banded path. Canonical periodic exteriors and residual
+root-stopping behavior can differ from SciPy. Repeated interior knots and
+modern selection/soft counts for larger inputs remain gaps. Numerical validation
 checks unwrapped endpoint derivatives, independent B-spline evaluation,
 weighted residuals, and cyclic normal equations with a shared nonnegative
 multiplier. See the [validation record](../validation/periodic_constructors_2026-11-14.md).
+The [modern integration record](../validation/modern_selection_2026-11-14.md)
+additionally checks selected vectors and feasible/infeasible soft-count stops.
 
 See the [scalar constructor](interpolate_make_splrep.md),
 [parametric constructor](interpolate_make_splprep.md),

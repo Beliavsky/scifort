@@ -135,7 +135,8 @@ Status `1` denotes invalid input; `3` denotes a size, range, representation,
 or numerical failure. Status `0` denotes successful initialization, a returned
 vector, or normal exhaustion as distinguished by `done`.
 
-`make_splrep` and `make_splprep` retain their existing automatic selection and
-hard `nest` semantics. Integrating this generator into those constructors is
-separate work. C ABI and wrappers remain deferred. See the
+`make_splrep` and `make_splprep` now use this generator for automatic smoothing
+within its size limits, followed by their existing fixed-knot smoothing solve.
+See [constructor integration and soft counts](interpolate_modern_selection.md)
+for larger-input fallback and infeasible-target behavior. C ABI and wrappers remain deferred. See the
 [validation record](../validation/generate_knots_2026-11-14.md).

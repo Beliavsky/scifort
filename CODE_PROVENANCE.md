@@ -1,3 +1,34 @@
+## 2026-11-14 - Modern constructor integration
+
+The `automatic_fit` dispatch added to `src/interpolate_fitpack_compat.f90`
+is original MIT SciFort adapter code. It consumes the already attributed
+native `generate_knots` state and composes existing fixed-knot smoothing
+solvers. The original public signatures, supplied-knot paths, interpolation
+paths, legacy tuple solvers and upstream notices are retained. Inputs beyond
+the generator's 256-site/channel limits retain their prior banded selection
+and hard-capacity behavior. No new numerical kernel or dependency is imported.
+
+The exact SciPy v1.18.0 `_make_splrep_impl` implementation, root stopping
+logic, public scalar/parametric constructor contracts and root BSD license
+were inspected as behavioral references. The inspected `_fitpack_repro.py`
+and license are the same hash-verified files recorded in the adaptive-knot
+entry below. The adapter does not translate SciPy's root solver or C++ QR.
+Existing perazz/FITPACK and SciPy adaptations retain their full recorded
+BSD terms unchanged. Selected-vector smoothing follows the mathematical
+derivative-jump residual-constrained problem in Dierckx (1993), already cited
+by the fixed-knot solver provenance.
+
+New native tests, driver, combined checker and residual-aware validation
+helper are original MIT code. Nonperiodic knots compare directly with SciPy
+1.15.3; periodic selection uses the previously documented pinned v1.18.0
+control flow with canonical cyclic residuals, not an unmodified 1.18 binary.
+Different accepted residual stops are compared using the convexity bound
+`norm(A*(c1-c2))**2 <= abs(fp1-fp2)` for exact derivative-jump minimizers,
+plus an explicit residual-evaluation roundoff budget. Independent target,
+representation and common-multiplier normal-equation tests remain in place.
+No blanket forward-error or exact iteration-path equivalence is claimed.
+See the [validation record](validation/modern_selection_2026-11-14.md).
+
 ## 2026-11-14 - Adaptive knot generator
 
 `src/interpolate_generate_knots.f90` adapts SciPy v1.18.0's

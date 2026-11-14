@@ -10,6 +10,7 @@ module scifort_interpolate_fitpack_compat
     use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
     use scifort_interpolate_curfit_core, only : fitpack_periodic_parametric
     use scifort_interpolate_periodic_lsq, only: periodic_lsq
+    use scifort_interpolate_generate_knots, only: generate_knots,knot_generator_type
     use scifort_interpolate_fixed_smoothing, only: fixed_knots_valid,fixed_smoothing
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline, &
         interpolated_univariate_spline, lsq_univariate_spline,make_interp_spline, &
@@ -65,7 +66,7 @@ contains
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative total residual target, default zero.
         real(dp), intent(in), optional :: t(:) !! Full knots for positive s; simple interiors.
-        integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
+        integer, intent(in), optional :: nest !! Knot-count target; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical.
         real(dp), allocatable, intent(out), optional :: parameters(:) !! Sites on success only.
         character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
@@ -167,8 +168,8 @@ contains
                 if (present(t)) then
                     call supplied_fit(param,x,w,degree,target,t,bounds,.true.,knots,coeff,code)
                 else
-                    call fitpack_periodic_parametric(param,x,w,degree,target,knots,coeff,code, &
-                        knot_capacity=nest)
+                    call automatic_fit(param,x,w,degree,target,bounds,.true.,nest, &
+                        knots,coeff,code)
                 end if
                 if (code/=0) goto 900
                 fit=bspline(knots,coeff,degree,status=local_code)
@@ -189,8 +190,7 @@ contains
             if (present(t)) then
                 call supplied_fit(param,x,w,degree,target,t,bounds,.false.,knots,coeff,code)
             else
-                call fitpack_smooth_parametric(param,x,w,degree,target,bounds,knots,coeff,code, &
-                    knot_capacity=nest)
+                call automatic_fit(param,x,w,degree,target,bounds,.false.,nest,knots,coeff,code)
             end if
             if (code/=0) goto 900
             fit=bspline(knots,coeff,degree,status=local_code)
@@ -210,7 +210,7 @@ contains
         integer, intent(in), optional :: k !! Degree one through five, default three.
         real(dp), intent(in), optional :: s !! Nonnegative squared-residual target, default zero.
         real(dp), intent(in), optional :: t(:) !! Full knots for positive s; simple interiors.
-        integer, intent(in), optional :: nest !! Hard knot capacity; positive s only; excludes t.
+        integer, intent(in), optional :: nest !! Knot-count target; positive s only; excludes t.
         integer, intent(out), optional :: status !! 0 success, 1 invalid, 2 unsupported, 3 numerical
         character(*), intent(in), optional :: bc_type !! 'not-a-knot' default or 'periodic'.
         type(bspline_interpolator_type) :: fit
@@ -279,8 +279,9 @@ contains
                     knots,periodic_coeff,code,scalar=.true.)
                 if (code==0) coeff=periodic_coeff(:,1)
             else
-                call fitpack_periodic_curve(x,y,w,degree,target,knots,coeff,code, &
-                    knot_capacity=nest)
+                call automatic_fit(x,reshape(y,[m,1]),w,degree,target,bounds,.true.,nest, &
+                    knots,periodic_coeff,code,scalar=.true.)
+                if (code==0) coeff=periodic_coeff(:,1)
             end if
             if (code/=0) goto 900
             fit=bspline(knots,coeff,degree,status=local_code)
@@ -302,14 +303,74 @@ contains
                 knots,periodic_coeff,code,scalar=.true.)
             if (code==0) coeff=periodic_coeff(:,1)
         else
-            call fitpack_smooth_curve(x,y,w,degree,target,bounds,knots,coeff,code, &
-                knot_capacity=nest,shift_origin=.true.)
+            call automatic_fit(x,reshape(y,[m,1]),w,degree,target,bounds,.false.,nest, &
+                knots,periodic_coeff,code,scalar=.true.)
+            if (code==0) coeff=periodic_coeff(:,1)
         end if
         if (code/=0) goto 900
         fit=bspline(knots,coeff,degree,status=local_code)
         if (local_code/=0) code=fitpack_tck_singular
 900     if (present(status)) status=code
     end function make_splrep
+
+    subroutine automatic_fit(u,x,w,k,s,bounds,periodic,nest,knots,coeff,code,scalar)
+        implicit none
+        real(dp), intent(in) :: u(:) !! Increasing physical sample sites.
+        real(dp), intent(in) :: x(:,:) !! Finite coordinates (sites,channels).
+        real(dp), intent(in), optional :: w(:) !! Positive residual multipliers, default one.
+        integer, intent(in) :: k !! Degree, one through five.
+        real(dp), intent(in) :: s !! Positive shared squared-residual bound.
+        real(dp), intent(in) :: bounds(2) !! Physical enclosing interval endpoints.
+        logical, intent(in) :: periodic !! Match endpoint derivatives through order k-1.
+        integer, intent(in), optional :: nest !! Soft modern count; legacy capacity for large inputs.
+        real(dp), allocatable, intent(out) :: knots(:) !! Selected full knots on success.
+        real(dp), allocatable, intent(out) :: coeff(:,:) !! Unpadded physical coefficients.
+        integer, intent(out) :: code !! Zero success; one invalid; three range/size/infeasible.
+        logical, intent(in), optional :: scalar !! Use established scalar smoothing arithmetic.
+        type(knot_generator_type) :: gen
+        real(dp), allocatable :: candidate(:),selected(:),c(:)
+        real(dp) :: selected_bounds(2)
+        logical :: done,is_scalar
+        character(10) :: boundary
+        is_scalar=.false.
+        if (present(scalar)) is_scalar=scalar
+        ! Retain the established banded large-input contract beyond generator limits.
+        if (size(u)>256 .or. size(x,2)>256) then
+            if (periodic) then
+                if (is_scalar) then
+                    call fitpack_periodic_curve(u,x(:,1),w,k,s,knots,c,code,knot_capacity=nest)
+                else
+                    call fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,code,knot_capacity=nest)
+                end if
+            else
+                if (is_scalar) then
+                    call fitpack_smooth_curve(u,x(:,1),w,k,s,bounds,knots,c,code, &
+                        knot_capacity=nest,shift_origin=.true.)
+                else
+                    call fitpack_smooth_parametric(u,x,w,k,s,bounds,knots,coeff,code, &
+                        knot_capacity=nest)
+                end if
+            end if
+            if (code==0 .and. is_scalar) coeff=reshape(c,[size(c),1])
+            return
+        end if
+        boundary='not-a-knot'
+        if (periodic) boundary='periodic'
+        gen=generate_knots(u,x,w=w,xb=bounds(1),xe=bounds(2),k=k,s=s,nest=nest, &
+            bc_type=boundary,status=code)
+        if (code/=0) return
+        do
+            call gen%next(candidate,done,code)
+            if (code/=0) return
+            if (done) exit
+            call move_alloc(candidate,selected)
+        end do
+        code=3
+        if (.not.allocated(selected)) return
+        ! Interpolation-limit knots use the actual sites, including for enclosing bounds.
+        selected_bounds=[selected(k+1),selected(size(selected)-k)]
+        call supplied_fit(u,x,w,k,s,selected,selected_bounds,periodic,knots,coeff,code,scalar)
+    end subroutine automatic_fit
 
     subroutine supplied_fit(u,x,w,k,s,t,bounds,periodic,knots,coeff,code,scalar)
         implicit none

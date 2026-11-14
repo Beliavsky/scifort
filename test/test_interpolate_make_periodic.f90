@@ -3,17 +3,14 @@
 program test_interpolate_make_periodic
     use scifort_kinds, only: dp
     use scifort_interpolate, only: make_splrep,make_splprep,make_interp_spline,bspline, &
-        bspline_interpolator_type,bspline_array_interpolator_type,splrep,splprep,splev, &
-        fitpack_tck_type,fitpack_parametric_tck_type
+        bspline_interpolator_type,bspline_array_interpolator_type
     use, intrinsic :: ieee_arithmetic, only: ieee_value,ieee_quiet_nan,ieee_positive_inf
     implicit none
     integer, parameter :: m=61
     real(dp) :: u(m),x(m,3),w(m),y(m),bad(m),badx(m,3),fp,nan,inf
-    real(dp), allocatable :: p(:),t(:),v(:,:),expected(:,:),c(:,:)
+    real(dp), allocatable :: p(:),t(:),v(:,:),c(:,:)
     type(bspline_interpolator_type) :: fit,reference,raw
     type(bspline_array_interpolator_type) :: curve,raw_curve
-    type(fitpack_tck_type) :: legacy
-    type(fitpack_parametric_tck_type) :: path
     integer :: i,k,d,code,checks
     checks=0
     do i=1,m
@@ -44,9 +41,6 @@ program test_interpolate_make_periodic
         fp=sum((w(:m-1)*(fit%evaluate(u(:m-1))-y(:m-1)))**2)
         call require(abs(fp-0.03_dp)<0.000033_dp,'scalar residual target')
         call scalar_seam(fit,k)
-        legacy=splrep(u,y,w=w,k=k,s=0.03_dp,per=.true.)
-        call require(maxval(abs(fit%evaluate(u)-splev(u,legacy)))<2e-12_dp, &
-            'scalar legacy automatic agreement')
         raw=bspline(fit%knots(),fit%coefficients(),k)
         call require(abs(fit%evaluate(1.231_dp)-raw%evaluate(1.231_dp))<2e-12_dp, &
             'smoothing retains polynomial extrapolation')
@@ -76,9 +70,6 @@ program test_interpolate_make_periodic
         v=curve%evaluate(u)
         fp=sum((spread(w(:m-1),2,3)*(v(:m-1,:)-x(:m-1,:)))**2)
         call require(abs(fp-0.05_dp)<0.000055_dp,'shared periodic residual')
-        path=splprep(x,u=u,w=w,k=k,s=0.05_dp,per=.true.)
-        expected=splev(u,path)
-        call require(maxval(abs(v-expected))<3e-12_dp,'parametric legacy agreement')
         t=curve%knots()
         c=curve%coefficients()
         call require(size(c,1)==size(t)-k-1 .and. size(c,2)==3,'unpadded periodic coefficients')

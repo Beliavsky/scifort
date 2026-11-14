@@ -3529,7 +3529,23 @@ least-squares work. C ABI and wrappers remain deferred.
   explicit size/range limits, and checked numerical validation.
 - [x] Retain exact upstream source/license attribution and document the
   intentional periodic selection differences.
-- [ ] Integrate modern selection into `make_splrep` / `make_splprep` and their
-  soft-capacity behavior. Existing constructors still use their prior paths.
+- [x] Integrate modern selection into `make_splrep` / `make_splprep` and their
+  soft-count behavior within the generator's size limits; larger inputs retain legacy paths.
 - [ ] Repeated interior knots, larger dense problems and stateless alternatives
   to FITPACK continuation remain separate work.
+
+## 2026-11-14 -- Approved modern constructor selection and soft counts
+
+The user approved integrating native `generate_knots` into both modern
+constructors. C ABI and wrappers remain deferred.
+
+- [x] Shared automatic dispatch for scalar/parametric and nonperiodic/periodic
+  fits, reusing existing fixed-knot smoothing after selection.
+- [x] Feasible soft-count overshoots, explicit infeasible-target failures,
+  physical selected endpoints and parameter-output cleanup.
+- [x] Preserve larger-input banded legacy coverage and its documented hard
+  capacities; preserve supplied-knot, interpolation and legacy tuple paths.
+- [x] Checked debug/optimized native regressions, modern selected-knot checks,
+  residual-aware SciPy comparisons and independent smoothing equations.
+- [ ] Larger modern-selection problems, repeated interiors, exact periodic
+  selection/root-iteration parity and stateless continuation remain gaps.

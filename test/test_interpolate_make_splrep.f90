@@ -3,14 +3,13 @@
 program test_interpolate_make_splrep
     use scifort_kinds, only: dp
     use scifort_interpolate, only: make_splrep,make_interp_spline,make_lsq_spline, &
-        bspline_interpolator_type,splrep,splev,fitpack_tck_type
+        bspline_interpolator_type
     use, intrinsic :: ieee_arithmetic, only: ieee_value,ieee_quiet_nan,ieee_positive_inf
     implicit none
     integer, parameter :: m=61
     real(dp) :: x(m),y(m),w(m),bad(m),values(m),fp,nan,inf
     real(dp), allocatable :: t(:),c(:)
     type(bspline_interpolator_type) :: fit,reference,lsq
-    type(fitpack_tck_type) :: legacy
     integer :: i,k,code,checks
     checks=0
     do i=1,m
@@ -31,8 +30,6 @@ program test_interpolate_make_splrep
         t=fit%knots()
         c=fit%coefficients()
         call require(size(c)==size(t)-k-1,'unpadded native coefficients')
-        legacy=splrep(x,y,w=w,k=k,s=0.15_dp,status=code)
-        call require(maxval(abs(fit%evaluate(x)-splev(x,legacy)))<1e-10_dp,'legacy agreement')
         reference=make_splrep(x,y,w=w,k=k,s=0.15_dp,t=t,status=code)
         call require(code==0 .and. reference%valid(),'supplied-knot smoothing')
         call require(all(reference%knots()==t),'supplied knots preserved')

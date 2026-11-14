@@ -3,14 +3,13 @@
 program test_interpolate_make_splprep
     use scifort_kinds, only: dp
     use scifort_interpolate, only: make_splprep,make_interp_spline, &
-        bspline_array_interpolator_type,splprep,splev,fitpack_parametric_tck_type
+        bspline_array_interpolator_type
     use, intrinsic :: ieee_arithmetic, only: ieee_value,ieee_quiet_nan,ieee_positive_inf
     implicit none
     integer, parameter :: m=61
     real(dp) :: u(m),x(m,3),w(m),bad(m),badx(m,3),chords(m),fp,nan,inf
     real(dp), allocatable :: t(:),p(:),v(:,:),c(:,:)
     type(bspline_array_interpolator_type) :: fit,reference,poly
-    type(fitpack_parametric_tck_type) :: legacy
     integer :: i,k,j,code,checks
     checks=0
     do i=1,m
@@ -44,8 +43,6 @@ program test_interpolate_make_splprep
         t=fit%knots()
         c=fit%coefficients()
         call require(size(c,1)==size(t)-k-1 .and. size(c,2)==3,'native coefficient shape')
-        legacy=splprep(x,u=u,w=w,k=k,s=0.15_dp,status=code)
-        call require(maxval(abs(v-splev(u,legacy)))<1e-11_dp,'legacy automatic agreement')
         reference=make_splprep(x,u=u,w=w,k=k,s=0.15_dp,t=t,status=code)
         call require(code==0 .and. reference%valid(),'fixed-knot smoothing')
         call require(all(reference%knots()==t),'full supplied knots preserved')

@@ -7234,7 +7234,7 @@ sites. Default `s=0` interpolates; `w`, `t`, and `nest` are invalid in that mode
 Positive nonperiodic `s` supports automatic knots or full supplied
 knots with simple interiors and nondecreasing exterior knots. Periodic interpolation and automatic/supplied-knot smoothing
 are available with `bc_type='periodic'`. Accepted full periodic knot forms,
-hard `nest`, numerical guards, and modern automatic-selection differences are
+soft modern `nest`, large-input legacy fallback, numerical guards and selection differences are
 documented in the [parametric constructor guide](interpolate_make_splprep.md).
 
 Nonclamped exterior knots and rank-deficient regularized fits use the
@@ -7250,8 +7250,9 @@ full knot vectors. Scalar/shared-channel data, degrees 1-5, positive weights,
 nonperiodic/periodic selection, interpolation and soft stopping counts are
 supported within bounded dense-solver limits. Initialization and each step
 require status checks. See [adaptive knot generation](interpolate_generate_knots.md)
-for residual conventions, periodic differences and range limits. Existing
-automatic spline constructors are unchanged.
+for residual conventions, periodic differences and range limits. Both modern
+constructors now use it within these limits; see
+[constructor integration](interpolate_modern_selection.md).
 
 ### Native scalar adaptive smoothing
 
@@ -7259,12 +7260,14 @@ automatic spline constructors are unchanged.
 returns a native `bspline_interpolator_type` for interpolation or smoothing.
 It supports automatic knots or a supplied full knot vector with
 simple interiors and nondecreasing exterior knots. Supplied knots still request derivative-jump smoothing;
-`nest` is a hard capacity, with explicit failure for infeasible targets.
+`nest` is a soft count within modern selection limits; larger-input legacy
+fallback retains its earlier hard capacity. Infeasible residuals fail explicitly.
 The default is `s=0`; weights, knots, and capacity are rejected in that mode.
 Periodic interpolation and automatic/supplied-knot smoothing use `bc_type='periodic'`;
 see the [periodic guide](interpolate_periodic_constructors.md) for closed input,
 residuals, accepted full periodic knots, capacities, and extrapolation policies.
-Exact modern SciPy automatic-knot parity remains unsupported.
+Nonperiodic modern selection is independently checked against SciPy; exact
+periodic selection and root-iteration parity remain unsupported.
 See the [constructor guide](interpolate_make_splrep.md).
 
 `splrep(x,y,w=...,k=...,s=positive)` now selects knots and fits a nonperiodic

@@ -26,7 +26,7 @@ fit = make_splrep(x, y, w=w, s=0.15_dp, status=status)
 | `k` | Polynomial degree 1-5; default 3 |
 | `s` | Nonnegative total weighted squared-residual target; default zero |
 | `t(:)` | Full nondecreasing knots with simple interiors; positive `s` only |
-| `nest` | Hard knot capacity; upper bound `size(x)+k+1`, or `size(x)+2*k` for periodic fits |
+| `nest` | Soft modern knot-count target; upper bound `size(x)+k+1`, or `size(x)+2*k` for periodic fits; large-input fallback retains a hard capacity |
 | `status` | Existing FITPACK status convention: 0 success, 1 invalid, 2 unsupported, 3 numerical failure |
 | `bc_type` | Default or explicit `'not-a-knot'`, or `'periodic'` |
 
@@ -37,7 +37,8 @@ interpolation; unlike SciPy's interpolation shortcut, they are validated.
 
 For nonperiodic `s>0`, the fit minimizes squared jumps of the kth derivative subject
 to `sum((w*(fit(x)-y))**2) <= s`, with FITPACK relative tolerance `0.001`.
-Automatic fitting chooses knots through the licensed native FITPACK solver.
+Automatic fitting uses native `generate_knots` within its size limits, then
+the existing fixed-knot smoothing solver. Larger inputs retain legacy banded selection.
 Coefficients are unpadded: `size(c) = size(knots)-k-1`.
 
 When `t` is supplied, its base interval endpoints equal the bounds,
@@ -51,11 +52,10 @@ status 3 and an invalid object are returned. Nonclamped exterior knots and
 rank-deficient regularized fits use a [documented dense fallback](interpolate_fixed_general.md).
 Repeated interior knots remain invalid.
 
-`t` and `nest` are mutually exclusive. `nest` is a hard capacity in SciFort;
-if it prevents meeting the target, status 3 is returned. SciPy instead
-treats `nest` as a target that may be exceeded, so this is an intentional
-compatibility limitation. No successful fit silently violates the residual
-contract because of insufficient workspace.
+`t` and `nest` are mutually exclusive. Modern selection can exceed `nest`;
+if the last selected vector still cannot meet the residual bound, status 3
+is returned. Large-input legacy fallback retains its earlier hard capacity.
+See [modern selection and soft counts](interpolate_modern_selection.md).
 
 The solver shifts coordinates before scaling, normalizes ordinates and
 weights, and verifies the final physical representation. The normalized
@@ -68,18 +68,17 @@ conditioning for all accepted problems.
 
 ## Compatibility and remaining gaps
 
-Automatic selection follows the native legacy FITPACK path. Modern SciPy's
-`generate_knots` path can select different knots and produce different
-coefficients and higher derivatives while satisfying the same mathematical
-contract. Exact modern automatic-knot parity is not claimed. Supplied-knot
-and interpolation behavior are independently checked against modern SciPy;
-automatic fits are checked against legacy FITPACK and the smoothing equations.
-See the [validation record](../validation/make_splrep_2026-11-13.md).
+Automatic selection uses the modern generator for at most 256 sites/channels.
+Nonperiodic selected knots match the independent SciPy comparison cases.
+Periodic canonicalization and root-stopping differences remain documented;
+matching knots do not promise coefficients or higher derivatives that match
+to roundoff. See [modern selection validation](../validation/modern_selection_2026-11-14.md)
+and the earlier [constructor validation](../validation/make_splrep_2026-11-13.md).
 
 Periodic interpolation and automatic/supplied-knot smoothing are supported; see the
 [periodic constructor guide](interpolate_periodic_constructors.md) for closed
 input, residual, capacity, numerical, and extrapolation contracts and accepted full periodic knot forms. The native parametric counterpart
 [`make_splprep`](interpolate_make_splprep.md) is also available. Repeated
-interior knots and SciPy's soft `nest` behavior remain gaps. See
+interior knots and modern selection/soft counts for larger inputs remain gaps. See
 [SciPy's constructor documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.make_splrep.html)
 and the [native TCK guide](interpolate_fitpack_tck_backend.md).

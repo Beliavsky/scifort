@@ -8,6 +8,7 @@ import subprocess
 import numpy as np
 import scipy
 from scipy.interpolate import BSpline, make_splprep, make_lsq_spline
+from spline_stop_checks import check_stopping_difference
 
 
 def main():
@@ -65,7 +66,8 @@ def main():
                           capture_output=True, text=True, check=True)
     rows = iter(proc.stdout.splitlines())
     stat_max = residual_max = repr_max = diagnostic_max = fixed_max = interp_max = 0.
-    adaptive = different_knots = count = 0
+    adaptive = different_knots = count = stopping_checks = 0
+    stopping_ratio = 0.0
     for index, (k, mode, x, w, u, target, bounds, t, q, ref, ru) in enumerate(cases):
         code = int(next(rows))
         assert code == 0, (index, k, mode, code)
@@ -87,8 +89,7 @@ def main():
         same = len(knots) == len(ref.t) and np.allclose(knots, ref.t, atol=3e-13, rtol=3e-13)
         if not same and mode in (1, 3):
             different_knots += 1
-        if mode in (0, 2):
-            assert same, (index, 'interpolation/supplied knots')
+        assert same, (index, 'modern selected/specified/interpolation knots')
         weights = w if mode else np.ones_like(w)
         fp = np.sum((weights[:, None]*(values-x))**2)
         assert fp <= 1.0011*target+1e-22, (index, 'residual', fp, target)
@@ -129,6 +130,10 @@ def main():
             repr_max = max(repr_max, error)
         comparisons = [(values, ref(au).T), (integral, ref.integrate(*bounds))]
         comparisons.extend((v, ref(q, nu=d).T) for d, v in enumerate(queries))
+        if mode in (1, 3):
+            stopping_ratio = max(stopping_ratio, check_stopping_difference(
+                design, w[:, None]*x, coeff, ref.c))
+            stopping_checks += 1
         if mode in (0, 2):
             comparisons.append((coeff, ref.c))
         for actual, expected in comparisons:
@@ -149,6 +154,8 @@ def main():
           f'{residual_max:.6g}; scaled stationarity {stat_max:.6g}; representation {repr_max:.6g}')
     print(f'Modern diagnostics: {different_knots} automatic knot differences; '
           f'fixed-knot maximum {fixed_max:.6g}; overall maximum {diagnostic_max:.6g}')
+    print(f'{stopping_checks} residual-aware automatic fits; maximum coefficient error / '
+          f'residual stopping bound {stopping_ratio:.6g}')
 
 
 if __name__ == '__main__':

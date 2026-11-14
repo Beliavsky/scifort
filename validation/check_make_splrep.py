@@ -6,7 +6,8 @@ from pathlib import Path
 import subprocess
 import numpy as np
 import scipy
-from scipy.interpolate import make_splrep, make_lsq_spline, splrep, BSpline
+from scipy.interpolate import make_splrep, make_lsq_spline, BSpline
+from spline_stop_checks import check_stopping_difference
 
 
 def main():
@@ -65,7 +66,8 @@ def main():
                           capture_output=True, text=True, check=True)
     rows = iter(proc.stdout.splitlines())
     maximum = stationarity_max = residual_max = diagnostic_max = 0.
-    count = adaptive = different_knots = 0
+    count = adaptive = different_knots = stopping_checks = 0
+    stopping_ratio = 0.0
     for index, (k, mode, x, y, w, target, bounds, t, q, reference) in enumerate(cases):
         code = int(next(rows))
         assert code == 0, (index, k, mode, code)
@@ -81,8 +83,7 @@ def main():
                       np.allclose(knots, reference.t, rtol=3e-13, atol=3e-13))
         if not same_knots:
             different_knots += 1
-        if mode in (0, 2):
-            assert same_knots, (index, 'specified/interpolation knots')
+        assert same_knots, (index, 'modern selected/specified/interpolation knots')
         if len(t):
             np.testing.assert_array_equal(knots, t)
         weights = w if mode else np.ones_like(w)
@@ -118,24 +119,29 @@ def main():
         for actual, expected in diagnostic:
             diagnostic_max = max(diagnostic_max,
                                  np.max(abs(actual-expected)/(1+abs(expected))))
-        if mode in (1, 3):
-            legacy = splrep(x, y, w=w, k=k, s=target, xb=bounds[0], xe=bounds[1])
-            reference = BSpline(*legacy)
-            np.testing.assert_allclose(knots, reference.t, rtol=3e-13, atol=3e-13)
         comparisons = [(coeff, reference.c[:nt-k-1]), (values, reference(x)),
                        (np.array([integral]), np.array([reference.integrate(*bounds)]))]
         comparisons.extend((v, reference(q, nu=d)) for d, v in enumerate(queries))
+        stop_aware = mode in (1, 3) and nt > 2*(k+1)
+        if stop_aware:
+            design = BSpline.design_matrix(x, knots, k).toarray()*w[:, None]
+            stopping_ratio = max(stopping_ratio, check_stopping_difference(
+                design, w*y, coeff, reference.c[:nt-k-1]))
+            stopping_checks += 1
         for actual, expected in comparisons:
             error = np.max(abs(actual-expected)/(1+abs(expected)))
-            assert error < 3e-8, (index, k, mode, 'SciPy difference', error)
+            if not stop_aware:
+                assert error < 3e-8, (index, k, mode, 'SciPy difference', error)
+                count += actual.size
             maximum = max(maximum, error)
-            count += actual.size
     assert next(rows, None) is None
-    print(f'PASS: {len(cases)} fits; {adaptive} adaptive; {count} SciPy {scipy.__version__} comparisons')
+    print(f'PASS: {len(cases)} fits; {adaptive} adaptive; {count} strict SciPy '
+          f'{scipy.__version__} comparisons; {stopping_checks} residual-aware automatic fits')
     print(f'Maximum normalized difference {maximum:.6g}; residual relative error '
           f'{residual_max:.6g}; scaled stationarity error {stationarity_max:.6g}')
     print(f'Modern automatic knot differences: {different_knots}; maximum modern '
           f'value/derivative/integral diagnostic difference {diagnostic_max:.6g}')
+    print(f'Maximum coefficient error / residual stopping bound {stopping_ratio:.6g}')
 
 
 if __name__ == '__main__':
