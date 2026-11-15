@@ -4,6 +4,8 @@
 """Compare explicit native continuation with exact cached upstream FITPACK state.
 
 The Fortran driver links the unchanged, separately cached attributed source.
+Periodic scalar references use one-channel clocur: upstream percur has an
+overlapping coefficient assignment bug for short cyclic bases.
 Upstream closed-curve restart failures after interpolation are recorded before
 an independent task-0 restart; no upstream source patch is made.
 """
@@ -42,7 +44,7 @@ def main():
         proc = subprocess.run([str(exe), reference], input=data, text=True,
                               capture_output=True, check=True)
         return iter(proc.stdout.splitlines())
-    native, upstream = run('native'), run('reference')
+    native, upstream = run('native'), run('reference-cyclic')
     fits = fixes = history = 0
     coefficient_max = residual_max = derivative_max = seam_max = 0.
     for index, (u, x, w, k, periodic, targets) in enumerate(cases):

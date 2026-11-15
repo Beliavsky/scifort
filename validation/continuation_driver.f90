@@ -8,7 +8,7 @@ program continuation_driver
     use fitpack_core, only: curfit,percur,parcur,clocur
     implicit none
     character(20) :: argument
-    logical :: reference,periodic
+    logical :: reference,periodic,cyclic_reference
     integer :: m,ndim,k,per,steps,io,i,j,step,mode,nest,n,lwrk,ier,original,nc,code,active
     real(dp) :: target,xscale,wscale,ub,ue,fp
     real(dp), allocatable :: u(:),x(:,:),w(:),targets(:),t(:),c(:),wrk(:),xx(:,:),ww(:),cc(:,:)
@@ -17,7 +17,8 @@ program continuation_driver
     type(fitpack_tck_type) :: scalar
     type(fitpack_parametric_tck_type) :: curve
     call get_command_argument(1,argument)
-    reference=trim(argument)=='reference'
+    cyclic_reference=trim(argument)=='reference-cyclic'
+    reference=trim(argument)=='reference' .or. cyclic_reference
     do
         read(*,*,iostat=io) m,ndim,k,per,steps
         if (io/=0) exit
@@ -59,7 +60,7 @@ program continuation_driver
                     call upstream(mode)
                     original=ier
                     ! Record the unmodified upstream failure before independent fresh restart.
-                    if (ier>0 .and. periodic .and. ndim>1 .and. step>1) then
+                    if (ier>0 .and. periodic .and. (ndim>1 .or. cyclic_reference) .and. step>1) then
                         if (targets(step-1)==0.0_dp .and. targets(step)>0.0_dp) then
                             n=2*(k+1)
                             call upstream(0)
@@ -111,7 +112,7 @@ contains
         ue=1.0_dp
         fp=0.0_dp
         ier=0
-        if (ndim==1) then
+        if (ndim==1 .and. .not.(periodic .and. cyclic_reference)) then
             if (periodic) then
                 call percur(task,m,u,xx(1,:),ww,k,target,nest,n,t,c,fp,wrk,lwrk,iw,ier)
             else

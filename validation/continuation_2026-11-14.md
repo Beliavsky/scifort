@@ -89,6 +89,14 @@ corrected native knots and coefficients match that independent fit exactly.
 Subsequent upstream task-1 calls continue from the recovered reference state.
 This is a recorded intentional correction, not hidden upstream success.
 
+## Subsequent correction
+
+The later [short cyclic basis correction](periodic_short_basis_2026-11-14.md)
+fixes the scalar failure below. The historical results in this record describe
+the pre-correction code and original upstream scalar reference. Current
+`check_continuation.py` explicitly uses unchanged one-channel `clocur` for
+periodic scalar references because upstream `percur` contains the same defect.
+
 ## Existing numerical limits
 
 The extension preserves existing normalization, rank and final physical-

@@ -1,3 +1,31 @@
+## 2026-11-14 - Short cyclic scalar spline correction
+
+`src/interpolate_curfit_core.f90` retains its MIT AND BSD-3-Clause notices
+and Federico Perini attribution. The two `fpperi` coefficient extensions now
+copy `c(n7+i)=c(i)` in ascending order, as required by the documented cyclic
+identity when the independent coefficient count `n7` is smaller than degree
+`k`. An overlapping Fortran array assignment evaluates its right-hand side
+before assignment and cannot propagate a coefficient across multiple wraps.
+The fixed-knot branch and existing parametric `fpclos` already used ordered
+loops; no QR, rank threshold, root iteration or tolerance is changed.
+
+The exact cached perazz/FITPACK source at commit
+`1907c7bad9f5c4557970e906bdd4909eb52b2d4c` was inspected, including `fpperi`,
+`fpclos` and `fpbacp`; its scalar path has the same array-assignment defect.
+[Source](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90)
+SHA-256: `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+The full BSD license remains in `LICENSES/perazz-fitpack-BSD-3-Clause.txt`.
+This is an intentional correction to attributed code, not a new independent
+implementation or an assertion of parity with the defective scalar source.
+
+The original MIT regression and Python checks compare independent residuals,
+periodic seams, SciPy numerical outputs and unchanged upstream one-channel
+`clocur` for periodic scalar continuation. `continuation_driver` retains its
+original `reference` mode and adds explicit `reference-cyclic` mode for this
+purpose. Upstream interpolation-restart errors are still recorded before
+independent fresh restart. No reference source is patched or vendored.
+See the [validation record](validation/periodic_short_basis_2026-11-14.md).
+
 ## 2026-11-14 - Explicit-state spline continuation
 
 The caller-owned `fitpack_continuation_type`, exact active-input validation,

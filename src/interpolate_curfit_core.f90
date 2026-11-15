@@ -2566,13 +2566,10 @@ contains
         c(1:n7) = fpbacp(a1,a2,z,n7,kk,kk1,nest)
 
         ! calculate from condition (**) the coefficients c(j+n7),j=1,2,...k.
-        if (fixed) then
-            do i=1,k
-                c(n7+i)=c(i)
-            end do
-        else
-            c(n7+1:n7+k)=c(1:k)
-        end if
+        ! Copy in order: a short cyclic basis can wrap more than once.
+        do i=1,k
+            c(n7+i)=c(i)
+        end do
 
         ! success! if the approximation sinf(x) is an acceptable solution.
         fpms = fp-s
@@ -2785,13 +2782,10 @@ contains
          c(:n7) = fpbacp(g1,g2,c,n7,k1,k2,nest)
 
          ! calculate from condition (**) the b-spline coefficients c(n7+j),j=1,.
-         if (fixed) then
-             do i=1,k
-                 c(n7+i)=c(i)
-             end do
-         else
-             c(n7+1:n7+k)=c(1:k)
-         end if
+         ! Copy in order: a short cyclic basis can wrap more than once.
+         do i=1,k
+             c(n7+i)=c(i)
+         end do
 
          ! computation of f(p).
          fp = zero

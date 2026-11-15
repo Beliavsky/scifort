@@ -1,3 +1,12 @@
+## 2026-11-14 - Periodic scalar smoothing with short cyclic bases
+
+- Correct ordered cyclic coefficient extension in both scalar FITPACK solves.
+  Cubic and quintic moderate-target fits no longer fail from stale repeated
+  coefficients when the independent basis is shorter than the degree.
+- Add fresh/continued regression checks, independent residual and seam checks,
+  and comparisons against SciPy and upstream one-channel parametric fits.
+- Preserve public interfaces, solver tolerances, and third-party attribution.
+
 ## 2026-11-14 - Explicit-state native spline continuation
 
 - Add caller-owned `fitpack_continuation_type` for `splrep` / `splprep`

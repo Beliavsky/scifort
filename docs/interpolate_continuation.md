@@ -82,9 +82,10 @@ seed, not room beyond the previous interpolation knot count.
 
 Existing finite-range, rank and final physical-residual checks still apply.
 Continuation does not cure ill-conditioning or guarantee every smoothing
-request succeeds. Some moderate-target periodic scalar fits already return
-status 3 in the pre-continuation implementation; that broader numerical
-limitation remains. C ABI and wrappers are deferred.
+request succeeds. The known moderate-target scalar failure with short cyclic
+bases is [corrected](../validation/periodic_short_basis_2026-11-14.md) by ordered
+coefficient extension. Broader periodic conditioning and numerical reliability
+remain separate audits. C ABI and wrappers are deferred.
 
 See the [validation record](../validation/continuation_2026-11-14.md),
 [provenance](../CODE_PROVENANCE.md), and the public SciPy

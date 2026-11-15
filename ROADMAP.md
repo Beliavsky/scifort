@@ -3602,3 +3602,18 @@ state, scalar/parametric and ordinary/periodic fits, and upstream validation.
 See [explicit continuation](docs/interpolate_continuation.md). C ABI and wrappers
 remain deferred. Earlier stateless-continuation entries are superseded by this
 explicit-state API; no global mutable cache is introduced.
+
+## 2026-11-14 -- Approved periodic scalar reliability correction
+
+The user approved fixing the reproducible moderate-target periodic scalar
+status-3 failures before further feature expansion.
+
+- [x] Trace the failure to overlapping coefficient extension for short cyclic
+  bases; use ordered copying in both least-squares and smoothing solves.
+- [x] Test degrees 1-5, fresh/continued fits, interpolation restart, residuals,
+  cyclic identities and periodic derivatives against independent references.
+- [ ] General conditioning audits, other periodic failure modes and exact
+  modern selection/root-iteration parity remain separate work.
+
+See the [validation record](validation/periodic_short_basis_2026-11-14.md).
+C ABI and wrappers remain deferred.
