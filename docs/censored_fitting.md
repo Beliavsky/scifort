@@ -2,9 +2,9 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum/maximum Weibull, Rayleigh, lognormal, gamma, Erlang, beta, Cauchy, Laplace,
+minimum/maximum Weibull, Rayleigh, lognormal, Gibrat, gamma, Erlang, beta, Cauchy, Laplace,
 logistic, half-Cauchy, half-logistic, and both Gumbel distributions.
-Lognormal, gamma, and Erlang censored fits currently require fixed location.
+Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
 and [censored fitting likelihood](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html).
@@ -62,6 +62,7 @@ exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
 weibull_max_censored_loglikelihood(data, c [, loc, scale])
 lognormal_censored_loglikelihood(data, s [, loc, scale])
+gibrat_censored_loglikelihood(data [, loc, scale])
 gamma_censored_loglikelihood(data, a [, loc, scale])
 erlang_censored_loglikelihood(data, a [, loc, scale])
 beta_censored_loglikelihood(data, a, b [, loc, scale])
@@ -107,7 +108,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
-`rayleigh_fit`, `lognormal_fit`, `gamma_fit`, `erlang_fit`,
+`rayleigh_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -125,7 +126,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
+Gibrat, exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma and Erlang, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -138,6 +139,34 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Gibrat details
+
+`gibrat_censored_loglikelihood(data [, loc, scale])` and its `_nnlf`
+companion reuse lognormal with log-shape fixed at 1. Location is the lower
+support endpoint (default zero), and scale must be positive (default one).
+The existing stable lognormal log tails and interval calculation apply,
+including when standardized displacements underflow or raw displacements
+overflow. At or below the support endpoint, density and CDF are zero and SF
+is one. Invalid inputs return NaN; valid empty data has log-likelihood zero.
+
+`gibrat_fit` accepts bounds in `[loc,scale]` order. The censored overload
+requires fixed location, as does the current lognormal overload. Scale may be
+free or fixed; shape is always 1 and is absent from the bounds and results.
+An exact observation at or below the support endpoint has zero likelihood,
+so a fully fixed fit containing one returns `fit_status_no_finite_objective`.
+Existing array-based calls retain their original behavior, including support
+for free location.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, gibrat_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[1.0_dp,2.0_dp,4.0_dp])
+call gibrat_fit(data, [0.0_dp,0.05_dp], [0.0_dp,10.0_dp], fit)
+! Fixed location zero; fitted scale is approximately the geometric mean, 2.
+```
 
 ## Erlang details
 

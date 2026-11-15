@@ -9,6 +9,7 @@ module scifort_stats
         exponential_censored_loglikelihood, exponential_censored_nnlf, &
         weibull_censored_loglikelihood, weibull_censored_nnlf, &
         lognormal_censored_loglikelihood, lognormal_censored_nnlf, &
+        gibrat_censored_loglikelihood, gibrat_censored_nnlf, &
         gamma_censored_loglikelihood, gamma_censored_nnlf, &
         erlang_censored_loglikelihood, erlang_censored_nnlf, &
         beta_censored_loglikelihood, beta_censored_nnlf, &
@@ -704,6 +705,7 @@ module scifort_stats
     public :: exponential_censored_loglikelihood, exponential_censored_nnlf
     public :: weibull_censored_loglikelihood, weibull_censored_nnlf
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
+    public :: gibrat_censored_loglikelihood, gibrat_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: erlang_censored_loglikelihood, erlang_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf

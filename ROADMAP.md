@@ -1,3 +1,10 @@
+## Gibrat censoring (2026-11-15)
+
+- [x] Reuse lognormal exact/left/right/interval kernels at shape 1.
+- [x] Add fixed-location bounded fits with `[loc,scale]` bounds and results.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md);
+  C ABI expansion remains deferred.
+
 ## Erlang censoring (2026-11-15)
 
 - [x] Reuse gamma exact/left/right/interval likelihoods and bounded fitting.

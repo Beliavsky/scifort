@@ -1,3 +1,13 @@
+## 2026-11-15 - Gibrat censoring
+
+- Add Gibrat mixed-censoring likelihood/NNLF and bounded fit overloads using
+  lognormal with shape fixed at 1; preserve existing scalar and array APIs.
+- Require fixed location for censored fits, with scale free or fixed and
+  two-parameter bounds/results in `[loc,scale]` order.
+- Validate 154 native checks at checked `-O0` and `-O3`, 104 new independent
+  reference comparisons per build, and the full `fpm test` suite.
+- Update the inventory to seventeen supported families and 92 remaining.
+
 ## 2026-11-15 - Erlang censoring
 
 - Add Erlang mixed-censoring likelihood/NNLF and bounded fit overloads using

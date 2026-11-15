@@ -12,6 +12,7 @@ module scifort_fit
         gumbel_r_censored_nnlf, gumbel_l_censored_nnlf, laplace_censored_nnlf, &
         cauchy_censored_nnlf, halfcauchy_censored_nnlf, halflogistic_censored_nnlf, &
         rayleigh_censored_nnlf, weibull_max_censored_nnlf
+    use scifort_censored, only : gibrat_censored_nnlf
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : dp
     use scifort_likelihood, only : normal_nnlf, &
@@ -448,6 +449,10 @@ module scifort_fit
         module procedure lognormal_fit, lognormal_fit_censored
     end interface lognormal_fit
 
+    interface gibrat_fit
+        module procedure gibrat_fit, gibrat_fit_censored
+    end interface gibrat_fit
+
     interface gamma_fit
         module procedure gamma_fit, gamma_fit_censored
     end interface gamma_fit
@@ -680,6 +685,31 @@ contains
         call bounded_fit([real(dp) ::], family_lognormal, lower, upper, result, guess, &
             [.false., .false., .false.], max_iter, tolerance, data)
     end subroutine lognormal_fit_censored
+
+    subroutine gibrat_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for location and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; location must be fixed
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting location and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        logical :: fixed_location
+
+        fixed_location = .false.
+        if (all(ieee_is_finite([lower(1), upper(1)]))) then
+            fixed_location = lower(1) == upper(1)
+        end if
+        if (.not. fixed_location) then
+            allocate(result%params(2))
+            result%params = nan_value()
+            result%nllf = nan_value()
+            return
+        end if
+        call bounded_fit([real(dp) ::], family_gibrat, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine gibrat_fit_censored
 
     subroutine gamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1083,6 +1113,8 @@ contains
                 value = gamma_censored_nnlf(censored, params(1), params(2), params(3))
             case (family_lognormal)
                 value = lognormal_censored_nnlf(censored, params(1), params(2), params(3))
+            case (family_gibrat)
+                value = gibrat_censored_nnlf(censored, params(1), params(2))
             case (family_weibull)
                 value = weibull_censored_nnlf(censored, params(1), params(2), params(3))
             case default

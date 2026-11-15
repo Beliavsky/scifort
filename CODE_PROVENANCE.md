@@ -1,3 +1,16 @@
+## 2026-11-15 - Gibrat censored likelihoods and fitting
+
+The new Gibrat entry points in `src/censored.f90` and `src/fit.f90` reuse
+existing SciFort lognormal censored kernels at fixed log-shape 1 and the
+existing bounded optimizer. The [SciPy Gibrat mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gibrat.html),
+inspected 2026-11-15, documents this relationship and the location/scale
+parameterization. No upstream implementation code was imported or translated;
+these wrappers and tests are original MIT SciFort code. Existing lognormal
+kernel provenance and notices continue to apply. Reference tests independently
+evaluate the lognormal mathematical specification using mpmath, with SciPy
+Gibrat fit comparisons. No new dependency, C ABI, or third-party license text
+is introduced. See the [validation report](validation/gibrat_censored_2026-11-15.md).
+
 ## 2026-11-15 - Erlang censored likelihoods and fitting
 
 The new Erlang wrappers in `src/censored.f90` and `src/fit.f90` reuse existing
