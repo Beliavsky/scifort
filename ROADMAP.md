@@ -1,3 +1,11 @@
+## Half-family censoring (2026-11-15)
+
+- [x] Add half-Cauchy and half-logistic exact/left/right/interval likelihoods.
+- [x] Add bounded censored fit overloads with free or fixed location and scale.
+- [x] Validate support clipping, narrow intervals, near-one logs and extreme tails.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md),
+  including a separate Student t tail/interval audit; C ABI work remains deferred.
+
 ## Cauchy censoring (2026-11-15)
 
 - [x] Add stable exact/left/right/interval censored Cauchy likelihoods.

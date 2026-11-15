@@ -1,3 +1,24 @@
+## 2026-11-15 - Half-Cauchy and half-logistic censored fits
+
+The half-Cauchy and half-logistic callbacks in `src/censored.f90` are original
+MIT SciFort implementations from the mathematical density, support and
+location/scale specifications in the
+[SciPy half-Cauchy documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.halfcauchy.html),
+[SciPy half-logistic documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.halflogistic.html),
+and [censored likelihood specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html),
+inspected 2026-11-15. No third-party implementation code is imported or
+translated. Existing MIT SciFort Cauchy/logistic density and interval kernels
+are reused with positive-half normalization. Direct half-family CDFs follow
+by integrating the densities; stable complementary log tails use SciFort's
+existing logarithmic helpers. The bounded fit overloads reuse the unchanged
+coordinate/pattern optimizer. All public scalar and array APIs are retained.
+
+The independent reference scripts evaluate high-precision arctangent or tanh
+CDF differences with mpmath, including support clipping, rather than the
+production parent interval identities. Fixed-location mixed fits are checked
+against SciPy. There are no new runtime dependencies or C ABI additions.
+See [validation](validation/half_censored_2026-11-15.md).
+
 ## 2026-11-15 - Cauchy censored likelihoods and bounded fits
 
 The Cauchy callbacks in `src/censored.f90` are original MIT SciFort code,

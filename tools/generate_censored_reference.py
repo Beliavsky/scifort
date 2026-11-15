@@ -21,6 +21,9 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family in ('gumbel_r','gumbel_l'):
         if family == 'gumbel_l': z=-z
         return -z-mp.exp(-z)-mp.log(scale)
+    if family in ('halfcauchy', 'halflogistic'):
+        if z < 0: return mp.ninf
+        return mp.log(2)+logpdf(x,family[4:],shape,loc,scale)
     if family == 'cauchy':
         return -mp.log(mp.pi)-mp.log(scale)-mp.log1p(z*z)
     if family == 'laplace':
@@ -47,6 +50,10 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
         return -mp.exp(-z)
     if family == 'gumbel_l':
         return mp.log(-mp.expm1(-mp.exp(z)))
+    if family in ('halfcauchy', 'halflogistic'):
+        if z <= 0: return mp.ninf
+        if family == 'halfcauchy': return mp.log(2*mp.atan(z)/mp.pi)
+        return mp.log(mp.tanh(z/2))
     if family == 'cauchy':
         return mp.log(mp.mpf('.5')+mp.atan(z)/mp.pi)
     if family == 'laplace':
@@ -73,6 +80,10 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
         return mp.log(-mp.expm1(-mp.exp(-z)))
     if family == 'gumbel_l':
         return -mp.exp(z)
+    if family in ('halfcauchy', 'halflogistic'):
+        if z <= 0: return mp.mpf(0)
+        if family == 'halfcauchy': return mp.log(1-2*mp.atan(z)/mp.pi)
+        return mp.log(2)-mp.log1p(mp.exp(z))
     if family == 'cauchy':
         return mp.log(mp.mpf('.5')-mp.atan(z)/mp.pi)
     if family == 'laplace':
@@ -125,6 +136,13 @@ def main():
         result[family+'_mixed'] = float(value)
         kwargs = {} if family in ('normal','cauchy','laplace','logistic','gumbel_r','gumbel_l') else {'floc': 0.}
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
+    for family in ['halfcauchy','halflogistic']:
+        loc,scale=0.,1.3
+        value=sum(logpdf(x,family,1.,loc,scale) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,1.,loc,scale)+logsf(3.5,family,1.,loc,scale)
+        value+=sum(loginterval(a,b,family,1.,loc,scale) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        result[family+'_fixed_loc_fit']=list(getattr(stats,family).fit(data,floc=0.))
     intervals = [
         ('gumbel_r_tail',1000.,math.nextafter(1000.,math.inf),'gumbel_r',1.,1.),
         ('gumbel_r_left',-5.,math.nextafter(-5.,math.inf),'gumbel_r',1.,1.),

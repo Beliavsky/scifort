@@ -52,6 +52,8 @@ module scifort_censored
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
+    public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf
     public :: logistic_censored_loglikelihood, logistic_censored_nnlf
@@ -59,6 +61,200 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function halfcauchy_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, halfcauchy_lpdf, halfcauchy_lcdf, &
+            halfcauchy_lsf, halfcauchy_interval)
+    end function halfcauchy_censored_loglikelihood
+
+    pure function halfcauchy_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value
+        value = -halfcauchy_censored_loglikelihood(data, loc, scale)
+    end function halfcauchy_censored_nnlf
+
+    pure function halfcauchy_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(1)) return
+        value = scifort_log_two + cauchy_lpdf(x, params)
+    end function halfcauchy_lpdf
+
+    pure function halfcauchy_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value, other
+        call halfcauchy_tails(x, params, value, other)
+    end function halfcauchy_lcdf
+
+    pure function halfcauchy_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value, other
+        call halfcauchy_tails(x, params, other, value)
+    end function halfcauchy_lsf
+
+    pure function halfcauchy_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value, lower_sf, upper_sf
+        value = negative_infinity(0.0_dp)
+        if (b <= params(1)) return
+        if (a <= params(1)) then
+            value = halfcauchy_lcdf(b, params)
+        else
+            lower_sf = halfcauchy_lsf(a, params)
+            if (.not. ieee_is_finite(lower_sf)) return
+            upper_sf = halfcauchy_lsf(b, params)
+            if (upper_sf - lower_sf <= -scifort_log_two) then
+                ! Wide intervals retain tiny omitted probabilities near unit mass.
+                value = lower_sf + log1p_safe(-exp(upper_sf - lower_sf))
+            else
+                value = scifort_log_two + cauchy_interval(a, b, params)
+            end if
+        end if
+    end function halfcauchy_interval
+
+    pure function halflogistic_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, halflogistic_lpdf, halflogistic_lcdf, &
+            halflogistic_lsf, halflogistic_interval)
+    end function halflogistic_censored_loglikelihood
+
+    pure function halflogistic_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value
+        value = -halflogistic_censored_loglikelihood(data, loc, scale)
+    end function halflogistic_censored_nnlf
+
+    pure function halflogistic_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(1)) return
+        if (x == params(1)) then
+            value = -scifort_log_two - log(params(2))
+        else
+            value = scifort_log_two + logistic_lpdf(x, params)
+        end if
+    end function halflogistic_lpdf
+
+    pure function halflogistic_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value, other
+        call halflogistic_tails(x, params, value, other)
+    end function halflogistic_lcdf
+
+    pure function halflogistic_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value, other
+        call halflogistic_tails(x, params, other, value)
+    end function halflogistic_lsf
+
+    pure function halflogistic_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp) :: value, lower_sf, upper_sf
+        value = negative_infinity(0.0_dp)
+        if (b <= params(1)) return
+        if (a <= params(1)) then
+            value = halflogistic_lcdf(b, params)
+        else
+            lower_sf = halflogistic_lsf(a, params)
+            if (.not. ieee_is_finite(lower_sf)) return
+            upper_sf = halflogistic_lsf(b, params)
+            if (upper_sf - lower_sf <= -scifort_log_two) then
+                ! Wide intervals retain tiny omitted probabilities near unit mass.
+                value = lower_sf + log1p_safe(-exp(upper_sf - lower_sf))
+            else
+                value = scifort_log_two + logistic_interval(a, b, params)
+            end if
+        end if
+    end function halflogistic_interval
+
+    pure subroutine halfcauchy_tails(x, params, logcdf, logsf)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp), intent(out) :: logcdf !! log lower-tail probability, -infinity at/below support
+        real(dp), intent(out) :: logsf !! log upper-tail probability, zero at/below support
+        real(dp) :: logz
+        logcdf = negative_infinity(0.0_dp)
+        logsf = 0.0_dp
+        if (x <= params(1)) return
+        logz = cauchy_log_distance(x, params)
+        if (logz <= 0.0_dp) then
+            logcdf = scifort_log_two + cauchy_logatan_exp(logz) - log(scifort_pi)
+            logsf = log1p_safe(-exp(logcdf))
+        else
+            logsf = scifort_log_two + cauchy_log_small_tail(logz)
+            logcdf = log1p_safe(-exp(logsf))
+        end if
+    end subroutine halfcauchy_tails
+
+    pure subroutine halflogistic_tails(x, params, logcdf, logsf)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive finite scale
+        real(dp), intent(out) :: logcdf !! log lower-tail probability, -infinity at/below support
+        real(dp), intent(out) :: logsf !! log upper-tail probability, zero at/below support
+        real(dp) :: logz
+        logcdf = negative_infinity(0.0_dp)
+        logsf = 0.0_dp
+        if (x <= params(1)) return
+        logz = cauchy_log_distance(x, params)
+        if (logz <= 0.0_dp) then
+            ! F(z) = (1-exp(-z))/(1+exp(-z)); retain log(z) if z underflows.
+            logcdf = log_exponential_mass(logz) - log1pexp(-exp(logz))
+            logsf = log1p_safe(-exp(logcdf))
+        else
+            logsf = scifort_log_two + logistic_lsf(x, params)
+            logcdf = log1p_safe(-exp(logsf))
+        end if
+    end subroutine halflogistic_tails
+
 
     pure function cauchy_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

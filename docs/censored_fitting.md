@@ -2,7 +2,8 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum-Weibull, lognormal, gamma, beta, Cauchy, Laplace, logistic, and both Gumbel distributions.
+minimum-Weibull, lognormal, gamma, beta, Cauchy, Laplace, logistic, half-Cauchy,
+half-logistic, and both Gumbel distributions.
 Lognormal and gamma censored fits currently require fixed location. Beta censored fits require fixed location
 and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -50,6 +51,8 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
 cauchy_censored_loglikelihood(data [, loc, scale])
+halfcauchy_censored_loglikelihood(data [, loc, scale])
+halflogistic_censored_loglikelihood(data [, loc, scale])
 laplace_censored_loglikelihood(data [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
 gumbel_r_censored_loglikelihood(data [, loc, scale])
@@ -101,7 +104,8 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`,
-`beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
+`beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `halfcauchy_fit`,
+`halflogistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
 
 ```fortran
@@ -117,7 +121,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-exponential, Cauchy, Laplace, logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
+exponential, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -130,6 +134,69 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Half-Cauchy and half-logistic details
+
+`halfcauchy_censored_loglikelihood` and `halflogistic_censored_loglikelihood`
+accept `(data [, loc, scale])`; the corresponding `*_censored_nnlf` procedures
+return the negative log-likelihood. Location is the finite lower support
+endpoint, default zero, and scale must be positive and finite, default one.
+The support includes `loc`. Their `halfcauchy_fit` and `halflogistic_fit`
+censored overloads use `[loc, scale]` bounds with the existing `guess`,
+`max_iter`, and `tolerance` options. Either parameter can be free or fixed;
+no fixed-location restriction is imposed.
+
+For `z=(x-loc)/scale >= 0`, these are normalized positive halves of Cauchy
+and logistic distributions. Their densities and upper tails are twice the
+parent density and upper tail. The lower-tail identities are
+
+```text
+half-Cauchy:   F(z) = 2*atan(z)/pi
+half-logistic: F(z) = tanh(z/2) = (1-exp(-z))/(1+exp(-z))
+```
+
+Below support, the density and CDF are zero and the SF is one. At `loc`, the
+CDF is zero, the SF is one, and densities are respectively `2/(pi*scale)`
+and `1/(2*scale)`. Exact endpoint observations are valid. As elsewhere in
+this API, equal finite interval endpoints mean an exact observation.
+Left censoring at or below `loc` and intervals wholly below support have
+zero probability and contribute negative infinity, rather than an invalid
+input status. Intervals crossing `loc` are clipped to support. Infinite
+endpoints follow the usual one-sided censoring rules.
+
+Narrow intervals wholly above support reuse the stable parent interval kernels
+with log normalization `log(2)`. Wide intervals use
+`logsf(lower) + log1p(-exp(logsf(upper)-logsf(lower)))` when the upper
+survival probability is at most half the lower survival probability. This
+retains tiny excluded probabilities for intervals covering almost the whole
+support. Clipped intervals use the half-family CDF.
+Near the boundary, direct arctangent or exponential-increment CDF formulas
+retain finite log probabilities when the standardized distance underflows.
+Near-one SF values use `log1p` of the small CDF. In the opposite tail, the
+implementation directly evaluates the log SF and uses `log1p` for the CDF.
+This avoids subtracting a parent CDF near one half or losing tiny logarithms
+of probabilities near one. The half-logistic endpoint log density is evaluated
+directly to avoid cancellation in the normalization.
+
+The half-Cauchy callbacks retain finite density and SF logs beyond the
+representable standardized range. Half-logistic log densities and SFs whose
+magnitudes exceed binary64 return negative infinity. Existing scalar and
+array APIs retain their behavior. Sample sums must still fit in binary64.
+The bounded local optimizer makes no global-optimality or identifiability
+guarantee. Endpoint data can favor the lower scale bound; all-censored data
+can have flat regions or boundary solutions. Inspect diagnostics and bounds.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    halfcauchy_fit, halflogistic_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.5_dp, 1.2_dp, 2.5_dp], right=[3.5_dp])
+call halfcauchy_fit(data, [0.0_dp, 0.05_dp], [0.0_dp, 10.0_dp], fit)
+call halflogistic_fit(data, [0.0_dp, 0.05_dp], [0.0_dp, 10.0_dp], fit)
+! Both calls fix loc=0; fit%params = [loc, scale].
+```
 
 ## Cauchy details
 

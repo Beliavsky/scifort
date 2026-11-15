@@ -276,6 +276,58 @@ def main():
             expected = reference.loginterval(a,b,'cauchy',1.,loc,scale)
             cases.append(('cauchy_stress',float(expected)))
             stdin += f'11 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    with mp.workdps(700):
+        for number,family in [(12,'halfcauchy'),(13,'halflogistic')]:
+            for _ in range(args.cases):
+                loc, scale = rng.uniform(-3.,3.), 10**rng.uniform(-4.,4.)
+                exact = [loc+scale*rng.uniform(.01,20.) for _ in range(3)]
+                left = [loc+scale*rng.uniform(.01,40.)]
+                right = [loc+scale*rng.uniform(-2.,40.)]
+                intervals=[]
+                for _ in range(2):
+                    a=loc+scale*rng.uniform(.01,1000.)
+                    b=a+scale*10**rng.uniform(-14.,2.)
+                    if b == a: b=math.nextafter(a,math.inf)
+                    intervals.append((a,b))
+                b=loc+scale*10**rng.uniform(-12.,1.)
+                if b <= loc: b=math.nextafter(loc,math.inf)
+                intervals.append((loc-scale,b))
+                value=sum(reference.logpdf(x,family,1.,loc,scale) for x in exact)
+                value+=sum(reference.logcdf(x,family,1.,loc,scale) for x in left)
+                value+=sum(reference.logsf(x,family,1.,loc,scale) for x in right)
+                value+=sum(reference.loginterval(a,b,family,1.,loc,scale) for a,b in intervals)
+                cases.append((family,float(value)))
+                stdin+=f'{number} 1 {loc:.17g} {scale:.17g} 3 1 1 3\n'
+                stdin+='\n'.join(' '.join(f'{x:.17g}' for x in group)
+                                  for group in [exact,left,right,*intervals])+'\n'
+            stress=[
+                (0.,math.nextafter(0.,1.),0.,1.),
+                (-math.nextafter(0.,1.),math.nextafter(0.,1.),0.,1.),
+                (1e-300,2e-300,0.,1e300),
+                (-1e-300,1e-300,0.,1e300),
+                (1000.,math.nextafter(1000.,math.inf),0.,1.),
+                (-1e308,1e308,0.,1e308),
+                (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+                (-1e-300,1e-300,0.,1e-300),
+                (0.,1.,0.,1.),
+                (1.,math.nextafter(1.,math.inf),1.,1.),
+                (-1.,1.,0.,1.),
+                (0.,1000.,0.,1.),
+            ]
+            if family == 'halfcauchy':
+                stress += [
+                    (1e-300,1e300,0.,1.),
+                    (1e300,math.nextafter(1e300,math.inf),0.,1.),
+                    (1e308,math.nextafter(1e308,math.inf),0.,math.nextafter(0.,1.)),
+                    (1e-300,2e-300,0.,math.nextafter(0.,1.)),
+                    (0.,math.nextafter(0.,1.),0.,1e308),
+                ]
+            if family == 'halflogistic':
+                stress += [(1e-300,700.,0.,1.)]
+            for a,b,loc,scale in stress:
+                value=reference.loginterval(a,b,family,1.,loc,scale)
+                cases.append((family+'_stress',float(value)))
+                stdin+=f'{number} 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -294,11 +346,14 @@ def main():
         worst = (0., '')
         laplace_errors = []
         cauchy_errors = []
+        half_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('halfcauchy','halflogistic')):
+                half_errors.append(error)
             if family.startswith('cauchy'):
                 cauchy_errors.append(error)
             if family.startswith('laplace'):
@@ -309,6 +364,8 @@ def main():
               f'max scaled error={max(laplace_errors):.3g}', flush=True)
         print(f'  Cauchy: {len(cauchy_errors)} comparisons; '
               f'max scaled error={max(cauchy_errors):.3g}', flush=True)
+        print(f'  Half-Cauchy/logistic: {len(half_errors)} comparisons; '
+              f'max scaled error={max(half_errors):.3g}', flush=True)
 
 
 if __name__ == '__main__':

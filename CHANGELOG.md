@@ -1,3 +1,14 @@
+## 2026-11-15 - Half-Cauchy and half-logistic censoring
+
+- Add native exact/left/right/interval censored likelihoods and bounded fit
+  overloads for half-Cauchy and half-logistic distributions.
+- Reuse validated Cauchy/logistic kernels above support, clip crossing intervals,
+  and retain tiny boundary probabilities and near-one logarithms directly.
+- Permit free or fixed support location and scale; preserve existing scalar and
+  array APIs and the bounded optimizer's documented local-convergence limits.
+- Add native and independent high-precision/SciPy checks and update the inventory
+  to thirteen censored families, with 96 remaining candidates.
+
 ## 2026-11-15 - Cauchy censored likelihoods and fitting
 
 - Add native Cauchy log-likelihood and negative log-likelihood for exact,
