@@ -6,7 +6,7 @@
 module scifort_censored
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_kinds, only : dp
-    use scifort_constants, only : scifort_log_sqrt_two_pi
+    use scifort_constants, only : scifort_log_sqrt_two_pi, scifort_log_two
     use scifort_empirical_distribution, only : censored_data
     use scifort_math, only : quiet_nan, negative_infinity, positive_infinity, valid_loc_scale, &
         expm1_safe, log1p_safe, log1pexp
@@ -52,11 +52,97 @@ module scifort_censored
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: laplace_censored_loglikelihood, laplace_censored_nnlf
     public :: logistic_censored_loglikelihood, logistic_censored_nnlf
     public :: gumbel_r_censored_loglikelihood, gumbel_r_censored_nnlf
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function laplace_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite mean absolute deviation (default 1)
+        real(dp) :: value, params(2)
+
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, laplace_lpdf, laplace_lcdf, &
+            laplace_lsf, laplace_interval)
+    end function laplace_censored_loglikelihood
+
+    pure function laplace_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! center (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite mean absolute deviation (default 1)
+        real(dp) :: value
+        value = -laplace_censored_loglikelihood(data, loc, scale)
+    end function laplace_censored_nnlf
+
+    pure function laplace_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value
+        value = -abs(location_scale_z(x, params)) - scifort_log_two - log(params(2))
+    end function laplace_lpdf
+
+    pure function laplace_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, z
+        z = location_scale_z(x, params)
+        if (z <= 0.0_dp) then
+            value = z - scifort_log_two
+        else
+            value = log1p_safe(-0.5_dp * exp(-z))
+        end if
+    end function laplace_lcdf
+
+    pure function laplace_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, z
+        z = location_scale_z(x, params)
+        if (z >= 0.0_dp) then
+            value = -z - scifort_log_two
+        else
+            value = log1p_safe(-0.5_dp * exp(z))
+        end if
+    end function laplace_lsf
+
+    pure function laplace_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, left, right, large, small, logscale
+        logscale = log(params(2))
+        if (b <= params(1)) then
+            ! Left-side exponential mass, anchored at the endpoint nearest the center.
+            value = laplace_lcdf(b, params) + &
+                log_exponential_mass(log_distance(b, a) - logscale)
+        else if (a >= params(1)) then
+            value = laplace_lsf(a, params) + &
+                log_exponential_mass(log_distance(b, a) - logscale)
+        else
+            ! Split at the cusp; log-add the two positive half-masses.
+            left = log_exponential_mass(log_distance(params(1), a) - logscale)
+            right = log_exponential_mass(log_distance(b, params(1)) - logscale)
+            large = max(left, right)
+            small = min(left, right)
+            value = large + log1p_safe(0.5_dp * expm1_safe(small - large))
+        end if
+    end function laplace_interval
+
 
     pure function gumbel_r_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

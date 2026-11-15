@@ -190,6 +190,44 @@ def main():
                 cases.append((family+'_stress',float(reference.loginterval(
                     lo,hi,family,1.,center,scale))))
                 stdin+=f'{number} 1 {center:.17g} {scale:.17g} 0 0 0 1\n{lo:.17g} {hi:.17g}\n'
+    with mp.workdps(700):
+        for _ in range(args.cases):
+            loc, scale = rng.uniform(-3., 3.), 10**rng.uniform(-4., 4.)
+            exact = [loc+scale*rng.uniform(-20.,20.) for _ in range(3)]
+            left = [loc+scale*rng.uniform(-40.,40.)]
+            right = [loc+scale*rng.uniform(-40.,40.)]
+            intervals = []
+            for _ in range(3):
+                a = loc+scale*rng.uniform(-1000.,1000.)
+                b = a+scale*10**rng.uniform(-14.,3.)
+                if b == a: b = math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            # Force a center-crossing interval as well as same-tail intervals.
+            intervals.append((loc-scale*10**rng.uniform(-12.,2.),
+                              loc+scale*10**rng.uniform(-12.,2.)))
+            expected = sum(reference.logpdf(x,'laplace',1.,loc,scale) for x in exact)
+            expected += sum(reference.logcdf(x,'laplace',1.,loc,scale) for x in left)
+            expected += sum(reference.logsf(x,'laplace',1.,loc,scale) for x in right)
+            expected += sum(reference.loginterval(a,b,'laplace',1.,loc,scale)
+                            for a,b in intervals)
+            cases.append(('laplace',float(expected)))
+            stdin += f'10 1 {loc:.17g} {scale:.17g} 3 1 1 4\n'
+            stdin += '\n'.join(' '.join(f'{x:.17g}' for x in group)
+                               for group in [exact,left,right,*intervals])+'\n'
+        for a,b,loc,scale in [
+            (0.,math.nextafter(0.,1.),0.,1.),
+            (-math.nextafter(0.,1.),math.nextafter(0.,1.),0.,1.),
+            (1e-300,2e-300,0.,1e300),
+            (-1e-300,1e-300,0.,1e300),
+            (1000.,math.nextafter(1000.,math.inf),0.,1.),
+            (-math.nextafter(1000.,math.inf),-1000.,0.,1.),
+            (-1e308,1e308,0.,1e308),
+            (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+            (-1e-300,1e-300,0.,1e-300),
+        ]:
+            expected = reference.loginterval(a,b,'laplace',1.,loc,scale)
+            cases.append(('laplace_stress',float(expected)))
+            stdin += f'10 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -206,13 +244,18 @@ def main():
         values = list(map(float, run.stdout.split()))
         assert len(values) == len(cases)
         worst = (0., '')
+        laplace_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith('laplace'):
+                laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Laplace: {len(laplace_errors)} comparisons; '
+              f'max scaled error={max(laplace_errors):.3g}', flush=True)
 
 
 if __name__ == '__main__':

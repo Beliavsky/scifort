@@ -1,3 +1,11 @@
+## Laplace censoring (2026-11-15)
+
+- [x] Add stable exact/left/right/interval censored likelihoods for Laplace.
+- [x] Add bounded censored Laplace fits with free or fixed location/scale.
+- [x] Check narrow/extreme intervals and independent high-precision references.
+- [ ] Extend the remaining continuous families in
+  [the censoring inventory](docs/censored_distribution_gaps.md); C ABI work remains deferred.
+
 ## Spherical spline interfaces (2026-11-13)
 
 - [x] Add native fixed-knot `lsq_sphere_bivariate_spline` with weighted fitting,

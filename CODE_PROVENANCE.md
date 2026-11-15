@@ -1,3 +1,21 @@
+## 2026-11-15 - Laplace censored likelihoods and bounded fits
+
+The Laplace callbacks in `src/censored.f90` are original MIT SciFort code,
+implemented independently from the mathematical density and location/scale
+specification in the [SciPy Laplace documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.laplace.html)
+and the [censored likelihood specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html)
+(inspected 2026-11-15). Integrating the density on each side of the center
+gives exponential interval masses; crossing intervals sum the two halves.
+The implementation reuses SciFort's existing standardization, log-distance,
+exponential-increment, and censored accumulation helpers. The bounded fitting
+overload reuses the unchanged SciFort coordinate/pattern optimizer.
+
+No third-party implementation source is imported or translated. Independent
+reference formulas in `tools/generate_censored_reference.py` use mpmath tail
+differences rather than the production interval identities; SciPy is used
+for mixed-sample fit comparisons. No new dependency or C ABI is introduced.
+See [validation](validation/laplace_censored_2026-11-15.md).
+
 ## 2026-11-15 - Real generalized Schur and ordered blocks
 
 The real overloads of `qz`, `ordqz` and `ordqz_factors` use original MIT

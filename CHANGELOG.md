@@ -1,3 +1,14 @@
+## 2026-11-15 - Laplace censored likelihoods and fitting
+
+- Add native Laplace log-likelihood and negative log-likelihood for exact,
+  left-, right-, and interval-censored observations.
+- Add the `laplace_fit(censored_data, ...)` bounded-fit overload, preserving
+  the existing array API and optimizer behavior.
+- Evaluate exponential interval masses directly in the log domain, including
+  center-crossing, adjacent, subnormal-width, and extreme-tail intervals.
+- Add numerical regressions and independent mpmath/SciPy validation; update
+  the censoring inventory to ten supported families and 99 remaining.
+
 ## 2026-11-15 - Real QZ and ordered generalized Schur blocks
 
 - Add real-output `qz` and `ordqz` overloads for real matrix pairs, with real

@@ -2,7 +2,7 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum-Weibull, lognormal, gamma, beta, logistic, and both Gumbel distributions.
+minimum-Weibull, lognormal, gamma, beta, Laplace, logistic, and both Gumbel distributions.
 Lognormal and gamma censored fits currently require fixed location. Beta censored fits require fixed location
 and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,7 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
+laplace_censored_loglikelihood(data [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
 gumbel_r_censored_loglikelihood(data [, loc, scale])
 gumbel_l_censored_loglikelihood(data [, loc, scale])
@@ -99,7 +100,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`,
-`beta_fit`, `logistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
+`beta_fit`, `laplace_fit`, `logistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
 
 ```fortran
@@ -115,7 +116,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-exponential, logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
+exponential, Laplace, logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -128,6 +129,43 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Laplace details
+
+`laplace_censored_loglikelihood(data [, loc, scale])` uses center `loc` and
+positive finite mean absolute deviation `scale`, matching SciPy's Laplace
+parameterization. `laplace_fit` accepts censored data with bounds ordered
+`[loc, scale]`. Neither parameter must be fixed. Equal bounds fix a parameter;
+`guess`, `max_iter`, and `tolerance` retain their existing meanings.
+
+For finite intervals wholly on one side of the center, the mass is the
+nearer endpoint's exponential tail multiplied by
+`1-exp(-(upper-lower)/scale)`. Both terms are evaluated in the log domain.
+Intervals crossing the center use the average of the positive exponential
+masses on the two sides, evaluated with a stable log average. This avoids subtracting nearly equal
+CDFs, preserves adjacent and subnormal-width intervals, and retains finite
+log probabilities when the standardized width underflows. The shared
+standardization and log-distance helpers avoid intermediate displacement
+and width overflow.
+
+Invalid data or parameters return NaN; an empty valid sample returns zero.
+Unrepresentable log densities or log tails return negative infinity. The
+existing binary64 likelihood accumulation limits still apply. Bounded fits
+use the existing local optimizer: convergence does not establish a global
+optimum or a finite unconstrained MLE. In particular, exact observations at
+the center can drive scale to its lower bound, and one-sided censored samples
+can drive location to a box boundary. Existing array-based Laplace likelihood
+and fit procedures retain their behavior.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, laplace_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[-1.0_dp, 0.0_dp, 2.0_dp], right=[3.0_dp])
+call laplace_fit(data, [-5.0_dp, 0.05_dp], [8.0_dp, 10.0_dp], fit)
+! fit%params = [loc, scale]; inspect fit%success and fit%nllf.
+```
 
 ## Gumbel details
 
