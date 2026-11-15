@@ -16,6 +16,8 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'laplace_asymmetric':
+        return -mp.log(shape+1/shape)-mp.log(scale)-(shape*z if z >= 0 else -z/shape)
     if family == 'hypsecant':
         return -mp.log(mp.pi)-mp.log(mp.cosh(z))-mp.log(scale)
     if family == 'halfnorm':
@@ -61,6 +63,9 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'laplace_asymmetric':
+        if z <= 0: return 2*mp.log(shape)-mp.log1p(shape*shape)+z/shape
+        return mp.log1p(-mp.exp(-shape*z)/(1+shape*shape))
     if family == 'hypsecant':
         t=2*mp.atan(mp.exp(-abs(z)))/mp.pi
         return mp.log(t) if z <= 0 else mp.log1p(-t)
@@ -98,6 +103,11 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family == 'laplace_asymmetric':
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if z >= 0: return -mp.log1p(shape*shape)-shape*z
+        return mp.log1p(-shape*shape*mp.exp(z/shape)/(1+shape*shape))
     if family == 'hypsecant':
         return logcdf(-mp.mpf(x),family,shape,-mp.mpf(loc),scale)
     if family == 'halfnorm':
@@ -166,6 +176,7 @@ def main():
         ('gibrat', stats.gibrat, 1., 0., 1.3),
         ('halfnorm', stats.halfnorm, 1., 0., 1.3),
         ('hypsecant', stats.hypsecant, 1., .4, 1.3),
+        ('laplace_asymmetric', stats.laplace_asymmetric, 1.7, .4, 1.3),
     ]:
         value = sum(logpdf(x, family, shape, loc, scale) for x in [.5, 1.2, 2.5])
         value += logcdf(.3, family, shape, loc, scale)
@@ -175,7 +186,10 @@ def main():
         result[family+'_mixed'] = float(value)
         kwargs = {} if family in ('normal','cauchy','laplace','logistic','gumbel_r',
                                   'gumbel_l','hypsecant') else {'floc': 0.}
+        if family == 'laplace_asymmetric': kwargs = {'floc': loc}
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
+        if family == 'laplace_asymmetric':
+            result[family+'_fixed_shape_fit'] = list(distribution.fit(data,f0=shape,floc=loc))
     for family in ['halfcauchy','halflogistic']:
         loc,scale=0.,1.3
         value=sum(logpdf(x,family,1.,loc,scale) for x in [.5,1.2,2.5])

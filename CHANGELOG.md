@@ -1,3 +1,13 @@
+## 2026-11-15 - Asymmetric Laplace censoring
+
+- Add asymmetric Laplace mixed-censoring likelihood/NNLF and bounded fits with
+  free or fixed shape, location, and scale; retain scalar and array APIs.
+- Evaluate asymmetric weights, rates, normalization, and interval increments
+  in the log domain, including binary64 shape extremes and underflowed tails.
+- Validate 282 native checks at checked `-O0` and `-O3`, 117 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to twenty censored families and 89 remaining candidates.
+
 ## 2026-11-15 - Hyperbolic-secant censoring
 
 - Add hyperbolic-secant mixed-censoring likelihood/NNLF and bounded fits with

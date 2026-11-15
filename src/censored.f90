@@ -59,6 +59,7 @@ module scifort_censored
     public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
     public :: halfnorm_censored_loglikelihood, halfnorm_censored_nnlf
     public :: hypsecant_censored_loglikelihood, hypsecant_censored_nnlf
+    public :: laplace_asymmetric_censored_loglikelihood, laplace_asymmetric_censored_nnlf
     public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf
@@ -67,6 +68,142 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function laplace_asymmetric_censored_loglikelihood(data, kappa, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: kappa !! finite positive asymmetry parameter
+        real(dp), intent(in), optional :: loc !! finite cusp location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [kappa, 0.0_dp, 1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (kappa <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, laplace_asymmetric_lpdf, &
+            laplace_asymmetric_lcdf, laplace_asymmetric_lsf, laplace_asymmetric_interval)
+    end function laplace_asymmetric_censored_loglikelihood
+
+    pure function laplace_asymmetric_censored_nnlf(data, kappa, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: kappa !! finite positive asymmetry parameter
+        real(dp), intent(in), optional :: loc !! finite cusp location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -laplace_asymmetric_censored_loglikelihood(data, kappa, loc, scale)
+    end function laplace_asymmetric_censored_nnlf
+
+    pure function laplace_asymmetric_log_hazard(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point on either side of the cusp
+        real(dp), intent(in) :: params(:) !! positive shape, finite cusp, positive scale
+        real(dp) :: value, t, logs
+        value = negative_infinity(0.0_dp)
+        if (x == params(2)) return
+        t = log(params(1))
+        logs = log(params(3))
+        value = log_distance(max(x,params(2)),min(x,params(2)))
+        if (x > params(2)) then
+            value = value+(t-logs)
+        else
+            value = value-(t+logs)
+        end if
+    end function laplace_asymmetric_log_hazard
+
+    pure function laplace_asymmetric_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite cusp, positive scale
+        real(dp) :: value, t
+        t = abs(log(params(1)))
+        value = negative_hazard(laplace_asymmetric_log_hazard(x,params)) &
+            -t-log1p_safe(exp(-t)**2)-log(params(3))
+    end function laplace_asymmetric_lpdf
+
+    pure function laplace_asymmetric_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite cusp, positive scale
+        real(dp) :: value, t, logh, left, right, large, small
+        t = log(params(1))
+        logh = laplace_asymmetric_log_hazard(x,params)
+        left = -log1pexp(-2.0_dp*t)
+        right = -log1pexp(2.0_dp*t)
+        if (x <= params(2)) then
+            value = left+negative_hazard(logh)
+        else
+            value = right+negative_hazard(logh)
+            if (value <= -scifort_log_two) then
+                value = log1p_safe(-exp(value))
+            else
+                ! F = left weight + right weight*(1-exp(-H)); retain underflowed F.
+                right = right+log_hazard_mass(logh)
+                large = max(left,right)
+                small = min(left,right)
+                value = large+log1p_safe(exp(small-large))
+            end if
+        end if
+    end function laplace_asymmetric_lcdf
+
+    pure function laplace_asymmetric_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite cusp, positive scale
+        real(dp) :: value, t, logh, left, right, large, small
+        t = log(params(1))
+        logh = laplace_asymmetric_log_hazard(x,params)
+        left = -log1pexp(-2.0_dp*t)
+        right = -log1pexp(2.0_dp*t)
+        if (x >= params(2)) then
+            value = right+negative_hazard(logh)
+        else
+            value = left+negative_hazard(logh)
+            if (value <= -scifort_log_two) then
+                value = log1p_safe(-exp(value))
+            else
+                ! S = right weight + left weight*(1-exp(-H)); retain underflowed S.
+                left = left+log_hazard_mass(logh)
+                large = max(left,right)
+                small = min(left,right)
+                value = large+log1p_safe(exp(small-large))
+            end if
+        end if
+    end function laplace_asymmetric_lsf
+
+    pure function laplace_asymmetric_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite cusp, positive scale
+        real(dp) :: value, t, logs, left, right, large, small, omitted
+        t = log(params(1))
+        logs = log(params(3))
+        if (b <= params(2)) then
+            value = laplace_asymmetric_lcdf(b,params) &
+                + log_hazard_mass(log_distance(b,a)-(logs+t))
+        else if (a >= params(2)) then
+            value = laplace_asymmetric_lsf(a,params) &
+                + log_hazard_mass(log_distance(b,a)+(t-logs))
+        else
+            omitted = exp(laplace_asymmetric_lcdf(a,params)) &
+                + exp(laplace_asymmetric_lsf(b,params))
+            if (omitted <= 0.5_dp) then
+                value = log1p_safe(-omitted)
+            else
+                ! Add positive masses from each side rather than subtracting near-unit tails.
+                left = -log1pexp(-2.0_dp*t) &
+                    + log_hazard_mass(log_distance(params(2),a)-(logs+t))
+                right = -log1pexp(2.0_dp*t) &
+                    + log_hazard_mass(log_distance(b,params(2))+(t-logs))
+                large = max(left,right)
+                small = min(left,right)
+                value = large+log1p_safe(exp(small-large))
+            end if
+        end if
+    end function laplace_asymmetric_interval
 
     pure function hypsecant_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

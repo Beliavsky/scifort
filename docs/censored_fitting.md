@@ -2,7 +2,7 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum/maximum Weibull, Rayleigh, lognormal, Gibrat, gamma, Erlang, beta, Cauchy, Laplace,
+minimum/maximum Weibull, Rayleigh, lognormal, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
 logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
@@ -57,6 +57,7 @@ halfnorm_censored_loglikelihood(data [, loc, scale])
 hypsecant_censored_loglikelihood(data [, loc, scale])
 halflogistic_censored_loglikelihood(data [, loc, scale])
 laplace_censored_loglikelihood(data [, loc, scale])
+laplace_asymmetric_censored_loglikelihood(data, kappa [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
 gumbel_r_censored_loglikelihood(data [, loc, scale])
 gumbel_l_censored_loglikelihood(data [, loc, scale])
@@ -72,7 +73,8 @@ beta_censored_loglikelihood(data, a, b [, loc, scale])
 
 The corresponding `*_censored_nnlf` procedures return the negative
 log-likelihood. Location defaults to 0 and scale to 1. Weibull shape `c`,
-lognormal shape `s`, gamma shape `a`, or beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
+lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
+and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
 finite. Invalid data or parameters return quiet NaN, including for empty data.
 An empty valid sample has log-likelihood zero. An impossible observation
 contributes negative infinity. No finite penalty is substituted for impossible
@@ -111,7 +113,7 @@ responsibility for the generic procedure.
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `rayleigh_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
-`beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `halfcauchy_fit`,
+`beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
 
@@ -128,8 +130,8 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-Gibrat, exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
-lognormal, `[a, loc, scale]` for gamma and Erlang, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
+Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
+lognormal, `[a, loc, scale]` for gamma and Erlang, `[kappa,loc,scale]` for asymmetric Laplace, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
 the existing optimizer status codes.
@@ -141,6 +143,43 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Asymmetric Laplace details
+
+`laplace_asymmetric_censored_loglikelihood(data, kappa [, loc, scale])`
+and its `_nnlf` companion require finite positive asymmetry `kappa`, finite
+cusp location `loc` (default zero), and positive finite `scale` (default one).
+Support is the entire real line. With `z=(x-loc)/scale`, density is
+`exp(-kappa*z)/(scale*(kappa+1/kappa))` for `z>=0`, and
+`exp(z/kappa)/(scale*(kappa+1/kappa))` for `z<0`. The probability to the left
+of the cusp is `kappa**2/(1+kappa**2)`. Shape one recovers symmetric Laplace;
+reflection exchanges `kappa` with `1/kappa` without changing scale.
+
+The censored kernels evaluate shape weights, normalization, decay rates, and
+interval widths in the log domain, avoiding explicit reciprocals, squared
+shapes, and overflowing raw displacements. When a complementary probability
+would underflow, its log is obtained by adding the positive masses on each
+side rather than subtracting a near-unit tail. Intervals entirely on one side
+use exponential increments; crossing intervals split at the cusp or complement
+both omitted tails, preserving narrow and nearly full-support probabilities.
+These robustness measures belong to the new censored API; existing scalar
+functions retain their current numerical behavior.
+
+`laplace_asymmetric_fit` accepts bounds and returns parameters in
+`[kappa,loc,scale]` order. Any parameter may be free or fixed using equal bounds.
+Fits are bounded local searches, without uniqueness or global-optimality
+guarantees; use scientifically justified bounds.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    laplace_asymmetric_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[-2.0_dp,-1.0_dp,1.0_dp,3.0_dp])
+call laplace_asymmetric_fit(data, [2.0_dp,0.0_dp,0.05_dp], [2.0_dp,0.0_dp,10.0_dp], fit)
+! Fixed shape 2 and location zero; fitted scale is approximately 2.375.
+```
 
 ## Hyperbolic-secant details
 
@@ -446,7 +485,8 @@ call cauchy_fit(data, [-5.0_dp, 0.05_dp], [8.0_dp, 10.0_dp], fit)
 
 ## Laplace details
 
-`laplace_censored_loglikelihood(data [, loc, scale])` uses center `loc` and
+`laplace_censored_loglikelihood(data [, loc, scale])
+laplace_asymmetric_censored_loglikelihood(data, kappa [, loc, scale])` uses center `loc` and
 positive finite mean absolute deviation `scale`, matching SciPy's Laplace
 parameterization. `laplace_fit` accepts censored data with bounds ordered
 `[loc, scale]`. Neither parameter must be fixed. Equal bounds fix a parameter;

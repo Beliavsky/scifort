@@ -1,3 +1,25 @@
+## 2026-11-15 - Asymmetric Laplace censored likelihoods and fitting
+
+The new asymmetric Laplace callbacks in `src/censored.f90` are original MIT
+SciFort code, independently implemented from the density and location/scale
+specification in the [SciPy asymmetric Laplace mathematical documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.laplace_asymmetric.html),
+inspected 2026-11-15. Integrating the two exponential branches gives left/right
+weights `kappa**2/(1+kappa**2)` and `1/(1+kappa**2)`, with rates
+`1/(scale*kappa)` and `kappa/scale`. The callbacks evaluate these quantities
+through logs and softplus; positive-piece sums retain log probabilities when
+complementing a rounded near-unit tail would lose them. Same-side intervals
+use log exponential increments, while crossing intervals add the two pieces
+or complement both omitted tails. Grouping log rates before adding log widths
+retains accuracy when shape and scale compensate.
+No upstream implementation code was imported or translated. Existing SciFort
+log-distance, softplus, log-hazard mass, and guarded negative-hazard helpers are
+reused without modification, retaining their existing provenance. The bounded
+fit overload reuses the existing optimizer and preserves the array-specific
+routine. Independent mpmath calculations use direct density/CDF/SF definitions;
+SciPy supplies fixed-location and fixed-shape fit comparisons. No dependency,
+C ABI, or third-party license text is added. See the
+[validation report](validation/asymmetric_laplace_censored_2026-11-15.md).
+
 ## 2026-11-15 - Hyperbolic-secant censored likelihoods and fitting
 
 The new hyperbolic-secant callbacks in `src/censored.f90` are original MIT

@@ -18,6 +18,7 @@ module scifort_stats
         halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf, &
         halfnorm_censored_loglikelihood, halfnorm_censored_nnlf, &
         hypsecant_censored_loglikelihood, hypsecant_censored_nnlf, &
+        laplace_asymmetric_censored_loglikelihood, laplace_asymmetric_censored_nnlf, &
         halflogistic_censored_loglikelihood, halflogistic_censored_nnlf, &
         cauchy_censored_loglikelihood, cauchy_censored_nnlf, &
         laplace_censored_loglikelihood, laplace_censored_nnlf, &
@@ -716,6 +717,7 @@ module scifort_stats
     public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
     public :: halfnorm_censored_loglikelihood, halfnorm_censored_nnlf
     public :: hypsecant_censored_loglikelihood, hypsecant_censored_nnlf
+    public :: laplace_asymmetric_censored_loglikelihood, laplace_asymmetric_censored_nnlf
     public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf

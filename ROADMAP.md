@@ -1,3 +1,11 @@
+## Asymmetric Laplace censoring (2026-11-15)
+
+- [x] Add exact/left/right/interval likelihoods and bounded shape/location/scale fits.
+- [x] Validate the symmetric Laplace identity, reciprocal-shape reflection,
+  tiny/nearly unit interval masses, and extreme shapes and scales.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md);
+  C ABI expansion remains deferred.
+
 ## Hyperbolic-secant censoring (2026-11-15)
 
 - [x] Add exact/left/right/interval likelihoods and bounded location/scale fits.
