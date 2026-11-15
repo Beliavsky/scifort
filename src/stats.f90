@@ -16,6 +16,7 @@ module scifort_stats
         rayleigh_censored_loglikelihood, rayleigh_censored_nnlf, &
         weibull_max_censored_loglikelihood, weibull_max_censored_nnlf, &
         halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf, &
+        halfnorm_censored_loglikelihood, halfnorm_censored_nnlf, &
         halflogistic_censored_loglikelihood, halflogistic_censored_nnlf, &
         cauchy_censored_loglikelihood, cauchy_censored_nnlf, &
         laplace_censored_loglikelihood, laplace_censored_nnlf, &
@@ -712,6 +713,7 @@ module scifort_stats
     public :: rayleigh_censored_loglikelihood, rayleigh_censored_nnlf
     public :: weibull_max_censored_loglikelihood, weibull_max_censored_nnlf
     public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
+    public :: halfnorm_censored_loglikelihood, halfnorm_censored_nnlf
     public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf

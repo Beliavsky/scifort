@@ -16,6 +16,8 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'halfnorm':
+        return mp.log(2/mp.pi)/2-mp.log(scale)-z*z/2 if z >= 0 else mp.ninf
     if family == 'weibull_max':
         if x > loc: return mp.ninf
         if x == loc:
@@ -57,6 +59,8 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'halfnorm':
+        return mp.log(mp.erf(z/mp.sqrt(2))) if z > 0 else mp.ninf
     if family == 'weibull_max':
         return -(-z)**shape if z < 0 else mp.mpf(0)
     if family == 'rayleigh':
@@ -89,6 +93,9 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family == 'halfnorm':
+        z = (mp.mpf(x)-mp.mpf(loc))/mp.mpf(scale)
+        return mp.log(mp.erfc(z/mp.sqrt(2))) if z > 0 else mp.mpf(0)
     if family == 'gibrat': family, shape = 'lognormal', 1.
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
@@ -150,6 +157,7 @@ def main():
         ('gamma', stats.gamma, .6, 0., 2.3),
         ('erlang', stats.erlang, 2., 0., 2.3),
         ('gibrat', stats.gibrat, 1., 0., 1.3),
+        ('halfnorm', stats.halfnorm, 1., 0., 1.3),
     ]:
         value = sum(logpdf(x, family, shape, loc, scale) for x in [.5, 1.2, 2.5])
         value += logcdf(.3, family, shape, loc, scale)

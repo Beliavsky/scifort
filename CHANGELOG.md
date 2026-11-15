@@ -1,3 +1,13 @@
+## 2026-11-15 - Half-normal censoring
+
+- Add half-normal mixed-censoring likelihood/NNLF and bounded fits with free
+  or fixed location and scale; retain the scalar and array APIs.
+- Reuse guarded standardization and narrow normal-interval quadrature, with
+  direct log tails and stable survival differences for nearly unit masses.
+- Validate 138 native checks at checked `-O0` and `-O3`, 112 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to eighteen censored families and 91 remaining candidates.
+
 ## 2026-11-15 - Gibrat censoring
 
 - Add Gibrat mixed-censoring likelihood/NNLF and bounded fit overloads using

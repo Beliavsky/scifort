@@ -1,3 +1,21 @@
+## 2026-11-15 - Half-normal censored likelihoods and fitting
+
+The new half-normal callbacks in `src/censored.f90` are original MIT SciFort
+code, independently implemented from the density and location/scale definition
+in the [SciPy half-normal mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.halfnorm.html),
+inspected 2026-11-15. Integrating the specified density gives
+`F(z)=erf(z/sqrt(2))` and `S(z)=erfc(z/sqrt(2))` for `z>=0`.
+No upstream implementation code was imported or translated. The callbacks
+reuse existing SciFort guarded location/scale standardization, log-distance,
+log-complement, normal log-survival, and three-point narrow normal-interval
+quadrature helpers. The latter's existing provenance and DLMF quadrature
+reference continue to apply. The bounded fitting overload reuses the existing
+coordinate/pattern optimizer and retains the original array-specific routine.
+Independent mpmath references evaluate erf/erfc differences and densities;
+SciPy supplies a separate fixed-location fit comparison. No new dependency,
+C ABI, or third-party license text is introduced. See the
+[validation report](validation/halfnorm_censored_2026-11-15.md).
+
 ## 2026-11-15 - Gibrat censored likelihoods and fitting
 
 The new Gibrat entry points in `src/censored.f90` and `src/fit.f90` reuse

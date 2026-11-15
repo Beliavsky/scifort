@@ -1,3 +1,11 @@
+## Half-normal censoring (2026-11-15)
+
+- [x] Add exact/left/right/interval likelihoods and bounded fitting.
+- [x] Handle finite endpoint density, narrow/tiny intervals, near-one tails,
+  and overflowing raw displacements using existing validated helpers.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md);
+  C ABI expansion remains deferred.
+
 ## Gibrat censoring (2026-11-15)
 
 - [x] Reuse lognormal exact/left/right/interval kernels at shape 1.

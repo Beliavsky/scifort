@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, Gibrat, gamma, Erlang, beta, Cauchy, Laplace,
-logistic, half-Cauchy, half-logistic, and both Gumbel distributions.
+logistic, half-Cauchy, half-logistic, half-normal, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -53,6 +53,7 @@ normal_censored_loglikelihood(data [, loc, scale])
 rayleigh_censored_loglikelihood(data [, loc, scale])
 cauchy_censored_loglikelihood(data [, loc, scale])
 halfcauchy_censored_loglikelihood(data [, loc, scale])
+halfnorm_censored_loglikelihood(data [, loc, scale])
 halflogistic_censored_loglikelihood(data [, loc, scale])
 laplace_censored_loglikelihood(data [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
@@ -110,7 +111,7 @@ responsibility for the generic procedure.
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `rayleigh_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `halfcauchy_fit`,
-`halflogistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
+`halflogistic_fit`, `halfnorm_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
 
 ```fortran
@@ -126,7 +127,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-Gibrat, exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
+Gibrat, exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, half-normal, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma and Erlang, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -139,6 +140,39 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Half-normal details
+
+`halfnorm_censored_loglikelihood(data [, loc, scale])` and its `_nnlf`
+companion use lower support endpoint `loc` (default zero) and positive normal
+scale `scale` (default one). For `z=(x-loc)/scale >= 0`, density is
+`sqrt(2/pi)*exp(-z*z/2)/scale`, CDF is `erf(z/sqrt(2))`, and SF is
+`erfc(z/sqrt(2))`. At the support endpoint the density is finite and positive,
+CDF is zero, and SF is one. Below support the density and CDF are zero.
+
+The likelihood uses direct log tails. Near support it evaluates the normal
+interval from `loc` to `x`, retaining its log width even when standardization
+underflows. The complementary tail uses `log1p` so tiny excluded probabilities
+survive near unit mass. Narrow intervals reuse the normal density quadrature;
+wide intervals use stable survival differences. Raw displacement overflow is
+avoided by the existing guarded location/scale standardization helper.
+These robustness measures belong to the new censored API; the existing scalar
+functions retain their current numerical behavior.
+
+`halfnorm_fit` accepts bounds and returns parameters in `[loc,scale]` order.
+Either parameter may be free or fixed using equal bounds. Exact observations
+at the support endpoint are allowed. Fits remain bounded local searches,
+without a guarantee of a global optimum or an unconstrained MLE.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, halfnorm_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[1.0_dp,2.0_dp,3.0_dp])
+call halfnorm_fit(data, [0.0_dp,0.05_dp], [0.0_dp,10.0_dp], fit)
+! Fixed location zero; fitted scale is approximately sqrt(14/3).
+```
 
 ## Gibrat details
 

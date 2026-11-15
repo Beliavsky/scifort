@@ -57,6 +57,7 @@ module scifort_censored
     public :: rayleigh_censored_loglikelihood, rayleigh_censored_nnlf
     public :: weibull_max_censored_loglikelihood, weibull_max_censored_nnlf
     public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
+    public :: halfnorm_censored_loglikelihood, halfnorm_censored_nnlf
     public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf
@@ -65,6 +66,117 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function halfnorm_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite normal scale, default one
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, halfnorm_lpdf, halfnorm_lcdf, &
+            halfnorm_lsf, halfnorm_interval)
+    end function halfnorm_censored_loglikelihood
+
+    pure function halfnorm_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite normal scale, default one
+        real(dp) :: value
+        value = -halfnorm_censored_loglikelihood(data, loc, scale)
+    end function halfnorm_censored_nnlf
+
+    pure function halfnorm_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite support endpoint and positive finite scale
+        real(dp) :: value, z
+        value = negative_infinity(0.0_dp)
+        if (x < params(1)) return
+        z = location_scale_z(x, params)
+        if (z > sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+        value = (-0.5_dp*z)*z + (scifort_log_two-scifort_log_sqrt_two_pi) &
+            - log(params(2))
+    end function halfnorm_lpdf
+
+    pure function halfnorm_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite support endpoint and positive finite scale
+        real(dp) :: value, other
+        call halfnorm_tails(x, params, value, other)
+    end function halfnorm_lcdf
+
+    pure function halfnorm_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite support endpoint and positive finite scale
+        real(dp) :: value, other
+        call halfnorm_tails(x, params, other, value)
+    end function halfnorm_lsf
+
+    pure subroutine halfnorm_tails(x, params, logcdf, logsf)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite support endpoint and positive finite scale
+        real(dp), intent(out) :: logcdf !! log lower-tail probability, -infinity at/below support
+        real(dp), intent(out) :: logsf !! log upper-tail probability, zero at/below support
+        real(dp) :: logz, z
+        logcdf = negative_infinity(0.0_dp)
+        logsf = 0.0_dp
+        if (x <= params(1)) return
+        logz = log_distance(x, params(1))-log(params(2))
+        if (logz <= 0.0_dp) then
+            if (logz <= log(0.01_dp)) then
+                ! F(x)=2*P(loc < N(loc,scale) <= x); retain log widths below tiny.
+                logcdf = scifort_log_two + normal_small_interval(0.0_dp, logz)
+            else
+                z = location_scale_z(x, params)
+                logcdf = log(erf(z/sqrt(2.0_dp)))
+            end if
+            logsf = log1p_safe(-exp(logcdf))
+        else
+            z = location_scale_z(x, params)
+            logsf = scifort_log_two + normal_logsf(z)
+            logcdf = log1p_safe(-exp(logsf))
+        end if
+    end subroutine halfnorm_tails
+
+    pure function halfnorm_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! finite support endpoint and positive finite scale
+        real(dp) :: value, lower_sf, upper_sf, z, logscaled
+        value = negative_infinity(0.0_dp)
+        if (b <= params(1)) return
+        if (a <= params(1)) then
+            value = halfnorm_lcdf(b, params)
+            return
+        end if
+        lower_sf = halfnorm_lsf(a, params)
+        if (.not. ieee_is_finite(lower_sf)) return
+        upper_sf = halfnorm_lsf(b, params)
+        if (upper_sf-lower_sf <= -scifort_log_two) then
+            ! Preserve tiny excluded probabilities for nearly full-support intervals.
+            value = lower_sf + log1p_safe(-exp(upper_sf-lower_sf))
+        else
+            z = location_scale_z(a, params)
+            logscaled = log_distance(b,a)-log(params(2))
+            value = normal_small_interval(z,logscaled)
+            if (ieee_is_nan(value)) then
+                value = tail_interval(a,b,params,halfnorm_lcdf,halfnorm_lsf)
+            else
+                value = value+scifort_log_two
+            end if
+        end if
+    end function halfnorm_interval
 
     pure function gibrat_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

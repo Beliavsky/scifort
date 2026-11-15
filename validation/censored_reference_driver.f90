@@ -7,6 +7,7 @@ program censored_reference_driver
         lognormal_censored_loglikelihood, gamma_censored_loglikelihood, &
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
+        halfnorm_censored_loglikelihood, &
         beta_censored_loglikelihood, logistic_censored_loglikelihood, &
         laplace_censored_loglikelihood, cauchy_censored_loglikelihood, &
         halfcauchy_censored_loglikelihood, halflogistic_censored_loglikelihood, &
@@ -64,6 +65,8 @@ program censored_reference_driver
             value = erlang_censored_loglikelihood(data,c,loc,scale)
         case (17)
             value = gibrat_censored_loglikelihood(data,loc,scale)
+        case (18)
+            value = halfnorm_censored_loglikelihood(data,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

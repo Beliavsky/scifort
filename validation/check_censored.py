@@ -387,11 +387,11 @@ def main():
             expected=reference.loginterval(a,b,'weibull_max',shape,loc,scale)
             cases.append(('weibull_max_stress',float(expected)))
             stdin+=f'15 {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
-    for number, family in [(16,'erlang'),(17,'gibrat')]:
+    for number, family in [(16,'erlang'),(17,'gibrat'),(18,'halfnorm')]:
         for _ in range(args.cases):
             loc, scale = rng.uniform(-3., 3.), 10**rng.uniform(-4., 4.)
             c = 10**rng.uniform(-1., 1.) if number >= 3 else 1.
-            if family == 'gibrat': c = 1.
+            if family in ('gibrat','halfnorm'): c = 1.
             exact = [loc+scale*rng.uniform(.1, 4.) for _ in range(3)]
             left = [loc+scale*rng.uniform(.1, 5.)]
             right = [loc+scale*rng.uniform(.1, 5.)]
@@ -420,6 +420,24 @@ def main():
             expected=reference.loginterval(a,b,'gibrat',1.,loc,scale)
             cases.append(('gibrat_stress',float(expected)))
             stdin+=f'17 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    with mp.workdps(800):
+        for a,b,loc,scale in [
+            (0.,math.nextafter(0.,1.),0.,1.),
+            (-math.nextafter(0.,1.),math.nextafter(0.,1.),0.,1.),
+            (1e-300,2e-300,0.,1e300),
+            (-1e-300,1e-300,0.,1e300),
+            (40.,math.nextafter(40.,math.inf),0.,1.),
+            (-1e308,1e308,-1.1e308,1e308),
+            (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+            (1e-20,10.,0.,1.),
+            (0.,1e308,0.,1.5e308),
+            (.01,math.nextafter(.01,math.inf),0.,1.),
+            (1.,math.nextafter(1.,math.inf),0.,1.),
+            (-1.,1.,0.,1.),
+        ]:
+            expected=reference.loginterval(a,b,'halfnorm',1.,loc,scale)
+            cases.append(('halfnorm_stress',float(expected)))
+            stdin+=f'18 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -442,11 +460,14 @@ def main():
         hazard_errors = []
         erlang_errors = []
         gibrat_errors = []
+        halfnorm_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith('halfnorm'):
+                halfnorm_errors.append(error)
             if family.startswith('gibrat'):
                 gibrat_errors.append(error)
             if family.startswith('erlang'):
@@ -463,6 +484,8 @@ def main():
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
         print(f'  Erlang: {len(erlang_errors)} comparisons; '
               f'max scaled error={max(erlang_errors):.3g}', flush=True)
+        print(f'  Half-normal: {len(halfnorm_errors)} comparisons; '
+              f'max scaled error={max(halfnorm_errors):.3g}', flush=True)
         print(f'  Gibrat: {len(gibrat_errors)} comparisons; '
               f'max scaled error={max(gibrat_errors):.3g}', flush=True)
         print(f'  Laplace: {len(laplace_errors)} comparisons; '
