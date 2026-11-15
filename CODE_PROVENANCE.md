@@ -1,3 +1,35 @@
+## 2026-11-14 - Modern near-least-squares stopping correction
+
+The four existing fixed-knot branches in `src/interpolate_curfit_core.f90`
+now enter their finite-penalty search when the least-squares residual is below
+the target, even if already inside the residual tolerance. Other task modes,
+including legacy continuation, are unchanged. This is a targeted correction
+to the existing attributed FITPACK adaptation; its MIT AND BSD-3-Clause
+header, Federico Perini copyright and full perazz license remain intact.
+No new upstream numerical kernel or dependency is imported.
+
+Before changing the stopping condition, the exact cached SciPy v1.18.0
+`_make_splrep_impl`, `root_rati`, `fprati`, `disc`, `F` and `Fperiodic` were
+inspected alongside existing native and perazz root/least-squares paths.
+[Upstream source](https://github.com/scipy/scipy/blob/v1.18.0/scipy/interpolate/_fitpack_repro.py)
+SHA-256: `82449ae292bb361675439b422cec6c084f9fbfa6519eabec06b1009c51a818bd`.
+The full source license was inspected and remains retained in
+`LICENSES/scipy-generate-knots-BSD-3-Clause.txt`. The new condition reflects
+the modern reference's finite-penalty evaluation rather than translating a
+new solver. Native root safeguarding is preserved; invalid or nonconverged
+reference output is not adopted merely for parity.
+
+`test/test_interpolate_modern_root.f90` and
+`validation/check_modern_root.py` are original MIT tests. Test constants come
+from the unchanged hash-verified reference root control flow with independently
+constructed NumPy augmented least-squares solves and B-spline evaluation.
+The Python checker executes only the named cached reference definitions;
+no reference source is patched or committed. Periodic QR initial scales are
+computed from positive dense QR diagonals of folded cyclic design matrices.
+Ordinary cases additionally compare against public SciPy 1.15.3 constructors.
+No complete upstream suite or blanket bitwise compatibility is claimed.
+See the [validation record](validation/modern_root_2026-11-14.md).
+
 ## 2026-11-14 - Short cyclic scalar spline correction
 
 `src/interpolate_curfit_core.f90` retains its MIT AND BSD-3-Clause notices

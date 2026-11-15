@@ -66,6 +66,10 @@ differs from SciPy v1.18.0's stale exteriors within refinement batches and at
 some capacity stops, so exact periodic selection-path parity is not claimed.
 Nonperiodic selected knots match the independent SciPy cases in validation.
 
+The [near-least-squares early exit](interpolate_modern_root.md) is now corrected
+for feasible simple-knot modern fits. General fallback and root-history
+compatibility remain separate audits.
+
 Even with matching knots, coefficients and higher derivatives need not match
 SciPy to roundoff. Existing scalar/parametric smoothing root searches can
 stop at different residuals within the permitted band. The validation checks

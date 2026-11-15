@@ -1,3 +1,13 @@
+## 2026-11-14 - Modern smoothing near the least-squares limit
+
+- Evaluate finite smoothing penalties for feasible supplied-knot modern fits
+  just above the least-squares residual, instead of returning unpenalized
+  coefficients solely because that residual is already inside the tolerance.
+- Cover scalar/shared, ordinary/periodic fits and degrees 1-5; preserve legacy
+  tuple behavior, polynomial/constant limits and feasibility allowances.
+- Add coefficient/highest-derivative regressions and independent rational-root
+  comparisons with identical knots, including public SciPy checks.
+
 ## 2026-11-14 - Periodic scalar smoothing with short cyclic bases
 
 - Correct ordered cyclic coefficient extension in both scalar FITPACK solves.

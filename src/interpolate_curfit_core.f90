@@ -839,8 +839,9 @@ contains
                 exit main_loop
             end if
 
+            ! Feasible modern fixed fits still sample a finite smoothing penalty.
             fpms = fp - s
-            if (abs(fpms) < acc) then
+            if (abs(fpms) < acc .and. (.not.fixed .or. fpms>=zero)) then
                 accepted = fp_true
                 exit main_loop
             end if
@@ -1964,8 +1965,9 @@ contains
             ! test whether the approximation sinf(u) is an acceptable solution.
             if (iopt < 0) return ! was done already
 
+            ! Feasible modern fixed fits still sample a finite smoothing penalty.
             fpms = fp - s
-            if (abs(fpms) < acc) return
+            if (abs(fpms) < acc .and. (.not.fixed .or. fpms>=zero)) return
 
             ! if f(p=inf) < s accept the choice of knots.
             if (fpms < zero) exit main_loop
@@ -2572,8 +2574,9 @@ contains
         end do
 
         ! success! if the approximation sinf(x) is an acceptable solution.
+        ! Feasible modern fixed fits still sample a finite smoothing penalty.
         fpms = fp-s
-        if (iopt<0 .or. abs(fpms)<acc) return
+        if (iopt<0 .or. (abs(fpms)<acc .and. (.not.fixed .or. fpms>=zero))) return
 
         ! if f(p=inf) < s accept the choice of knots.
         if (fpms<zero) exit update_knots
@@ -3396,8 +3399,9 @@ contains
           end do
 
           ! test whether the approximation sinf(u) is an acceptable solution.
+          ! Feasible modern fixed fits still sample a finite smoothing penalty.
           fpms = fp-s
-          if (iopt<0 .or. abs(fpms)<acc) return
+          if (iopt<0 .or. (abs(fpms)<acc .and. (.not.fixed .or. fpms>=zero))) return
 
           ! if f(p=inf)<s accept the choice of knots.
           if (fpms<zero) exit find_knots

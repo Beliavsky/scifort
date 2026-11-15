@@ -7274,7 +7274,8 @@ see the [periodic guide](interpolate_periodic_constructors.md) for closed input,
 residuals, accepted full periodic knots, capacities, and extrapolation policies.
 Nonperiodic modern selection is independently checked against SciPy; exact
 periodic selection and root-iteration parity remain unsupported.
-See the [constructor guide](interpolate_make_splrep.md).
+See the [constructor guide](interpolate_make_splrep.md) and
+[near-least-squares stopping contract](interpolate_modern_root.md).
 
 `splrep(x,y,w=...,k=...,s=positive)` now selects knots and fits a nonperiodic
 scalar smoothing spline without the optional FITPACK package. Degrees 1-5,

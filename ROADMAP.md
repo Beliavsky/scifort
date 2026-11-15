@@ -3617,3 +3617,18 @@ status-3 failures before further feature expansion.
 
 See the [validation record](validation/periodic_short_basis_2026-11-14.md).
 C ABI and wrappers remain deferred.
+
+## 2026-11-14 -- Approved modern smoothing compatibility audit
+
+The user approved isolating supplied-knot modern smoothing and correcting
+reproducible root-search differences before increasing size limits.
+
+- [x] Compare identical knots, scalar/shared fits and ordinary/periodic boundaries
+  with inspected reference root control flow and independent linear solves.
+- [x] Correct the feasible near-least-squares early exit in modern paths while
+  preserving legacy tuple stopping and numerical feasibility safeguards.
+- [x] Add fixed numerical references, highest-derivative and nearby-target tests.
+- [ ] General fallback root-search parity, broader conditioning audits and exact
+  periodic selection parity remain separate work. C ABI and wrappers are deferred.
+
+See the [modern root guide](docs/interpolate_modern_root.md).
