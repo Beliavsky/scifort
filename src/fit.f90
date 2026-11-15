@@ -452,6 +452,10 @@ module scifort_fit
         module procedure gamma_fit, gamma_fit_censored
     end interface gamma_fit
 
+    interface erlang_fit
+        module procedure erlang_fit, erlang_fit_censored
+    end interface erlang_fit
+
     interface beta_fit
         module procedure beta_fit, beta_fit_censored
     end interface beta_fit
@@ -714,6 +718,20 @@ contains
         call bounded_fit([real(dp) ::], family_gamma, lower, upper, result, guess, &
             [.false., .false., .false.], max_iter, tolerance, data)
     end subroutine gamma_fit_censored
+
+    subroutine erlang_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds for shape, location, scale
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; location must be fixed
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting shape, location, scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+
+        ! Preserve gamma's validation, endpoint restriction, and continuous shape search.
+        call gamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+    end subroutine erlang_fit_censored
 
     subroutine beta_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none

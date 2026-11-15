@@ -387,6 +387,28 @@ def main():
             expected=reference.loginterval(a,b,'weibull_max',shape,loc,scale)
             cases.append(('weibull_max_stress',float(expected)))
             stdin+=f'15 {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    for number, family in [(16,'erlang')]:
+        for _ in range(args.cases):
+            loc, scale = rng.uniform(-3., 3.), 10**rng.uniform(-4., 4.)
+            c = 10**rng.uniform(-1., 1.) if number >= 3 else 1.
+            exact = [loc+scale*rng.uniform(.1, 4.) for _ in range(3)]
+            left = [loc+scale*rng.uniform(.1, 5.)]
+            right = [loc+scale*rng.uniform(.1, 5.)]
+            intervals = []
+            for _ in range(2):
+                a = loc+scale*rng.uniform(-30. if number == 1 else .01, 30.)
+                b = a+scale*10**rng.uniform(-12., .5)
+                if b == a:
+                    b = math.nextafter(a, math.inf)
+                intervals.append((a,b))
+            value = sum(reference.logpdf(x, family, c, loc, scale) for x in exact)
+            value += sum(reference.logcdf(x, family, c, loc, scale) for x in left)
+            value += sum(reference.logsf(x, family, c, loc, scale) for x in right)
+            value += sum(reference.loginterval(a,b,family,c,loc,scale) for a,b in intervals)
+            cases.append((family, float(value)))
+            stdin += f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            stdin += '\n'.join(' '.join(f'{x:.17g}' for x in group)
+                                for group in [exact,left,right,*intervals])+'\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -407,11 +429,14 @@ def main():
         cauchy_errors = []
         half_errors = []
         hazard_errors = []
+        erlang_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith('erlang'):
+                erlang_errors.append(error)
             if family.startswith(('rayleigh','weibull_max')):
                 hazard_errors.append(error)
             if family.startswith(('halfcauchy','halflogistic')):
@@ -422,6 +447,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Erlang: {len(erlang_errors)} comparisons; '
+              f'max scaled error={max(erlang_errors):.3g}', flush=True)
         print(f'  Laplace: {len(laplace_errors)} comparisons; '
               f'max scaled error={max(laplace_errors):.3g}', flush=True)
         print(f'  Cauchy: {len(cauchy_errors)} comparisons; '

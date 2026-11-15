@@ -2,10 +2,10 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum/maximum Weibull, Rayleigh, lognormal, gamma, beta, Cauchy, Laplace,
+minimum/maximum Weibull, Rayleigh, lognormal, gamma, Erlang, beta, Cauchy, Laplace,
 logistic, half-Cauchy, half-logistic, and both Gumbel distributions.
-Lognormal and gamma censored fits currently require fixed location. Beta censored fits require fixed location
-and scale. The definitions follow SciPy's
+Lognormal, gamma, and Erlang censored fits currently require fixed location.
+Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
 and [censored fitting likelihood](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html).
 Existing array-based likelihood and fitting calls are unchanged.
@@ -63,6 +63,7 @@ weibull_censored_loglikelihood(data, c [, loc, scale])
 weibull_max_censored_loglikelihood(data, c [, loc, scale])
 lognormal_censored_loglikelihood(data, s [, loc, scale])
 gamma_censored_loglikelihood(data, a [, loc, scale])
+erlang_censored_loglikelihood(data, a [, loc, scale])
 beta_censored_loglikelihood(data, a, b [, loc, scale])
 ```
 
@@ -106,7 +107,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
-`rayleigh_fit`, `lognormal_fit`, `gamma_fit`,
+`rayleigh_fit`, `lognormal_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -125,7 +126,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
 exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
-lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
+lognormal, `[a, loc, scale]` for gamma and Erlang, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
 the existing optimizer status codes.
@@ -137,6 +138,32 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Erlang details
+
+`erlang_censored_loglikelihood(data, a [, loc, scale])` and its `_nnlf`
+companion reuse the gamma censored kernels, including stable interval masses
+and extreme log tails. Shape `a` must be finite and positive; location defaults
+to zero and scale to one. As in the existing Erlang scalar/array API, positive
+noninteger shapes are accepted without warnings. The mathematical Erlang
+special case has integer shape; fitting searches shape continuously, as SciPy
+does. Fix shape with equal bounds when an integer shape is required.
+
+`erlang_fit` accepts bounds in `[a,loc,scale]` order and requires fixed location.
+It excludes exact observations at the support endpoint, including equal-endpoint
+intervals, matching the current gamma fit restriction. Likelihood evaluation
+itself retains the gamma endpoint density contract: positive infinity for
+`a<1`, `1/scale` for `a=1`, and zero for `a>1` at `x=loc`.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, erlang_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[1.0_dp,2.0_dp,3.0_dp],right=[4.0_dp])
+call erlang_fit(data, [2.0_dp,0.0_dp,0.05_dp], [2.0_dp,0.0_dp,10.0_dp], fit)
+! Fixed integer shape 2, fixed location 0, free scale.
+```
 
 ## Rayleigh and Weibull maximum details
 
@@ -409,7 +436,8 @@ tail limits still apply; bounded convergence does not establish identifiability.
 
 ## Gamma details
 
-`gamma_censored_loglikelihood(data, a [, loc, scale])` uses positive shape
+`gamma_censored_loglikelihood(data, a [, loc, scale])
+erlang_censored_loglikelihood(data, a [, loc, scale])` uses positive shape
 `a` and inverse-rate scale, matching the existing gamma API. At `a=1`, it
 calls the exponential censored likelihood, preserving that identity exactly.
 An exact observation at `loc` contributes positive infinity for `a<1`,

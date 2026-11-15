@@ -51,6 +51,7 @@ module scifort_censored
     public :: weibull_censored_loglikelihood, weibull_censored_nnlf
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
+    public :: erlang_censored_loglikelihood, erlang_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
     public :: rayleigh_censored_loglikelihood, rayleigh_censored_nnlf
     public :: weibull_max_censored_loglikelihood, weibull_max_censored_nnlf
@@ -63,6 +64,27 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Erlang is gamma, including the existing positive noninteger-shape convention.
+    pure function erlang_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive shape, conventionally an integer
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = gamma_censored_loglikelihood(data, a, loc, scale)
+    end function erlang_censored_loglikelihood
+
+    pure function erlang_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive shape, conventionally an integer
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -erlang_censored_loglikelihood(data, a, loc, scale)
+    end function erlang_censored_nnlf
 
     pure function rayleigh_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

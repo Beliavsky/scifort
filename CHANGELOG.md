@@ -1,3 +1,13 @@
+## 2026-11-15 - Erlang censoring
+
+- Add Erlang mixed-censoring likelihood/NNLF and bounded fit overloads using
+  the existing gamma kernels, preserving scalar and array APIs.
+- Accept positive real shapes and require fixed location for censored fits;
+  exact support endpoint observations remain excluded from fitting.
+- Validate 175 native checks at checked `-O0` and `-O3`, 100 new high-precision
+  comparisons per build, and the full `fpm test` suite.
+- Update the inventory to sixteen supported families and 93 remaining.
+
 ## 2026-11-15 - Rayleigh and Weibull maximum censoring
 
 - Add native exact/left/right/interval censored likelihoods and bounded fit

@@ -12,6 +12,7 @@ mp.mp.dps = 100
 
 
 def logpdf(x, family, shape, loc, scale, second_shape=1.):
+    if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
     if family == 'weibull_max':
@@ -51,6 +52,7 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logcdf(x, family, shape, loc, scale, second_shape=1.):
+    if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
     if family == 'weibull_max':
@@ -85,6 +87,7 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
     if family == 'weibull_max':
@@ -142,6 +145,7 @@ def main():
         ('weibull', stats.weibull_min, 1.7, 0., 2.3),
         ('lognormal', stats.lognorm, .8, 0., 2.3),
         ('gamma', stats.gamma, .6, 0., 2.3),
+        ('erlang', stats.erlang, 2., 0., 2.3),
     ]:
         value = sum(logpdf(x, family, shape, loc, scale) for x in [.5, 1.2, 2.5])
         value += logcdf(.3, family, shape, loc, scale)

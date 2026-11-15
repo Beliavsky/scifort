@@ -1,3 +1,16 @@
+## 2026-11-15 - Erlang censored likelihoods and fitting
+
+The new Erlang wrappers in `src/censored.f90` and `src/fit.f90` reuse existing
+SciFort gamma censored likelihood and fitting implementations, with unchanged
+parameterization. The [SciPy Erlang mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.erlang.html),
+inspected 2026-11-15, documents the gamma relationship and acceptance of
+noninteger shapes. No upstream implementation code was imported or translated;
+these wrappers and tests are original MIT SciFort code. Existing gamma kernel
+provenance and notices continue to apply. Reference tests use mpmath mathematical
+functions and SciPy fitting as independent checks. No new dependency, C ABI,
+or third-party license text is introduced. See the
+[validation report](validation/erlang_censored_2026-11-15.md).
+
 ## 2026-11-15 - Rayleigh and Weibull maximum censored fits
 
 The new callbacks in `src/censored.f90` are original MIT SciFort code,

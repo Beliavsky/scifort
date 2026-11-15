@@ -1,3 +1,10 @@
+## Erlang censoring (2026-11-15)
+
+- [x] Reuse gamma exact/left/right/interval likelihoods and bounded fitting.
+- [x] Preserve positive noninteger shapes and fixed-location fit restrictions.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md);
+  C ABI expansion remains deferred.
+
 ## Rayleigh and Weibull maximum censoring (2026-11-15)
 
 - [x] Add exact/left/right/interval censored likelihoods for both families.
