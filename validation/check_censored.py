@@ -328,6 +328,65 @@ def main():
                 value=reference.loginterval(a,b,family,1.,loc,scale)
                 cases.append((family+'_stress',float(value)))
                 stdin+=f'{number} 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    with mp.workdps(800):
+        for number,family in [(14,'rayleigh'),(15,'weibull_max')]:
+            for _ in range(args.cases):
+                loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+                shape=10**rng.uniform(-1.,1.) if number == 15 else 1.
+                exact=[loc+scale*rng.uniform(.01,4.) for _ in range(3)]
+                left=[loc+scale*rng.uniform(.01,5.)]
+                right=[loc+scale*rng.uniform(-1.,5.)]
+                intervals=[]
+                for _ in range(2):
+                    a=loc+scale*rng.uniform(.01,20.)
+                    b=a+scale*10**rng.uniform(-14.,.5)
+                    if b == a: b=math.nextafter(a,math.inf)
+                    intervals.append((a,b))
+                b=loc+scale*10**rng.uniform(-12.,1.)
+                if b <= loc: b=math.nextafter(loc,math.inf)
+                intervals.append((loc-scale,b))
+                if number == 15:
+                    loc=-loc
+                    exact=[-x for x in exact]
+                    left,right=[-x for x in right],[-x for x in left]
+                    intervals=[(-b,-a) for a,b in intervals]
+                expected=sum(reference.logpdf(x,family,shape,loc,scale) for x in exact)
+                expected+=sum(reference.logcdf(x,family,shape,loc,scale) for x in left)
+                expected+=sum(reference.logsf(x,family,shape,loc,scale) for x in right)
+                expected+=sum(reference.loginterval(a,b,family,shape,loc,scale) for a,b in intervals)
+                cases.append((family,float(expected)))
+                stdin+=f'{number} {shape:.17g} {loc:.17g} {scale:.17g} 3 1 1 3\n'
+                stdin+='\n'.join(' '.join(f'{x:.17g}' for x in group)
+                                  for group in [exact,left,right,*intervals])+'\n'
+        for a,b,loc,scale in [
+            (0.,math.nextafter(0.,1.),0.,1.),
+            (-math.nextafter(0.,1.),math.nextafter(0.,1.),0.,1.),
+            (1e-300,2e-300,0.,1e300),
+            (-1e-300,1e-300,0.,1e300),
+            (40.,math.nextafter(40.,math.inf),0.,1.),
+            (-1e308,1e308,0.,1e308),
+            (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+            (1e-300,40.,0.,1.),
+            (1e-150,37.,0.,1.),
+            (0.,1e308,0.,1.5e308),
+        ]:
+            expected=reference.loginterval(a,b,'rayleigh',1.,loc,scale)
+            cases.append(('rayleigh_stress',float(expected)))
+            stdin+=f'14 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+        for a,b,shape,loc,scale in [
+            (0.,math.nextafter(0.,1.),.3,0.,1.),
+            (1e-300,2e-300,.3,0.,1e300),
+            (1e-300,2e-300,2.,0.,1e300),
+            (40.,math.nextafter(40.,math.inf),2.,0.,1.),
+            (-1e308,1e308,2.,0.,1e308),
+            (1e308,math.nextafter(1e308,math.inf),2.,-1e308,1e308),
+            (1e-300,40.,2.,0.,1.),
+            (0.,1e308,1.,0.,1.5e308),
+        ]:
+            a,b,loc=-b,-a,-loc
+            expected=reference.loginterval(a,b,'weibull_max',shape,loc,scale)
+            cases.append(('weibull_max_stress',float(expected)))
+            stdin+=f'15 {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -347,11 +406,14 @@ def main():
         laplace_errors = []
         cauchy_errors = []
         half_errors = []
+        hazard_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('rayleigh','weibull_max')):
+                hazard_errors.append(error)
             if family.startswith(('halfcauchy','halflogistic')):
                 half_errors.append(error)
             if family.startswith('cauchy'):
@@ -366,6 +428,8 @@ def main():
               f'max scaled error={max(cauchy_errors):.3g}', flush=True)
         print(f'  Half-Cauchy/logistic: {len(half_errors)} comparisons; '
               f'max scaled error={max(half_errors):.3g}', flush=True)
+        print(f'  Rayleigh/Weibull max: {len(hazard_errors)} comparisons; '
+              f'max scaled error={max(hazard_errors):.3g}', flush=True)
 
 
 if __name__ == '__main__':

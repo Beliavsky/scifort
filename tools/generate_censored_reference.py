@@ -14,6 +14,13 @@ mp.mp.dps = 100
 def logpdf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'weibull_max':
+        if x > loc: return mp.ninf
+        if x == loc:
+            return mp.inf if shape < 1 else (-mp.log(scale) if shape == 1 else mp.ninf)
+        return logpdf(-x,'weibull',shape,-loc,scale)
+    if family == 'rayleigh':
+        return mp.log(z)-mp.log(scale)-z*z/2 if z > 0 else mp.ninf
     if family == 'beta':
         second_shape=mp.mpf(second_shape)
         return ((shape-1)*mp.log(z)+(second_shape-1)*mp.log1p(-z)
@@ -46,6 +53,10 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
 def logcdf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'weibull_max':
+        return -(-z)**shape if z < 0 else mp.mpf(0)
+    if family == 'rayleigh':
+        return mp.log(-mp.expm1(-z*z/2)) if z > 0 else mp.ninf
     if family == 'gumbel_r':
         return -mp.exp(-z)
     if family == 'gumbel_l':
@@ -76,6 +87,10 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 def logsf(x, family, shape, loc, scale, second_shape=1.):
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'weibull_max':
+        return mp.log(-mp.expm1(-(-z)**shape)) if z < 0 else mp.ninf
+    if family == 'rayleigh':
+        return -z*z/2 if z > 0 else mp.mpf(0)
     if family == 'gumbel_r':
         return mp.log(-mp.expm1(-mp.exp(-z)))
     if family == 'gumbel_l':
@@ -143,6 +158,19 @@ def main():
         value+=sum(loginterval(a,b,family,1.,loc,scale) for a,b in [(1.1,1.4),(4.,4.4)])
         result[family+'_mixed']=float(value)
         result[family+'_fixed_loc_fit']=list(getattr(stats,family).fit(data,floc=0.))
+    family='rayleigh'
+    value=sum(logpdf(x,family,1.,0.,1.3) for x in [.5,1.2,2.5])
+    value+=logcdf(.3,family,1.,0.,1.3)+logsf(3.5,family,1.,0.,1.3)
+    value+=sum(loginterval(a,b,family,1.,0.,1.3) for a,b in [(1.1,1.4),(4.,4.4)])
+    result['rayleigh_mixed']=float(value)
+    result['rayleigh_fixed_loc_fit']=list(stats.rayleigh.fit(data,floc=0.))
+    reflected=stats.CensoredData(uncensored=[-.5,-1.2,-2.5],right=[-.3],left=[-3.5],
+                                interval=[[-1.4,-1.1],[-4.4,-4.]])
+    value=sum(logpdf(x,'weibull_max',1.7,0.,1.3) for x in [-.5,-1.2,-2.5])
+    value+=logsf(-.3,'weibull_max',1.7,0.,1.3)+logcdf(-3.5,'weibull_max',1.7,0.,1.3)
+    value+=sum(loginterval(a,b,'weibull_max',1.7,0.,1.3) for a,b in [(-1.4,-1.1),(-4.4,-4.)])
+    result['weibull_max_mixed']=float(value)
+    result['weibull_max_fixed_loc_fit']=list(stats.weibull_max.fit(reflected,floc=0.))
     intervals = [
         ('gumbel_r_tail',1000.,math.nextafter(1000.,math.inf),'gumbel_r',1.,1.),
         ('gumbel_r_left',-5.,math.nextafter(-5.,math.inf),'gumbel_r',1.,1.),

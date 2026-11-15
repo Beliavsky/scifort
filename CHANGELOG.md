@@ -1,3 +1,14 @@
+## 2026-11-15 - Rayleigh and Weibull maximum censoring
+
+- Add native exact/left/right/interval censored likelihoods and bounded fit
+  overloads for Rayleigh and Weibull maximum, retaining scalar and array APIs.
+- Use log cumulative hazards and positive increments for Rayleigh without an
+  overflowing scale conversion, and reuse reflected minimum-Weibull intervals.
+- Preserve tiny near-one log probabilities and deliberate endpoint densities,
+  including infinite Weibull endpoint likelihoods and nonfinite fit objectives.
+- Add native and independent mpmath/SciPy checks; update the censoring inventory
+  to fifteen supported families and 94 remaining candidates.
+
 ## 2026-11-15 - Half-Cauchy and half-logistic censoring
 
 - Add native exact/left/right/interval censored likelihoods and bounded fit

@@ -1,3 +1,12 @@
+## Rayleigh and Weibull maximum censoring (2026-11-15)
+
+- [x] Add exact/left/right/interval censored likelihoods for both families.
+- [x] Add bounded fit overloads with free or fixed parameters.
+- [x] Validate shape-two/reflection identities, endpoints, narrow intervals,
+  tiny excluded probabilities, extreme scales and independent reference fits.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md);
+  C ABI expansion remains deferred.
+
 ## Half-family censoring (2026-11-15)
 
 - [x] Add half-Cauchy and half-logistic exact/left/right/interval likelihoods.

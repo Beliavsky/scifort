@@ -2,8 +2,8 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum-Weibull, lognormal, gamma, beta, Cauchy, Laplace, logistic, half-Cauchy,
-half-logistic, and both Gumbel distributions.
+minimum/maximum Weibull, Rayleigh, lognormal, gamma, beta, Cauchy, Laplace,
+logistic, half-Cauchy, half-logistic, and both Gumbel distributions.
 Lognormal and gamma censored fits currently require fixed location. Beta censored fits require fixed location
 and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -50,6 +50,7 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
+rayleigh_censored_loglikelihood(data [, loc, scale])
 cauchy_censored_loglikelihood(data [, loc, scale])
 halfcauchy_censored_loglikelihood(data [, loc, scale])
 halflogistic_censored_loglikelihood(data [, loc, scale])
@@ -59,6 +60,7 @@ gumbel_r_censored_loglikelihood(data [, loc, scale])
 gumbel_l_censored_loglikelihood(data [, loc, scale])
 exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
+weibull_max_censored_loglikelihood(data, c [, loc, scale])
 lognormal_censored_loglikelihood(data, s [, loc, scale])
 gamma_censored_loglikelihood(data, a [, loc, scale])
 beta_censored_loglikelihood(data, a, b [, loc, scale])
@@ -103,7 +105,8 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`,
+The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+`rayleigh_fit`, `lognormal_fit`, `gamma_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -121,7 +124,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-exponential, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
+exponential, Rayleigh, Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -134,6 +137,70 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Rayleigh and Weibull maximum details
+
+`rayleigh_censored_loglikelihood(data [, loc, scale])` uses finite lower
+support endpoint `loc` and positive finite `scale`, defaulting to zero and
+one. `weibull_max_censored_loglikelihood(data, c [, loc, scale])` uses positive
+finite shape `c`, finite upper support endpoint `loc`, and positive finite
+`scale`, with the same defaults. Corresponding `*_censored_nnlf` procedures
+return negative log-likelihoods. Invalid data or parameters return NaN,
+including for empty data; a valid empty sample returns zero.
+
+Rayleigh has cumulative hazard `H(x)=((x-loc)/scale)**2/2` above support.
+Its SF is `exp(-H)` and its CDF is `1-exp(-H)`. The callbacks form log
+hazards from log distances and log scales, avoiding overflowing subtraction,
+squaring, or conversion to Weibull scale `sqrt(2)*scale`. Its density is zero
+at and below `loc`. The CDF is zero and SF is one at/below that endpoint.
+For finite intervals, the implementation clips to support and evaluates
+`-H(lower) + log(1-exp(-delta_H))`, with the positive increment obtained from
+
+```text
+delta_H = (upper-lower)*((upper-loc)+(lower-loc))/(2*scale**2)
+```
+
+using log factors rather than subtracting squared endpoints. Tiny increments
+use `expm1`; large increments use a complementary `log1p` expression, which
+retains tiny excluded probabilities for nearly full-support intervals.
+
+For Weibull maximum, `H(x)=((loc-x)/scale)**c` below support and
+`logcdf=-H`. Its SF uses the stable log hazard mass above. Intervals are
+reflections of minimum-Weibull intervals: endpoints reverse, and left and
+right censoring interchange. Narrow intervals reuse the existing stable
+minimum-Weibull hazard-increment kernel. Wide intervals use a direct log CDF
+difference to retain near-one log masses. Density evaluation also uses log
+distance and log hazard, extending the range beyond explicitly forming the
+standardized displacement. At `loc`, density is positive infinity for `c<1`,
+`1/scale` for `c=1`, and zero for `c>1`, matching existing Weibull behavior.
+The CDF is one and SF zero at/above `loc`. Equal finite interval endpoints
+still mean exact observations, including endpoint density behavior.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    rayleigh_fit, weibull_max_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp], right=[3.5_dp])
+call rayleigh_fit(data, [0.0_dp,0.05_dp], [0.0_dp,10.0_dp], fit)
+data = make_censored_data(uncensored=[-0.5_dp,-1.2_dp,-2.5_dp], left=[-3.5_dp])
+call weibull_max_fit(data, [0.1_dp,0.0_dp,0.05_dp], [6.0_dp,0.0_dp,10.0_dp], fit)
+! These examples fix loc=0. Bounds may free either location.
+```
+
+Bounds follow `[loc,scale]` for Rayleigh and `[c,loc,scale]` for Weibull
+maximum. All parameters can be free or fixed; `guess`, `max_iter`, and
+`tolerance` retain the existing meanings. The bounded local optimizer is
+unchanged, as are the scalar and array APIs. Infinite endpoint likelihoods
+are not replaced with a finite likelihood penalty. The optimizer rejects
+nonfinite objective candidates; fully fixed nonfinite objectives return
+`fit_status_no_finite_objective`. A finite local fit does not establish a
+global finite MLE, especially when free support locations and shapes can
+produce singular endpoint likelihoods. Sample sums must fit in binary64;
+log magnitudes beyond its range return negative infinity where appropriate.
+Existing minimum-Weibull interval accuracy limits apply to the reflected
+narrow-interval kernel.
 
 ## Half-Cauchy and half-logistic details
 

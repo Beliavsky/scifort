@@ -1,3 +1,24 @@
+## 2026-11-15 - Rayleigh and Weibull maximum censored fits
+
+The new callbacks in `src/censored.f90` are original MIT SciFort code,
+implemented independently from the density/location/scale definitions in the
+[SciPy Rayleigh documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rayleigh.html),
+[SciPy Weibull maximum documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.weibull_max.html),
+and [censored likelihood specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html),
+inspected 2026-11-15. No third-party implementation code is imported or
+translated. Integrating the Rayleigh density gives cumulative hazard
+`(x-loc)^2/(2*scale^2)`; the interval increment uses the difference-of-squares
+factorization in log form. Weibull maximum reflects the existing MIT SciFort
+minimum-Weibull log-hazard and narrow-interval routines. New private callbacks
+use direct log densities, complementary hazard masses, and wide-interval
+log differences. Existing numerical routines and scalar/array APIs are unchanged.
+
+The bounded fitting overloads reuse the existing coordinate/pattern optimizer.
+Reference scripts independently evaluate high-precision distribution CDF
+and SF differences with mpmath, with SciPy fixed-location fit comparisons.
+No new runtime dependency or C ABI is added. See
+[validation](validation/rayleigh_max_censored_2026-11-15.md).
+
 ## 2026-11-15 - Half-Cauchy and half-logistic censored fits
 
 The half-Cauchy and half-logistic callbacks in `src/censored.f90` are original

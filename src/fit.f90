@@ -10,7 +10,8 @@ module scifort_fit
         normal_censored_nnlf, exponential_censored_nnlf, weibull_censored_nnlf, &
         lognormal_censored_nnlf, gamma_censored_nnlf, beta_censored_nnlf, logistic_censored_nnlf, &
         gumbel_r_censored_nnlf, gumbel_l_censored_nnlf, laplace_censored_nnlf, &
-        cauchy_censored_nnlf, halfcauchy_censored_nnlf, halflogistic_censored_nnlf
+        cauchy_censored_nnlf, halfcauchy_censored_nnlf, halflogistic_censored_nnlf, &
+        rayleigh_censored_nnlf, weibull_max_censored_nnlf
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : dp
     use scifort_likelihood, only : normal_nnlf, &
@@ -455,6 +456,14 @@ module scifort_fit
         module procedure beta_fit, beta_fit_censored
     end interface beta_fit
 
+    interface rayleigh_fit
+        module procedure rayleigh_fit, rayleigh_fit_censored
+    end interface rayleigh_fit
+
+    interface weibull_max_fit
+        module procedure weibull_max_fit, weibull_max_fit_censored
+    end interface weibull_max_fit
+
     interface halfcauchy_fit
         module procedure halfcauchy_fit, halfcauchy_fit_censored
     end interface halfcauchy_fit
@@ -484,6 +493,33 @@ module scifort_fit
     end interface gumbel_l_fit
 
 contains
+
+    subroutine rayleigh_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for lower support endpoint and positive scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting lower support endpoint and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_rayleigh, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine rayleigh_fit_censored
+
+    subroutine weibull_max_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds for shape, upper support endpoint, scale
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting shape, upper support endpoint, scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_weibull_max, lower, upper, result, guess, &
+            [.false., .false., .false.], max_iter, tolerance, data)
+    end subroutine weibull_max_fit_censored
+
 
     subroutine gumbel_r_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1007,6 +1043,10 @@ contains
                 value = gumbel_r_censored_nnlf(censored, params(1), params(2))
             case (family_gumbel_l)
                 value = gumbel_l_censored_nnlf(censored, params(1), params(2))
+            case (family_rayleigh)
+                value = rayleigh_censored_nnlf(censored,params(1),params(2))
+            case (family_weibull_max)
+                value = weibull_max_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_halfcauchy)
                 value = halfcauchy_censored_nnlf(censored, params(1), params(2))
             case (family_halflogistic)

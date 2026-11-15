@@ -85,8 +85,8 @@ program normal_example
 end program normal_example
 ```
 
-Normal, exponential, Weibull, lognormal, gamma, beta, Cauchy, Laplace, logistic,
-half-Cauchy, half-logistic, and both Gumbel distributions also support
+Normal, exponential, minimum/maximum Weibull, Rayleigh, lognormal, gamma, beta,
+Cauchy, Laplace, logistic, half-Cauchy, half-logistic, and both Gumbel distributions support
 [censored likelihoods and fitting](docs/censored_fitting.md).
 
 See [runnable examples](example/) for other APIs and [numerical policy](docs/numerical-policy.md)

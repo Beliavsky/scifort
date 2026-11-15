@@ -52,6 +52,8 @@ module scifort_censored
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: rayleigh_censored_loglikelihood, rayleigh_censored_nnlf
+    public :: weibull_max_censored_loglikelihood, weibull_max_censored_nnlf
     public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
     public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
@@ -61,6 +63,199 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function rayleigh_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, rayleigh_lpdf, rayleigh_lcdf, &
+            rayleigh_lsf, rayleigh_interval)
+    end function rayleigh_censored_loglikelihood
+
+    pure function rayleigh_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite scale (default 1)
+        real(dp) :: value
+        value = -rayleigh_censored_loglikelihood(data, loc, scale)
+    end function rayleigh_censored_nnlf
+
+    pure function weibull_max_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite shape, > 0
+        real(dp), intent(in), optional :: loc !! upper support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
+        real(dp) :: value, params(3)
+
+        params = [c, 0.0_dp, 1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. ieee_is_finite(c)) return
+        if (c <= 0.0_dp .or. .not. valid_loc_scale(params(2), params(3))) return
+        value = censored_loglikelihood(data, params, weibull_max_lpdf, weibull_max_lcdf, &
+            weibull_max_lsf, weibull_max_interval)
+    end function weibull_max_censored_loglikelihood
+
+    pure function weibull_max_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite shape, > 0
+        real(dp), intent(in), optional :: loc !! upper support endpoint (default 0)
+        real(dp), intent(in), optional :: scale !! scale, > 0 (default 1)
+        real(dp) :: value
+        value = -weibull_max_censored_loglikelihood(data, c, loc, scale)
+    end function weibull_max_censored_nnlf
+
+    pure function negative_hazard(logh) result(value)
+        implicit none
+        real(dp), intent(in) :: logh !! log nonnegative cumulative hazard, possibly infinite
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (logh > log(huge(1.0_dp))) return
+        value = -exp(logh)
+    end function negative_hazard
+
+    pure function log_hazard_mass(logh) result(value)
+        implicit none
+        real(dp), intent(in) :: logh !! log positive cumulative-hazard increment, possibly infinite
+        real(dp) :: value
+        if (logh <= log(scifort_log_two)) then
+            value = log_exponential_mass(logh)
+        else
+            value = log1p_safe(-exp(negative_hazard(logh)))
+        end if
+    end function log_hazard_mass
+
+    pure function rayleigh_log_hazard(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above the support endpoint
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value
+        value = 2.0_dp*(log_distance(x,params(1))-log(params(2))) - scifort_log_two
+    end function rayleigh_log_hazard
+
+    pure function rayleigh_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x <= params(1)) return
+        value = negative_hazard(rayleigh_log_hazard(x,params))
+        value = value + log_distance(x,params(1)) - 2.0_dp*log(params(2))
+    end function rayleigh_lpdf
+
+    pure function rayleigh_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x <= params(1)) return
+        value = log_hazard_mass(rayleigh_log_hazard(x,params))
+    end function rayleigh_lcdf
+
+    pure function rayleigh_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value
+        value = 0.0_dp
+        if (x <= params(1)) return
+        value = negative_hazard(rayleigh_log_hazard(x,params))
+    end function rayleigh_lsf
+
+    pure function rayleigh_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value, loga, logb, logdelta
+        value = negative_infinity(0.0_dp)
+        if (b <= params(1)) return
+        if (a <= params(1)) then
+            value = rayleigh_lcdf(b,params)
+        else
+            value = rayleigh_lsf(a,params)
+            if (.not. ieee_is_finite(value)) return
+            loga = log_distance(a,params(1))
+            logb = log_distance(b,params(1))
+            ! Delta H = (b-a)*((b-loc)+(a-loc))/(2*scale**2).
+            logdelta = log_distance(b,a)+logb+log1p_safe(exp(loga-logb)) &
+                -scifort_log_two-2.0_dp*log(params(2))
+            value = value + log_hazard_mass(logdelta)
+        end if
+    end function rayleigh_interval
+
+    pure function weibull_max_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite upper support endpoint, scale
+        real(dp) :: value, logh
+        value = negative_infinity(0.0_dp)
+        if (x > params(2)) return
+        if (x == params(2)) then
+            value = weibull_logpdf(0.0_dp,params(1),scale=params(3))
+            return
+        end if
+        logh = weibull_log_hazard(-x,[params(1),-params(2),params(3)])
+        if (logh > log(huge(1.0_dp))) return
+        value = log(params(1))-log_distance(params(2),x)+logh-exp(logh)
+    end function weibull_max_lpdf
+
+    pure function weibull_max_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite upper support endpoint, scale
+        real(dp) :: value
+        value = 0.0_dp
+        if (x >= params(2)) return
+        value = negative_hazard(weibull_log_hazard(-x,[params(1),-params(2),params(3)]))
+    end function weibull_max_lcdf
+
+    pure function weibull_max_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite upper support endpoint, scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x >= params(2)) return
+        value = log_hazard_mass(weibull_log_hazard(-x,[params(1),-params(2),params(3)]))
+    end function weibull_max_lsf
+
+    pure function weibull_max_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive shape, finite upper support endpoint, scale
+        real(dp) :: value, lower_cdf, upper_cdf
+        value = negative_infinity(0.0_dp)
+        if (a >= params(2)) return
+        if (b >= params(2)) then
+            value = weibull_max_lsf(a,params)
+        else
+            upper_cdf = weibull_max_lcdf(b,params)
+            if (.not. ieee_is_finite(upper_cdf)) return
+            lower_cdf = weibull_max_lcdf(a,params)
+            if (lower_cdf-upper_cdf <= -scifort_log_two) then
+                value = upper_cdf+log1p_safe(-exp(lower_cdf-upper_cdf))
+            else
+                value = weibull_interval(-b,-a,[params(1),-params(2),params(3)])
+            end if
+        end if
+    end function weibull_max_interval
+
 
     pure function halfcauchy_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

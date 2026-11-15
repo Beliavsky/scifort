@@ -8,6 +8,7 @@ program censored_reference_driver
         beta_censored_loglikelihood, logistic_censored_loglikelihood, &
         laplace_censored_loglikelihood, cauchy_censored_loglikelihood, &
         halfcauchy_censored_loglikelihood, halflogistic_censored_loglikelihood, &
+        rayleigh_censored_loglikelihood, weibull_max_censored_loglikelihood, &
         gumbel_r_censored_loglikelihood, gumbel_l_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
@@ -53,6 +54,10 @@ program censored_reference_driver
             value = halfcauchy_censored_loglikelihood(data,loc,scale)
         case (13)
             value = halflogistic_censored_loglikelihood(data,loc,scale)
+        case (14)
+            value = rayleigh_censored_loglikelihood(data,loc,scale)
+        case (15)
+            value = weibull_max_censored_loglikelihood(data,c,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select
