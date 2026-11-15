@@ -2,7 +2,7 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum-Weibull, lognormal, gamma, beta, Laplace, logistic, and both Gumbel distributions.
+minimum-Weibull, lognormal, gamma, beta, Cauchy, Laplace, logistic, and both Gumbel distributions.
 Lognormal and gamma censored fits currently require fixed location. Beta censored fits require fixed location
 and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,7 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
+cauchy_censored_loglikelihood(data [, loc, scale])
 laplace_censored_loglikelihood(data [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
 gumbel_r_censored_loglikelihood(data [, loc, scale])
@@ -100,7 +101,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `lognormal_fit`, `gamma_fit`,
-`beta_fit`, `laplace_fit`, `logistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
+`beta_fit`, `cauchy_fit`, `laplace_fit`, `logistic_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
 
 ```fortran
@@ -116,7 +117,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-exponential, Laplace, logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
+exponential, Cauchy, Laplace, logistic, and both Gumbel families, `[c, loc, scale]` for Weibull, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -129,6 +130,62 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Cauchy details
+
+`cauchy_censored_loglikelihood(data [, loc, scale])` uses finite median `loc`
+and positive finite half width at half maximum `scale`. `cauchy_fit` accepts
+censored data with bounds ordered `[loc, scale]`; either parameter may be
+free or fixed with equal bounds. Optional `guess`, `max_iter`, and `tolerance`
+retain their existing meanings. The support is the whole real line.
+
+The density is `1/(pi*scale*(1+z*z))`, where `z=(x-loc)/scale`.
+Censored callbacks compute the log absolute displacement before scaling.
+This retains finite log densities and small-tail log probabilities even
+when forming `z` or its square would overflow, or when the ordinary tail
+probability would underflow. The small tail uses the reciprocal-arctangent
+identity. The near-one log tail uses `log1p` directly.
+
+For finite intervals on one side of the median, the positive angle between
+the endpoint arctangents satisfies
+
+```text
+tan(angle) = ((upper-lower)/scale) / (1 + z_lower*z_upper)
+log_mass = log(angle) - log(pi)
+```
+
+The calculation uses log widths and log products, without forming endpoint
+products or subtracting CDFs. Narrow intervals crossing the median add two
+positive arctangent contributions. Crossing intervals whose endpoints are
+at least one scale from the median instead use `log1p` of the negative sum
+of the two missing tails, preserving near-one log probabilities.
+
+`log(atan(exp(t)))` is evaluated without overflowing or underflowing its
+exponential argument. When `t < log(epsilon)/2`, it returns `t`: the relative
+error of replacing `atan(u)` by `u` is at most `u*u/3`, below binary64
+roundoff there. For positive `t`, it uses `atan(u)=pi/2-atan(1/u)`.
+
+Invalid data or parameters return NaN; an empty valid sample returns zero.
+Equal interval endpoints represent exact observations; one infinite endpoint
+represents one-sided censoring. A sum must still fit in binary64. Existing
+array likelihood/fit calls and scalar Cauchy routines are unchanged; their
+original standardization limits still apply. The censored overload extends
+the numerical range of its private callbacks, without changing those APIs.
+
+Fits use the existing bounded local search. Cauchy likelihoods can have
+multiple stationary points; convergence does not establish a global optimum,
+identifiability, or a finite unconstrained MLE. Check scientifically justified
+bounds and consider multiple starting guesses.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, cauchy_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[-1.0_dp, 0.0_dp, 2.0_dp], right=[3.0_dp])
+call cauchy_fit(data, [-5.0_dp, 0.05_dp], [8.0_dp, 10.0_dp], fit)
+! fit%params = [loc, scale]; inspect fit%success and fit%nllf.
+```
 
 ## Laplace details
 

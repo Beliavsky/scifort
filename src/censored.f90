@@ -6,7 +6,7 @@
 module scifort_censored
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_kinds, only : dp
-    use scifort_constants, only : scifort_log_sqrt_two_pi, scifort_log_two
+    use scifort_constants, only : scifort_log_sqrt_two_pi, scifort_log_two, scifort_pi
     use scifort_empirical_distribution, only : censored_data
     use scifort_math, only : quiet_nan, negative_infinity, positive_infinity, valid_loc_scale, &
         expm1_safe, log1p_safe, log1pexp
@@ -52,12 +52,130 @@ module scifort_censored
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf
     public :: logistic_censored_loglikelihood, logistic_censored_nnlf
     public :: gumbel_r_censored_loglikelihood, gumbel_r_censored_nnlf
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function cauchy_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite median (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite half width at half maximum (default 1)
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, cauchy_lpdf, cauchy_lcdf, &
+            cauchy_lsf, cauchy_interval)
+    end function cauchy_censored_loglikelihood
+
+    pure function cauchy_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite median (default 0)
+        real(dp), intent(in), optional :: scale !! positive finite half width at half maximum (default 1)
+        real(dp) :: value
+        value = -cauchy_censored_loglikelihood(data, loc, scale)
+    end function cauchy_censored_nnlf
+
+    pure function cauchy_log_distance(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x == params(1)) return
+        value = log_distance(max(x, params(1)), min(x, params(1))) - log(params(2))
+    end function cauchy_log_distance
+
+    pure function cauchy_logatan_exp(logx) result(value)
+        implicit none
+        real(dp), intent(in) :: logx !! log positive argument; negative infinity means zero
+        real(dp) :: value
+        if (logx < 0.5_dp * log(epsilon(1.0_dp))) then
+            ! atan(t)/t differs from 1 by at most t**2/3 for 0 <= t <= 1.
+            value = logx
+        else if (logx <= 0.0_dp) then
+            value = log(atan(exp(logx)))
+        else
+            ! Reciprocal identity keeps EXP bounded and subtraction well conditioned.
+            value = log(0.5_dp * scifort_pi - atan(exp(-logx)))
+        end if
+    end function cauchy_logatan_exp
+
+    pure function cauchy_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp) :: value, logz
+        logz = cauchy_log_distance(x, params)
+        value = -log(scifort_pi) - log(params(2)) - log1pexp(2.0_dp * logz)
+    end function cauchy_lpdf
+
+    pure function cauchy_log_small_tail(logz) result(value)
+        implicit none
+        real(dp), intent(in) :: logz !! log absolute standardized displacement, possibly -infinity
+        real(dp) :: value
+        if (logz >= 0.0_dp) then
+            value = cauchy_logatan_exp(-logz) - log(scifort_pi)
+        else
+            value = log(0.5_dp - atan(exp(logz)) / scifort_pi)
+        end if
+    end function cauchy_log_small_tail
+
+    pure function cauchy_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp) :: value
+        value = cauchy_log_small_tail(cauchy_log_distance(x, params))
+        if (x > params(1)) value = log1p_safe(-exp(value))
+    end function cauchy_lcdf
+
+    pure function cauchy_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp) :: value
+        value = cauchy_log_small_tail(cauchy_log_distance(x, params))
+        if (x < params(1)) value = log1p_safe(-exp(value))
+    end function cauchy_lsf
+
+    pure function cauchy_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp) :: value, loga, logb, logratio, left, right, large, small
+        loga = cauchy_log_distance(a, params)
+        logb = cauchy_log_distance(b, params)
+        if (b <= params(1) .or. a >= params(1)) then
+            ! Same-side arctangent difference has a positive denominator:
+            ! tan(angle) = ((b-a)/scale) / (1 + za*zb).
+            logratio = log_distance(b, a) - log(params(2)) - log1pexp(loga + logb)
+            value = cauchy_logatan_exp(logratio) - log(scifort_pi)
+        else if (min(loga, logb) >= 0.0_dp) then
+            ! Wide crossing interval: retain even tiny missing tail probabilities.
+            left = exp(cauchy_log_small_tail(loga))
+            right = exp(cauchy_log_small_tail(logb))
+            value = log1p_safe(-(left + right))
+        else
+            ! Narrow crossing interval: add positive angles, never subtract CDFs.
+            left = cauchy_logatan_exp(loga)
+            right = cauchy_logatan_exp(logb)
+            large = max(left, right)
+            small = min(left, right)
+            value = min(0.0_dp, large + log1p_safe(exp(small - large)) - log(scifort_pi))
+        end if
+    end function cauchy_interval
+
 
     pure function laplace_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

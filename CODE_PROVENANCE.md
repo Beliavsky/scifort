@@ -1,3 +1,23 @@
+## 2026-11-15 - Cauchy censored likelihoods and bounded fits
+
+The Cauchy callbacks in `src/censored.f90` are original MIT SciFort code,
+implemented independently from the mathematical density/location/scale
+specification in the [SciPy Cauchy documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.cauchy.html)
+and the [censored likelihood specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html),
+inspected 2026-11-15. The arctangent difference, reciprocal identity, and
+small-argument remainder follow the elementary identities and series in
+[NIST DLMF section 4.24](https://dlmf.nist.gov/4.24). Integrating the Cauchy
+density gives the arctangent CDF; same-side intervals use the tangent of the
+angle difference, and crossing intervals use positive angle sums or missing
+tails. No third-party implementation code is imported or translated.
+
+The implementation reuses SciFort's existing generic censored accumulation,
+log-distance/logarithmic helpers, and unchanged bounded coordinate/pattern
+optimizer. The reference scripts use mpmath high-precision CDF differences
+and SciPy fit comparisons independently of the production interval formula.
+No new dependency or C ABI is introduced. See
+[validation](validation/cauchy_censored_2026-11-15.md).
+
 ## 2026-11-15 - Laplace censored likelihoods and bounded fits
 
 The Laplace callbacks in `src/censored.f90` are original MIT SciFort code,

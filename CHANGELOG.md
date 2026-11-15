@@ -1,3 +1,14 @@
+## 2026-11-15 - Cauchy censored likelihoods and fitting
+
+- Add native Cauchy log-likelihood and negative log-likelihood for exact,
+  left-, right-, and interval-censored observations.
+- Add bounded `cauchy_fit(censored_data, ...)` with free or fixed median/scale,
+  retaining the existing optimizer, array APIs, and scalar distribution kernels.
+- Use log distances and arctangent interval identities to retain heavy-tail,
+  narrow-interval, and near-one log probabilities at extreme scales.
+- Add native and independent high-precision regressions; update the censoring
+  inventory to eleven supported families and 98 remaining candidates.
+
 ## 2026-11-15 - Laplace censored likelihoods and fitting
 
 - Add native Laplace log-likelihood and negative log-likelihood for exact,

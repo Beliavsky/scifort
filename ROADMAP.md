@@ -1,3 +1,11 @@
+## Cauchy censoring (2026-11-15)
+
+- [x] Add stable exact/left/right/interval censored Cauchy likelihoods.
+- [x] Add bounded censored Cauchy fits with free or fixed median/scale.
+- [x] Validate heavy tails and extreme intervals against independent references.
+- [ ] Extend the remaining continuous families in
+  [the censoring inventory](docs/censored_distribution_gaps.md); C ABI work remains deferred.
+
 ## Laplace censoring (2026-11-15)
 
 - [x] Add stable exact/left/right/interval censored likelihoods for Laplace.

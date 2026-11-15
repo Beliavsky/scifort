@@ -21,6 +21,8 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family in ('gumbel_r','gumbel_l'):
         if family == 'gumbel_l': z=-z
         return -z-mp.exp(-z)-mp.log(scale)
+    if family == 'cauchy':
+        return -mp.log(mp.pi)-mp.log(scale)-mp.log1p(z*z)
     if family == 'laplace':
         return -abs(z)-mp.log(2)-mp.log(scale)
     if family == 'logistic':
@@ -45,6 +47,8 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
         return -mp.exp(-z)
     if family == 'gumbel_l':
         return mp.log(-mp.expm1(-mp.exp(z)))
+    if family == 'cauchy':
+        return mp.log(mp.mpf('.5')+mp.atan(z)/mp.pi)
     if family == 'laplace':
         return z-mp.log(2) if z <= 0 else mp.log1p(-mp.exp(-z)/2)
     if family == 'logistic':
@@ -69,6 +73,8 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
         return mp.log(-mp.expm1(-mp.exp(-z)))
     if family == 'gumbel_l':
         return -mp.exp(z)
+    if family == 'cauchy':
+        return mp.log(mp.mpf('.5')-mp.atan(z)/mp.pi)
     if family == 'laplace':
         return -z-mp.log(2) if z >= 0 else mp.log1p(-mp.exp(z)/2)
     if family == 'logistic':
@@ -101,6 +107,7 @@ def main():
     result = {'scipy_version': scipy.__version__, 'mpmath_version': mp.__version__}
     for family, distribution, shape, loc, scale in [
         ('normal', stats.norm, 1., .4, 1.3),
+        ('cauchy', stats.cauchy, 1., .4, 1.3),
         ('laplace', stats.laplace, 1., .4, 1.3),
         ('logistic', stats.logistic, 1., .4, 1.3),
         ('gumbel_r', stats.gumbel_r, 1., .4, 1.3),
@@ -116,7 +123,7 @@ def main():
         value += sum(loginterval(a, b, family, shape, loc, scale)
                      for a, b in [(1.1, 1.4), (4., 4.4)])
         result[family+'_mixed'] = float(value)
-        kwargs = {} if family in ('normal','laplace','logistic','gumbel_r','gumbel_l') else {'floc': 0.}
+        kwargs = {} if family in ('normal','cauchy','laplace','logistic','gumbel_r','gumbel_l') else {'floc': 0.}
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
     intervals = [
         ('gumbel_r_tail',1000.,math.nextafter(1000.,math.inf),'gumbel_r',1.,1.),

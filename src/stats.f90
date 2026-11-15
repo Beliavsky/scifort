@@ -11,6 +11,7 @@ module scifort_stats
         lognormal_censored_loglikelihood, lognormal_censored_nnlf, &
         gamma_censored_loglikelihood, gamma_censored_nnlf, &
         beta_censored_loglikelihood, beta_censored_nnlf, &
+        cauchy_censored_loglikelihood, cauchy_censored_nnlf, &
         laplace_censored_loglikelihood, laplace_censored_nnlf, &
         logistic_censored_loglikelihood, logistic_censored_nnlf, &
         gumbel_r_censored_loglikelihood, gumbel_r_censored_nnlf, &
@@ -700,6 +701,7 @@ module scifort_stats
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf
     public :: gamma_censored_loglikelihood, gamma_censored_nnlf
     public :: beta_censored_loglikelihood, beta_censored_nnlf
+    public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf
     public :: logistic_censored_loglikelihood, logistic_censored_nnlf
     public :: gumbel_r_censored_loglikelihood, gumbel_r_censored_nnlf

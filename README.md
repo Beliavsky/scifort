@@ -85,7 +85,7 @@ program normal_example
 end program normal_example
 ```
 
-Normal, exponential, Weibull, lognormal, gamma, beta, Laplace, logistic, and both
+Normal, exponential, Weibull, lognormal, gamma, beta, Cauchy, Laplace, logistic, and both
 Gumbel distributions also support
 [censored likelihoods and fitting](docs/censored_fitting.md).
 
