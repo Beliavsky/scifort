@@ -5,6 +5,8 @@
 ! are exchanged by separate two-sided unitary transformations. No explicit
 ! inverse and no LAPACK dependency are needed for the reordering step.
 module scifort_linalg_ordqz
+    use scifort_linalg_real_qz, only: real_qz_eigenvalues,real_qz_check
+    use scifort_linalg_qz_lapack, only: dtgexc
     use scifort_kinds, only : dp
     use scifort_linalg, only : linalg_status_success, linalg_status_invalid_shape, &
         linalg_status_no_convergence
@@ -25,11 +27,17 @@ module scifort_linalg_ordqz
     end interface
 
     interface ordqz
+        module procedure ordqz_real
         module procedure ordqz_rr
         module procedure ordqz_rc
         module procedure ordqz_cr
         module procedure ordqz_cc
     end interface ordqz
+
+    interface ordqz_factors
+        module procedure ordqz_factors
+        module procedure ordqz_factors_real
+    end interface ordqz_factors
 
 contains
 
@@ -356,5 +364,195 @@ contains
         if (present(sdim)) sdim = count
         status = linalg_status_success
     end subroutine ordqz_factors
+
+
+    subroutine ordqz_real(a,b,aa,bb,q,z,status,alpha,beta,sort,sdim,selector,method)
+        implicit none
+        real(dp), intent(in) :: a(:,:) !! First finite real matrix, order 0..40.
+        real(dp), intent(in) :: b(:,:) !! Second finite real matrix, same order.
+        real(dp), intent(out) :: aa(:,:) !! Ordered real quasi-triangular first factor.
+        real(dp), intent(out) :: bb(:,:) !! Ordered real triangular second factor.
+        real(dp), intent(out) :: q(:,:) !! Left real orthogonal Schur vectors.
+        real(dp), intent(out) :: z(:,:) !! Right real orthogonal Schur vectors.
+        integer, intent(out) :: status !! Existing linalg status code.
+        complex(dp), intent(out), optional :: alpha(:) !! Homogeneous numerators, size n.
+        real(dp), intent(out), optional :: beta(:) !! Nonnegative denominators, size n.
+        character(*), intent(in), optional :: sort !! lhp default; rhp, iuc, ouc, none.
+        integer, intent(out), optional :: sdim !! Selected eigenvalue count, including whole pairs.
+        procedure(ordqz_selector), optional :: selector !! Selecting either conjugate selects both.
+        character(*), intent(in), optional :: method !! auto or iterative for the real backend.
+        complex(dp), allocatable :: ar(:)
+        real(dp), allocatable :: be(:)
+        integer :: n
+        aa=0.0_dp
+        bb=0.0_dp
+        q=0.0_dp
+        z=0.0_dp
+        if (present(alpha)) alpha=cmplx(0.0_dp,0.0_dp,dp)
+        if (present(beta)) beta=0.0_dp
+        if (present(sdim)) sdim=0
+        status=linalg_status_invalid_shape
+        n=size(a,1)
+        if (present(alpha)) then
+            if (size(alpha)/=n) return
+        end if
+        if (present(beta)) then
+            if (size(beta)/=n) return
+        end if
+        if (.not.valid_sort(sort)) return
+        call qz(a,b,aa,bb,q,z,status,method=method)
+        if (status/=linalg_status_success) return
+        call ordqz_factors_real(aa,bb,q,z,status,sort,sdim,selector)
+        if (status/=linalg_status_success) return
+        allocate(ar(n),be(n))
+        call real_qz_eigenvalues(aa,bb,ar,be,status)
+        if (status/=linalg_status_success) return
+        if (present(alpha)) alpha=ar
+        if (present(beta)) beta=be
+    end subroutine ordqz_real
+
+    subroutine ordqz_factors_real(aa,bb,q,z,status,sort,sdim,selector)
+        implicit none
+        real(dp), intent(inout) :: aa(:,:) !! Real quasi-triangular factor; unchanged on failure.
+        real(dp), intent(inout) :: bb(:,:) !! Real triangular factor; unchanged on failure.
+        real(dp), intent(inout) :: q(:,:) !! Real left orthogonal basis; unchanged on failure.
+        real(dp), intent(inout) :: z(:,:) !! Real right orthogonal basis; unchanged on failure.
+        integer, intent(out) :: status !! Zero success; shape or numerical failure otherwise.
+        character(*), intent(in), optional :: sort !! lhp default; rhp, iuc, ouc, none.
+        integer, intent(out), optional :: sdim !! Number of selected eigenvalues in whole blocks.
+        procedure(ordqz_selector), optional :: selector !! Existing complex homogeneous interface.
+        real(dp), allocatable :: wa(:,:),wb(:,:),wq(:,:),wz(:,:),original_a(:,:),original_b(:,:)
+        real(dp), allocatable :: be(:),work(:)
+        complex(dp), allocatable :: ar(:)
+        integer, allocatable :: blocks(:)
+        logical, allocatable :: selected(:)
+        integer :: n,i,j,k,nb,count,width,start,target,ifst,ilst,info,code
+        real(dp) :: sa,sb,tol
+        character(:), allocatable :: choice
+        logical :: member
+        if (present(sdim)) sdim=0
+        status=linalg_status_invalid_shape
+        n=size(aa,1)
+        if (n>matrix_function_max_order .or. size(aa,2)/=n) return
+        if (any(shape(bb)/=[n,n]) .or. any(shape(q)/=[n,n])) return
+        if (any(shape(z)/=[n,n]) .or. .not.valid_sort(sort)) return
+        choice='lhp'
+        if (present(sort)) choice=trim(adjustl(sort))
+        status=linalg_status_no_convergence
+        if (.not.all(ieee_is_finite(aa)) .or. .not.all(ieee_is_finite(bb))) return
+        if (.not.all(ieee_is_finite(q)) .or. .not.all(ieee_is_finite(z))) return
+        if (n==0) then
+            status=linalg_status_success
+            return
+        end if
+        sa=maxval(abs(aa))
+        sb=maxval(abs(bb))
+        if (sa==0.0_dp) sa=1.0_dp
+        if (sb==0.0_dp) sb=1.0_dp
+        wa=aa/sa
+        wb=bb/sb
+        wq=q
+        wz=z
+        allocate(ar(n),be(n),blocks(n),selected(n),work(4*n+16))
+        blocks=0
+        selected=.false.
+        tol=4096*epsilon(1.0_dp)*real(n,dp)
+        do j=1,n
+            do i=j+1,n
+                if (abs(wb(i,j))>tol) return
+                wb(i,j)=0.0_dp
+                if (i>j+1) then
+                    if (abs(wa(i,j))>tol) return
+                    wa(i,j)=0.0_dp
+                end if
+            end do
+            if (wb(j,j)<0.0_dp) then
+                wa(j,:)=-wa(j,:)
+                wb(j,:)=-wb(j,:)
+                wq(:,j)=-wq(:,j)
+            end if
+        end do
+        if (maxval(abs(q))>1.0_dp+tol .or. maxval(abs(z))>1.0_dp+tol) return
+        original_a=matmul(q,matmul(aa/sa,transpose(z)))
+        original_b=matmul(q,matmul(bb/sb,transpose(z)))
+        call real_qz_check(original_a,original_b,wa,wb,wq,wz,info)
+        if (info/=linalg_status_success) return
+        ! Evaluate predicates in physical input units before sorting.
+        call real_qz_eigenvalues(wa*sa,wb*sb,ar,be,info)
+        if (info/=linalg_status_success) return
+        i=1
+        nb=0
+        do while (i<=n)
+            nb=nb+1
+            width=1
+            if (i<n) then
+                if (wa(i+1,i)/=0.0_dp) width=2
+            end if
+            blocks(nb)=width
+            selected(nb)=chosen(ar(i),cmplx(be(i),0.0_dp,dp),choice,0.0_dp,selector)
+            if (width==2) selected(nb)=selected(nb) .or. &
+                chosen(ar(i+1),cmplx(be(i+1),0.0_dp,dp),choice,0.0_dp,selector)
+            i=i+width
+        end do
+        count=0
+        target=1
+        do j=1,nb
+            if (.not.selected(j)) cycle
+            start=1+sum(blocks(:j-1))
+            width=blocks(j)
+            if (start/=target) then
+                ifst=start
+                ilst=target
+                call dtgexc(.true.,.true.,n,wa,n,wb,n,wq,n,wz,n,ifst,ilst,work,size(work),code)
+                if (code/=0 .or. ilst/=target) return
+            end if
+            do k=j,1+count+1,-1
+                blocks(k)=blocks(k-1)
+                selected(k)=selected(k-1)
+            end do
+            blocks(count+1)=width
+            selected(count+1)=.true.
+            count=count+1
+            target=target+width
+        end do
+        do i=1,n
+            if (wb(i,i)<0.0_dp) then
+                wa(i,:)=-wa(i,:)
+                wb(i,:)=-wb(i,:)
+                wq(:,i)=-wq(:,i)
+            end if
+        end do
+        call real_qz_check(original_a,original_b,wa,wb,wq,wz,info)
+        if (info/=linalg_status_success) return
+        if (sa>1.0_dp) then
+            if (maxval(abs(wa))>huge(sa)/sa) return
+        end if
+        if (sb>1.0_dp) then
+            if (maxval(abs(wb))>huge(sb)/sb) return
+        end if
+        wa=wa*sa
+        wb=wb*sb
+        if (.not.all(ieee_is_finite(wa)) .or. .not.all(ieee_is_finite(wb))) return
+        call real_qz_eigenvalues(wa,wb,ar,be,info)
+        if (info/=linalg_status_success) return
+        i=1
+        do while (i<=n)
+            width=1
+            if (i<n) then
+                if (wa(i+1,i)/=0.0_dp) width=2
+            end if
+            member=chosen(ar(i),cmplx(be(i),0.0_dp,dp),choice,0.0_dp,selector)
+            if (width==2) member=member .or. &
+                chosen(ar(i+1),cmplx(be(i+1),0.0_dp,dp),choice,0.0_dp,selector)
+            if (member .neqv. (i<target)) return
+            i=i+width
+        end do
+        aa=wa
+        bb=wb
+        q=wq
+        z=wz
+        if (present(sdim)) sdim=target-1
+        status=linalg_status_success
+    end subroutine ordqz_factors_real
 
 end module scifort_linalg_ordqz

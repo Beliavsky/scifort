@@ -1,4 +1,8 @@
-# Ordered generalized complex Schur decomposition (`ordqz`)
+# Ordered real and complex generalized Schur decomposition (`ordqz`)
+
+Real-output ordering is available for real inputs; see the
+[real QZ and block-ordering guide](linalg_real_qz.md).
+The existing complex API is described below.
 
 `scifort_linalg_ordqz` implements the **complex-output** form of
 [`scipy.linalg.ordqz`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.ordqz.html),
@@ -98,7 +102,8 @@ be classified differently from SciPy depending on rounding.
 Reordering can become ill-conditioned when eigenvalues are tightly clustered
 or nearly defective. A successful small reconstruction residual and small
 triangularity error do **not** guarantee small forward eigenvalue errors.
-Batch operations, real generalized Schur output, LAPACK-grade reordering
+[Real generalized Schur output and block reordering](linalg_real_qz.md) are
+available for orders 0..40. Batch operations, LAPACK-grade reordering
 condition estimates, and robust sorting of nearly singular irregular pencils
 remain unimplemented. No new external numerical dependencies were added.
 

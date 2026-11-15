@@ -1,4 +1,8 @@
-# Generalized complex Schur (`scifort_linalg_qz.qz`)
+# Real and complex generalized Schur (`scifort_linalg_qz.qz`)
+
+Real output is available for real inputs by declaring the four factor matrices
+as `real(dp)`. See the [real QZ and ordering guide](linalg_real_qz.md).
+The existing complex path is described below.
 
 `src/linalg_qz.f90` provides the complex-output generalized Schur factorization
 of real, complex, and mixed real/complex square matrix pairs. It computes
@@ -69,8 +73,8 @@ zero-diagonal and convergence safeguards of LAPACK `ZHGEQZ`.
 - Supported order: `0..40`, inherited from the current project-wide dense
   matrix-function limit. The iteration itself is not fundamentally limited
   to 40, but the public contract is unchanged.
-- Output: complex Schur factors only. Real quasi-triangular generalized Schur,
-  generalized left/right eigenvectors, batching, and condition
+- Output: existing complex Schur factors and [real factors](linalg_real_qz.md).
+  Generalized left/right eigenvectors, batching, and condition
   estimates are supplied by other modules or remain future work. Complex
   `ordqz` reordering is implemented in `scifort_linalg_ordqz` (see
   [ordered QZ guide](linalg_ordqz.md)).

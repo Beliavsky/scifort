@@ -5,6 +5,16 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Real QZ and real block reordering (Reference-LAPACK, BSD-3-Clause)
+
+`src/linalg_qz_lapack.f90` adapts Reference-LAPACK v3.12.1 real QZ,
+Hessenberg reduction, real block swaps and their support kernels. Original
+SciFort adapters are in `src/linalg_real_qz.f90` and the real overloads in
+`src/linalg_ordqz.f90`. Applicable copyright and NAG attribution remain in
+source. Full terms: [`LICENSES/lapack-BSD-3-Clause.txt`](LICENSES/lapack-BSD-3-Clause.txt).
+Exact files, hashes and modifications: [source catalog](docs/linalg_real_qz_sources.md).
+No new linked numerical dependency is required.
+
 ## Adaptive knot generation (SciPy, BSD-3-Clause)
 
 `src/interpolate_generate_knots.f90` adapts selection and knot-placement logic

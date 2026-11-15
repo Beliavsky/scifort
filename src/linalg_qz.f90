@@ -7,6 +7,7 @@
 ! forming inverses. The previous inverse-based method is retained as a
 ! separate fallback for cases beyond the present iterative implementation.
 module scifort_linalg_qz
+    use scifort_linalg_real_qz, only: real_qz
     use scifort_kinds, only : dp
     use scifort_linalg, only : linalg_status_success, linalg_status_invalid_shape, &
         linalg_status_singular, linalg_status_no_convergence
@@ -21,6 +22,7 @@ module scifort_linalg_qz
     public :: qz
 
     interface qz
+        module procedure real_qz
         module procedure qz_rr
         module procedure qz_rc
         module procedure qz_cr

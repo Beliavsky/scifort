@@ -3632,3 +3632,19 @@ reproducible root-search differences before increasing size limits.
   periodic selection parity remain separate work. C ABI and wrappers are deferred.
 
 See the [modern root guide](docs/interpolate_modern_root.md).
+
+## 2026-11-15 -- Approved real generalized Schur output
+
+The user approved real-output `qz` followed by whole-block `ordqz` reordering.
+
+- [x] Real orthogonal factors, 1x1/2x2 generalized Schur blocks and homogeneous
+  eigenvalues with singular-B regular pencils and explicit status checks.
+- [x] Native real block ordering, pair-closed custom selection and transactional
+  factor-only reordering, preserving existing complex procedure names.
+- [x] Reuse pinned permissive Fortran kernels with complete provenance; compare
+  reconstruction, spectra and ordering against independent and exact sources.
+- [ ] Larger public sizes, batched APIs, condition estimates and broader
+  near-irregular/defective robustness remain work. C ABI stays deferred.
+
+See the [real QZ guide](docs/linalg_real_qz.md). Earlier entries listing real
+Schur output as missing are superseded by this addition within its size limits.

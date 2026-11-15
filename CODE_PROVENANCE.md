@@ -1,3 +1,40 @@
+## 2026-11-15 - Real generalized Schur and ordered blocks
+
+The real overloads of `qz`, `ordqz` and `ordqz_factors` use original MIT
+SciFort normalization, shape/range validation, Householder QR orchestration,
+status handling, pair-closed predicate selection, transactional ordering and
+reconstruction/orthogonality checks. Existing complex numerical algorithms
+and the original complex `ordqz_factors` specific procedure are preserved.
+No C ABI or external linked dependency is introduced.
+
+`src/linalg_qz_lapack.f90` adapts **52 exact Reference-LAPACK v3.12.1 source
+files** plus selected safe-scaling definitions from `la_constants.f90`.
+The numerical engine includes `DHGEQZ` real double-shift QZ, `DGGHRD`,
+`DTGEXC`/`DTGEX2` block swaps and their private auxiliary/BLAS closure.
+The source and full license were inspected before adaptation. The
+[complete catalog](docs/linalg_real_qz_sources.md) records each upstream URL,
+SHA-256 and modifications. Required full terms remain in
+`LICENSES/lapack-BSD-3-Clause.txt` (SHA-256
+`978539245c405775bf347b1256c36df4daf8b69a64b099e94b1d53742201621e`).
+The source retains the universities' copyright, NAG attribution, original
+author/reference comments and the mixed `MIT AND BSD-3-Clause` designation.
+This remains an adaptation, not an original SciFort QZ algorithm.
+
+Mechanical changes are lowercase free form, the project binary64 kind,
+explicit module interfaces, documented dummy intents/function results,
+selected binary64 constants and intrinsic NaN detection. The private error
+hook never prints or stops; callers retain their INFO handling. No numerical
+coefficients, shift rules, stopping or block-swap acceptance tests change.
+The private `DORMR2` reflector storage has `intent(inout)` because its source
+temporarily writes and restores that array.
+
+New native tests, the real validation driver and Python checker are original
+MIT work. They compare independent reconstruction, orthogonality, whole-pair
+sorting and homogeneous SciPy spectra. The same inputs also run through a
+separately compiled unchanged pinned upstream source tree; no upstream
+numerical source is patched. The complete LAPACK test suite was not run.
+See the [validation record](validation/real_qz_2026-11-15.md).
+
 ## 2026-11-14 - Modern near-least-squares stopping correction
 
 The four existing fixed-knot branches in `src/interpolate_curfit_core.f90`

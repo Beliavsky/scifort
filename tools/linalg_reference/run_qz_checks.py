@@ -20,7 +20,8 @@ from scipy.optimize import linear_sum_assignment
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ["src/kinds.f90", "src/linalg.f90", "src/linalg_dense.f90",
            "src/linalg_svd.f90", "src/linalg_qr.f90", "src/linalg_matrix_functions.f90",
-           "src/linalg_schur.f90", "src/linalg_qz.f90"]
+           "src/linalg_schur.f90", "src/linalg_qz_lapack.f90", "src/linalg_real_qz.f90",
+           "src/linalg_qz.f90"]
 
 
 def cases(count: int, seed: int, max_order: int):

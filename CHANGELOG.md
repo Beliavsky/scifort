@@ -1,3 +1,13 @@
+## 2026-11-15 - Real QZ and ordered generalized Schur blocks
+
+- Add real-output `qz` and `ordqz` overloads for real matrix pairs, with real
+  orthogonal bases, quasi-triangular 1x1/2x2 blocks and homogeneous eigenvalues.
+- Add transactional real `ordqz_factors`, whole-conjugate-block selection and
+  sorting, retaining existing complex APIs and the order-40 public limit.
+- Adapt pinned Reference-LAPACK real QZ/reordering kernels with complete source
+  provenance and the retained license; no external linked dependency is added.
+- Add native, independent SciPy and separately compiled unchanged upstream checks.
+
 ## 2026-11-14 - Modern smoothing near the least-squares limit
 
 - Evaluate finite smoothing penalties for feasible supplied-knot modern fits
