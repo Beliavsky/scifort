@@ -14,6 +14,7 @@ module scifort_fit
         rayleigh_censored_nnlf, weibull_max_censored_nnlf
     use scifort_censored, only : gibrat_censored_nnlf
     use scifort_censored, only : halfnorm_censored_nnlf
+    use scifort_censored, only : hypsecant_censored_nnlf
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : dp
     use scifort_likelihood, only : normal_nnlf, &
@@ -482,6 +483,10 @@ module scifort_fit
         module procedure halfnorm_fit, halfnorm_fit_censored
     end interface halfnorm_fit
 
+    interface hypsecant_fit
+        module procedure hypsecant_fit, hypsecant_fit_censored
+    end interface hypsecant_fit
+
     interface halflogistic_fit
         module procedure halflogistic_fit, halflogistic_fit_censored
     end interface halflogistic_fit
@@ -586,6 +591,19 @@ contains
         call bounded_fit([real(dp) ::], family_halfnorm, lower, upper, result, guess, &
             [.false., .false.], max_iter, tolerance, data)
     end subroutine halfnorm_fit_censored
+
+    subroutine hypsecant_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for center and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting center and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_hypsecant, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine hypsecant_fit_censored
 
     subroutine halflogistic_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1117,6 +1135,8 @@ contains
                 value = halfcauchy_censored_nnlf(censored, params(1), params(2))
             case (family_halfnorm)
                 value = halfnorm_censored_nnlf(censored, params(1), params(2))
+            case (family_hypsecant)
+                value = hypsecant_censored_nnlf(censored, params(1), params(2))
             case (family_halflogistic)
                 value = halflogistic_censored_nnlf(censored, params(1), params(2))
             case (family_cauchy)

@@ -1,3 +1,13 @@
+## 2026-11-15 - Hyperbolic-secant censoring
+
+- Add hyperbolic-secant mixed-censoring likelihood/NNLF and bounded fits with
+  free or fixed location and scale; retain existing scalar and array APIs.
+- Use log-domain arctangent identities for narrow/tail intervals and retain
+  both omitted tails for nearly full-support intervals.
+- Validate 216 native checks at checked `-O0` and `-O3`, 112 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to nineteen censored families and 90 remaining candidates.
+
 ## 2026-11-15 - Half-normal censoring
 
 - Add half-normal mixed-censoring likelihood/NNLF and bounded fits with free

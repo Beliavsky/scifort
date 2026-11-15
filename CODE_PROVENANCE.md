@@ -1,3 +1,24 @@
+## 2026-11-15 - Hyperbolic-secant censored likelihoods and fitting
+
+The new hyperbolic-secant callbacks in `src/censored.f90` are original MIT
+SciFort code, independently implemented from the density and location/scale
+definition in the [SciPy hyperbolic-secant mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.hypsecant.html),
+inspected 2026-11-15. Integrating `sech(z)/pi` gives
+`F(z)=2*atan(exp(z))/pi`; reflection gives survival. The elementary arctangent
+subtraction identity gives positive interval expressions. Same-side intervals
+use `exp(-za)*(1-exp(-(zb-za)))/(1+exp(-za)*exp(-zb))`; crossing intervals use
+`(1-exp(-(zb-za)))/(exp(za)+exp(-zb))`, or the complement of both omitted tails
+when that is well conditioned. These ratios are tangents of the probability
+angle, converted back using an arctangent and the factor `2/pi`.
+No upstream implementation code was imported or translated. Existing SciFort
+log-arctangent, log interval-width, exponential-mass, and guarded standardization
+helpers are reused without modification. Their existing provenance and notices
+continue to apply. Bounded fitting reuses the existing optimizer. Independent
+mpmath calculations use direct density and distribution-function definitions;
+SciPy supplies separate fitting checks. No dependency, C ABI, or third-party
+license text is added. See the
+[validation report](validation/hypsecant_censored_2026-11-15.md).
+
 ## 2026-11-15 - Half-normal censored likelihoods and fitting
 
 The new half-normal callbacks in `src/censored.f90` are original MIT SciFort

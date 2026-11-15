@@ -438,6 +438,43 @@ def main():
             expected=reference.loginterval(a,b,'halfnorm',1.,loc,scale)
             cases.append(('halfnorm_stress',float(expected)))
             stdin+=f'18 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    for _ in range(args.cases):
+        loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+        exact=[loc+scale*rng.uniform(-20.,20.) for _ in range(3)]
+        left=[loc+scale*rng.uniform(-40.,40.)]
+        right=[loc+scale*rng.uniform(-40.,40.)]
+        intervals=[]
+        for _ in range(3):
+            a=loc+scale*rng.uniform(-1000.,1000.)
+            b=a+scale*10**rng.uniform(-14.,3.)
+            if b == a: b=math.nextafter(a,math.inf)
+            intervals.append((a,b))
+        expected=sum(reference.logpdf(x,'hypsecant',1.,loc,scale) for x in exact)
+        expected+=sum(reference.logcdf(x,'hypsecant',1.,loc,scale) for x in left)
+        expected+=sum(reference.logsf(x,'hypsecant',1.,loc,scale) for x in right)
+        expected+=sum(reference.loginterval(a,b,'hypsecant',1.,loc,scale) for a,b in intervals)
+        cases.append(('hypsecant',float(expected)))
+        stdin+=f'19 1 {loc:.17g} {scale:.17g} 3 1 1 3\n'
+        stdin+='\n'.join(' '.join(f'{x:.17g}' for x in group)
+                          for group in [exact,left,right,*intervals])+'\n'
+    with mp.workdps(800):
+        for a,b,loc,scale in [
+            (0.,math.nextafter(0.,1.),0.,1.),
+            (-math.nextafter(0.,1.),math.nextafter(0.,1.),0.,1.),
+            (1e-300,2e-300,0.,1e300),
+            (-2e-300,-1e-300,0.,1e300),
+            (-1e-300,1e-300,0.,1e300),
+            (1000.,math.nextafter(1000.,math.inf),0.,1.),
+            (-math.nextafter(1000.,math.inf),-1000.,0.,1.),
+            (-40.,41.,0.,1.),
+            (-.1,.2,0.,1.),
+            (-1e308,1e308,0.,1e308),
+            (1e308,math.nextafter(1e308,math.inf),-1e308,1e308),
+            (0.,1e308,0.,1.5e308),
+        ]:
+            expected=reference.loginterval(a,b,'hypsecant',1.,loc,scale)
+            cases.append(('hypsecant_stress',float(expected)))
+            stdin+=f'19 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -461,11 +498,14 @@ def main():
         erlang_errors = []
         gibrat_errors = []
         halfnorm_errors = []
+        hypsecant_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith('hypsecant'):
+                hypsecant_errors.append(error)
             if family.startswith('halfnorm'):
                 halfnorm_errors.append(error)
             if family.startswith('gibrat'):
@@ -484,6 +524,8 @@ def main():
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
         print(f'  Erlang: {len(erlang_errors)} comparisons; '
               f'max scaled error={max(erlang_errors):.3g}', flush=True)
+        print(f'  Hypsecant: {len(hypsecant_errors)} comparisons; '
+              f'max scaled error={max(hypsecant_errors):.3g}', flush=True)
         print(f'  Half-normal: {len(halfnorm_errors)} comparisons; '
               f'max scaled error={max(halfnorm_errors):.3g}', flush=True)
         print(f'  Gibrat: {len(gibrat_errors)} comparisons; '

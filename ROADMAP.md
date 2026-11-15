@@ -1,3 +1,11 @@
+## Hyperbolic-secant censoring (2026-11-15)
+
+- [x] Add exact/left/right/interval likelihoods and bounded location/scale fits.
+- [x] Validate reflection, tiny/far-tail intervals, nearly full-support
+  probabilities, and guarded displacement/width calculations.
+- [ ] Continue the [remaining censoring inventory](docs/censored_distribution_gaps.md);
+  C ABI expansion remains deferred.
+
 ## Half-normal censoring (2026-11-15)
 
 - [x] Add exact/left/right/interval likelihoods and bounded fitting.

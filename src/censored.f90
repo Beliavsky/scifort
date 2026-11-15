@@ -58,6 +58,7 @@ module scifort_censored
     public :: weibull_max_censored_loglikelihood, weibull_max_censored_nnlf
     public :: halfcauchy_censored_loglikelihood, halfcauchy_censored_nnlf
     public :: halfnorm_censored_loglikelihood, halfnorm_censored_nnlf
+    public :: hypsecant_censored_loglikelihood, hypsecant_censored_nnlf
     public :: halflogistic_censored_loglikelihood, halflogistic_censored_nnlf
     public :: cauchy_censored_loglikelihood, cauchy_censored_nnlf
     public :: laplace_censored_loglikelihood, laplace_censored_nnlf
@@ -66,6 +67,95 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function hypsecant_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, hypsecant_lpdf, hypsecant_lcdf, &
+            hypsecant_lsf, hypsecant_interval)
+    end function hypsecant_censored_loglikelihood
+
+    pure function hypsecant_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -hypsecant_censored_loglikelihood(data, loc, scale)
+    end function hypsecant_censored_nnlf
+
+    pure function hypsecant_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, z, t
+        z = abs(location_scale_z(x,params))
+        t = exp(-z)
+        value = -z-log1p_safe(t*t)+(scifort_log_two-log(scifort_pi))-log(params(2))
+    end function hypsecant_lpdf
+
+    pure function hypsecant_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, z
+        z = location_scale_z(x,params)
+        value = (scifort_log_two-log(scifort_pi))+cauchy_logatan_exp(-abs(z))
+        if (z > 0.0_dp) value = log1p_safe(-exp(value))
+    end function hypsecant_lcdf
+
+    pure function hypsecant_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, z
+        z = location_scale_z(x,params)
+        value = (scifort_log_two-log(scifort_pi))+cauchy_logatan_exp(-abs(z))
+        if (z < 0.0_dp) value = log1p_safe(-exp(value))
+    end function hypsecant_lsf
+
+    pure function hypsecant_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp) :: value, za, zb, logmass, logratio, omitted, large, small
+        value = negative_infinity(0.0_dp)
+        za = location_scale_z(a,params)
+        zb = location_scale_z(b,params)
+        logmass = log_exponential_mass(log_distance(b,a)-log(params(2)))
+        if (a >= params(1) .or. b <= params(1)) then
+            ! Reflect a negative interval; 0 <= za <= zb thereafter.
+            if (b <= params(1)) then
+                large = -za
+                za = -zb
+                zb = large
+            end if
+            if (.not. ieee_is_finite(za)) return
+            ! atan(exp(-za))-atan(exp(-zb)) has a positive difference formula.
+            logratio = -za+logmass-log1p_safe(exp(-za)*exp(-zb))
+        else
+            omitted = exp(hypsecant_lcdf(a,params))+exp(hypsecant_lsf(b,params))
+            if (omitted <= 0.5_dp) then
+                value = log1p_safe(-omitted)
+                return
+            end if
+            ! tan(angle)=(1-exp(-(zb-za)))/(exp(za)+exp(-zb)).
+            large = max(za,-zb)
+            small = min(za,-zb)
+            logratio = logmass-(large+log1p_safe(exp(small-large)))
+        end if
+        value = (scifort_log_two-log(scifort_pi))+cauchy_logatan_exp(logratio)
+    end function hypsecant_interval
 
     pure function halfnorm_censored_loglikelihood(data, loc, scale) result(value)
         implicit none
