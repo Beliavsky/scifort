@@ -7288,10 +7288,21 @@ interpolation (`s=0`, the default) and smoothing (`s>0`) for degrees 1-5.
 The last ordinate and weight are ignored; the period comes from the first
 and last coordinates. Endpoint derivatives through order `k-1` agree.
 Periodic fixed-knot least squares is available with `task=-1`;
-see the [fixed-knot guide](interpolate_periodic_lsq.md). Continuation remains unsupported. Evaluation
+see the [fixed-knot guide](interpolate_periodic_lsq.md). Continuation is native with [explicit state](interpolate_continuation.md). Evaluation
 outside the period retains the existing extrapolation/clipping conventions.
 See the [TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-scalar-fitting)
 and [validation record](../validation/splrep_periodic_2026-11-13.md).
+
+### Explicit tuple continuation
+
+`fitpack_continuation_type` holds a caller-owned successful fitting history.
+Pass `state=history` to `splrep` or `splprep` with `task=0`, then `task=1`
+with the same active data, sites, weights, degree, bounds and periodic mode.
+Only the smoothing target changes. Scalar/parametric and ordinary/periodic
+fits support degrees 1-5, positive targets and `s=0`. Assignment deep-copies
+history; `valid()` inspects it and `reset()` releases it. Failed calls preserve
+prior state and return invalid tuples. See [continuation](interpolate_continuation.md)
+for status, matching, memory, history-dependent knots and numerical limits.
 
 ### Native parametric adaptive smoothing
 
@@ -7312,6 +7323,6 @@ leg back to the first row. Explicit `u` must include the finite period endpoint.
 Endpoint values and derivatives through order `k-1` match within conditioning
 limits. Periodic fixed-knot least squares is available with `task=-1` and
 a full input knot vector; see the [fixed-knot guide](interpolate_periodic_lsq.md).
-Continuation remains unsupported. See the
+Continuation is native with [explicit state](interpolate_continuation.md). See the
 [TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-parametric-fitting)
 and [validation record](../validation/splprep_closed_2026-11-13.md).

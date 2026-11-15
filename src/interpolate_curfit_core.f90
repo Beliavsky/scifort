@@ -19,7 +19,54 @@ module scifort_interpolate_curfit_core
     integer, parameter :: fitpack_s_too_small = 2, fitpack_maxit = 3
     real(dp), parameter :: zero = 0.0_dp, one = 1.0_dp, half = 0.5_dp
     logical, parameter :: fp_true = .true., fp_false = .false.
+    type, public :: fitpack_work_type
+        private
+        integer :: n=0
+        real(dp), allocatable :: t(:),fpint(:)
+        integer, allocatable :: nrdata(:)
+    contains
+        procedure :: valid => work_valid
+    end type fitpack_work_type
 contains
+
+    logical function work_valid(self) result(ok)
+        implicit none
+        class(fitpack_work_type), intent(in) :: self !! Opaque saved normalized knot-pass state.
+        ok=self%n>0
+    end function work_valid
+
+    subroutine restore_work(work,n,t,fpint,nrdata,mode)
+        implicit none
+        type(fitpack_work_type), intent(in), optional :: work !! Prior successful matching fit.
+        integer, intent(inout) :: n !! Initial or saved active knot count.
+        real(dp), intent(inout) :: t(:) !! Zeroed normalized knot workspace.
+        real(dp), intent(inout) :: fpint(:) !! Zeroed interval residual and history workspace.
+        integer, intent(inout) :: nrdata(:) !! Zeroed interval counts and refinement history.
+        integer, intent(out) :: mode !! Zero fresh; one resumed; minus one if capacity is incompatible.
+        mode=0
+        if (.not.present(work)) return
+        if (.not.work%valid()) return
+        mode=-1
+        if (work%n>size(t)) return
+        n=work%n
+        t(:n)=work%t
+        fpint(:n)=work%fpint
+        nrdata(:n)=work%nrdata
+        mode=1
+    end subroutine restore_work
+
+    subroutine capture_work(work,n,t,fpint,nrdata)
+        implicit none
+        type(fitpack_work_type), intent(out) :: work !! Candidate state, committed after validation.
+        integer, intent(in) :: n !! Active knot count after a successful kernel call.
+        real(dp), intent(in) :: t(:) !! Normalized full knots, before physical rescaling.
+        real(dp), intent(in) :: fpint(:) !! Interval sums and saved residual diagnostics.
+        integer, intent(in) :: nrdata(:) !! Interval counts and saved refinement size.
+        work%n=n
+        work%t=t(:n)
+        work%fpint=fpint(:n)
+        work%nrdata=nrdata(:n)
+    end subroutine capture_work
 
     subroutine fitpack_periodic_lsq(u,x,w,k,t,coeff,status)
         implicit none
@@ -87,7 +134,7 @@ contains
         status=0
     end subroutine fitpack_periodic_lsq
 
-    subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status,knot_capacity,full_knots)
+    subroutine fitpack_periodic_parametric(u,x,w,k,s,knots,coeff,status,knot_capacity,full_knots,work)
         implicit none
         real(dp), intent(in) :: u(:) !! Finite increasing sites, including the closing endpoint.
         real(dp), intent(in) :: x(:,:) !! Coordinates (sites,channels); final row is ignored.
@@ -99,6 +146,9 @@ contains
         integer, intent(out) :: status !! Zero success, three numerical or allocation failure.
         integer, intent(in), optional :: knot_capacity !! Hard knot capacity, default m+2*k.
         real(dp), intent(in), optional :: full_knots(:) !! Fixed full periodic knots; positive s.
+        type(fitpack_work_type), intent(inout), optional :: work !! Explicit continuation state.
+        type(fitpack_work_type) :: pending
+        integer :: task_mode
         real(dp), allocatable :: uu(:),xx(:),ww(:),t(:),c(:),fpint(:),z(:),q(:,:)
         real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
         integer, allocatable :: nrdata(:)
@@ -107,6 +157,7 @@ contains
         real(dp) :: constant_fp,weight_sum
         real(dp), allocatable :: constant(:)
         status=3
+        if (present(work) .and. present(full_knots)) return
         m=size(u)
         ndim=size(x,2)
         if (m>huge(m)/64) return
@@ -163,6 +214,8 @@ contains
         g2=zero
         nrdata=0
         n=2*(k+1)
+        call restore_work(work,n,t,fpint,nrdata,task_mode)
+        if (task_mode<0) return
         fp=zero
         ier=fitpack_ok
         if (present(full_knots)) then
@@ -186,15 +239,16 @@ contains
                 end do
             else
                 if (n==2*(k+1)) return
-                call fpclos(0,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
+                call fpclos(task_mode,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
                     ncc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier, &
                     fixed_knots=.true.,constant_residual=constant_fp)
             end if
         else
-            call fpclos(0,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
+            call fpclos(task_mode,ndim,m,uu,m*ndim,xx,ww,k,target,nest,0.001_dp,20,k+1,k+2,n,t, &
                 ncc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
         end if
         if (ier>0) return
+        if (present(work)) call capture_work(pending,n,t,fpint,nrdata)
         ncoef=n-k-1
         if (.not.all(ieee_is_finite(c))) return
         if (xscale>one) then
@@ -238,10 +292,11 @@ contains
             offset=(j-1)*n
             coeff(:,j)=c(offset+1:offset+ncoef)
         end do
+        if (present(work)) work=pending
         status=0
     end subroutine fitpack_periodic_parametric
 
-    subroutine fitpack_periodic_curve(x,y,w,k,s,knots,coeff,status,knot_capacity,full_knots)
+    subroutine fitpack_periodic_curve(x,y,w,k,s,knots,coeff,status,knot_capacity,full_knots,work)
         implicit none
         real(dp), intent(in) :: x(:) !! Finite increasing coordinates, including period endpoint.
         real(dp), intent(in) :: y(:) !! Observations; the final entry is ignored.
@@ -253,6 +308,9 @@ contains
         integer, intent(out) :: status !! Zero success, three numerical or allocation failure.
         integer, intent(in), optional :: knot_capacity !! Hard knot capacity, default m+2*k.
         real(dp), intent(in), optional :: full_knots(:) !! Fixed full periodic knots; positive s.
+        type(fitpack_work_type), intent(inout), optional :: work !! Explicit continuation state.
+        type(fitpack_work_type) :: pending
+        integer :: task_mode
         real(dp), allocatable :: xx(:),yy(:),ww(:),t(:),c(:),fpint(:),z(:),q(:,:)
         real(dp), allocatable :: a1(:,:),a2(:,:),b(:,:),g1(:,:),g2(:,:)
         integer, allocatable :: nrdata(:)
@@ -261,6 +319,7 @@ contains
         real(dp) :: constant_fp,weight_sum
         real(dp) :: constant
         status=3
+        if (present(work) .and. present(full_knots)) return
         m=size(x)
         if (m>huge(m)/64) return
         ! Extended periodic knots require exponent headroom beyond the data interval.
@@ -314,6 +373,8 @@ contains
         g2=zero
         nrdata=0
         n=2*(k+1)
+        call restore_work(work,n,t,fpint,nrdata,task_mode)
+        if (task_mode<0) return
         fp=zero
         ier=0
         if (present(full_knots)) then
@@ -328,15 +389,16 @@ contains
                 c(:n-k-1)=constant
             else
                 if (n==2*(k+1)) return
-                call fpperi(0,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
+                call fpperi(task_mode,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
                     fpint,z,a1,a2,b,g1,g2,q,nrdata,ier, &
                     fixed_knots=.true.,constant_residual=constant_fp)
             end if
         else
-            call fpperi(0,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
+            call fpperi(task_mode,xx,yy,ww,m,k,target,nest,0.001_dp,20,k+1,k+2,n,t,c,fp, &
                 fpint,z,a1,a2,b,g1,g2,q,nrdata,ier)
         end if
         if (ier>0) return
+        if (present(work)) call capture_work(pending,n,t,fpint,nrdata)
         nc=n-k-1
         if (.not.all(ieee_is_finite(c(:nc)))) return
         if (yscale>one) then
@@ -374,17 +436,18 @@ contains
         knots=t(:n)
         coeff=zero
         coeff(:nc)=c(:nc)
+        if (present(work)) work=pending
         status=0
     end subroutine fitpack_periodic_curve
 
     subroutine fitpack_smooth_curve(x, y, w, k, s, bounds, knots, coeff, status, &
-                                   full_knots, knot_capacity,shift_origin)
+                                   full_knots, knot_capacity,shift_origin,work)
         implicit none
         real(dp), intent(in) :: x(:) !! Finite strictly increasing sample coordinates.
         real(dp), intent(in) :: y(:) !! Finite sample values, length size(x).
         real(dp), intent(in), optional :: w(:) !! Positive residual multipliers, default one.
         integer, intent(in) :: k !! Polynomial degree, from one through five.
-        real(dp), intent(in) :: s !! Positive weighted squared-residual target.
+        real(dp), intent(in) :: s !! Nonnegative weighted squared-residual target; zero interpolates.
         real(dp), intent(in) :: bounds(2) !! Finite enclosing left and right bounds.
         real(dp), allocatable, intent(out) :: knots(:) !! Full active knots on success.
         real(dp), allocatable, intent(out) :: coeff(:) !! Coefficients padded to knot count.
@@ -392,6 +455,9 @@ contains
         real(dp), intent(in), optional :: full_knots(:) !! Full clamped knots for fixed smoothing.
         integer, intent(in), optional :: knot_capacity !! Hard knot limit, default size(x)+k+1.
         logical, intent(in), optional :: shift_origin !! Shift before scaling, default false.
+        type(fitpack_work_type), intent(inout), optional :: work !! Explicit continuation state.
+        type(fitpack_work_type) :: pending
+        integer :: task_mode
         real(dp), allocatable :: xx(:), yy(:), ww(:), t(:), c(:), a(:, :), b(:, :), g(:, :)
         real(dp), allocatable :: q(:, :), z(:), fpint(:)
         integer, allocatable :: nrdata(:)
@@ -402,6 +468,7 @@ contains
         status = 3
         shifted=.false.
         if (present(shift_origin)) shifted=shift_origin
+        if (present(work) .and. present(full_knots)) return
         m = size(x)
         if (m > huge(m)/32) return
         nest = m + k + 1
@@ -439,14 +506,17 @@ contains
         wscale = maxval(ww)
         ww = ww/wscale
         if (any(ww < tiny(one)**0.125_dp)) return
-        logtarget = log(s) - 2*log(yscale) - 2*log(wscale)
-        ! A normalized polynomial residual is at most m; avoid huge targets.
-        if (logtarget >= log(real(m, dp) + one)) then
-            target = real(m, dp) + one
-        else
-            ! An unrepresentable positive target is an explicit numerical failure.
-            if (logtarget < log(tiny(one))) return
-            target = exp(logtarget)
+        target=zero
+        if (s>zero) then
+            logtarget = log(s) - 2*log(yscale) - 2*log(wscale)
+            ! A normalized polynomial residual is at most m; avoid huge targets.
+            if (logtarget >= log(real(m, dp) + one)) then
+                target = real(m, dp) + one
+            else
+                ! An unrepresentable positive target is an explicit numerical failure.
+                if (logtarget < log(tiny(one))) return
+                target = exp(logtarget)
+            end if
         end if
         t = zero
         c = zero
@@ -458,7 +528,9 @@ contains
         fpint = zero
         nrdata = 0
         n = 2*(k + 1)
-        call fpcurf(0, xx, yy, ww, m, zero, one, k, target, nest, 0.001_dp, 20, k + 1, k + 2, &
+        call restore_work(work,n,t,fpint,nrdata,task_mode)
+        if (task_mode<0) return
+        call fpcurf(task_mode, xx, yy, ww, m, zero, one, k, target, nest, 0.001_dp, 20, k + 1, k + 2, &
                     n, t, c, fp, fpint, z, a, b, g, q, nrdata, ier, &
                     polynomial_only=present(full_knots))
         if (present(full_knots)) then
@@ -481,12 +553,13 @@ contains
             t(n-k:n)=one
             if (any(t(k+2:n-k)-t(k+1:n-k-1) < &
                 tiny(one)**(one/real(4*(k+1),dp)))) return
-            call fpcurf(0,xx,yy,ww,m,zero,one,k,target,nest,0.001_dp,20,k+1,k+2, &
+            call fpcurf(task_mode,xx,yy,ww,m,zero,one,k,target,nest,0.001_dp,20,k+1,k+2, &
                 n,t,c,fp,fpint,z,a,b,g,q,nrdata,ier, &
                 fixed_knots=.true.,polynomial_residual=poly_fp)
             yy=y/yscale
         end if
         if (ier > 0) return
+        if (present(work)) call capture_work(pending,n,t,fpint,nrdata)
         nc = n - k - 1
         if (.not. all(ieee_is_finite(c(:nc)))) return
         ! Check the returned representation, including interpolation-roundoff limits.
@@ -499,7 +572,7 @@ contains
             if (abs(residual)>sqrt(huge(one)/real(m,dp))) return
             fp=fp+residual**2
         end do
-        if (fp>1.001_dp*target) return
+        if (fp>merge(1.001_dp*target,real(m,dp)*(128*epsilon(one))**2,target>zero)) return
         if (yscale > one) then
             if (maxval(abs(c(:nc))) > huge(one)/yscale) return
         end if
@@ -540,11 +613,12 @@ contains
                 end if
                 fp=fp+residual**2
             end do
-            if (fp>1.0011_dp*target) then
+            if (fp>merge(1.0011_dp*target,real(m,dp)*(128*epsilon(one))**2,target>zero)) then
                 deallocate(knots,coeff)
                 return
             end if
         end if
+        if (present(work)) work=pending
         status = 0
     end subroutine fitpack_smooth_curve
 
@@ -560,7 +634,7 @@ contains
         real(dp), intent(in) :: s !! Nonnegative normalized weighted squared-residual target.
         real(dp), intent(in) :: tol !! Relative residual-target tolerance, 0.001.
         real(dp), intent(out) :: fp !! Achieved normalized weighted squared residual.
-        integer, intent(in) :: iopt !! FITPACK task selector; this wrapper always uses zero.
+        integer, intent(in) :: iopt !! FITPACK task selector: zero fresh, one continuation, minus one fixed.
         integer, intent(in) :: m !! Number of strictly increasing samples.
         integer, intent(in) :: k !! Spline degree, from one through five.
         integer, intent(in) :: nest !! Allocated knot and coefficient capacity.
@@ -1492,19 +1566,22 @@ contains
     end subroutine fprati
 
     subroutine fitpack_smooth_parametric(u, x, w, k, s, bounds, knots, coeff, status, &
-                                         full_knots,knot_capacity)
+                                         full_knots,knot_capacity,work)
         implicit none
         real(dp), intent(in) :: u(:) !! Finite strictly increasing parameter sites.
         real(dp), intent(in) :: x(:, :) !! Finite coordinates, shape (size(u),channels).
         real(dp), intent(in), optional :: w(:) !! Positive residual multipliers, default one.
         integer, intent(in) :: k !! Polynomial degree, from one through five.
-        real(dp), intent(in) :: s !! Positive total weighted squared-residual target.
+        real(dp), intent(in) :: s !! Nonnegative shared weighted squared-residual target; zero interpolates.
         real(dp), intent(in) :: bounds(2) !! Finite enclosing parameter bounds.
         real(dp), allocatable, intent(out) :: knots(:) !! Full active knots on success.
         real(dp), allocatable, intent(out) :: coeff(:, :) !! Unpadded coefficients by channel.
         integer, intent(out) :: status !! Zero success, three numerical/allocation failure.
         real(dp), intent(in), optional :: full_knots(:) !! Full clamped knots for fixed smoothing.
         integer, intent(in), optional :: knot_capacity !! Hard knot limit, default size(u)+k+1.
+        type(fitpack_work_type), intent(inout), optional :: work !! Explicit continuation state.
+        type(fitpack_work_type) :: pending
+        integer :: task_mode
         real(dp), allocatable :: uu(:), xx(:), ww(:), t(:), c(:), a(:, :), b(:, :), g(:, :)
         real(dp), allocatable :: q(:, :), z(:), fpint(:)
         integer, allocatable :: nrdata(:)
@@ -1513,6 +1590,7 @@ contains
         real(dp), allocatable :: polynomial(:,:)
         integer :: m, ndim, nest, ncc, n, ncoef, ier, info, i, j, l, offset
         status = 3
+        if (present(work) .and. present(full_knots)) return
         m = size(u)
         ndim = size(x, 2)
         if (m > huge(m)/32) return
@@ -1545,13 +1623,16 @@ contains
         wscale = maxval(ww)
         ww = ww/wscale
         if (any(ww < tiny(one)**0.125_dp)) return
-        logtarget = log(s) - 2*log(xscale) - 2*log(wscale)
-        limit = real(m, dp)*real(ndim, dp) + one
-        if (logtarget >= log(limit)) then
-            target = limit
-        else
-            if (logtarget < log(tiny(one))) return
-            target = exp(logtarget)
+        target=zero
+        if (s>zero) then
+            logtarget = log(s) - 2*log(xscale) - 2*log(wscale)
+            limit = real(m, dp)*real(ndim, dp) + one
+            if (logtarget >= log(limit)) then
+                target = limit
+            else
+                if (logtarget < log(tiny(one))) return
+                target = exp(logtarget)
+            end if
         end if
         t = zero
         c = zero
@@ -1563,9 +1644,11 @@ contains
         fpint = zero
         nrdata = 0
         n = 2*(k + 1)
+        call restore_work(work,n,t,fpint,nrdata,task_mode)
+        if (task_mode<0) return
         ier = fitpack_ok
         fp = zero
-        call fppara(0, ndim, m, uu, m*ndim, xx, ww, zero, one, k, target, nest, 0.001_dp, 20, &
+        call fppara(task_mode, ndim, m, uu, m*ndim, xx, ww, zero, one, k, target, nest, 0.001_dp, 20, &
                     k + 1, k + 2, n, t, ncc, c, fp, fpint, z, a, b, g, q, nrdata, ier, &
                     polynomial_only=present(full_knots))
         if (present(full_knots)) then
@@ -1593,12 +1676,13 @@ contains
             t(n-k:n)=one
             if (any(t(k+2:n-k)-t(k+1:n-k-1) < &
                 tiny(one)**(one/real(4*(k+1),dp)))) return
-            call fppara(0,ndim,m,uu,m*ndim,xx,ww,zero,one,k,target,nest,0.001_dp,20, &
+            call fppara(task_mode,ndim,m,uu,m*ndim,xx,ww,zero,one,k,target,nest,0.001_dp,20, &
                 k+1,k+2,n,t,ncc,c,fp,fpint,z,a,b,g,q,nrdata,ier, &
                 fixed_knots=.true.,polynomial_residual=poly_fp)
             xx=reshape(transpose(x/xscale),[m*ndim])
         end if
         if (ier > 0) return
+        if (present(work)) call capture_work(pending,n,t,fpint,nrdata)
         ncoef = n - k - 1
         if (any(g(:ncoef, 1) /= zero)) then
             if (fp_rank_deficient(g, ncoef, nest)) return
@@ -1620,7 +1704,7 @@ contains
                 fp = fp + residual**2
             end do
         end do
-        if (fp > 1.001_dp*target) return
+        if (fp>merge(1.001_dp*target,real(m,dp)*real(ndim,dp)*(128*epsilon(one))**2,target>zero)) return
         if (xscale > one) then
             if (maxval(abs(c)) > huge(one)/xscale) return
         end if
@@ -1662,10 +1746,11 @@ contains
                 fp=fp+residual**2
             end do
         end do
-        if (fp>1.001_dp*target) then
+        if (fp>merge(1.001_dp*target,real(m,dp)*(128*epsilon(one))**2,target>zero)) then
             deallocate(knots,coeff)
             return
         end if
+        if (present(work)) work=pending
         status = 0
     end subroutine fitpack_smooth_parametric
 
@@ -1682,7 +1767,7 @@ contains
         real(dp), intent(inout) :: fp !! Total normalized weighted squared residual.
         integer, intent(in) :: idim !! Number of coordinate channels.
         integer, intent(in) :: maxit !! Maximum smoothing iterations, 20.
-        integer, intent(in) :: iopt !! FITPACK task selector, zero for this wrapper.
+        integer, intent(in) :: iopt !! FITPACK task selector: zero fresh, one continuation, minus one fixed.
         integer, intent(in) :: m !! Number of strictly increasing parameter sites.
         integer, intent(in) :: mx !! Length of coordinate-fastest flattened observations.
         integer, intent(in) :: k !! Spline polynomial degree, from one through five.
@@ -3142,7 +3227,8 @@ contains
                   fpold = fp0
 
                   ! test whether the required storage space exceeds the available one.
-                  if (n>=nest) then
+                  ! Restart needs the minimal seed, even after a full interpolation state.
+                  if (nmin>=nest) then
                      ier = fitpack_insufficient_storage
                      return
                   end if

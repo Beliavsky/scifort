@@ -6,7 +6,8 @@
 module scifort_interpolate_fitpack_compat
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_value, ieee_quiet_nan
     use scifort_kinds, only : dp
-    use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric
+    use scifort_interpolate_curfit_core, only : fitpack_smooth_curve,fitpack_smooth_parametric, &
+        fitpack_work_type
     use scifort_interpolate_curfit_core, only : fitpack_periodic_curve
     use scifort_interpolate_curfit_core, only : fitpack_periodic_parametric
     use scifort_interpolate_periodic_lsq, only: periodic_lsq
@@ -47,6 +48,18 @@ module scifort_interpolate_fitpack_compat
         procedure :: channels => parametric_tck_channels
     end type fitpack_parametric_tck_type
 
+    type, public :: fitpack_continuation_type
+        private
+        logical :: ready=.false.,scalar=.false.,periodic=.false.
+        integer :: k=-1
+        real(dp) :: bounds(2)=0.0_dp
+        real(dp), allocatable :: u(:),x(:,:),w(:)
+        type(fitpack_work_type) :: work
+    contains
+        procedure :: valid => continuation_valid
+        procedure :: reset => continuation_reset
+    end type fitpack_continuation_type
+
     public :: splrep, splprep, splev, splint, splder, splantider, spalde
     public :: make_splrep,make_splprep
     interface splev
@@ -55,6 +68,79 @@ module scifort_interpolate_fitpack_compat
     end interface
 
 contains
+
+    logical function continuation_valid(self) result(ok)
+        implicit none
+        class(fitpack_continuation_type), intent(in) :: self !! Caller-owned fitting history.
+        ok=self%ready .and. self%work%valid()
+    end function continuation_valid
+
+    subroutine continuation_reset(self)
+        implicit none
+        class(fitpack_continuation_type), intent(inout) :: self !! State to release and invalidate.
+        type(fitpack_work_type) :: empty
+        self%ready=.false.
+        self%work=empty
+        if (allocated(self%u)) deallocate(self%u)
+        if (allocated(self%x)) deallocate(self%x)
+        if (allocated(self%w)) deallocate(self%w)
+        self%k=-1
+    end subroutine continuation_reset
+
+    logical function continuation_matches(state,u,x,w,k,bounds,periodic,scalar) result(ok)
+        implicit none
+        type(fitpack_continuation_type), intent(in) :: state !! Previously committed successful fit.
+        real(dp), intent(in) :: u(:) !! Physical sites, including any period endpoint.
+        real(dp), intent(in) :: x(:,:) !! Sample coordinates; periodic closing row ignored.
+        real(dp), intent(in), optional :: w(:) !! Active residual weights; default one.
+        integer, intent(in) :: k !! Requested degree.
+        real(dp), intent(in) :: bounds(2) !! Requested physical domain.
+        logical, intent(in) :: periodic !! Requested periodic constraint mode.
+        logical, intent(in) :: scalar !! Whether the scalar tuple API is being used.
+        integer :: active
+        ok=.false.
+        if (.not.state%valid()) return
+        if (state%k/=k .or. (state%periodic.neqv.periodic)) return
+        if (state%scalar.neqv.scalar) return
+        if (any(state%bounds/=bounds)) return
+        if (size(state%u)/=size(u) .or. size(state%x,2)/=size(x,2)) return
+        if (any(state%u/=u)) return
+        active=size(u)
+        if (periodic) active=active-1
+        if (any(state%x/=x(:active,:))) return
+        if (present(w)) then
+            if (any(state%w/=w(:active))) return
+        else
+            if (any(state%w/=1.0_dp)) return
+        end if
+        ok=.true.
+    end function continuation_matches
+
+    subroutine commit_continuation(state,u,x,w,k,bounds,periodic,scalar,work)
+        implicit none
+        type(fitpack_continuation_type), intent(inout) :: state !! State committed only after success.
+        real(dp), intent(in) :: u(:) !! Physical sites, including any period endpoint.
+        real(dp), intent(in) :: x(:,:) !! Active sample coordinates and any ignored closing row.
+        real(dp), intent(in), optional :: w(:) !! Residual weights; default one.
+        integer, intent(in) :: k !! Degree of the successful fit.
+        real(dp), intent(in) :: bounds(2) !! Physical support bounds.
+        logical, intent(in) :: periodic !! Periodic fitting mode.
+        logical, intent(in) :: scalar !! Whether the scalar tuple API was used.
+        type(fitpack_work_type), intent(in) :: work !! Validated normalized numerical history.
+        integer :: active
+        active=size(u)
+        if (periodic) active=active-1
+        state%u=u
+        state%x=x(:active,:)
+        state%w=spread(1.0_dp,1,active)
+        if (present(w)) state%w=w(:active)
+        state%k=k
+        state%bounds=bounds
+        state%scalar=scalar
+        state%periodic=periodic
+        state%work=work
+        state%ready=.true.
+    end subroutine commit_continuation
 
     function make_splprep(x,w,u,ub,ue,k,s,t,nest,status,parameters,bc_type) result(fit)
         implicit none
@@ -564,19 +650,21 @@ contains
     ! or supplied full knot vector (task=-1).
     ! Input ordinates are transposed relative to scipy.splprep's sequence:
     ! coordinates(sample,dimension), with up to arbitrary coordinate count.
-    function splprep(x,u,w,k,s,task,t,ub,ue,per,status) result(tck)
+    function splprep(x,u,w,k,s,task,t,ub,ue,per,status,state) result(tck)
         implicit none
         real(dp), intent(in) :: x(:,:) !! curve coordinates (samples, dimensions)
         real(dp), intent(in), optional :: u(:) !! strictly increasing parameter
         real(dp), intent(in), optional :: w(:) !! positive FITPACK residual multipliers
         integer, intent(in), optional :: k !! degree 1:5 (default 3)
         real(dp), intent(in), optional :: s !! total weighted squared-residual target, default zero
-        integer, intent(in), optional :: task !! 0=interpolation/smoothing, -1=fixed knots
+        integer, intent(in), optional :: task !! 0=fresh, 1=continue with state, -1=fixed knots
         real(dp), intent(in), optional :: t(:) !! *complete* FITPACK knots if task=-1
         real(dp), intent(in), optional :: ub !! left parameter domain bound
         real(dp), intent(in), optional :: ue !! right parameter domain bound
         logical, intent(in), optional :: per !! Closed periodic curve, default false.
         integer, intent(out), optional :: status !! 0=success, 1=invalid, 2=unsupported, 3=singular
+        type(fitpack_continuation_type), intent(inout), optional :: state !! Explicit task 0/1 history.
+        type(fitpack_work_type), allocatable :: work
         type(fitpack_parametric_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
         real(dp), allocatable :: param(:),distances(:),coefficients(:),knots(:),interior(:)
@@ -593,10 +681,15 @@ contains
         if (present(k)) deg = k
         mode = 0
         if (present(task)) mode = task
+        if (mode==1) then
+            if (.not.present(state)) goto 900
+            if (.not.state%valid()) goto 900
+        end if
+        if (mode==-1 .and. present(state)) goto 900
         target = 0.0_dp
         if (present(s)) target = s
         if (deg < 1 .or. deg > 5 .or. n <= deg .or. ndim < 1) goto 900
-        if (mode /= 0 .and. mode /= -1) goto 900
+        if (mode /= 0 .and. mode /= -1 .and. mode /= 1) goto 900
         used=n
         if (periodic) used=n-1
         if (.not. all(ieee_is_finite(x(:used,:)))) goto 900
@@ -624,7 +717,7 @@ contains
                 goto 900
             end if
             coordinate_scale=1.0_dp
-            scaled_chords=periodic .or. (mode==0 .and. target>0.0_dp)
+            scaled_chords=periodic .or. (mode>=0 .and. (target>0.0_dp .or. present(state)))
             if (scaled_chords) then
                 coordinate_scale=maxval(abs(x(:used,:)))
                 if (coordinate_scale == 0.0_dp) goto 900
@@ -662,6 +755,16 @@ contains
         if (present(ue)) right = ue
         if (.not. ieee_is_finite(left) .or. .not. ieee_is_finite(right)) goto 900
         if (left > param(1) .or. right < param(n) .or. left >= right) goto 900
+        if (target==0.0_dp .and. mode>=0) then
+            if (left/=param(1) .or. right/=param(n)) goto 900
+        end if
+        if (present(state)) then
+            allocate(work)
+            if (mode==1) then
+                if (.not.continuation_matches(state,param,x, w,deg,[left,right],periodic,.false.)) goto 900
+                work=state%work
+            end if
+        end if
         if (periodic) then
             if (left/=param(1) .or. right/=param(n)) goto 900
             if (mode==-1) then
@@ -671,7 +774,7 @@ contains
                 call periodic_lsq(param,x,w,deg,t(deg+2:size(t)-deg-1),tck%t,tck%c,code)
             else
                 if (present(t)) goto 900
-                call fitpack_periodic_parametric(param,x,w,deg,target,tck%t,tck%c,code)
+                call fitpack_periodic_parametric(param,x,w,deg,target,tck%t,tck%c,code,work=work)
             end if
             if (code==0) then
                 call move_alloc(param,tck%u)
@@ -680,11 +783,11 @@ contains
             end if
             goto 900
         end if
-        if (mode == 0) then
+        if (mode == 0 .or. mode == 1) then
             if (present(t)) goto 900
-            if (target > 0.0_dp) then
+            if (target > 0.0_dp .or. present(state)) then
                 call fitpack_smooth_parametric(param,x,w,deg,target,[left,right], &
-                    tck%t,tck%c,code)
+                    tck%t,tck%c,code,work=work)
                 if (code == 0) then
                     call move_alloc(param,tck%u)
                     tck%k=deg
@@ -708,7 +811,7 @@ contains
             interior = t(deg+2:size(t)-deg-1)
         end if
         do j=1,ndim
-            if (mode == 0) then
+            if (mode == 0 .or. mode == 1) then
                 fit = interpolated_univariate_spline(param,x(:,j),k=deg,status=fitcode)
             else
                 fit = lsq_univariate_spline(param,x(:,j),interior,w=w,k=deg, &
@@ -743,6 +846,9 @@ contains
             if (allocated(tck%t)) deallocate(tck%t)
             if (allocated(tck%u)) deallocate(tck%u)
             tck%k = -1
+        end if
+        if (code==0 .and. present(state)) then
+            call commit_continuation(state,tck%u,x,w,deg,[left,right],periodic,.false.,work)
         end if
         if (present(status)) status = code
     end function splprep
@@ -821,18 +927,20 @@ contains
 
     ! Task 0: interpolation at s=0 or automatic-knot smoothing at s>0.
     ! Task -1: specified knots and LSQ.
-    function splrep(x,y,w,k,s,task,t,bbox,status,per) result(tck)
+    function splrep(x,y,w,k,s,task,t,bbox,status,per,state) result(tck)
         implicit none
         real(dp), intent(in) :: x(:) !! increasing sample abscissae
         real(dp), intent(in) :: y(:) !! scalar sample values
         real(dp), intent(in), optional :: w(:) !! positive FITPACK residual multipliers
         integer, intent(in), optional :: k !! spline degree 1..5 (default 3)
         real(dp), intent(in), optional :: s !! weighted residual target (s=0 for interpolation)
-        integer, intent(in), optional :: task !! 0 interpolation/smoothing, -1 fixed knots LSQ
+        integer, intent(in), optional :: task !! 0=fresh, 1=continue with state, -1=fixed knots LSQ
         real(dp), intent(in), optional :: t(:) !! interior knots when task=-1
         real(dp), intent(in), optional :: bbox(:) !! left and right support bounds
         integer, intent(out), optional :: status !! success, invalid, unsupported, singular
         logical, intent(in), optional :: per !! Periodic fit over x(1):x(m), default false.
+        type(fitpack_continuation_type), intent(inout), optional :: state !! Explicit task 0/1 history.
+        type(fitpack_work_type), allocatable :: work
         type(fitpack_tck_type) :: tck
         type(bspline_interpolator_type) :: fit
         real(dp) :: target, bounds(2)
@@ -843,9 +951,14 @@ contains
         if (present(per)) periodic=per
         deg = 3
         if (present(k)) deg = k
+        code = fitpack_tck_invalid_input
         mode = 0
         if (present(task)) mode = task
-        code = fitpack_tck_invalid_input
+        if (mode==1) then
+            if (.not.present(state)) goto 900
+            if (.not.state%valid()) goto 900
+        end if
+        if (mode==-1 .and. present(state)) goto 900
         if (deg < 1 .or. deg > 5) goto 900
         if (size(x)<deg+1 .or. size(y)/=size(x)) goto 900
         used=size(x)
@@ -869,6 +982,16 @@ contains
             if (bbox(1) > x(1) .or. bbox(2) < x(size(x))) goto 900
             bounds = bbox
         end if
+        if (target==0.0_dp .and. mode>=0) then
+            if (any(bounds/=[x(1),x(size(x))])) goto 900
+        end if
+        if (present(state)) then
+            allocate(work)
+            if (mode==1) then
+                if (.not.continuation_matches(state,x,reshape(y,[size(x),1]),w,deg,bounds,periodic,.true.)) goto 900
+                work=state%work
+            end if
+        end if
         if (periodic) then
             if (any(bounds/=[x(1),x(size(x))])) goto 900
             if (mode==-1) then
@@ -876,19 +999,19 @@ contains
                 call periodic_lsq(x,reshape(y,[size(x),1]),w,deg,t, &
                     tck%t,periodic_coeff,code)
                 if (code==0) tck%c=[periodic_coeff(:,1),spread(0.0_dp,1,deg+1)]
-            else if (mode==0) then
+            else if (mode==0 .or. mode==1) then
                 if (present(t)) goto 900
-                call fitpack_periodic_curve(x,y,w,deg,target,tck%t,tck%c,code)
+                call fitpack_periodic_curve(x,y,w,deg,target,tck%t,tck%c,code,work=work)
             else
                 goto 900
             end if
             if (code==0) tck%k=deg
             goto 900
         end if
-        if (mode == 0) then
+        if (mode == 0 .or. mode == 1) then
             if (present(t)) goto 900
-            if (target > 0.0_dp) then
-                call fitpack_smooth_curve(x,y,w,deg,target,bounds,tck%t,tck%c,code)
+            if (target > 0.0_dp .or. present(state)) then
+                call fitpack_smooth_curve(x,y,w,deg,target,bounds,tck%t,tck%c,code,work=work)
                 if (code == 0) tck%k = deg
                 goto 900
             end if
@@ -910,7 +1033,15 @@ contains
         else if (code /= fitpack_tck_invalid_input) then
             code = fitpack_tck_singular
         end if
-900     if (present(status)) status = code
+900     if (code/=0) then
+            if (allocated(tck%t)) deallocate(tck%t)
+            if (allocated(tck%c)) deallocate(tck%c)
+            tck%k=-1
+        end if
+        if (code==0 .and. present(state)) then
+            call commit_continuation(state,x,reshape(y,[size(x),1]),w,deg,bounds,periodic,.true.,work)
+        end if
+        if (present(status)) status = code
     end function splrep
 
     function make_spline(tck,code) result(s)

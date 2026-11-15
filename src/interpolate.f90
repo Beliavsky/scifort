@@ -27,7 +27,8 @@ module scifort_interpolate
         bisplev, bisplev_points, bispline_integral, rect_bivariate_spline, &
         bispline_partial_derivative, bispline_insert_knot, &
         bispline_success, bispline_invalid_input, bispline_singular
-    use scifort_interpolate_fitpack_compat, only : fitpack_tck_type, fitpack_parametric_tck_type, splrep, splprep, splev, splint, splder, &
+    use scifort_interpolate_fitpack_compat, only : fitpack_tck_type, fitpack_parametric_tck_type, &
+        fitpack_continuation_type, splrep, splprep, splev, splint, splder, &
         splantider, spalde, make_splrep, make_splprep, fitpack_tck_success, fitpack_tck_invalid_input, &
         fitpack_tck_unsupported_smoothing, fitpack_tck_singular, fitpack_tck_out_of_bounds
     use scifort_interpolate_bspline, only : bspline_interpolator_type, bspline_array_interpolator_type, &
@@ -127,7 +128,7 @@ module scifort_interpolate
     public :: fitpack_bivariate_tck_type, bisplev, bisplev_points, bispline_integral, rect_bivariate_spline, &
         bispline_partial_derivative, bispline_insert_knot, &
         bispline_success, bispline_invalid_input, bispline_singular
-    public :: fitpack_tck_type, fitpack_parametric_tck_type, splrep, splprep, &
+    public :: fitpack_tck_type, fitpack_parametric_tck_type, fitpack_continuation_type, splrep, splprep, &
         splev, splint, splder, splantider, spalde, make_splrep, make_splprep
     public :: fitpack_tck_success, fitpack_tck_invalid_input, fitpack_tck_unsupported_smoothing, &
         fitpack_tck_singular, fitpack_tck_out_of_bounds

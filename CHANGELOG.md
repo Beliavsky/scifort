@@ -1,3 +1,13 @@
+## 2026-11-14 - Explicit-state native spline continuation
+
+- Add caller-owned `fitpack_continuation_type` for `splrep` / `splprep`
+  `task=0/1`, ordinary/periodic fits, degrees 1-5 and interpolation.
+- Preserve normalized knots and refinement diagnostics for existing FITPACK
+  continuation branches; validate exact active-input compatibility.
+- Keep independent copied histories and preserve prior state after failed calls.
+- Correct the attributed closed-curve restart capacity check after interpolation.
+- Add native lifecycle tests and exact upstream continued-fit comparisons.
+
 ## 2026-11-14 - Repeated supplied interior knots (SciFort extension)
 
 - Support multiplicities through k+1 in positive-target scalar/shared spline

@@ -1,3 +1,42 @@
+## 2026-11-14 - Explicit-state spline continuation
+
+The caller-owned `fitpack_continuation_type`, exact active-input validation,
+transactional commits and tuple routing in `src/interpolate_fitpack_compat.f90`
+are original MIT SciFort adapter code. `src/interpolate.f90` exports the type.
+No global cache, new dependency or C ABI is introduced.
+
+`src/interpolate_curfit_core.f90` retains its MIT AND BSD-3-Clause notices
+and Federico Perini copyright. The new optional work adapters preserve the
+existing attributed `fpcurf`, `fppara`, `fpperi` and `fpclos` normalized knots,
+interval sums/counts and refinement diagnostics, then invoke their existing
+`iopt=1` branches. QR factors are rebuilt. Nonperiodic wrappers additionally
+admit zero targets for stateful interpolation, with explicit residual rounding
+checks; their positive-target tolerances remain unchanged.
+
+The exact perazz/FITPACK source and BSD license were inspected before reuse:
+commit `1907c7bad9f5c4557970e906bdd4909eb52b2d4c`,
+[source](https://github.com/perazz/fitpack/blob/1907c7bad9f5c4557970e906bdd4909eb52b2d4c/src/fitpack_core.F90),
+SHA-256 `02e413063f7df855c45eed6119130f7ab7a07cfa3e2f6ac0e42b6f496df414ec`.
+Inspected entry points include `curfit`, `parcur`, `percur`, `clocur` and their
+continuation kernel bootstrap/storage paths. Required full BSD terms remain
+in `LICENSES/perazz-fitpack-BSD-3-Clause.txt` and the existing license index.
+The `fpclos` restart capacity comparison changes from `n>=nest` to `nmin>=nest`:
+when restarting from the constant seed after interpolation, the previous
+maximum knot count must not incorrectly forbid that smaller restart. Other
+adopted algorithms and their attribution remain intact.
+
+Public API behavior was checked against SciPy's
+[`splrep`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splrep.html)
+and [`splprep`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.splprep.html)
+continuation contracts. Explicit independent state deliberately replaces
+Python's internal-cache convention; no Python wrapper implementation is copied.
+The new native tests, `validation/continuation_driver.f90` and
+`validation/check_continuation.py` are original MIT work. The validation-only
+driver links the exact unchanged upstream module from ignored build storage,
+records its closed interpolation-restart failure, and compares the corrected
+result with an independent upstream task-0 restart. No generated vendored
+source or binary is added. See the [validation record](validation/continuation_2026-11-14.md).
+
 ## 2026-11-14 - Repeated supplied interior knots
 
 The repeated-knot extension in `src/interpolate_fixed_smoothing.f90` and its

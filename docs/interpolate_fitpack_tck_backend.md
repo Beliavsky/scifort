@@ -80,8 +80,8 @@ sites and nonzero samples. These guards do not guarantee good conditioning
 for every accepted data set. Working storage for automatic-knot fitting is linear in sample count for
 the supported degrees; no new dependency or C ABI is added.
 
-**Remaining limitations:** `task=1` and `quiet`
-are not included. A native object-returning [make_splrep constructor](interpolate_make_splrep.md)
+**Remaining limitations:** `quiet` is not included. Native `task=1` is
+available with [explicit caller-owned state](interpolate_continuation.md). A native object-returning [make_splrep constructor](interpolate_make_splrep.md)
 is available with documented knot-form, boundary, and capacity limitations. Nonperiodic parametric
 smoothing is native through `splprep`, as described below. See the
 [native smoothing validation](../validation/splrep_smoothing_2026-11-13.md),
@@ -115,7 +115,8 @@ within the base period.
 
 Periodic `task=-1` now performs native
 [fixed-knot least squares](interpolate_periodic_lsq.md) on interior knots.
-`task=1` remains invalid (status 1). Numerical/allocation failures return 3.
+`task=1` requires [explicit continuation state](interpolate_continuation.md);
+without state it remains invalid (status 1). Numerical/allocation failures return 3.
 The normalized gap and weight guards above also apply. Additionally,
 `maxval(abs(x)) <= huge(1.0_dp)/(4*(k+1))`, the physical period and every
 physical knot gap must be at least `tiny(1.0_dp)`, and physical knots must
@@ -265,8 +266,9 @@ automatically wrap out-of-period queries.
 If supplied, `ub` and `ue` must equal the parameter endpoints. This deliberate
 validation differs from SciPy's periodic path, which ignores these bounds.
 Periodic `task=-1` with supplied knots now supports native
-[fixed-knot least squares](interpolate_periodic_lsq.md). `task=1` and
-malformed input return status 1. Numerical/range/allocation
+[fixed-knot least squares](interpolate_periodic_lsq.md). `task=1` requires
+[explicit continuation state](interpolate_continuation.md). Malformed input
+and missing/incompatible state return status 1. Numerical/range/allocation
 failures return status 3. The normalized gap and relative-weight guards
 described above apply. As with periodic scalar fits, parameter magnitudes
 reserve headroom for exterior knots: `maxval(abs(u)) <= huge(1.0_dp)/(4*(k+1))`.
@@ -281,7 +283,8 @@ for original-core and SciPy comparisons, independent cyclic normal equations,
 and the remaining conditioning limitations. Exact adaptive paths and
 high-derivative accuracy are not guaranteed for every accepted problem.
 
-**Not yet supported for parametric `splprep`:** FITPACK `task=1` continuation.
+**Continuation:** `task=1` is native with a caller-owned
+[`fitpack_continuation_type`](interpolate_continuation.md), including periodic fits.
 Native modern [`make_splprep`](interpolate_make_splprep.md) is available.
 
 The independent regression compares `splprep` parameters, knots,

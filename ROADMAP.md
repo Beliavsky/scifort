@@ -3584,3 +3584,21 @@ fixed-knot scalar/parametric fits with continuity and smoothing contracts.
   continuation remain separate work. C ABI and wrappers remain deferred.
 
 See [repeated-knot contract](docs/interpolate_repeated_knots.md).
+
+## 2026-11-14 -- Approved explicit-state tuple continuation
+
+The user approved native `splrep` / `splprep` task-1 continuation using explicit
+state, scalar/parametric and ordinary/periodic fits, and upstream validation.
+
+- [x] Caller-owned opaque history, genuine FITPACK `iopt=1` continuation branches,
+  exact active-input checks and transactional success commits.
+- [x] Degrees 1-5, interpolation transitions, polynomial/constant limits,
+  independent copies, reset and recovery after invalid/numerical failures.
+- [x] Compare complete sequences with the exact unchanged upstream work arrays;
+  correct the closed-curve interpolation-restart capacity check.
+- [ ] Broader periodic numerical reliability, exact modern root/selection parity,
+  larger modern limits and conditioning audits remain separate work.
+
+See [explicit continuation](docs/interpolate_continuation.md). C ABI and wrappers
+remain deferred. Earlier stateless-continuation entries are superseded by this
+explicit-state API; no global mutable cache is introduced.
