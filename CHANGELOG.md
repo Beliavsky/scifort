@@ -1,3 +1,13 @@
+## 2026-11-15 - Pareto censoring
+
+- Add Pareto mixed-censoring likelihood/NNLF and bounded fits with free or
+  fixed shape, location, and scale; preserve scalar and array APIs.
+- Preserve support endpoints, tiny cumulative hazards, narrow tail intervals,
+  nearly unit probabilities, and overflowing displacements in log coordinates.
+- Validate 354 native checks at checked `-O0` and `-O3`, 112 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to twenty-two censored families and 87 remaining candidates.
+
 ## 2026-11-15 - Log-Laplace censoring
 
 - Add log-Laplace mixed-censoring likelihood/NNLF and bounded fits with free

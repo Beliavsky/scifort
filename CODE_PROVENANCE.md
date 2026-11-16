@@ -1,3 +1,23 @@
+## 2026-11-15 - Pareto censored likelihoods and fitting
+
+The new Pareto callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the density and support in
+[SciPy's Pareto mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html),
+inspected 2026-11-15. Integrating `b*z**(-b-1)` for `z >= 1` gives
+`S(z)=z**(-b)` and cumulative hazard `b*log(z)`. The log transform is
+exponential; exact densities include its Jacobian. Same-side intervals use
+log-coordinate widths and exponential increments, with support clipping
+without forming `loc+scale`. Near-unit CDFs use the direct guarded hazard
+to avoid amplifying a log/exp round-trip error. Existing SciFort Weibull
+log-distance/scale, softplus, log-distance, and log-hazard-mass helpers are
+reused without modification and retain their existing provenance.
+No upstream implementation code was imported or translated. The bounded fit
+overload preserves the array-specific routine and reuses the existing optimizer.
+Independent mpmath definitions, exponential/log-Laplace identities, analytic
+MLEs, and a fixed-support SciPy shape fit provide validation. No dependency,
+C ABI, or third-party license text is added. See the
+[validation report](validation/pareto_censored_2026-11-15.md).
+
 ## 2026-11-15 - Log-Laplace censored likelihoods and fitting
 
 The log-Laplace callbacks in `src/censored.f90` are original MIT SciFort code,

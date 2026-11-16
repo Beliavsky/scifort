@@ -15,6 +15,7 @@ module scifort_fit
     use scifort_censored, only : gibrat_censored_nnlf
     use scifort_censored, only : halfnorm_censored_nnlf
     use scifort_censored, only : hypsecant_censored_nnlf
+    use scifort_censored, only : pareto_censored_nnlf
     use scifort_censored, only : loglaplace_censored_nnlf
     use scifort_censored, only : laplace_asymmetric_censored_nnlf
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
@@ -489,6 +490,10 @@ module scifort_fit
         module procedure hypsecant_fit, hypsecant_fit_censored
     end interface hypsecant_fit
 
+    interface pareto_fit
+        module procedure pareto_fit, pareto_fit_censored
+    end interface pareto_fit
+
     interface loglaplace_fit
         module procedure loglaplace_fit, loglaplace_fit_censored
     end interface loglaplace_fit
@@ -614,6 +619,20 @@ contains
         call bounded_fit([real(dp) ::], family_hypsecant, lower, upper, result, guess, &
             [.false., .false.], max_iter, tolerance, data)
     end subroutine hypsecant_fit_censored
+
+    subroutine pareto_fit_censored(data, lower, upper, result, guess, &
+            max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds for shape, location, scale
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting shape, location, scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_pareto, lower, upper, result, guess, &
+            [.false., .false., .false.], max_iter, tolerance, data)
+    end subroutine pareto_fit_censored
 
     subroutine loglaplace_fit_censored(data, lower, upper, result, guess, &
             max_iter, tolerance)
@@ -1175,6 +1194,8 @@ contains
                 value = halfnorm_censored_nnlf(censored, params(1), params(2))
             case (family_hypsecant)
                 value = hypsecant_censored_nnlf(censored, params(1), params(2))
+            case (family_pareto)
+                value = pareto_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_loglaplace)
                 value = loglaplace_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_laplace_asymmetric)

@@ -22,6 +22,7 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: pareto_censored_loglikelihood, pareto_censored_nnlf
     public :: loglaplace_censored_loglikelihood, loglaplace_censored_nnlf
 
     integer, parameter, public :: censored_status_success = 0
@@ -69,6 +70,90 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function pareto_censored_loglikelihood(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location shift, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [b, 0.0_dp, 1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (b <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,pareto_lpdf,pareto_lcdf, &
+            pareto_lsf,pareto_interval)
+    end function pareto_censored_loglikelihood
+
+    pure function pareto_censored_nnlf(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location shift, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -pareto_censored_loglikelihood(data,b,loc,scale)
+    end function pareto_censored_nnlf
+
+    pure function pareto_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, logz
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        logz = lognormal_logz(x,params)
+        if (logz < 0.0_dp) return
+        value = log(params(1))-log_distance(x,params(2))-weibull_log_hazard(x,params)
+    end function pareto_lpdf
+
+    pure function pareto_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, logz
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        logz = lognormal_logz(x,params)
+        if (logz <= 0.0_dp) return
+        ! Keep small hazards in log form, but avoid a log/exp round trip for
+        ! large hazards: its error would be amplified in a nearly unit CDF.
+        value = weibull_log_hazard(x,params)
+        if (value >= scifort_log_two) then
+            value = log1p_safe(-exp(-value))
+        else
+            value = log_hazard_mass(log(params(1))+log(logz))
+        end if
+    end function pareto_lcdf
+
+    pure function pareto_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value
+        value = 0.0_dp
+        if (x <= params(2)) return
+        value = -max(0.0_dp,weibull_log_hazard(x,params))
+    end function pareto_lsf
+
+    pure function pareto_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, logr, logspan
+        ! Clip intervals crossing the support boundary without forming loc+scale.
+        value = pareto_lcdf(b,params)
+        if (a <= params(2)) return
+        if (lognormal_logz(a,params) <= 0.0_dp) return
+        logr = log_distance(b,a)-log_distance(a,params(2))
+        logspan = logr
+        if (logr >= log(epsilon(1.0_dp))-2.0_dp) logspan = log(log1pexp(logr))
+        value = pareto_lsf(a,params)+log_hazard_mass(log(params(1))+logspan)
+    end function pareto_interval
 
     pure function loglaplace_censored_loglikelihood(data, c, loc, scale) result(value)
         implicit none

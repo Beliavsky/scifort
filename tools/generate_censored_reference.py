@@ -18,6 +18,8 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     z = (x - loc) / scale
     if family == 'laplace_asymmetric':
         return -mp.log(shape+1/shape)-mp.log(scale)-(shape*z if z >= 0 else -z/shape)
+    if family == 'pareto':
+        return mp.log(shape)-mp.log(x-loc)-shape*mp.log(z) if z >= 1 else mp.ninf
     if family == 'loglaplace':
         if z < 0: return mp.ninf
         if z == 0: return mp.inf if shape < 1 else (-mp.log(2*scale) if shape == 1 else mp.ninf)
@@ -70,6 +72,8 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'laplace_asymmetric':
         if z <= 0: return 2*mp.log(shape)-mp.log1p(shape*shape)+z/shape
         return mp.log1p(-mp.exp(-shape*z)/(1+shape*shape))
+    if family == 'pareto':
+        return mp.log(-mp.expm1(-shape*mp.log(z))) if z > 1 else mp.ninf
     if family == 'loglaplace':
         if z <= 0: return mp.ninf
         t=shape*mp.log(z)
@@ -125,6 +129,8 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'pareto':
+        return -shape*mp.log(z) if z > 1 else mp.mpf(0)
     if family == 'loglaplace':
         if z <= 0: return mp.mpf(0)
         t=shape*mp.log(z)
@@ -185,6 +191,7 @@ def main():
         ('lognormal', stats.lognorm, .8, 0., 2.3),
         ('gamma', stats.gamma, .6, 0., 2.3),
         ('erlang', stats.erlang, 2., 0., 2.3),
+        ('pareto', stats.pareto, 1.7, 0., .2),
         ('loglaplace', stats.loglaplace, 1.7, 0., 1.3),
         ('gibrat', stats.gibrat, 1., 0., 1.3),
         ('halfnorm', stats.halfnorm, 1., 0., 1.3),
@@ -200,6 +207,7 @@ def main():
         kwargs = {} if family in ('normal','cauchy','laplace','logistic','gumbel_r',
                                   'gumbel_l','hypsecant') else {'floc': 0.}
         if family == 'laplace_asymmetric': kwargs = {'floc': loc}
+        if family == 'pareto': kwargs = {'floc': loc, 'fscale': scale}
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
         if family == 'laplace_asymmetric':
             result[family+'_fixed_shape_fit'] = list(distribution.fit(data,f0=shape,floc=loc))
