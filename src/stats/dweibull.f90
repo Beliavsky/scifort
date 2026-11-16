@@ -381,6 +381,8 @@ contains
 
         if (logr == 0.0_dp) then
             value = 0.0_dp
+        else if (c <= 1.0_dp) then
+            value = c * logr
         else if (abs(logr) > huge(1.0_dp) / c) then
             if (logr > 0.0_dp) then
                 value = positive_infinity(seed)

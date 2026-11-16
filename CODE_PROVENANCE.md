@@ -1,3 +1,60 @@
+## 2026-11-16 - Double-gamma, double-Weibull, and log-gamma censoring
+
+The callbacks in `src/censored.f90`, fitting overloads, tests, and reference
+extensions are original MIT SciFort code, independently implemented from the
+public mathematical specifications for
+[SciPy double gamma](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dgamma.html),
+[double Weibull](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dweibull.html),
+and [log gamma](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.loggamma.html),
+inspected 2026-11-16. No upstream implementation was copied or translated.
+The log-gamma support is the real line, as follows directly from `Z=log(G)`
+for positive gamma `G`; the documentation's density specifies `c>0`.
+
+Double-gamma/Weibull are equal mixtures of positive and reflected unit-scale
+gamma/Weibull variates. Their densities are one half the radial density,
+and their outer tails are one half the radial survival. Same-side interval
+masses reuse existing SciFort gamma/Weibull kernels. Crossing intervals sum
+positive radial CDF contributions or complement both omitted outer tails.
+Reflection negates the observation and location separately. The scalar
+`src/stats/dweibull.f90` change prevents overflow in `huge/c` for `c<=1`;
+then multiplication of a finite log radius by `c` cannot overflow.
+
+Log-gamma has log density `c*z-exp(z)-log(Gamma(c))-log(scale)` and tails
+`P(c,exp(z))`, `Q(c,exp(z))`. Existing SciFort incomplete-gamma kernels and
+the small-argument expansion in [DLMF 8.7](https://dlmf.nist.gov/8.7) are
+reused. A very negative coordinate's product `c*z` is retained via signed
+log distances if `z` overflows. For `c>=10`, the density uses the Stirling
+saddle form `log(c)/2-log(sqrt(2*pi))-c*(expm1(u)-u)-remainder(c)`, where
+`u=z-log(c)`. The remainder is the existing SciFort routine, with an overflow guard added
+so its reciprocal-square argument is formed without `a*a` above `sqrt(huge)`.
+Its established [DLMF 5.11](https://dlmf.nist.gov/5.11) coefficients are unchanged.
+For `abs(u)<0.1`
+the elementary exponential Taylor series through degree 20 evaluates the
+nonnegative difference without cancellation (the next term is below 2e-41).
+
+For `exp(z)>huge`, the upper gamma endpoint approximation gives
+`log(Q) = log density + log(scale) - log(exp(z)-c)`. See
+[DLMF 8.11(iii)](https://dlmf.nist.gov/8.11#iii) for the large-parameter
+endpoint expansion. The first relative correction is of order
+`exp(z)/(exp(z)-c)**2`, negligible here: the next binary64 coordinate above
+`log(huge)` already separates `exp(z)` and any finite `c` by many gamma
+standard deviations. This avoids overflowing `exp(z)` when the logarithm
+of the tail is still representable. High-precision analytic validation at
+`c=1e308,z=710` uses the independently evaluated density and endpoint term;
+its relative correction is below 2e-308. Near-mode coordinate rounding at
+extremely large shapes remains a documented binary64 limitation.
+
+Narrow log-gamma intervals integrate relative densities with three-point
+Gauss-Legendre quadrature, using the standard nodes/weights from
+[DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v), also already used in SciFort's
+normal/gamma interval kernels. Both `c*delta` and `exp(z)*delta` are bounded
+by 0.001 before this path is used; broader intervals use tail differences.
+The mpmath oracle independently integrates the specified distributions via
+regularized incomplete gamma functions and elementary Weibull expressions.
+SciPy is used only for numerical fit comparisons. No new dependency,
+third-party source, license text, or C ABI is introduced. See the
+[validation report](validation/reflected_censored_2026-11-16.md).
+
 ## 2026-11-16 - Bradford, triangular, and trapezoidal censoring
 
 The new callbacks in `src/censored.f90` are original MIT SciFort code,

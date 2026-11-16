@@ -11,6 +11,8 @@ program censored_reference_driver
         moyal_censored_loglikelihood, &
         levy_censored_loglikelihood, &
         levy_l_censored_loglikelihood, &
+        dgamma_censored_loglikelihood, dweibull_censored_loglikelihood, &
+        loggamma_censored_loglikelihood, &
         bradford_censored_loglikelihood, &
         triang_censored_loglikelihood, &
         trapezoid_censored_loglikelihood, &
@@ -122,6 +124,12 @@ program censored_reference_driver
             value = triang_censored_loglikelihood(data,c,loc,scale)
         case (38)
             value = trapezoid_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (39)
+            value = dgamma_censored_loglikelihood(data,c,loc,scale)
+        case (40)
+            value = dweibull_censored_loglikelihood(data,c,loc,scale)
+        case (41)
+            value = loggamma_censored_loglikelihood(data,c,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

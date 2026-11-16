@@ -28,6 +28,9 @@ module scifort_fit
     use scifort_censored, only : bradford_censored_nnlf
     use scifort_censored, only : triang_censored_nnlf
     use scifort_censored, only : trapezoid_censored_nnlf
+    use scifort_censored, only : dgamma_censored_nnlf
+    use scifort_censored, only : dweibull_censored_nnlf
+    use scifort_censored, only : loggamma_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -492,6 +495,18 @@ module scifort_fit
         module procedure trapezoid_fit, trapezoid_fit_censored
     end interface trapezoid_fit
 
+    interface dgamma_fit
+        module procedure dgamma_fit, dgamma_fit_censored
+    end interface dgamma_fit
+
+    interface dweibull_fit
+        module procedure dweibull_fit, dweibull_fit_censored
+    end interface dweibull_fit
+
+    interface loggamma_fit
+        module procedure loggamma_fit, loggamma_fit_censored
+    end interface loggamma_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -816,6 +831,45 @@ contains
         call bounded_fit([real(dp) ::],family_trapezoid,lower,upper,result,guess, &
             [.false., .false., .false., .false.],max_iter,tolerance,data)
     end subroutine trapezoid_fit_censored
+
+    subroutine dgamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in a, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_dgamma,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine dgamma_fit_censored
+
+    subroutine dweibull_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_dweibull,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine dweibull_fit_censored
+
+    subroutine loggamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_loggamma,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine loggamma_fit_censored
 
     subroutine fisk_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1501,6 +1555,12 @@ contains
                 value = triang_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_trapezoid)
                 value = trapezoid_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_dgamma)
+                value = dgamma_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_dweibull)
+                value = dweibull_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_loggamma)
+                value = loggamma_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

@@ -1,3 +1,15 @@
+## 2026-11-16 - Double-gamma, double-Weibull, and log-gamma censoring
+
+- Add mixed-censoring likelihood/NNLF and bounded fit overloads for three
+  real-line families, with free or fixed shape, location, and scale.
+- Preserve reflected interval masses, singular center densities, narrow
+  intervals, and finite extreme log-gamma likelihoods in log coordinates.
+- Correct the existing scalar double-Weibull small-shape overflow guard and
+  prevent overflow in the shared Stirling remainder at very large arguments.
+- Add native and independent high-precision comparisons and SciPy fit checks.
+- Update coverage to forty-one censored families and 68 remaining candidates.
+  C ABI and wrapper work remain deferred.
+
 ## 2026-11-16 - Bradford, triangular, and trapezoidal censoring
 
 - Add mixed-censoring likelihood/NNLF and bounded fits for three families,

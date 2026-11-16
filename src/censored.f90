@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: dgamma_censored_loglikelihood, dgamma_censored_nnlf
+    public :: dweibull_censored_loglikelihood, dweibull_censored_nnlf
+    public :: loggamma_censored_loglikelihood, loggamma_censored_nnlf
     public :: bradford_censored_loglikelihood, bradford_censored_nnlf
     public :: triang_censored_loglikelihood, triang_censored_nnlf
     public :: trapezoid_censored_loglikelihood, trapezoid_censored_nnlf
@@ -86,6 +89,394 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function dgamma_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, y, p(3)
+        y = x
+        p = params
+        if (x < params(2)) then
+            y = -x
+            p(2) = -params(2)
+        end if
+        value = gamma_lpdf(y,p)-scifort_log_two
+    end function dgamma_lpdf
+
+    pure function dgamma_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, y, p(3)
+        if (x == params(2)) then
+            value = -scifort_log_two
+            return
+        end if
+        y = x
+        p = params
+        if (x < params(2)) then
+            y = -x
+            p(2) = -params(2)
+        end if
+        value = gamma_lsf(y,p)-scifort_log_two
+        if (.not. (x < params(2))) value = log1p_safe(-exp(value))
+    end function dgamma_lcdf
+
+    pure function dgamma_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, y, p(3)
+        y = x
+        p = params
+        if (x < params(2)) then
+            y = -x
+            p(2) = -params(2)
+        end if
+        value = gamma_lsf(y,p)-scifort_log_two
+        if (.not. (x >= params(2))) value = log1p_safe(-exp(value))
+    end function dgamma_lsf
+
+    pure function dgamma_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, p(3), left, right, omitted
+        p = [params(1),-params(2),params(3)]
+        if (b <= params(2)) then
+            value = gamma_interval(-b,-a,p)-scifort_log_two
+        else if (a >= params(2)) then
+            value = gamma_interval(a,b,params)-scifort_log_two
+        else
+            left = gamma_lcdf(-a,p)
+            right = gamma_lcdf(b,params)
+            value = bounded_logadd(left,right)-scifort_log_two
+            ! Preserve both excluded tails for nearly full intervals.
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(gamma_lsf(-a,p), &
+                    gamma_lsf(b,params))-scifort_log_two
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function dgamma_interval
+
+    pure function dweibull_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, y, p(3)
+        y = x
+        p = params
+        if (x < params(2)) then
+            y = -x
+            p(2) = -params(2)
+        end if
+        value = radial_weibull_lpdf(y,p)-scifort_log_two
+    end function dweibull_lpdf
+
+    pure function dweibull_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, y, p(3)
+        if (x == params(2)) then
+            value = -scifort_log_two
+            return
+        end if
+        y = x
+        p = params
+        if (x < params(2)) then
+            y = -x
+            p(2) = -params(2)
+        end if
+        value = radial_weibull_lsf(y,p)-scifort_log_two
+        if (.not. (x < params(2))) value = log1p_safe(-exp(value))
+    end function dweibull_lcdf
+
+    pure function dweibull_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, y, p(3)
+        y = x
+        p = params
+        if (x < params(2)) then
+            y = -x
+            p(2) = -params(2)
+        end if
+        value = radial_weibull_lsf(y,p)-scifort_log_two
+        if (.not. (x >= params(2))) value = log1p_safe(-exp(value))
+    end function dweibull_lsf
+
+    pure function dweibull_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, p(3), left, right, omitted
+        p = [params(1),-params(2),params(3)]
+        if (b <= params(2)) then
+            value = weibull_interval(-b,-a,p)-scifort_log_two
+        else if (a >= params(2)) then
+            value = weibull_interval(a,b,params)-scifort_log_two
+        else
+            left = radial_weibull_lcdf(-a,p)
+            right = radial_weibull_lcdf(b,params)
+            value = bounded_logadd(left,right)-scifort_log_two
+            ! Preserve both excluded tails for nearly full intervals.
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(radial_weibull_lsf(-a,p), &
+                    radial_weibull_lsf(b,params))-scifort_log_two
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function dweibull_interval
+
+    pure function radial_weibull_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point at or above location
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, logh
+        if (x == params(2)) then
+            value = weibull_logpdf(x,params(1),params(2),params(3))
+            return
+        end if
+        logh = weibull_log_hazard(x,params)
+        value = negative_infinity(0.0_dp)
+        if (.not. ieee_is_finite(logh)) return
+        if (logh > log(huge(1.0_dp))) return
+        value = log(params(1))+logh-log_distance(x,params(2))-exp(logh)
+    end function radial_weibull_lpdf
+
+    pure function radial_weibull_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point at or above location
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x == params(2)) return
+        value = log_exponential_mass(weibull_log_hazard(x,params))
+    end function radial_weibull_lcdf
+
+    pure function radial_weibull_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point at or above location
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value
+        value = 0.0_dp
+        if (x == params(2)) return
+        value = negative_hazard(weibull_log_hazard(x,params))
+    end function radial_weibull_lsf
+
+    pure function loggamma_left_kernel(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point with standardized coordinate below log(tiny)
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, product
+        ! Retain c*z even if z itself overflows for a very small shape.
+        product = negative_hazard(log(params(1))+log_distance(params(2),x)-log(params(3)))
+        if (params(1) < 10.0_dp) then
+            value = product-log_gamma_one_plus(params(1))
+        else
+            z = location_scale_z(x,params(2:3))
+            value = negative_infinity(0.0_dp)
+            if (ieee_is_finite(z)) value = gamma_small_kernel(params(1),z)
+        end if
+    end function loggamma_left_kernel
+
+    pure function loggamma_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, u, factor, term
+        integer :: k
+        z = location_scale_z(x,params(2:3))
+        value = negative_infinity(0.0_dp)
+        if (z < log(tiny(1.0_dp))) then
+            value = log(params(1))+loggamma_left_kernel(x,params)-log(params(3))
+        else if (params(1) < 10.0_dp) then
+            if (z > log(huge(1.0_dp))) return
+            value = log(params(1))+params(1)*z-exp(z)-log_gamma_one_plus(params(1)) &
+                -log(params(3))
+        else
+            ! Gamma saddle form retains the cancellation at the log-gamma mode.
+            u = z-log(params(1))
+            if (u > log(huge(1.0_dp))) return
+            if (abs(u) < 0.1_dp) then
+                term = (0.5_dp*u)*u
+                factor = term
+                do k = 3, 20
+                    term = term*u/real(k,dp)
+                    factor = factor+term
+                end do
+            else
+                factor = expm1_safe(u)-u
+            end if
+            if (factor > 1.0_dp) then
+                if (params(1) > huge(1.0_dp)/factor) return
+            end if
+            value = 0.5_dp*log(params(1))-scifort_log_sqrt_two_pi &
+                -params(1)*factor-stirling_remainder(params(1))-log(params(3))
+        end if
+    end function loggamma_lpdf
+
+    pure function loggamma_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z
+        z = location_scale_z(x,params(2:3))
+        if (z < log(tiny(1.0_dp))) then
+            value = loggamma_left_kernel(x,params)
+        else if (z > log(huge(1.0_dp))) then
+            value = 0.0_dp
+        else
+            value = log_gammainc(params(1),exp(z))
+        end if
+    end function loggamma_lcdf
+
+    pure function loggamma_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, logp, u
+        z = location_scale_z(x,params(2:3))
+        if (z < log(tiny(1.0_dp))) then
+            logp = loggamma_left_kernel(x,params)
+            value = 0.0_dp
+            if (ieee_is_finite(logp)) value = log_exponential_mass(bounded_log(-logp))
+        else if (z > log(huge(1.0_dp))) then
+            ! For exp(z)>huge, the endpoint expansion has negligible relative
+            ! correction O(exp(z)/(exp(z)-c)**2). Retain a representable log tail.
+            u = z-log(params(1))
+            value = loggamma_lpdf(x,params)
+            if (ieee_is_finite(value)) value = value+log(params(3)) &
+                -log(params(1))-log_expm1_from_log(log(u))
+        else
+            value = log_gammaincc(params(1),exp(z))
+        end if
+    end function loggamma_lsf
+
+    pure function loggamma_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, logwidth, logscaled, d, t(3), r(3), correction, omitted
+        z = location_scale_z(a,params(2:3))
+        logwidth = log_distance(b,a)
+        logscaled = logwidth-log(params(3))
+        ! Bound c*d and exp(z)*d independently; the density varies by <0.002.
+        if (logscaled+max(log(params(1)),z) <= log(0.001_dp)) then
+            d = 0.0_dp
+            if (z > log(tiny(1.0_dp))) d = exp(logscaled)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            r = t*exp(log(params(1))+logscaled)
+            if (z > log(tiny(1.0_dp))) then
+                ! expm1(t*d)/d remains t when d underflows.
+                if (d > 0.0_dp) then
+                    r = r-exp(z+logscaled)*(expm1_safe(t*d)/d)
+                else
+                    r = r-t*exp(z+logscaled)
+                end if
+            end if
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = loggamma_lpdf(a,params)+logwidth+log1p_safe(correction)
+        else
+            value = tail_interval(a,b,params,loggamma_lcdf,loggamma_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(loggamma_lcdf(a,params),loggamma_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function loggamma_interval
+
+
+    pure function dgamma_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [a,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (a <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,dgamma_lpdf,dgamma_lcdf, &
+            dgamma_lsf,dgamma_interval)
+    end function dgamma_censored_loglikelihood
+
+    pure function dgamma_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -dgamma_censored_loglikelihood(data,a,loc,scale)
+    end function dgamma_censored_nnlf
+
+    pure function dweibull_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,dweibull_lpdf,dweibull_lcdf, &
+            dweibull_lsf,dweibull_interval)
+    end function dweibull_censored_loglikelihood
+
+    pure function dweibull_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -dweibull_censored_loglikelihood(data,c,loc,scale)
+    end function dweibull_censored_nnlf
+
+    pure function loggamma_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,loggamma_lpdf,loggamma_lcdf, &
+            loggamma_lsf,loggamma_interval)
+    end function loggamma_censored_loglikelihood
+
+    pure function loggamma_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -loggamma_censored_loglikelihood(data,c,loc,scale)
+    end function loggamma_censored_nnlf
+
 
     pure function bounded_logadd(a, b) result(value)
         implicit none

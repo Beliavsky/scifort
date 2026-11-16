@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -73,6 +73,9 @@ weibull_max_censored_loglikelihood(data, c [, loc, scale])
 uniform_censored_loglikelihood(data [, loc, scale])
 powerlaw_censored_loglikelihood(data, a [, loc, scale])
 arcsine_censored_loglikelihood(data [, loc, scale])
+dgamma_censored_loglikelihood(data, a [, loc, scale])
+dweibull_censored_loglikelihood(data, c [, loc, scale])
+loggamma_censored_loglikelihood(data, c [, loc, scale])
 bradford_censored_loglikelihood(data, c [, loc, scale])
 triang_censored_loglikelihood(data, c [, loc, scale])
 trapezoid_censored_loglikelihood(data, c, d [, loc, scale])
@@ -93,7 +96,8 @@ The corresponding `*_censored_nnlf` procedures return the negative
 log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax/Fisk/generalized-logistic/Gompertz/inverse-Weibull shape `c`,
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
 power-function shape `a`, Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied.
-Bradford shape `c`, triangular mode `c`, and trapezoidal edges `c,d` are also required.
+Bradford shape `c`, triangular mode `c`, trapezoidal edges `c,d`,
+double-gamma shape `a`, and double-Weibull/log-gamma shape `c` are also required.
 Scale and shapes with positive domains must be positive and finite; location
 must be finite. Triangular/trapezoidal shapes use the bounded domains below.
 Invalid data or parameters return quiet NaN, including for empty data.
@@ -132,7 +136,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1139,3 +1143,59 @@ call trapezoid_fit(data,[0.0_dp,0.7_dp,0.0_dp,1.0_dp], &
 
 Other scalar kernels' extreme-range behavior is unchanged. See the
 [validation report](../validation/piecewise_censored_2026-11-16.md).
+
+## Double-gamma, double-Weibull, and log-gamma details
+
+All three distributions have real-line support, finite positive shape and
+scale, and finite location. Shapes follow SciPy: `a` for `dgamma`, and `c`
+for `dweibull` and `loggamma`. With `z=(x-loc)/scale`, double-gamma and
+double-Weibull put half of a gamma or Weibull density on each side of zero.
+Their CDF at location is exactly one half. Exact observations at location
+have infinite density for shape below one, zero density above one, and
+`1/(2*scale)` at shape one. Both shape-one families equal Laplace.
+
+Same-side intervals reuse the underlying gamma/Weibull interval kernels.
+Intervals crossing location sum two positive radial CDF contributions;
+nearly full intervals instead retain both omitted tails. Reflection uses
+negated observations/location, avoiding an overflowing `2*loc-x`.
+Log distances retain normalized radii below the smallest positive real.
+
+Log-gamma means `exp(Z)` is unit-scale gamma with shape `c`; it differs
+from lognormal and from the logarithm of the gamma function. Its density is
+`exp(c*z-exp(z))/(Gamma(c)*scale)`. Tails use incomplete gamma functions
+and log-domain small-argument expansions. Very negative standardized
+coordinates retain `c*z` when small shape rescues an overflowing coordinate.
+The large-shape density uses a Stirling saddle form around `z=log(c)`.
+Narrow intervals integrate relative densities with three-point Gauss-Legendre
+quadrature when both `c*delta` and `exp(z)*delta` are small; broader intervals
+use the better tail difference. Beyond representable `exp(z)`, an endpoint
+expansion retains representable log survival probabilities.
+
+`dgamma_fit`, `dweibull_fit`, and `loggamma_fit` accept `censored_data` with
+bounds in `(shape,loc,scale)` order. Any parameter may be free or fixed by
+equal bounds. Exact center singularities are retained in likelihoods;
+a fully fixed singular or zero-density objective returns
+`fit_status_no_finite_objective`. Free-location fits for shape below one can
+have unbounded likelihoods as location approaches an exact observation.
+A finite bounded optimizer result is not a guarantee of a global MLE.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    dgamma_fit, dweibull_fit, loggamma_fit
+type(censored_data) :: data
+type(fit_result) :: fitted
+
+data = make_censored_data(uncensored=[-1.2_dp,0.5_dp,2.5_dp], &
+    left=[-2.0_dp],right=[3.5_dp],interval=reshape([-0.2_dp,0.3_dp],[1,2]))
+call dgamma_fit(data,[1.1_dp,0.0_dp,0.2_dp],[5.0_dp,0.0_dp,5.0_dp],fitted)
+call dweibull_fit(data,[1.1_dp,0.0_dp,0.2_dp],[5.0_dp,0.0_dp,5.0_dp],fitted)
+call loggamma_fit(data,[0.1_dp,0.0_dp,0.2_dp],[5.0_dp,0.0_dp,5.0_dp],fitted)
+```
+
+The incomplete-gamma kernel's binary64 accuracy limits carry through to
+double-gamma and log-gamma. At extremely large shapes, rounding in the
+coordinate and `log(shape)` can limit accuracy near the sharply concentrated
+mode; subnormal results retain binary64 resolution limits. Existing scalar
+APIs and original array fit procedures keep their signatures. C ABI and
+wrapper additions remain deferred. See the
+[validation report](../validation/reflected_censored_2026-11-16.md).

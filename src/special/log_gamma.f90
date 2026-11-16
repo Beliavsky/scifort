@@ -109,7 +109,11 @@ contains
         integer :: k
         real(dp) :: inv_a2
 
-        inv_a2 = 1.0_dp / (a * a)
+        if (a > sqrt(huge(1.0_dp))) then
+            inv_a2 = (1.0_dp/a)**2
+        else
+            inv_a2 = 1.0_dp / (a * a)
+        end if
         y = stirling_coefficients(size(stirling_coefficients))
         do k = size(stirling_coefficients) - 1, 1, -1
             y = stirling_coefficients(k) + inv_a2 * y

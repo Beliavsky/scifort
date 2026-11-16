@@ -903,6 +903,39 @@ def main():
                     stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n'
                     if number == 38: stdin+=f'{d:.17g}\n'
                     stdin+=f'{a:.17g} {b:.17g}\n'
+    for number,family in enumerate(['dgamma','dweibull','loggamma'],39):
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            c=10**rng.uniform(-1.,1.)
+            exact=[loc+scale*rng.uniform(-3.,3.) for _ in range(3)]
+            left=[loc+scale*rng.uniform(-5.,5.)]
+            right=[loc+scale*rng.uniform(-5.,5.)]
+            intervals=[]
+            for _ in range(2):
+                a=loc+scale*rng.uniform(-5.,5.)
+                b=a+scale*10**rng.uniform(-14.,1.)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,c,loc,scale) for x in exact)
+            value+=sum(reference.logcdf(x,family,c,loc,scale) for x in left)
+            value+=sum(reference.logsf(x,family,c,loc,scale) for x in right)
+            value+=sum(reference.loginterval(a,b,family,c,loc,scale) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            for group in [exact,left,right,*intervals]:
+                stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+        with mp.workdps(1000):
+            for c in [.01,.4,1.,3.,100.]:
+                for a,b,loc,scale in [
+                    (0.,math.nextafter(0.,1.),0.,1.),
+                    (-1.,math.nextafter(-1.,math.inf),0.,1.),
+                    (1.,math.nextafter(1.,math.inf),0.,1.),
+                    (-1e-300,2e-300,0.,1e300),
+                    (-2.,3.,0.,1.),
+                    (-8.,8.,0.,1.)]:
+                    value=reference.loginterval(a,b,family,c,loc,scale)
+                    cases.append((family+'_stress',float(value)))
+                    stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -932,6 +965,7 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        reflected_errors = []
         piecewise_errors = []
         normal_transform_errors = []
         new_hazard_errors = []
@@ -941,6 +975,8 @@ def main():
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('dgamma','dweibull','loggamma')):
+                reflected_errors.append(error)
             if family.startswith(('bradford','triang','trapezoid')):
                 piecewise_errors.append(error)
             if family.startswith(('moyal','levy')):
@@ -977,6 +1013,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Double gamma/Weibull and log gamma: {len(reflected_errors)} comparisons; '
+              f'max scaled error={max(reflected_errors):.3g}', flush=True)
         print(f'  Bradford/triangular/trapezoidal: {len(piecewise_errors)} comparisons; '
               f'max scaled error={max(piecewise_errors):.3g}', flush=True)
         print(f'  Moyal/Levy/reflected Levy: {len(normal_transform_errors)} comparisons; '

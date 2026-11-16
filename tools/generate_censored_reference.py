@@ -32,6 +32,15 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family in ('dgamma','dweibull'):
+        r=abs(z)
+        if r == 0:
+            return mp.inf if shape < 1 else (-mp.log(2*scale) if shape == 1 else mp.ninf)
+        if family == 'dgamma':
+            return (shape-1)*mp.log(r)-r-mp.loggamma(shape)-mp.log(2*scale)
+        return mp.log(shape)-mp.log(2*scale)+(shape-1)*mp.log(r)-r**shape
+    if family == 'loggamma':
+        return shape*z-mp.exp(z)-mp.loggamma(shape)-mp.log(scale)
     if family == 'bradford':
         return mp.log(shape/scale)-mp.log1p(shape*z)-mp.log(mp.log1p(shape)) if 0 <= z <= 1 else mp.ninf
     if family in ('triang','trapezoid'):
@@ -122,6 +131,12 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family in ('dgamma','dweibull'):
+        q=(mp.gammainc(shape,abs(z),mp.inf)/mp.gamma(shape) if family == 'dgamma'
+           else mp.exp(-abs(z)**shape))/2
+        return mp.log(q) if z < 0 else mp.log1p(-q)
+    if family == 'loggamma':
+        return mp.log(mp.gammainc(shape,0,mp.exp(z))/mp.gamma(shape))
     if family == 'bradford':
         return mp.log(mp.log1p(shape*z)/mp.log1p(shape)) if 0 < z < 1 else (mp.ninf if z <= 0 else mp.mpf(0))
     if family in ('triang','trapezoid'):
@@ -199,6 +214,14 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('dgamma','dweibull','loggamma'):
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if family == 'loggamma':
+            return mp.log(mp.gammainc(shape,mp.exp(z),mp.inf)/mp.gamma(shape))
+        q=(mp.gammainc(shape,abs(z),mp.inf)/mp.gamma(shape) if family == 'dgamma'
+           else mp.exp(-abs(z)**shape))/2
+        return mp.log(q) if z >= 0 else mp.log1p(-q)
     if family in ('bradford','triang','trapezoid'):
         x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -286,6 +309,18 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1.):
+    if family in ('dgamma','dweibull'):
+        a,b,shape,loc,scale=map(mp.mpf,(a,b,shape,loc,scale))
+        za,zb=(a-loc)/scale,(b-loc)/scale
+        def radial_mass(lo,hi):
+            if family == 'dgamma':
+                return mp.gammainc(shape,lo,hi)/mp.gamma(shape)
+            hlo,hhi=lo**shape,hi**shape
+            return mp.exp(-hlo)*(-mp.expm1(-(hhi-hlo)))
+        if zb <= 0: mass=radial_mass(-zb,-za)/2
+        elif za >= 0: mass=radial_mass(za,zb)/2
+        else: mass=(radial_mass(0,-za)+radial_mass(0,zb))/2
+        return mp.log(mass)
     if logsf(a, family, shape, loc, scale, second_shape) < logcdf(b, family, shape, loc, scale, second_shape):
         large = logsf(a, family, shape, loc, scale, second_shape)
         small = logsf(b, family, shape, loc, scale, second_shape)
@@ -450,6 +485,13 @@ def main():
         b=mp.mpf(1e6)
         lp=a*mp.log(z)-mp.log(a)-mp.log(mp.beta(a,b))
         result['beta_tiny_large_sf']=float(mp.log(-mp.expm1(lp)))
+    for family in ['dgamma','dweibull','loggamma']:
+        shape,loc,scale=1.7,0.,1.3
+        value=sum(logpdf(x,family,shape,loc,scale) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,shape,loc,scale)+logsf(3.5,family,shape,loc,scale)
+        value+=sum(loginterval(a,b,family,shape,loc,scale) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        result[family+'_fixed_loc_scale_fit']=list(getattr(stats,family).fit(data,floc=0.,fscale=1.3))
     print(json.dumps(result, indent=2))
 
 
