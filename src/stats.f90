@@ -5,6 +5,9 @@ module scifort_stats
     use scifort_censored, only : genlogistic_censored_loglikelihood, genlogistic_censored_nnlf
     use scifort_censored, only : gompertz_censored_loglikelihood, gompertz_censored_nnlf
     use scifort_censored, only : invweibull_censored_loglikelihood, invweibull_censored_nnlf
+    use scifort_censored, only : moyal_censored_loglikelihood, moyal_censored_nnlf
+    use scifort_censored, only : levy_censored_loglikelihood, levy_censored_nnlf
+    use scifort_censored, only : levy_l_censored_loglikelihood, levy_l_censored_nnlf
     use scifort_censored, only : arcsine_censored_loglikelihood, arcsine_censored_nnlf
     use scifort_censored, only : powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     use scifort_censored, only : uniform_censored_loglikelihood, uniform_censored_nnlf
@@ -725,6 +728,9 @@ module scifort_stats
     public :: uniform_censored_loglikelihood, uniform_censored_nnlf
     public :: powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
+    public :: moyal_censored_loglikelihood, moyal_censored_nnlf
+    public :: levy_censored_loglikelihood, levy_censored_nnlf
+    public :: levy_l_censored_loglikelihood, levy_l_censored_nnlf
     public :: genlogistic_censored_loglikelihood, genlogistic_censored_nnlf
     public :: gompertz_censored_loglikelihood, gompertz_censored_nnlf
     public :: invweibull_censored_loglikelihood, invweibull_censored_nnlf

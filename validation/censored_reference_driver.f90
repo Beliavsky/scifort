@@ -8,6 +8,9 @@ program censored_reference_driver
         genlogistic_censored_loglikelihood, &
         gompertz_censored_loglikelihood, &
         invweibull_censored_loglikelihood, &
+        moyal_censored_loglikelihood, &
+        levy_censored_loglikelihood, &
+        levy_l_censored_loglikelihood, &
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
         halfnorm_censored_loglikelihood, &
@@ -104,6 +107,12 @@ program censored_reference_driver
             value = gompertz_censored_loglikelihood(data,c,loc,scale)
         case (32)
             value = invweibull_censored_loglikelihood(data,c,loc,scale)
+        case (33)
+            value = moyal_censored_loglikelihood(data,loc,scale)
+        case (34)
+            value = levy_censored_loglikelihood(data,loc,scale)
+        case (35)
+            value = levy_l_censored_loglikelihood(data,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

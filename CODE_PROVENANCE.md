@@ -1,3 +1,40 @@
+## 2026-11-16 - Moyal, Levy, and reflected Levy censoring
+
+The new callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the public density/support specifications for
+[SciPy Moyal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.moyal.html),
+[Levy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy.html),
+and [reflected Levy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_l.html),
+inspected 2026-11-16. Substituting `t=exp(-z/2)` (Moyal) or `t=1/sqrt(z)`
+(Levy) yields the half-normal density, giving CDF `erfc(t/sqrt(2))` and
+survival `erf(t/sqrt(2))`. Exact-data log densities include their analytic
+Jacobians. Reflected Levy reuses the Levy callbacks after negating points
+and location and swapping censoring tails/interval endpoints.
+
+The new helpers retain log transformed coordinates and guard the normal
+exponent `-t*t/2`. Moyal standardization computes the half coordinate
+separately if the full coordinate overflows. Normal interval widths use
+`t_a*(1-exp(-delta))`, with `delta=(b-a)/(2*scale)` for Moyal and
+`delta=log((b-loc)/(a-loc))/2` for Levy. Their logarithms preserve widths
+after rounded endpoints coincide. Existing SciFort normal tails, narrow
+normal-interval quadrature (retaining its DLMF 3.5 provenance), safe
+standardization, log-distance, log-softplus, and log-hazard-mass helpers
+are reused unchanged. No upstream implementation code was imported or translated.
+
+Independent mpmath definitions and SciPy fixed-location scale fits provide
+reference values. For enormous positive erfc arguments that overflow an
+internal mpmath range check, the Python reference uses the leading term of
+[DLMF 7.12.1](https://dlmf.nist.gov/7.12.E1), inspected 2026-11-16:
+`log(erfc(t))=-t*t-log(t)-log(pi)/2+O(1/(2*t*t))`. This branch is used only
+for `t>1e50`, where the first omitted term relative to the leading term
+is below `5e-101`;
+it is reference code, not a new library approximation. Native tests also
+check half-normal transformations, reflection, and limiting ratios.
+The fit overloads reuse the existing bounded optimizer and preserve array
+procedures. No scalar distribution source, dependency, C ABI, or third-party
+license text is changed. See the
+[validation report](validation/normal_transform_censored_2026-11-16.md).
+
 ## 2026-11-16 - Generalized logistic, Gompertz, and inverse Weibull censoring
 
 The new callbacks in `src/censored.f90` are original MIT SciFort code,

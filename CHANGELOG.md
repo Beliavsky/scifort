@@ -1,3 +1,14 @@
+## 2026-11-16 - Moyal, Levy, and reflected Levy censoring
+
+- Add mixed-censoring likelihood/NNLF and bounded fitting overloads for three
+  families, with free or fixed location and scale.
+- Reuse normal kernels through logarithmic half-normal transformations,
+  retaining narrow interval widths and extreme finite log probabilities.
+- Add independent high-precision references, SciPy scale-fit comparisons,
+  and native transformation, endpoint, and API tests.
+- Update coverage to thirty-five censored families and 74 remaining candidates.
+  C ABI and wrapper work remain deferred.
+
 ## 2026-11-16 - Generalized logistic, Gompertz, and inverse Weibull censoring
 
 - Add mixed-censoring likelihood/NNLF and bounded fitting overloads for three

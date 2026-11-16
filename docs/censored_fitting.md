@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, generalized logistic, Gompertz, inverse Weibull, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -50,6 +50,9 @@ The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
 normal_censored_loglikelihood(data [, loc, scale])
+moyal_censored_loglikelihood(data [, loc, scale])
+levy_censored_loglikelihood(data [, loc, scale])
+levy_l_censored_loglikelihood(data [, loc, scale])
 rayleigh_censored_loglikelihood(data [, loc, scale])
 cauchy_censored_loglikelihood(data [, loc, scale])
 halfcauchy_censored_loglikelihood(data [, loc, scale])
@@ -123,7 +126,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1032,3 +1035,47 @@ included for exact data. The new likelihoods have additional extreme-range
 guards; this does not change other scalar kernels' representability limits.
 The scalar inverse Weibull small-shape multiplication guard is corrected.
 See the [validation report](../validation/hazard_family_censored_2026-11-16.md).
+
+## Moyal, Levy, and reflected Levy details
+
+All three families use finite `loc` (default zero) and finite `scale>0`
+(default one). Moyal has support on the whole real line. Levy has lower
+support endpoint `loc`; reflected Levy (`levy_l`) has upper endpoint `loc`.
+Both Levy densities are zero at their endpoint. Intervals are clipped to
+support, and equal finite endpoints continue to represent exact data.
+
+For standardized `z`, the transformations `t=exp(-z/2)` for Moyal and
+`t=1/sqrt(z)` for Levy give a half-normal variable. Their CDF is
+`erfc(t/sqrt(2))` and survival probability is `erf(t/sqrt(2))`. Reflected
+Levy swaps these tails after reflection. Log transformed coordinates retain
+tiny survival probabilities, and guarded normal exponents retain finite
+log densities/CDFs when an unscaled exponential would overflow. Moyal also
+retains a finite half coordinate when the full standardized coordinate
+overflows. True log magnitudes outside binary64 range return negative infinity.
+
+Intervals retain their transformed width in logarithmic form before using
+the existing narrow normal-interval quadrature. Wider intervals use the
+better-conditioned tail difference; nearly full intervals complement both
+omitted tails. The existing normal-kernel accuracy limits still apply.
+
+Each `*_fit` overload accepts `censored_data` and bounds in `(loc,scale)`
+order. Either or both parameters can be free; equal bounds fix a parameter.
+Existing array-specific procedures remain available. Fits use the existing
+bounded local optimizer, so success does not establish a global optimum.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    moyal_fit, levy_fit, levy_l_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp],right=[3.5_dp])
+call moyal_fit(data,[0.0_dp,0.1_dp],[0.0_dp,10.0_dp],fit)
+call levy_fit(data,[0.0_dp,0.1_dp],[0.0_dp,10.0_dp],fit)
+data = make_censored_data(uncensored=[-0.5_dp,-1.2_dp,-2.5_dp],left=[-3.5_dp])
+call levy_l_fit(data,[0.0_dp,0.1_dp],[0.0_dp,10.0_dp],fit)
+```
+
+The new likelihoods have additional extreme-range guards; other scalar
+kernels' behavior is unchanged. See the
+[validation report](../validation/normal_transform_censored_2026-11-16.md).

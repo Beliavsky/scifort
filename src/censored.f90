@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: moyal_censored_loglikelihood, moyal_censored_nnlf
+    public :: levy_censored_loglikelihood, levy_censored_nnlf
+    public :: levy_l_censored_loglikelihood, levy_l_censored_nnlf
     public :: genlogistic_censored_loglikelihood, genlogistic_censored_nnlf
     public :: gompertz_censored_loglikelihood, gompertz_censored_nnlf
     public :: invweibull_censored_loglikelihood, invweibull_censored_nnlf
@@ -80,6 +83,280 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure subroutine normal_transform_tails(logt, logcdf, logsf)
+        implicit none
+        real(dp), intent(in) :: logt !! log positive half-normal coordinate, possibly infinite
+        real(dp), intent(out) :: logcdf !! log half-normal CDF
+        real(dp), intent(out) :: logsf !! log half-normal survival probability
+        real(dp) :: t
+        if (logt <= log(0.01_dp)) then
+            logcdf = scifort_log_two+normal_small_interval(0.0_dp,logt)
+            logsf = log1p_safe(-exp(logcdf))
+        else if (logt <= 0.0_dp) then
+            t = exp(logt)
+            logcdf = log(erf(t/sqrt(2.0_dp)))
+            logsf = log1p_safe(-exp(logcdf))
+        else
+            logsf = negative_infinity(0.0_dp)
+            if (logt <= 0.5_dp*(log(huge(1.0_dp))+scifort_log_two)) then
+                logsf = scifort_log_two+normal_logsf(exp(logt))
+            end if
+            logcdf = log1p_safe(-exp(logsf))
+        end if
+    end subroutine normal_transform_tails
+
+    pure function normal_transform_exponent(logt) result(value)
+        implicit none
+        real(dp), intent(in) :: logt !! log positive half-normal coordinate, possibly infinite
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (logt > 0.5_dp*(log(huge(1.0_dp))+scifort_log_two)) return
+        value = 0.0_dp
+        if (logt < log(tiny(1.0_dp))) return
+        value = negative_hazard(2.0_dp*logt-scifort_log_two)
+    end function normal_transform_exponent
+
+    pure function normal_transform_interval(loglo, loghi, logdelta) result(value)
+        implicit none
+        real(dp), intent(in) :: loglo !! log smaller half-normal coordinate
+        real(dp), intent(in) :: loghi !! log larger half-normal coordinate
+        real(dp), intent(in) :: logdelta !! log positive difference of the two log coordinates
+        real(dp) :: value, t, logwidth
+        value = negative_infinity(0.0_dp)
+        if (loglo > 0.5_dp*(log(huge(1.0_dp))+scifort_log_two)) return
+        t = exp(loglo)
+        logwidth = loghi+log_hazard_mass(logdelta)
+        ! NaN requests a tail-difference fallback when the interval is not narrow.
+        value = normal_small_interval(t,logwidth)
+        if (.not. ieee_is_nan(value)) value = value+scifort_log_two
+    end function normal_transform_interval
+
+    pure function moyal_logt(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, z
+        z = location_scale_z(x,params)
+        value = -0.5_dp*z
+        if (.not. ieee_is_finite(z)) then
+            ! The half coordinate can be finite when the full coordinate overflows.
+            ! Such overflow requires scale < huge()/2, so doubling scale is safe.
+            value = -location_scale_z(x,[params(1),2.0_dp*params(2)])
+        end if
+    end function moyal_logt
+
+    pure function moyal_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, logt, exponent
+        logt = moyal_logt(x,params)
+        exponent = normal_transform_exponent(logt)
+        value = negative_infinity(0.0_dp)
+        if (.not. ieee_is_finite(exponent)) return
+        value = logt+exponent-scifort_log_sqrt_two_pi-log(params(2))
+    end function moyal_lpdf
+
+    pure function moyal_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, unused
+        call normal_transform_tails(moyal_logt(x,params),unused,value)
+    end function moyal_lcdf
+
+    pure function moyal_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, unused
+        call normal_transform_tails(moyal_logt(x,params),value,unused)
+    end function moyal_lsf
+
+    pure function moyal_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, omitted, logdelta
+        omitted = exp(moyal_lcdf(a,params))+exp(moyal_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        logdelta = log_distance(b,a)-log(params(2))-scifort_log_two
+        value = normal_transform_interval(moyal_logt(b,params),moyal_logt(a,params),logdelta)
+        if (ieee_is_nan(value)) value = tail_interval(a,b,params,moyal_lcdf,moyal_lsf)
+    end function moyal_interval
+
+    pure function levy_logt(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value
+        value = 0.5_dp*(log(params(2))-log_distance(x,params(1)))
+    end function levy_logt
+
+    pure function levy_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value, logt
+        value = negative_infinity(0.0_dp)
+        if (x <= params(1)) return
+        logt = levy_logt(x,params)
+        value = logt-log_distance(x,params(1))-scifort_log_sqrt_two_pi &
+            +normal_transform_exponent(logt)
+    end function levy_lpdf
+
+    pure function levy_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value, unused
+        value = negative_infinity(0.0_dp)
+        if (x <= params(1)) return
+        call normal_transform_tails(levy_logt(x,params),unused,value)
+    end function levy_lcdf
+
+    pure function levy_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value, unused
+        value = 0.0_dp
+        if (x <= params(1)) return
+        call normal_transform_tails(levy_logt(x,params),value,unused)
+    end function levy_lsf
+
+    pure function levy_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp) :: value, omitted, logdelta
+        value = levy_lcdf(b,params)
+        if (a <= params(1)) return
+        omitted = exp(levy_lcdf(a,params))+exp(levy_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        logdelta = burr_logsoftplus(log_distance(b,a)-log_distance(a,params(1))) &
+            -scifort_log_two
+        value = normal_transform_interval(levy_logt(b,params),levy_logt(a,params),logdelta)
+        if (ieee_is_nan(value)) value = tail_interval(a,b,params,levy_lcdf,levy_lsf)
+    end function levy_interval
+
+    pure function levy_l_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite upper support endpoint and positive scale
+        real(dp) :: value
+        value = levy_lpdf(-x,[-params(1),params(2)])
+    end function levy_l_lpdf
+
+    pure function levy_l_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite upper support endpoint and positive scale
+        real(dp) :: value
+        value = levy_lsf(-x,[-params(1),params(2)])
+    end function levy_l_lcdf
+
+    pure function levy_l_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite upper support endpoint and positive scale
+        real(dp) :: value
+        value = levy_lcdf(-x,[-params(1),params(2)])
+    end function levy_l_lsf
+
+    pure function levy_l_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! finite upper support endpoint and positive scale
+        real(dp) :: value
+        value = levy_interval(-b,-a,[-params(1),params(2)])
+    end function levy_l_interval
+
+    pure function moyal_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, moyal_lpdf, moyal_lcdf, &
+            moyal_lsf, moyal_interval)
+    end function moyal_censored_loglikelihood
+
+    pure function moyal_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -moyal_censored_loglikelihood(data, loc, scale)
+    end function moyal_censored_nnlf
+
+    pure function levy_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, levy_lpdf, levy_lcdf, &
+            levy_lsf, levy_interval)
+    end function levy_censored_loglikelihood
+
+    pure function levy_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -levy_censored_loglikelihood(data, loc, scale)
+    end function levy_censored_nnlf
+
+    pure function levy_l_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite upper support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(2)
+        params = [0.0_dp, 1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data, params, levy_l_lpdf, levy_l_lcdf, &
+            levy_l_lsf, levy_l_interval)
+    end function levy_l_censored_loglikelihood
+
+    pure function levy_l_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite upper support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -levy_l_censored_loglikelihood(data, loc, scale)
+    end function levy_l_censored_nnlf
+
 
     pure function hazard_complement(logh, nh) result(value)
         implicit none

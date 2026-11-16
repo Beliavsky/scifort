@@ -817,6 +817,50 @@ def main():
                 value=reference.loginterval(a,b,family,shape,loc,scale)
                 cases.append((family+'_stress',float(value)))
                 stdin+=f'{number} {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    for number,family in enumerate(['moyal','levy','levy_l'],33):
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            sign=-1 if family == 'levy_l' else 1
+            exact=[loc+sign*scale*rng.uniform(.1,4.) for _ in range(3)]
+            left=[loc+sign*scale*rng.uniform(.1,5.)]
+            right=[loc+sign*scale*rng.uniform(.1,5.)]
+            intervals=[]
+            for _ in range(2):
+                a=loc+scale*rng.uniform(-6. if number == 33 else .01,30.)
+                b=a+scale*10**rng.uniform(-14.,.5)
+                if b == a: b=math.nextafter(a,math.inf)
+                if sign == -1: a,b=2*loc-b,2*loc-a
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,1.,loc,scale) for x in exact)
+            value+=sum(reference.logcdf(x,family,1.,loc,scale) for x in left)
+            value+=sum(reference.logsf(x,family,1.,loc,scale) for x in right)
+            value+=sum(reference.loginterval(a,b,family,1.,loc,scale) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} 1 {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            for group in [exact,left,right,*intervals]:
+                stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+        stress=[(1.,math.nextafter(1.,math.inf),0.,1.),
+                (1e-300,2e-300,0.,1e300),
+                (1e300,math.nextafter(1e300,math.inf),0.,1e300),
+                (.1,100.,0.,1.),
+                (1e308,math.nextafter(1e308,math.inf),-1e308,1e308)]
+        if family == 'moyal':
+            stress += [(1000.,math.nextafter(1000.,math.inf),0.,1.),
+                       (-6.,math.nextafter(-6.,math.inf),0.,1.),
+                       (-710.,math.nextafter(-710.,math.inf),0.,1.),
+                       (0.,math.nextafter(0.,1.),0.,1.),
+                       (1e-300,2e-300,700e300,1e300)]
+        else:
+            stress[1]=(1e-300,2e-300,0.,1.)
+            stress += [(1e300,math.nextafter(1e300,math.inf),0.,1.),
+                       (1e-300,2e-300,0.,1e-300),
+                       (1e-300,2e-300,0.,1e-308)]
+        with mp.workdps(1000):
+            for a,b,loc,scale in stress:
+                if family == 'levy_l': a,b,loc=-b,-a,-loc
+                value=reference.loginterval(a,b,family,1.,loc,scale)
+                cases.append((family+'_stress',float(value)))
+                stdin+=f'{number} 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -846,6 +890,7 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        normal_transform_errors = []
         new_hazard_errors = []
         bounded_errors = []
         for value, (family, expected) in zip(values, cases):
@@ -853,6 +898,8 @@ def main():
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('moyal','levy')):
+                normal_transform_errors.append(error)
             if family.startswith(('genlogistic','gompertz','invweibull')):
                 new_hazard_errors.append(error)
             if family.startswith(('uniform','powerlaw','arcsine')):
@@ -885,6 +932,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Moyal/Levy/reflected Levy: {len(normal_transform_errors)} comparisons; '
+              f'max scaled error={max(normal_transform_errors):.3g}', flush=True)
         print(f'  Generalized logistic/Gompertz/inverse Weibull: {len(new_hazard_errors)} comparisons; '
               f'max scaled error={max(new_hazard_errors):.3g}', flush=True)
         print(f'  Uniform/powerlaw/arcsine: {len(bounded_errors)} comparisons; '

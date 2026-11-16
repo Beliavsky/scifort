@@ -11,11 +11,23 @@ from scipy import stats
 mp.mp.dps = 100
 
 
+def logerfc_large_safe(x):
+    """DLMF 7.12.1 leading term; relative correction < 1/(2*x*x)."""
+    if x > mp.mpf('1e50'):
+        return -x*x-mp.log(x)-mp.log(mp.pi)/2
+    return mp.log(mp.erfc(x))
+
+
 def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'gibrat': family, shape = 'lognormal', 1.
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'moyal':
+        return -(z+mp.exp(-z))/2-mp.log(2*mp.pi)/2-mp.log(scale)
+    if family in ('levy','levy_l'):
+        if family == 'levy_l': z=-z
+        return -mp.log(2*mp.pi)/2-3*mp.log(z)/2-1/(2*z)-mp.log(scale) if z > 0 else mp.ninf
     if family == 'genlogistic':
         return mp.log(shape/scale)-mp.log1p(mp.exp(z))-shape*mp.log1p(mp.exp(-z))
     if family == 'gompertz':
@@ -92,6 +104,12 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'moyal':
+        return logerfc_large_safe(mp.exp(-z/2)/mp.sqrt(2))
+    if family == 'levy':
+        return logerfc_large_safe(1/mp.sqrt(2*z)) if z > 0 else mp.ninf
+    if family == 'levy_l':
+        return mp.log(mp.erf(1/mp.sqrt(-2*z))) if z < 0 else mp.mpf(0)
     if family == 'genlogistic':
         return -shape*mp.log1p(mp.exp(-z))
     if family == 'gompertz':
@@ -158,6 +176,12 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('moyal','levy','levy_l'):
+        x,loc,scale=map(mp.mpf,(x,loc,scale))
+        z=(x-loc)/scale
+        if family == 'moyal': return mp.log(mp.erf(mp.exp(-z/2)/mp.sqrt(2)))
+        if family == 'levy': return mp.log(mp.erf(1/mp.sqrt(2*z))) if z > 0 else mp.mpf(0)
+        return logerfc_large_safe(1/mp.sqrt(-2*z)) if z < 0 else mp.ninf
     if family in ('genlogistic','gompertz','invweibull'):
         x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -280,6 +304,17 @@ def main():
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
         if family == 'laplace_asymmetric':
             result[family+'_fixed_shape_fit'] = list(distribution.fit(data,f0=shape,floc=loc))
+    reflected=stats.CensoredData(uncensored=[-.5,-1.2,-2.5],right=[-.3],left=[-3.5],
+                                  interval=[[-1.4,-1.1],[-4.4,-4.]])
+    for family in ('moyal','levy','levy_l'):
+        sign=-1 if family == 'levy_l' else 1
+        value=sum(logpdf(sign*x,family,1.,0.,1.3) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,1.,0.,1.3) if sign == 1 else logsf(-.3,family,1.,0.,1.3)
+        value+=logsf(3.5,family,1.,0.,1.3) if sign == 1 else logcdf(-3.5,family,1.,0.,1.3)
+        value+=sum(loginterval(a,b,family,1.,0.,1.3) for a,b in
+                   ([(1.1,1.4),(4.,4.4)] if sign == 1 else [(-1.4,-1.1),(-4.4,-4.)]))
+        result[family+'_mixed']=float(value)
+        result[family+'_fixed_loc_fit']=list(getattr(stats,family).fit(reflected if sign == -1 else data,floc=0.))
     bounded=stats.CensoredData(uncensored=[.1,.3,.6],left=[.05],right=[.8],
                                interval=[[.2,.25],[.7,.75]])
     for family,shape in [('uniform',1.),('powerlaw',.6),('arcsine',1.)]:

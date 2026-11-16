@@ -22,6 +22,9 @@ module scifort_fit
     use scifort_censored, only : genlogistic_censored_nnlf
     use scifort_censored, only : gompertz_censored_nnlf
     use scifort_censored, only : invweibull_censored_nnlf
+    use scifort_censored, only : moyal_censored_nnlf
+    use scifort_censored, only : levy_censored_nnlf
+    use scifort_censored, only : levy_l_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -462,6 +465,18 @@ module scifort_fit
         module procedure invweibull_fit, invweibull_fit_censored
     end interface invweibull_fit
 
+    interface moyal_fit
+        module procedure moyal_fit, moyal_fit_censored
+    end interface moyal_fit
+
+    interface levy_fit
+        module procedure levy_fit, levy_fit_censored
+    end interface levy_fit
+
+    interface levy_l_fit
+        module procedure levy_l_fit, levy_l_fit_censored
+    end interface levy_l_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -643,6 +658,45 @@ contains
         call bounded_fit([real(dp) ::], family_halfcauchy, lower, upper, result, guess, &
             [.false., .false.], max_iter, tolerance, data)
     end subroutine halfcauchy_fit_censored
+
+    subroutine moyal_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for location and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting location and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_moyal, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine moyal_fit_censored
+
+    subroutine levy_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for support endpoint and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting support endpoint and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_levy, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine levy_fit_censored
+
+    subroutine levy_l_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for support endpoint and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting support endpoint and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_levy_l, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine levy_l_fit_censored
 
     subroutine halfnorm_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1371,6 +1425,12 @@ contains
                 value = weibull_max_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_halfcauchy)
                 value = halfcauchy_censored_nnlf(censored, params(1), params(2))
+            case (family_moyal)
+                value = moyal_censored_nnlf(censored,params(1),params(2))
+            case (family_levy)
+                value = levy_censored_nnlf(censored,params(1),params(2))
+            case (family_levy_l)
+                value = levy_l_censored_nnlf(censored,params(1),params(2))
             case (family_halfnorm)
                 value = halfnorm_censored_nnlf(censored, params(1), params(2))
             case (family_hypsecant)
