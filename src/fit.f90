@@ -18,6 +18,9 @@ module scifort_fit
     use scifort_censored, only : fisk_censored_nnlf
     use scifort_censored, only : burr_censored_nnlf
     use scifort_censored, only : burr12_censored_nnlf
+    use scifort_censored, only : uniform_censored_nnlf
+    use scifort_censored, only : powerlaw_censored_nnlf
+    use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
     use scifort_censored, only : pareto_censored_nnlf
     use scifort_censored, only : loglaplace_censored_nnlf
@@ -506,6 +509,18 @@ module scifort_fit
         module procedure burr12_fit, burr12_fit_censored
     end interface burr12_fit
 
+    interface uniform_fit
+        module procedure uniform_fit, uniform_fit_censored
+    end interface uniform_fit
+
+    interface powerlaw_fit
+        module procedure powerlaw_fit, powerlaw_fit_censored
+    end interface powerlaw_fit
+
+    interface arcsine_fit
+        module procedure arcsine_fit, arcsine_fit_censored
+    end interface arcsine_fit
+
     interface lomax_fit
         module procedure lomax_fit, lomax_fit_censored
     end interface lomax_fit
@@ -678,6 +693,45 @@ contains
         call bounded_fit([real(dp) ::],family_burr12,lower,upper,result,guess, &
             [.false., .false., .false., .false.],max_iter,tolerance,data)
     end subroutine burr12_fit_censored
+
+    subroutine uniform_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_uniform,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine uniform_fit_censored
+
+    subroutine powerlaw_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in a, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_powerlaw,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine powerlaw_fit_censored
+
+    subroutine arcsine_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_arcsine,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine arcsine_fit_censored
 
     subroutine lomax_fit_censored(data, lower, upper, result, guess, &
             max_iter, tolerance)
@@ -1273,6 +1327,12 @@ contains
                 value = burr_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_burr12)
                 value = burr12_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_uniform)
+                value = uniform_censored_nnlf(censored,params(1),params(2))
+            case (family_powerlaw)
+                value = powerlaw_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_arcsine)
+                value = arcsine_censored_nnlf(censored,params(1),params(2))
             case (family_lomax)
                 value = lomax_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_pareto)

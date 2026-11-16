@@ -8,6 +8,8 @@ program censored_reference_driver
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
         halfnorm_censored_loglikelihood, &
+        uniform_censored_loglikelihood, powerlaw_censored_loglikelihood, &
+        arcsine_censored_loglikelihood, &
         lomax_censored_loglikelihood, fisk_censored_loglikelihood, &
         burr_censored_loglikelihood, burr12_censored_loglikelihood, &
         hypsecant_censored_loglikelihood, pareto_censored_loglikelihood, &
@@ -87,6 +89,12 @@ program censored_reference_driver
             value = burr_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (26)
             value = burr12_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (27)
+            value = uniform_censored_loglikelihood(data,loc,scale)
+        case (28)
+            value = powerlaw_censored_loglikelihood(data,c,loc,scale)
+        case (29)
+            value = arcsine_censored_loglikelihood(data,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

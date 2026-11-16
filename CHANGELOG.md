@@ -1,3 +1,15 @@
+## 2026-11-16 - Bounded uniform, power-function, and arcsine censoring
+
+- Add censored likelihood/NNLF and bounded fits for uniform, power-function,
+  and arcsine distributions, with free or fixed support parameters.
+- Reuse compensated beta support distances and stable log-interval calculations;
+  retain both excluded tails for nearly full-support intervals.
+- Correct scalar power-function lower-endpoint density for shapes below one.
+- Document the finite-upper-edge contract and local uniform-fit limitation.
+- Validate 1,091 native checks at checked `-O0` and `-O3`, 338 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to twenty-nine censored families and 80 remaining candidates.
+
 ## 2026-11-16 - Fisk and Burr III/XII censoring
 
 - Add censored likelihood/NNLF and bounded fits for Fisk, Burr III, and Burr XII,

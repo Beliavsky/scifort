@@ -2,6 +2,9 @@
 ! Copyright (c) 2026 SciFort contributors
 
 module scifort_stats
+    use scifort_censored, only : arcsine_censored_loglikelihood, arcsine_censored_nnlf
+    use scifort_censored, only : powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
+    use scifort_censored, only : uniform_censored_loglikelihood, uniform_censored_nnlf
     use scifort_censored, only : burr12_censored_loglikelihood, burr12_censored_nnlf
     use scifort_censored, only : burr_censored_loglikelihood, burr_censored_nnlf
     use scifort_censored, only : fisk_censored_loglikelihood, fisk_censored_nnlf
@@ -716,6 +719,9 @@ module scifort_stats
     public :: fisk_censored_loglikelihood, fisk_censored_nnlf
     public :: burr_censored_loglikelihood, burr_censored_nnlf
     public :: burr12_censored_loglikelihood, burr12_censored_nnlf
+    public :: uniform_censored_loglikelihood, uniform_censored_nnlf
+    public :: powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
+    public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
     public :: lomax_censored_loglikelihood, lomax_censored_nnlf
     public :: pareto_censored_loglikelihood, pareto_censored_nnlf
     public :: loglaplace_censored_loglikelihood, loglaplace_censored_nnlf

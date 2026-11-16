@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
+    public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
+    public :: uniform_censored_loglikelihood, uniform_censored_nnlf
     public :: burr12_censored_loglikelihood, burr12_censored_nnlf
     public :: burr_censored_loglikelihood, burr_censored_nnlf
     public :: fisk_censored_loglikelihood, fisk_censored_nnlf
@@ -74,6 +77,200 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function uniform_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = powerlaw_censored_loglikelihood(data,1.0_dp,loc,scale)
+    end function uniform_censored_loglikelihood
+
+    pure function uniform_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = -uniform_censored_loglikelihood(data,loc,scale)
+    end function uniform_censored_nnlf
+
+    pure function arcsine_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value, params(4)
+        params = [0.5_dp,0.5_dp,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. beta_parameters_valid(params)) return
+        value = censored_loglikelihood(data,params,beta_lpdf,beta_lcdf,beta_lsf,arcsine_interval)
+    end function arcsine_censored_loglikelihood
+
+    pure function arcsine_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = -arcsine_censored_loglikelihood(data,loc,scale)
+    end function arcsine_censored_nnlf
+
+    pure function arcsine_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! half beta shapes, finite endpoint, positive width
+        real(dp) :: value, omitted
+        omitted = exp(beta_lcdf(a,params))+exp(beta_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+        else
+            value = beta_interval(a,b,params)
+        end if
+    end function arcsine_interval
+
+    pure function powerlaw_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive power-function shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value, params(4)
+        params = [a,1.0_dp,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. beta_parameters_valid(params)) return
+        value = censored_loglikelihood(data,params,powerlaw_lpdf,powerlaw_lcdf, &
+            powerlaw_lsf,powerlaw_interval)
+    end function powerlaw_censored_loglikelihood
+
+    pure function powerlaw_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive power-function shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = -powerlaw_censored_loglikelihood(data,a,loc,scale)
+    end function powerlaw_censored_nnlf
+
+    pure function powerlaw_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, unit beta shape, location, width
+        real(dp) :: value, left, right, z, w, logz, logw, factor
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        if (left == 0.0_dp) then
+            if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp) value = -log(params(4))
+            return
+        end if
+        if (right == 0.0_dp .or. params(1) == 1.0_dp) then
+            value = log(params(1))-log(params(4))
+            return
+        end if
+        call beta_coordinates(x,params,left,right,z,w,logz,logw)
+        factor = params(1)-1.0_dp
+        if (factor > 1.0_dp) then
+            if (-logz > huge(1.0_dp)/factor) return
+        end if
+        value = log(params(1))-log(params(4))+factor*logz
+    end function powerlaw_lpdf
+
+    pure subroutine powerlaw_hazard(x, params, nh, logh)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly inside support
+        real(dp), intent(in) :: params(:) !! positive shape, unit beta shape, location, width
+        real(dp), intent(out) :: nh !! log CDF, possibly negative infinity
+        real(dp), intent(out) :: logh !! log of negative log CDF
+        real(dp) :: left, right, z, w, logz, logw
+        call beta_distances(x,params,left,right)
+        call beta_coordinates(x,params,left,right,z,w,logz,logw)
+        if (w < tiny(1.0_dp)) then
+            ! -log(z)=w+O(w*w); retain log(w) when division rounds to zero
+            ! or to a subnormal with poor relative precision.
+            logh = log(params(1))+logw
+            nh = negative_hazard(logh)
+            return
+        end if
+        logh = log(params(1))+log(-logz)
+        nh = negative_infinity(0.0_dp)
+        if (params(1) > 1.0_dp) then
+            if (-logz > huge(1.0_dp)/params(1)) return
+        end if
+        nh = params(1)*logz
+    end subroutine powerlaw_hazard
+
+    pure function powerlaw_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, unit beta shape, location, width
+        real(dp) :: value, left, right, logh
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (left <= 0.0_dp) return
+        value = 0.0_dp
+        if (right <= 0.0_dp) return
+        call powerlaw_hazard(x,params,value,logh)
+    end function powerlaw_lcdf
+
+    pure function powerlaw_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, unit beta shape, location, width
+        real(dp) :: value, left, right, nh, logh
+        value = 0.0_dp
+        call beta_distances(x,params,left,right)
+        if (left <= 0.0_dp) return
+        value = negative_infinity(0.0_dp)
+        if (right <= 0.0_dp) return
+        call powerlaw_hazard(x,params,nh,logh)
+        if (nh <= -scifort_log_two) then
+            value = log1p_safe(-exp(nh))
+        else
+            value = log_hazard_mass(logh)
+        end if
+    end function powerlaw_lsf
+
+    pure function powerlaw_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, unit beta shape, location, width
+        real(dp) :: value, left, right, logr, logdelta, omitted
+        value = negative_infinity(0.0_dp)
+        call beta_distances(b,params,left,right)
+        if (left <= 0.0_dp) return
+        call beta_distances(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = powerlaw_lcdf(b,params)
+            return
+        end if
+        call beta_distances(b,params,left,right)
+        if (right <= 0.0_dp) then
+            value = powerlaw_lsf(a,params)
+            return
+        end if
+        omitted = exp(powerlaw_lcdf(a,params))+exp(powerlaw_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+        else if (params(1) == 1.0_dp) then
+            value = log_distance(b,a)-log(params(4))
+        else
+            logr = log_distance(b,a)-log_distance(a,params(3))
+            logdelta = log(params(1))+burr_logsoftplus(logr)
+            value = powerlaw_lcdf(b,params)+log_hazard_mass(logdelta)
+        end if
+    end function powerlaw_interval
+
 
     pure function fisk_censored_loglikelihood(data, c, loc, scale) result(value)
         implicit none

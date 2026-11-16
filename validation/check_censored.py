@@ -717,6 +717,64 @@ def main():
                     counts={'left':'0 1 0 0','right':'0 0 1 0','exact':'1 0 0 0'}[group]
                     stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} {counts}\n'
                     stdin+=f'{second:.17g}\n{x:.17g}\n'
+    for family, family_id in [('uniform',27),('powerlaw',28),('arcsine',29)]:
+        for _ in range(100):
+            shape=10**rng.uniform(-2.,2.) if family == 'powerlaw' else 1.
+            loc=rng.uniform(-3.,3.)
+            scale=10**rng.uniform(-2.,2.)
+            exact=[loc+scale*rng.uniform(.01,.99) for _ in range(3)]
+            left=[loc+scale*rng.uniform(.01,.99)]
+            right=[loc+scale*rng.uniform(-.2,.99)]
+            intervals=[]
+            for _ in range(3):
+                a=loc+scale*rng.uniform(.01,.99)
+                b=a+scale*10**rng.uniform(-14.,.1)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            expected=sum(reference.logpdf(x,family,shape,loc,scale) for x in exact)
+            expected+=sum(reference.logcdf(x,family,shape,loc,scale) for x in left)
+            expected+=sum(reference.logsf(x,family,shape,loc,scale) for x in right)
+            expected+=sum(reference.loginterval(a,b,family,shape,loc,scale) for a,b in intervals)
+            cases.append((family,float(expected)))
+            stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} 3 1 1 3\n'
+            stdin+='\n'.join(' '.join(f'{x:.17g}' for x in group)
+                              for group in [exact,left,right,*intervals])+'\n'
+        with mp.workdps(800):
+            for a,b,shape,loc,scale in [
+                (0.,math.nextafter(0.,1.),.4,0.,1.),
+                (.5,math.nextafter(.5,math.inf),1.7,0.,1.),
+                (math.nextafter(1.,0.),1.,1.7,0.,1.),
+                (1e-300,2e-300,.4,0.,1e300),
+                (1e307,math.nextafter(1e307,math.inf),1.7,-1e308,1.7e308),
+                (-1e308,1e308,1.7,0.,1.),
+                (2e-100,1.,1.7,1e-100,1.),
+                (.25,.75,math.nextafter(0.,1.),0.,1.),
+                (1e-300,2e-300,.4,-1e-300,1e-299),
+            ]:
+                if family != 'powerlaw': shape=1.
+                expected=reference.loginterval(a,b,family,shape,loc,scale)
+                cases.append((family+'_stress',float(expected)))
+                stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+            for shape,loc,scale,x,group in [
+                (.4,0.,1e300,1e-300,'exact'),
+                (.4,0.,1e300,1e-300,'left'),
+                (math.nextafter(0.,1.),0.,1.,.5,'right'),
+                (1.7,1.,1e-300,1.,'left'),
+            ]:
+                if group == 'left' and x == loc: continue  # Nonfinite endpoints have native checks.
+                if family != 'powerlaw': shape=1.
+                fn={'left':reference.logcdf,'right':reference.logsf,'exact':reference.logpdf}[group]
+                expected=fn(x,family,shape,loc,scale)
+                cases.append((family+'_extreme',float(expected)))
+                counts={'left':'0 1 0 0','right':'0 0 1 0','exact':'1 0 0 0'}[group]
+                stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} {counts}\n{x:.17g}\n'
+    with mp.workdps(1000):
+        for group in ['left','right']:
+            expected=getattr(reference,'logcdf' if group == 'left' else 'logsf')(
+                1e300,'powerlaw',1e300,1e-300,1e300)
+            cases.append(('powerlaw_upper_compensated',float(expected)))
+            counts='0 1 0 0' if group == 'left' else '0 0 1 0'
+            stdin+=f'28 1e300 1e-300 1e300 {counts}\n1e300\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -746,11 +804,14 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        bounded_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('uniform','powerlaw','arcsine')):
+                bounded_errors.append(error)
             if family.startswith(('fisk','burr')):
                 burr_family_errors.append(error)
             if family.startswith('lomax'):
@@ -779,6 +840,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Uniform/powerlaw/arcsine: {len(bounded_errors)} comparisons; '
+              f'max scaled error={max(bounded_errors):.3g}', flush=True)
         print(f'  Fisk/Burr/Burr XII: {len(burr_family_errors)} comparisons; '
               f'max scaled error={max(burr_family_errors):.3g}', flush=True)
         print(f'  Lomax: {len(lomax_errors)} comparisons; '

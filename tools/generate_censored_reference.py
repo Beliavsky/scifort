@@ -27,6 +27,12 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
         t=shape*mp.log(z)
         if family == 'burr': t=-t
         return mp.log(shape*d)-mp.log(x-loc)+t-(d+1)*mp.log1p(mp.exp(t))
+    if family in ('uniform','powerlaw','arcsine'):
+        if z < 0 or z > 1: return mp.ninf
+        if family == 'uniform': return -mp.log(scale)
+        if family == 'arcsine': return -mp.log(mp.pi)-mp.log(scale)-mp.log(z*(1-z))/2
+        if z == 0: return mp.inf if shape < 1 else (-mp.log(scale) if shape == 1 else mp.ninf)
+        return mp.log(shape/scale)+(shape-1)*mp.log(z)
     if family == 'lomax':
         return mp.log(shape/scale)-(shape+1)*mp.log1p(z) if z >= 0 else mp.ninf
     if family == 'pareto':
@@ -89,6 +95,12 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
         t=shape*mp.log(z)
         if family == 'burr': return -d*mp.log1p(mp.exp(-t))
         return mp.log(-mp.expm1(-d*mp.log1p(mp.exp(t))))
+    if family in ('uniform','powerlaw','arcsine'):
+        if z <= 0: return mp.ninf
+        if z >= 1: return mp.mpf(0)
+        if family == 'uniform': return mp.log(z)
+        if family == 'arcsine': return mp.log(2*mp.asin(mp.sqrt(z))/mp.pi)
+        return shape*mp.log(z)
     if family == 'lomax':
         return mp.log(-mp.expm1(-shape*mp.log1p(z))) if z > 0 else mp.ninf
     if family == 'pareto':
@@ -154,6 +166,12 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
         t=shape*mp.log(z)
         if family == 'burr': return mp.log(-mp.expm1(-d*mp.log1p(mp.exp(-t))))
         return -d*mp.log1p(mp.exp(t))
+    if family in ('uniform','powerlaw','arcsine'):
+        if z <= 0: return mp.mpf(0)
+        if z >= 1: return mp.ninf
+        if family == 'uniform': return mp.log1p(-z)
+        if family == 'arcsine': return mp.log(2*mp.asin(mp.sqrt(1-z))/mp.pi)
+        return mp.log(-mp.expm1(shape*mp.log(z)))
     if family == 'lomax':
         return -shape*mp.log1p(z) if z > 0 else mp.mpf(0)
     if family == 'pareto':
@@ -240,6 +258,15 @@ def main():
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
         if family == 'laplace_asymmetric':
             result[family+'_fixed_shape_fit'] = list(distribution.fit(data,f0=shape,floc=loc))
+    bounded=stats.CensoredData(uncensored=[.1,.3,.6],left=[.05],right=[.8],
+                               interval=[[.2,.25],[.7,.75]])
+    for family,shape in [('uniform',1.),('powerlaw',.6),('arcsine',1.)]:
+        value=sum(logpdf(x,family,shape,0.,1.) for x in [.1,.3,.6])
+        value+=logcdf(.05,family,shape,0.,1.)+logsf(.8,family,shape,0.,1.)
+        value+=sum(loginterval(a,b,family,shape,0.,1.) for a,b in [(.2,.25),(.7,.75)])
+        result[family+'_mixed']=float(value)
+        if family == 'powerlaw':
+            result[family+'_fit']=list(stats.powerlaw.fit(bounded,floc=0.,fscale=1.))
     for family in ('burr','burr12'):
         shape, second, loc, scale = 1.7, .8, 0., 1.3
         value=sum(logpdf(x,family,shape,loc,scale,second) for x in [.5,1.2,2.5])

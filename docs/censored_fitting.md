@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -64,6 +64,9 @@ gumbel_l_censored_loglikelihood(data [, loc, scale])
 exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
 weibull_max_censored_loglikelihood(data, c [, loc, scale])
+uniform_censored_loglikelihood(data [, loc, scale])
+powerlaw_censored_loglikelihood(data, a [, loc, scale])
+arcsine_censored_loglikelihood(data [, loc, scale])
 fisk_censored_loglikelihood(data, c [, loc, scale])
 burr_censored_loglikelihood(data, c, d [, loc, scale])
 burr12_censored_loglikelihood(data, c, d [, loc, scale])
@@ -80,7 +83,7 @@ beta_censored_loglikelihood(data, a, b [, loc, scale])
 The corresponding `*_censored_nnlf` procedures return the negative
 log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax/Fisk shape `c`,
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
-Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
+power-function shape `a`, Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
 finite. Invalid data or parameters return quiet NaN, including for empty data.
 An empty valid sample has log-likelihood zero. An impossible observation
 contributes negative infinity. No finite penalty is substituted for impossible
@@ -118,7 +121,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
-`rayleigh_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
+`rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -136,7 +139,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, log-Laplace, Lomax, and Fisk, `[c, d, loc, scale]` for Burr III/XII, `[b, loc, scale]` for Pareto, and `[s, loc, scale]` for
+uniform, arcsine, Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, log-Laplace, Lomax, and Fisk, `[a,loc,scale]` for the power function, `[c, d, loc, scale]` for Burr III/XII, `[b, loc, scale]` for Pareto, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma and Erlang, `[kappa,loc,scale]` for asymmetric Laplace, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -149,6 +152,72 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Bounded uniform, power-function, and arcsine details
+
+`uniform_censored_loglikelihood(data [, loc, scale])`,
+`powerlaw_censored_loglikelihood(data, a [, loc, scale])`, and
+`arcsine_censored_loglikelihood(data [, loc, scale])` have `_nnlf` companions.
+Location is the finite lower support endpoint (default zero); scale is the
+positive finite support width (default one). The rounded upper edge
+`loc+scale` must also be finite; an overflowing edge returns quiet NaN, even
+for empty data. This matches the existing beta likelihood's support contract.
+The two-term upper-edge calculation retains its rounding correction, so a
+small width or endpoint offset is not discarded when it rounds away in the
+sum. The density support includes both mathematical endpoints.
+
+For `z=(x-loc)/scale` on `[0,1]`, uniform density is `1/scale` and the
+power-function density is `a*z**(a-1)/scale`, with finite `a>0`.
+Uniform is the `a=1` special case. Arcsine density is
+`1/(pi*scale*sqrt(z*(1-z)))`, the beta `(1/2,1/2)` special case.
+The power-function CDF is `z**a`; arcsine CDF is `2*asin(sqrt(z))/pi`.
+All three have zero density outside the support, zero CDF at/below the lower
+edge, and zero survival at/above the upper edge.
+
+At the power-function lower endpoint, density is infinite for `a<1`,
+`1/scale` for `a=1`, and zero for `a>1`; upper-endpoint density is `a/scale`.
+The scalar `powerlaw_pdf` and `powerlaw_logpdf` now return the correct infinite
+limit at the lower endpoint for `a<1`, correcting their previous zero result.
+Arcsine density is infinite at either endpoint. These infinities are preserved
+in likelihoods, and the existing optimizer rejects nonfinite objectives.
+Equal finite interval endpoints still mean exact observations.
+
+Support clipping and normalized distances reuse the beta helpers. The power
+function has direct guarded log-CDF and complementary-tail calculations;
+subnormal or underflowed normalized upper distances retain their logarithms
+so a large shape can compensate without losing the tail. Its
+intervals retain `a*log1p((b-a)/(a-loc))` in the log domain instead of
+subtracting rounded CDFs. Uniform interior intervals use log width divided by
+support width. Nearly full-support intervals complement both excluded tails.
+Arcsine reuses the beta density, tails, and narrow-interval quadrature, with a
+separate complement branch that retains both small excluded endpoint masses.
+These guarantees apply to the new censored kernels, with the documented
+finite-upper-edge restriction and binary64 representability limits.
+
+The existing fit generics accept `censored_data`: bounds/results are
+`[loc,scale]` for uniform/arcsine and `[a,loc,scale]` for power-function fits.
+Every parameter may be free or fixed by equal bounds; the fixed-support
+restriction of the general beta fit does not apply to these overloads.
+Fits use the existing bounded local optimizer. In particular, a uniform fit
+with free location and width can stop on a flat location direction before
+reaching the global minimum-width support. Fixing location, supplying an
+informed initial guess, or comparing multiple bounded starts can help; success
+alone does not prove global optimality. Arcsine and small-shape power-function
+fits can approach singular endpoint densities when support parameters are free.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    uniform_fit, powerlaw_fit, arcsine_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.25_dp,0.5_dp,0.75_dp])
+call uniform_fit(data, [0.0_dp,0.75_dp], [0.0_dp,2.0_dp], fit)
+call powerlaw_fit(data, [0.1_dp,0.0_dp,1.0_dp], [10.0_dp,0.0_dp,1.0_dp], fit)
+call arcsine_fit(data, [0.0_dp,1.0_dp], [0.0_dp,1.0_dp], fit)
+```
+
+See the [validation report](../validation/bounded_family_censored_2026-11-16.md).
 
 ## Burr family details
 

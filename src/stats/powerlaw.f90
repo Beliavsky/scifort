@@ -49,7 +49,9 @@ contains
         if (z < 0.0_dp .or. z > 1.0_dp) then
             y = 0.0_dp
         else if (z == 0.0_dp) then
-            if (a == 1.0_dp) then
+            if (a < 1.0_dp) then
+                y = positive_infinity(x)
+            else if (a == 1.0_dp) then
                 y = 1.0_dp / sigma
             else
                 y = 0.0_dp
@@ -89,7 +91,9 @@ contains
         if (z < 0.0_dp .or. z > 1.0_dp) then
             y = negative_infinity(x)
         else if (z == 0.0_dp) then
-            if (a == 1.0_dp) then
+            if (a < 1.0_dp) then
+                y = positive_infinity(x)
+            else if (a == 1.0_dp) then
                 y = -log(sigma)
             else
                 y = negative_infinity(x)

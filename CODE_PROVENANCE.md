@@ -1,3 +1,38 @@
+## 2026-11-16 - Uniform, power-function, and arcsine censoring
+
+The new likelihoods and interval callbacks in `src/censored.f90` are original
+MIT SciFort code, independently implemented from the public density/support
+specifications for [SciPy uniform](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html),
+[power-function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.powerlaw.html),
+and [arcsine](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.arcsine.html),
+inspected 2026-11-16. Integrating gives `F_power(z)=z**a` and
+`F_arcsine(z)=2*asin(sqrt(z))/pi`. Uniform is power-function `a=1`;
+arcsine is beta `(1/2,1/2)` and power-function is beta `(a,1)`.
+
+The new power-function callbacks evaluate negative log CDF `-a*log(z)` with
+guarded products and log hazard increments. Subnormal/underflowed normalized
+upper distances retain their log magnitude before shape multiplication. For
+an interior interval,
+`P=F(b)*(1-exp(-a*log((b-loc)/(a-loc))))`. Uniform uses the same callbacks
+with a direct interior-width branch. Arcsine reuses existing beta density,
+tails and narrow-interval quadrature; a new interval callback complements
+both omitted endpoint tails when small. The beta helpers for compensated
+upper-edge distances and normalized log coordinates are reused unchanged,
+retaining their existing FastTwoSum and quadrature provenance. Their finite
+rounded upper-support-edge requirement is preserved. Existing log-hazard-mass
+and log-softplus helpers are reused unchanged. No upstream implementation
+code was imported or translated.
+
+The original SciFort scalar `src/stats/powerlaw.f90` receives the analytic
+lower-endpoint density correction for `a<1`: positive infinity replaces the
+previous zero density/negative-infinity log density. The public parameterization
+and procedure names are unchanged. The fit overloads reuse the existing bounded
+optimizer and preserve array-specific procedures. Independent mpmath definitions,
+SciPy fixed-support shape fitting, analytic fixed-location/shape MLEs, and beta
+identities provide validation. No dependency, C ABI, or third-party license text
+is added. See the
+[validation report](validation/bounded_family_censored_2026-11-16.md).
+
 ## 2026-11-16 - Fisk and Burr III/XII censored likelihoods and fitting
 
 The new callbacks in `src/censored.f90` are original MIT SciFort code,
