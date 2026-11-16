@@ -861,6 +861,48 @@ def main():
                 value=reference.loginterval(a,b,family,1.,loc,scale)
                 cases.append((family+'_stress',float(value)))
                 stdin+=f'{number} 1 {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    for number,family in enumerate(['bradford','triang','trapezoid'],36):
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            c=10**rng.uniform(-10.,10.) if number == 36 else rng.uniform(0.,1.)
+            d=rng.uniform(c,1.) if number == 38 else c
+            exact=[loc+scale*rng.uniform(.01,.99) for _ in range(3)]
+            left=[loc+scale*rng.uniform(.01,.2)]
+            right=[loc+scale*rng.uniform(.8,.99)]
+            intervals=[]
+            for _ in range(2):
+                a=loc+scale*rng.uniform(.01,.95)
+                b=min(a+scale*10**rng.uniform(-14.,-.3),loc+scale*1.1)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,c,loc,scale,d) for x in exact)
+            value+=sum(reference.logcdf(x,family,c,loc,scale,d) for x in left)
+            value+=sum(reference.logsf(x,family,c,loc,scale,d) for x in right)
+            value+=sum(reference.loginterval(a,b,family,c,loc,scale,d) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            if number == 38: stdin+=f'{d:.17g}\n'
+            for group in [exact,left,right,*intervals]:
+                stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+        shapes=[(1.7,1.)] if number == 36 else [(0.,0.),(.3,.3),(1.,1.)]
+        if number == 38: shapes += [(0.,1.),(0.,.7),(.2,1.),(.2,.7),
+                                   (1e-300,1e-300),(math.nextafter(0.,1.),math.nextafter(0.,1.))]
+        if number == 36: shapes += [(math.nextafter(0.,1.),1.),(1e300,1.)]
+        with mp.workdps(1000):
+            for c,d in shapes:
+                for a,b,loc,scale in [(0.,math.nextafter(0.,1.),0.,1.),
+                        (.3,math.nextafter(.3,math.inf),0.,1.),
+                        (1e-300,2e-300,0.,1e300),
+                        (2e-100,1.,1e-100,1.),
+                        (.19,.21,0.,1.),(.69,.71,0.,1.),
+                        (1e-24,6e-24,0.,1e300),
+                        (math.nextafter(1.,0.),1.,0.,1.),
+                        (-.1,.4,0.,1.),(.6,1.1,0.,1.)]:
+                    value=reference.loginterval(a,b,family,c,loc,scale,d)
+                    cases.append((family+'_stress',float(value)))
+                    stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n'
+                    if number == 38: stdin+=f'{d:.17g}\n'
+                    stdin+=f'{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -890,6 +932,7 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        piecewise_errors = []
         normal_transform_errors = []
         new_hazard_errors = []
         bounded_errors = []
@@ -898,6 +941,8 @@ def main():
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('bradford','triang','trapezoid')):
+                piecewise_errors.append(error)
             if family.startswith(('moyal','levy')):
                 normal_transform_errors.append(error)
             if family.startswith(('genlogistic','gompertz','invweibull')):
@@ -932,6 +977,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Bradford/triangular/trapezoidal: {len(piecewise_errors)} comparisons; '
+              f'max scaled error={max(piecewise_errors):.3g}', flush=True)
         print(f'  Moyal/Levy/reflected Levy: {len(normal_transform_errors)} comparisons; '
               f'max scaled error={max(normal_transform_errors):.3g}', flush=True)
         print(f'  Generalized logistic/Gompertz/inverse Weibull: {len(new_hazard_errors)} comparisons; '

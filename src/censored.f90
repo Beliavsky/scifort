@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: bradford_censored_loglikelihood, bradford_censored_nnlf
+    public :: triang_censored_loglikelihood, triang_censored_nnlf
+    public :: trapezoid_censored_loglikelihood, trapezoid_censored_nnlf
     public :: moyal_censored_loglikelihood, moyal_censored_nnlf
     public :: levy_censored_loglikelihood, levy_censored_nnlf
     public :: levy_l_censored_loglikelihood, levy_l_censored_nnlf
@@ -83,6 +86,404 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function bounded_logadd(a, b) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! log first nonnegative term, possibly negative infinity
+        real(dp), intent(in) :: b !! log second nonnegative term, possibly negative infinity
+        real(dp) :: value, big
+        big = max(a,b)
+        value = big
+        if (.not. ieee_is_finite(big)) return
+        value = big+log1p_safe(exp(min(a,b)-big))
+    end function bounded_logadd
+
+    pure function bounded_log(x) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! nonnegative dimensionless shape or width
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x > 0.0_dp) value = log(x)
+    end function bounded_log
+
+    pure function bounded_left(logz, logw, t) result(left)
+        implicit none
+        real(dp), intent(in) :: logz !! log coordinate strictly between zero and one
+        real(dp), intent(in) :: logw !! log complementary coordinate, retained independently
+        real(dp), intent(in) :: t !! breakpoint in [0,1]
+        logical :: left
+        left = .false.
+        if (t <= 0.0_dp) return
+        left = .true.
+        if (t >= 1.0_dp) return
+        if (t <= 0.5_dp) then
+            left = logz < log(t)
+        else
+            left = logw > log1p_safe(-t)
+        end if
+    end function bounded_left
+
+    pure function bounded_right(logz, logw, t) result(right)
+        implicit none
+        real(dp), intent(in) :: logz !! log coordinate strictly between zero and one
+        real(dp), intent(in) :: logw !! log complementary coordinate, retained independently
+        real(dp), intent(in) :: t !! breakpoint in [0,1]
+        logical :: right
+        right = .false.
+        if (t >= 1.0_dp) return
+        right = .true.
+        if (t <= 0.0_dp) return
+        if (t <= 0.5_dp) then
+            right = logz > log(t)
+        else
+            right = logw < log1p_safe(-t)
+        end if
+    end function bounded_right
+
+    pure function bounded_gap(t, logz, logw) result(value)
+        implicit none
+        real(dp), intent(in) :: t !! coordinate in (0,1], no smaller than z
+        real(dp), intent(in) :: logz !! log lower coordinate, possibly negative infinity
+        real(dp), intent(in) :: logw !! log complementary coordinate, retained independently
+        real(dp) :: value, large, small
+        if (t == 1.0_dp) then
+            value = logw
+        else
+            if (t > 0.5_dp) then
+                large = logw
+                small = log1p_safe(-t)
+            else
+                large = log(t)
+                small = logz
+            end if
+            ! Rounded coordinates may straddle a breakpoint by one ulp.
+            value = log_difference(large,min(large,small))
+        end if
+    end function bounded_gap
+
+    pure function bounded_right_gap(t, logz, logw) result(value)
+        implicit none
+        real(dp), intent(in) :: t !! breakpoint in [0,1), no greater than z
+        real(dp), intent(in) :: logz !! log lower coordinate, retained independently
+        real(dp), intent(in) :: logw !! log complementary coordinate
+        real(dp) :: value
+        if (t <= 0.5_dp) then
+            value = log_difference(logz,min(logz,bounded_log(t)))
+        else
+            value = bounded_gap(1.0_dp-t,logw,logz)
+        end if
+    end function bounded_right_gap
+
+    pure function trapezoid_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! plateau start/end in [0,1], location, width
+        real(dp) :: value, left, right, z, w, lz, lw, c, d
+        c = params(1)
+        d = params(2)
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        if (left == 0.0_dp .and. c > 0.0_dp) return
+        if (right == 0.0_dp .and. d < 1.0_dp) return
+        value = scifort_log_two-log1p_safe(d-c)-log(params(4))
+        if (left == 0.0_dp .or. right == 0.0_dp) return
+        call beta_coordinates(x,params,left,right,z,w,lz,lw)
+        if (bounded_left(lz,lw,c)) value = value+lz-log(c)
+        if (bounded_right(lz,lw,d)) value = value+lw-log1p_safe(-d)
+    end function trapezoid_lpdf
+
+    pure subroutine trapezoid_tails(x, params, logcdf, logsf)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! plateau start/end in [0,1], location, width
+        real(dp), intent(out) :: logcdf !! log lower-tail probability
+        real(dp), intent(out) :: logsf !! log upper-tail probability
+        real(dp) :: left, right, z, w, lz, lw, c, d, lc, lr, lh, gap, terms
+        logcdf = negative_infinity(0.0_dp)
+        logsf = 0.0_dp
+        call beta_distances(x,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            logcdf = 0.0_dp
+            logsf = negative_infinity(0.0_dp)
+            return
+        end if
+        call beta_coordinates(x,params,left,right,z,w,lz,lw)
+        c = params(1)
+        d = params(2)
+        lc = bounded_log(c)
+        lr = bounded_log(1.0_dp-d)
+        lh = scifort_log_two-log1p_safe(d-c)
+        if (bounded_left(lz,lw,c)) then
+            logcdf = lh-scifort_log_two+2.0_dp*lz-lc
+            gap = bounded_gap(c,lz,lw)
+            terms = bounded_logadd(lr,scifort_log_two+bounded_log(d-c))
+            terms = bounded_logadd(terms,gap+log1p_safe(exp(lz-lc)))
+            logsf = lh-scifort_log_two+terms
+        else if (bounded_right(lz,lw,d)) then
+            logsf = lh-scifort_log_two+2.0_dp*lw-lr
+            gap = bounded_right_gap(d,lz,lw)
+            terms = bounded_logadd(lc,scifort_log_two+bounded_log(d-c))
+            terms = bounded_logadd(terms,gap+log1p_safe(exp(lw-lr)))
+            logcdf = lh-scifort_log_two+terms
+        else
+            logcdf = lh+lz+log1p_safe(-0.5_dp*exp(lc-lz))
+            logsf = lh+lw+log1p_safe(-0.5_dp*exp(lr-lw))
+        end if
+        if (logcdf <= logsf) then
+            logsf = log1p_safe(-exp(logcdf))
+        else
+            logcdf = log1p_safe(-exp(logsf))
+        end if
+    end subroutine trapezoid_tails
+
+    pure function trapezoid_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left-censoring limit
+        real(dp), intent(in) :: params(:) !! plateau start/end in [0,1], location, width
+        real(dp) :: value, unused
+        call trapezoid_tails(x,params,value,unused)
+    end function trapezoid_lcdf
+
+    pure function trapezoid_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right-censoring limit
+        real(dp), intent(in) :: params(:) !! plateau start/end in [0,1], location, width
+        real(dp) :: value, unused
+        call trapezoid_tails(x,params,unused,value)
+    end function trapezoid_lsf
+
+    pure function trapezoid_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! plateau start/end in [0,1], location, width
+        real(dp) :: value, left, right, z, w, lza, lwa, lzb, lwb, ld, lc, lr, lh
+        real(dp) :: omitted, deficit, gap
+        value = negative_infinity(0.0_dp)
+        call beta_distances(b,params,left,right)
+        if (left <= 0.0_dp) return
+        call beta_distances(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = trapezoid_lcdf(b,params)
+            return
+        end if
+        call beta_coordinates(a,params,left,right,z,w,lza,lwa)
+        call beta_distances(b,params,left,right)
+        if (right <= 0.0_dp) then
+            value = trapezoid_lsf(a,params)
+            return
+        end if
+        call beta_coordinates(b,params,left,right,z,w,lzb,lwb)
+        omitted = exp(trapezoid_lcdf(a,params))+exp(trapezoid_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        ld = log_distance(b,a)-log(params(4))
+        lc = bounded_log(params(1))
+        lr = bounded_log(1.0_dp-params(2))
+        lh = scifort_log_two-log1p_safe(params(2)-params(1))
+        if (.not. bounded_right(lzb,lwb,params(1))) then
+            value = lh+ld+bounded_logadd(lza,lzb)-scifort_log_two-lc
+        else if (.not. bounded_left(lza,lwa,params(2))) then
+            value = lh+ld+bounded_logadd(lwa,lwb)-scifort_log_two-lr
+        else
+            ! Integrate the constant plateau height minus the two triangular deficits.
+            deficit = 0.0_dp
+            if (bounded_left(lza,lwa,params(1))) then
+                gap = bounded_gap(params(1),lza,lwa)
+                deficit = exp(2.0_dp*gap-scifort_log_two-lc-ld)
+            end if
+            if (bounded_right(lzb,lwb,params(2))) then
+                gap = bounded_right_gap(params(2),lzb,lwb)
+                deficit = deficit+exp(2.0_dp*gap-scifort_log_two-lr-ld)
+            end if
+            value = lh+ld+log1p_safe(-deficit)
+        end if
+    end function trapezoid_interval
+
+    pure function bradford_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, unused slot, location, width
+        real(dp) :: value, left, right, z, w, lz, lw, lc
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        lc = log(params(1))
+        value = -log(params(4))
+        if (lc < log(epsilon(1.0_dp))-2.0_dp) return
+        lz = negative_infinity(0.0_dp)
+        if (right == 0.0_dp) lz = 0.0_dp
+        if (left > 0.0_dp .and. right > 0.0_dp) then
+            call beta_coordinates(x,params,left,right,z,w,lz,lw)
+        end if
+        value = lc-log(params(4))-burr_logsoftplus(lc)-log1pexp(lc+lz)
+    end function bradford_lpdf
+
+    pure subroutine bradford_tails(x, params, logcdf, logsf)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, unused slot, location, width
+        real(dp), intent(out) :: logcdf !! log lower-tail probability
+        real(dp), intent(out) :: logsf !! log upper-tail probability
+        real(dp) :: left, right, z, w, lz, lw, lc, ln
+        logcdf = negative_infinity(0.0_dp)
+        logsf = 0.0_dp
+        call beta_distances(x,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            logcdf = 0.0_dp
+            logsf = negative_infinity(0.0_dp)
+            return
+        end if
+        call beta_coordinates(x,params,left,right,z,w,lz,lw)
+        lc = log(params(1))
+        if (lc < log(epsilon(1.0_dp))-2.0_dp) then
+            logcdf = lz
+            logsf = lw
+        else
+            ln = burr_logsoftplus(lc)
+            logcdf = burr_logsoftplus(lc+lz)-ln
+            logsf = burr_logsoftplus(lc+lw-log1pexp(lc+lz))-ln
+        end if
+        if (logcdf <= logsf) then
+            logsf = log1p_safe(-exp(logcdf))
+        else
+            logcdf = log1p_safe(-exp(logsf))
+        end if
+    end subroutine bradford_tails
+
+    pure function bradford_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left-censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, unused slot, location, width
+        real(dp) :: value, unused
+        call bradford_tails(x,params,value,unused)
+    end function bradford_lcdf
+
+    pure function bradford_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right-censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, unused slot, location, width
+        real(dp) :: value, unused
+        call bradford_tails(x,params,unused,value)
+    end function bradford_lsf
+
+    pure function bradford_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, unused slot, location, width
+        real(dp) :: value, left, right, z, w, lz, lw, lc, ld, omitted
+        value = negative_infinity(0.0_dp)
+        call beta_distances(b,params,left,right)
+        if (left <= 0.0_dp) return
+        call beta_distances(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = bradford_lcdf(b,params)
+            return
+        end if
+        call beta_coordinates(a,params,left,right,z,w,lz,lw)
+        call beta_distances(b,params,left,right)
+        if (right <= 0.0_dp) then
+            value = bradford_lsf(a,params)
+            return
+        end if
+        omitted = exp(bradford_lcdf(a,params))+exp(bradford_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        lc = log(params(1))
+        ld = log_distance(b,a)-log(params(4))
+        value = ld
+        if (lc < log(epsilon(1.0_dp))-2.0_dp) return
+        value = burr_logsoftplus(lc+ld-log1pexp(lc+lz))-burr_logsoftplus(lc)
+    end function bradford_interval
+
+    pure function bradford_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive Bradford shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value, params(4)
+        params = [c,1.0_dp,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp) return
+        if (.not. beta_parameters_valid([1.0_dp,1.0_dp,params(3),params(4)])) return
+        value = censored_loglikelihood(data,params,bradford_lpdf,bradford_lcdf, &
+            bradford_lsf,bradford_interval)
+    end function bradford_censored_loglikelihood
+
+    pure function bradford_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive Bradford shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = -bradford_censored_loglikelihood(data,c,loc,scale)
+    end function bradford_censored_nnlf
+
+    pure function triang_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite standardized mode in [0,1]
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = trapezoid_censored_loglikelihood(data,c,c,loc,scale)
+    end function triang_censored_loglikelihood
+
+    pure function triang_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite standardized mode in [0,1]
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = -triang_censored_loglikelihood(data,c,loc,scale)
+    end function triang_censored_nnlf
+
+    pure function trapezoid_censored_loglikelihood(data, c, d, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite plateau start in [0,1]
+        real(dp), intent(in) :: d !! finite plateau end in [c,1]
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value, params(4)
+        params = [c,d,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c < 0.0_dp .or. d < c .or. d > 1.0_dp) return
+        if (.not. beta_parameters_valid([1.0_dp,1.0_dp,params(3),params(4)])) return
+        value = censored_loglikelihood(data,params,trapezoid_lpdf,trapezoid_lcdf, &
+            trapezoid_lsf,trapezoid_interval)
+    end function trapezoid_censored_loglikelihood
+
+    pure function trapezoid_censored_nnlf(data, c, d, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite plateau start in [0,1]
+        real(dp), intent(in) :: d !! finite plateau end in [c,1]
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive support width, default one
+        real(dp) :: value
+        value = -trapezoid_censored_loglikelihood(data,c, d,loc,scale)
+    end function trapezoid_censored_nnlf
+
 
     pure subroutine normal_transform_tails(logt, logcdf, logsf)
         implicit none

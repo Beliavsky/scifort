@@ -8,6 +8,9 @@ module scifort_stats
     use scifort_censored, only : moyal_censored_loglikelihood, moyal_censored_nnlf
     use scifort_censored, only : levy_censored_loglikelihood, levy_censored_nnlf
     use scifort_censored, only : levy_l_censored_loglikelihood, levy_l_censored_nnlf
+    use scifort_censored, only : bradford_censored_loglikelihood, bradford_censored_nnlf
+    use scifort_censored, only : triang_censored_loglikelihood, triang_censored_nnlf
+    use scifort_censored, only : trapezoid_censored_loglikelihood, trapezoid_censored_nnlf
     use scifort_censored, only : arcsine_censored_loglikelihood, arcsine_censored_nnlf
     use scifort_censored, only : powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     use scifort_censored, only : uniform_censored_loglikelihood, uniform_censored_nnlf
@@ -728,6 +731,9 @@ module scifort_stats
     public :: uniform_censored_loglikelihood, uniform_censored_nnlf
     public :: powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
+    public :: bradford_censored_loglikelihood, bradford_censored_nnlf
+    public :: triang_censored_loglikelihood, triang_censored_nnlf
+    public :: trapezoid_censored_loglikelihood, trapezoid_censored_nnlf
     public :: moyal_censored_loglikelihood, moyal_censored_nnlf
     public :: levy_censored_loglikelihood, levy_censored_nnlf
     public :: levy_l_censored_loglikelihood, levy_l_censored_nnlf

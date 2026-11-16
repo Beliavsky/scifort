@@ -18,11 +18,29 @@ def logerfc_large_safe(x):
     return mp.log(mp.erfc(x))
 
 
+def polygon_cdf(z,c,d):
+    if z <= 0: return mp.mpf(0)
+    if z >= 1: return mp.mpf(1)
+    h=2/(1+d-c)
+    if z < c: return h*z*z/(2*c)
+    if z > d: return 1-h*(1-z)**2/(2*(1-d))
+    return h*(z-c/2)
+
+
 def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'gibrat': family, shape = 'lognormal', 1.
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'bradford':
+        return mp.log(shape/scale)-mp.log1p(shape*z)-mp.log(mp.log1p(shape)) if 0 <= z <= 1 else mp.ninf
+    if family in ('triang','trapezoid'):
+        if z < 0 or z > 1: return mp.ninf
+        d=shape if family == 'triang' else mp.mpf(second_shape)
+        h=2/(1+d-shape)
+        if z < shape: h*=z/shape
+        elif z > d: h*=(1-z)/(1-d)
+        return mp.log(h/scale)
     if family == 'moyal':
         return -(z+mp.exp(-z))/2-mp.log(2*mp.pi)/2-mp.log(scale)
     if family in ('levy','levy_l'):
@@ -104,6 +122,11 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'bradford':
+        return mp.log(mp.log1p(shape*z)/mp.log1p(shape)) if 0 < z < 1 else (mp.ninf if z <= 0 else mp.mpf(0))
+    if family in ('triang','trapezoid'):
+        d=shape if family == 'triang' else mp.mpf(second_shape)
+        return mp.log(polygon_cdf(z,shape,d))
     if family == 'moyal':
         return logerfc_large_safe(mp.exp(-z/2)/mp.sqrt(2))
     if family == 'levy':
@@ -176,6 +199,15 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('bradford','triang','trapezoid'):
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if z <= 0: return mp.mpf(0)
+        if z >= 1: return mp.ninf
+        if family == 'bradford':
+            return mp.log(mp.log1p(shape*(1-z)/(1+shape*z))/mp.log1p(shape))
+        d=shape if family == 'triang' else mp.mpf(second_shape)
+        return mp.log(polygon_cdf(1-z,1-d,1-shape))
     if family in ('moyal','levy','levy_l'):
         x,loc,scale=map(mp.mpf,(x,loc,scale))
         z=(x-loc)/scale
@@ -317,6 +349,15 @@ def main():
         result[family+'_fixed_loc_fit']=list(getattr(stats,family).fit(reflected if sign == -1 else data,floc=0.))
     bounded=stats.CensoredData(uncensored=[.1,.3,.6],left=[.05],right=[.8],
                                interval=[[.2,.25],[.7,.75]])
+    for family,c,d in [('bradford',1.7,1.),('triang',.3,.3),('trapezoid',.2,.7)]:
+        value=sum(logpdf(x,family,c,0.,1.,d) for x in [.1,.3,.6])
+        value+=logcdf(.05,family,c,0.,1.,d)+logsf(.8,family,c,0.,1.,d)
+        value+=sum(loginterval(a,b,family,c,0.,1.,d) for a,b in [(.2,.25),(.7,.75)])
+        result[family+'_mixed']=float(value)
+        if family == 'trapezoid':
+            result[family+'_fixed_d_fit']=list(stats.trapezoid.fit(bounded,.2,.7,f1=.7,floc=0.,fscale=1.))
+        else:
+            result[family+'_fixed_support_fit']=list(getattr(stats,family).fit(bounded,floc=0.,fscale=1.))
     for family,shape in [('uniform',1.),('powerlaw',.6),('arcsine',1.)]:
         value=sum(logpdf(x,family,shape,0.,1.) for x in [.1,.3,.6])
         value+=logcdf(.05,family,shape,0.,1.)+logsf(.8,family,shape,0.,1.)

@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -73,6 +73,9 @@ weibull_max_censored_loglikelihood(data, c [, loc, scale])
 uniform_censored_loglikelihood(data [, loc, scale])
 powerlaw_censored_loglikelihood(data, a [, loc, scale])
 arcsine_censored_loglikelihood(data [, loc, scale])
+bradford_censored_loglikelihood(data, c [, loc, scale])
+triang_censored_loglikelihood(data, c [, loc, scale])
+trapezoid_censored_loglikelihood(data, c, d [, loc, scale])
 fisk_censored_loglikelihood(data, c [, loc, scale])
 burr_censored_loglikelihood(data, c, d [, loc, scale])
 burr12_censored_loglikelihood(data, c, d [, loc, scale])
@@ -89,8 +92,11 @@ beta_censored_loglikelihood(data, a, b [, loc, scale])
 The corresponding `*_censored_nnlf` procedures return the negative
 log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax/Fisk/generalized-logistic/Gompertz/inverse-Weibull shape `c`,
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
-power-function shape `a`, Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
-finite. Invalid data or parameters return quiet NaN, including for empty data.
+power-function shape `a`, Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied.
+Bradford shape `c`, triangular mode `c`, and trapezoidal edges `c,d` are also required.
+Scale and shapes with positive domains must be positive and finite; location
+must be finite. Triangular/trapezoidal shapes use the bounded domains below.
+Invalid data or parameters return quiet NaN, including for empty data.
 An empty valid sample has log-likelihood zero. An impossible observation
 contributes negative infinity. No finite penalty is substituted for impossible
 observations; this differs from SciPy's fitting penalty policy.
@@ -126,7 +132,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1079,3 +1085,57 @@ call levy_l_fit(data,[0.0_dp,0.1_dp],[0.0_dp,10.0_dp],fit)
 The new likelihoods have additional extreme-range guards; other scalar
 kernels' behavior is unchanged. See the
 [validation report](../validation/normal_transform_censored_2026-11-16.md).
+
+## Bradford, triangular, and trapezoidal details
+
+All three families have support `[loc,loc+scale]`, with finite `loc` and
+finite `scale>0` (defaults zero and one). These interfaces require a finite
+rounded upper support edge, like the existing beta/uniform interfaces;
+invalid parameters return quiet NaN even for empty data. Compensated endpoint
+distances retain small offsets in `loc+scale` and log normalized distances
+when ordinary division underflows.
+
+Bradford requires finite `c>0`. Its standardized density is
+`c/((1+c*z)*log1p(c))`, including finite endpoint densities. Interval mass
+is `log1p(c*(z_b-z_a)/(1+c*z_a))/log1p(c)`, evaluated in logarithmic form.
+For `c<epsilon(1.0_dp)*exp(-2)`, the uniform limit is used: the relative
+correction is below binary64 roundoff. The public parameter domain still
+excludes `c=0`.
+
+Triangular mode `c` may range from zero to one, including endpoint modes.
+Trapezoidal plateau edges satisfy `0<=c<=d<=1`. With
+`h=2/(1+d-c)`, its standardized density rises as `h*z/c`, is constant `h`
+on the plateau, and falls as `h*(1-z)/(1-d)`. A zero-length ramp is omitted.
+The endpoint density is zero unless that endpoint belongs to the plateau.
+Triangular is exactly trapezoidal with `d=c`; `(c,d)=(0,1)` is uniform.
+Triangular endpoint modes are beta `(1,2)` and `(2,1)`.
+
+Intervals within one ramp integrate its linear density exactly. Intervals
+crossing corners integrate the constant plateau height minus triangular
+deficits, preserving the original interval width. Separate lower/upper log
+coordinates retain subnormal breakpoints and upper distances. Nearly full
+intervals complement both omitted tails. No quadrature or observation weights
+are added. Equal finite interval endpoints retain the exact-data convention.
+
+The new `*_fit` overloads accept `censored_data`. Parameter bounds have order
+`(c,loc,scale)` for Bradford/triangular and `(c,d,loc,scale)` for trapezoidal.
+All parameters may be free; equal bounds fix any parameter. The optimizer
+rejects candidates violating shape ordering or support. Existing array-specific
+procedures remain available. Fits retain the existing local optimizer's
+limits, including boundary/flat optima; success does not prove a global MLE.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    bradford_fit, triang_fit, trapezoid_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.1_dp,0.3_dp,0.6_dp],left=[0.05_dp],right=[0.8_dp])
+call bradford_fit(data,[0.01_dp,0.0_dp,1.0_dp],[10.0_dp,0.0_dp,1.0_dp],fit)
+call triang_fit(data,[0.0_dp,0.0_dp,1.0_dp],[1.0_dp,0.0_dp,1.0_dp],fit)
+call trapezoid_fit(data,[0.0_dp,0.7_dp,0.0_dp,1.0_dp], &
+    [0.7_dp,0.7_dp,0.0_dp,1.0_dp],fit)
+```
+
+Other scalar kernels' extreme-range behavior is unchanged. See the
+[validation report](../validation/piecewise_censored_2026-11-16.md).

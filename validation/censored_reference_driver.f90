@@ -11,6 +11,9 @@ program censored_reference_driver
         moyal_censored_loglikelihood, &
         levy_censored_loglikelihood, &
         levy_l_censored_loglikelihood, &
+        bradford_censored_loglikelihood, &
+        triang_censored_loglikelihood, &
+        trapezoid_censored_loglikelihood, &
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
         halfnorm_censored_loglikelihood, &
@@ -34,7 +37,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (family == 6 .or. family == 25 .or. family == 26) read(*, *) second_shape
+        if (family == 6 .or. family == 25 .or. family == 26 .or. family == 38) read(*, *) second_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -113,6 +116,12 @@ program censored_reference_driver
             value = levy_censored_loglikelihood(data,loc,scale)
         case (35)
             value = levy_l_censored_loglikelihood(data,loc,scale)
+        case (36)
+            value = bradford_censored_loglikelihood(data,c,loc,scale)
+        case (37)
+            value = triang_censored_loglikelihood(data,c,loc,scale)
+        case (38)
+            value = trapezoid_censored_loglikelihood(data,c,second_shape,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

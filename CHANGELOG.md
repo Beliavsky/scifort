@@ -1,3 +1,14 @@
+## 2026-11-16 - Bradford, triangular, and trapezoidal censoring
+
+- Add mixed-censoring likelihood/NNLF and bounded fits for three families,
+  with free or fixed shape, location, and support width.
+- Integrate linear pieces across corners without quadrature and retain
+  log-domain Bradford increments, compensated endpoints, and subnormal shapes.
+- Cover uniform/beta identities, endpoint modes, SciPy fits, and extreme
+  intervals in checked/optimized native and high-precision tests.
+- Update coverage to thirty-eight censored families and 71 remaining candidates.
+  C ABI and wrapper work remain deferred.
+
 ## 2026-11-16 - Moyal, Levy, and reflected Levy censoring
 
 - Add mixed-censoring likelihood/NNLF and bounded fitting overloads for three

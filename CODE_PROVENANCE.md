@@ -1,3 +1,38 @@
+## 2026-11-16 - Bradford, triangular, and trapezoidal censoring
+
+The new callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the public density/support specifications for
+[SciPy Bradford](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bradford.html),
+[triangular](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.triang.html),
+and [trapezoidal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.trapezoid.html),
+inspected 2026-11-16. Integrating the Bradford density gives
+`F(z)=log1p(c*z)/log1p(c)` and interior interval mass
+`log1p(c*(z_b-z_a)/(1+c*z_a))/log1p(c)`. The implementation keeps log
+softplus increments; at `c<epsilon*exp(-2)` it uses the uniform limit,
+whose relative density/tail correction is below binary64 roundoff.
+
+The trapezoidal density has height `h=2/(1+d-c)`, with linear ramps
+`h*z/c` and `h*(1-z)/(1-d)`. Its interval integral is either width times
+the mean endpoint density on a single ramp, or the plateau rectangle minus
+the two positive triangular deficits. For example, a crossing interval's
+left deficit relative to its rectangle is `(c-z_a)**2/(2*c*delta)`.
+These are direct integrals of the specified piecewise linear density;
+no upstream implementation was imported or translated. Lower/upper log
+coordinates compare breakpoints from the nearer endpoint and retain tiny
+gaps without forming rounded complements. CDF and SF accumulate positive
+areas before complementing the smaller tail; nearly full intervals retain
+both omitted tails. Triangular reuses trapezoidal with equal plateau edges.
+
+Existing SciFort compensated beta endpoint distances/coordinates (retaining
+their FastTwoSum provenance), log differences, log distances, log-softplus,
+and safe log1p/softplus helpers are reused unchanged. Their finite rounded
+upper-support-edge requirement is preserved. The bounded fit overloads
+preserve the array-specific procedures. Validation uses independent mpmath
+piecewise integrals, SciPy fixed-support/fixed-second-shape fits, and uniform
+and beta identities. No scalar distribution source, dependency, C ABI, or
+third-party license text is changed. See the
+[validation report](validation/piecewise_censored_2026-11-16.md).
+
 ## 2026-11-16 - Moyal, Levy, and reflected Levy censoring
 
 The new callbacks in `src/censored.f90` are original MIT SciFort code,
