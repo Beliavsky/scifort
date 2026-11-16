@@ -1,3 +1,70 @@
+## 2026-11-16 - Inverse-gamma, beta-prime, and Maxwell censoring
+
+The callbacks in `src/censored.f90`, fit overloads, tests, and reference
+extensions are original MIT SciFort code, independently implemented from
+public mathematical specifications for
+[SciPy inverse gamma](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.invgamma.html),
+[beta prime](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.betaprime.html),
+and [Maxwell](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.maxwell.html),
+inspected 2026-11-16. No upstream implementation was copied or translated.
+Existing SciFort gamma/beta/log-gamma kernels are reused with their established
+provenance, coefficients, and notices unchanged. No dependency, third-party
+source, new license text, or C ABI is introduced.
+
+With positive standardized distance `z`, inverse-gamma uses `y=1/z` and
+Maxwell uses `y=z*z/2` with gamma shapes `a` and `3/2`. In terms of the
+log-gamma density at `log(y)`, their exact log densities add Jacobians
+`-log(x-loc)` or `log(2)-log(x-loc)`, respectively. Inverse-gamma reverses
+the gamma tails. Log transformed arguments avoid an underflowed reciprocal
+or overflowing square. Existing log-gamma small/large argument branches
+retain the [DLMF 8.7](https://dlmf.nist.gov/8.7) and
+[DLMF 8.11](https://dlmf.nist.gov/8.11) provenance recorded above/below.
+The shared small-argument product now multiplies directly when the finite
+product is safe, avoiding a needless log/exp reconstruction. Its log-domain
+fallback remains for overflowing standardized coordinates and tiny shapes.
+
+Beta-prime uses beta coordinates `u=z/(1+z)`, `v=1/(1+z)`, calculated
+independently with their logarithms, and log density
+`log(u**a*v**b/B(a,b))-log(x-loc)`. Its tails are `I_u(a,b)` and `I_v(b,a)`.
+When a coordinate rounds to zero, the existing beta leading endpoint-tail
+normalization is reused. Combining that normalization before multiplying by
+a large shape avoids an overflowing intermediate product. The neglected
+opposite-end factor has log correction bounded by a few binary64 epsilons
+for coordinates below the subnormal range and finite opposite shape.
+The current censored beta-prime API requires a finite rounded shape sum,
+matching the incomplete-beta kernel's parameter range, and documents that
+limitation instead of allowing an unchecked overflowing sum. The symmetric
+check compares `a/2+b/2` with `huge/2`, so the check itself cannot overflow
+and a tiny shape paired with the largest finite shape is accepted in either
+parameter order when their rounded sum is finite.
+
+For narrow intervals put `q=(b-a)/(a-loc)` and quadrature fraction `t` in
+`[0,1]`. Relative log densities are, respectively,
+`-(shape+1)*log1p(t*q)+y*t*q/(1+t*q)` for inverse-gamma,
+`2*log1p(t*q)-y*t*q*(2+t*q)` for Maxwell, and
+`(shape_a-1)*log1p(t*q)-(shape_a+shape_b)*log1p(t*q*u)` for beta-prime.
+Original endpoint widths and scaled products are retained in log form.
+Three-point Gauss-Legendre nodes/weights follow
+[DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v), as in existing SciFort interval
+kernels; each varying density term is bounded by approximately 0.002 on
+this path. Broader intervals use the better tail difference or complement
+both omitted tails when the interval mass exceeds one half.
+
+Independent mpmath references use gamma/beta integrals, explicitly choosing
+the smaller gamma tail before subtraction, and complemented omitted tails
+for nearly full intervals; the new cases use
+100 digits, avoiding unnecessary very-high-precision gamma integrals.
+For beta-prime unit shapes the oracle uses the elementary identities
+`log(S)=-b*log1p(z)` at `a=1` and `log(F)=-a*log1p(1/z)` at `b=1`,
+including their interval integrals. These avoid losing the smaller shape
+in mpmath's `a+b` normalization when the other shape is near `huge`.
+A separate 100-digit analytic density reference at beta-prime shapes
+`a=1e305,b=1.7e308`, `x=1e-300,scale=1e300` is
+`-1.373112378206389e308`; the log CDF has the same rounded binary64 value.
+SciPy is used only for constrained fit comparisons. Scalar distribution
+sources and original array-fit signatures are unchanged. See the
+[validation report](validation/positive_transform_censored_2026-11-16.md).
+
 ## 2026-11-16 - Double-gamma, double-Weibull, and log-gamma censoring
 
 The callbacks in `src/censored.f90`, fitting overloads, tests, and reference

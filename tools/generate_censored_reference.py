@@ -18,6 +18,33 @@ def logerfc_large_safe(x):
     return mp.log(mp.erfc(x))
 
 
+def gamma_interval_mass(shape, lo, hi):
+    """Independent gamma integral, using the smaller tail before subtraction."""
+    if lo == 0: return mp.gammainc(shape,0,hi)/mp.gamma(shape)
+    if hi == mp.inf: return mp.gammainc(shape,lo,mp.inf)/mp.gamma(shape)
+    lower=mp.gammainc(shape,0,hi)
+    upper=mp.gammainc(shape,lo,mp.inf)
+    if lower <= upper:
+        mass=lower-mp.gammainc(shape,0,lo)
+    else:
+        mass=upper-mp.gammainc(shape,hi,mp.inf)
+    return mass/mp.gamma(shape)
+
+
+def betaprime_logtails(z, a, b):
+    """Use exact unit-shape integrals when a+b loses the smaller shape."""
+    if a == 1:
+        logq=-b*mp.log1p(z)
+        return mp.log(-mp.expm1(logq)),logq
+    if b == 1:
+        logp=-a*mp.log1p(1/z)
+        return logp,mp.log(-mp.expm1(logp))
+    p=mp.betainc(a,b,0,z/(1+z),regularized=True)
+    q=mp.betainc(b,a,0,1/(1+z),regularized=True)
+    if p <= q: return mp.log(p),mp.log1p(-p)
+    return mp.log1p(-q),mp.log(q)
+
+
 def polygon_cdf(z,c,d):
     if z <= 0: return mp.mpf(0)
     if z >= 1: return mp.mpf(1)
@@ -32,6 +59,17 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x - loc) / scale
+    if family == 'invgamma':
+        return -(shape+1)*mp.log(z)-1/z-mp.loggamma(shape)-mp.log(scale) if z > 0 else mp.ninf
+    if family == 'maxwell':
+        return mp.log(2/mp.pi)/2+2*mp.log(z)-z*z/2-mp.log(scale) if z > 0 else mp.ninf
+    if family == 'betaprime':
+        b=mp.mpf(second_shape)
+        if z < 0: return mp.ninf
+        if z == 0: return mp.inf if shape < 1 else (mp.log(b/scale) if shape == 1 else mp.ninf)
+        if shape == 1: return mp.log(b/scale)-(b+1)*mp.log1p(z)
+        if b == 1: return mp.log(shape/scale)+(shape-1)*mp.log(z)-(shape+1)*mp.log1p(z)
+        return (shape-1)*mp.log(z)-(shape+b)*mp.log1p(z)-mp.log(mp.beta(shape,b))-mp.log(scale)
     if family in ('dgamma','dweibull'):
         r=abs(z)
         if r == 0:
@@ -127,6 +165,17 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logcdf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('invgamma','maxwell','betaprime'):
+        x,c,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if z <= 0: return mp.ninf
+        if family == 'betaprime':
+            b=mp.mpf(second_shape)
+            return betaprime_logtails(z,c,b)[0]
+        y=1/z if family == 'invgamma' else z*z/2
+        a=c if family == 'invgamma' else mp.mpf('1.5')
+        lower=(family == 'maxwell')
+        return mp.log(mp.gammainc(a,0,y)/mp.gamma(a) if lower else mp.gammainc(a,y,mp.inf)/mp.gamma(a))
     if family == 'gibrat': family, shape = 'lognormal', 1.
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
@@ -214,6 +263,17 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('invgamma','maxwell','betaprime'):
+        x,c,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if z <= 0: return mp.mpf(0)
+        if family == 'betaprime':
+            b=mp.mpf(second_shape)
+            return betaprime_logtails(z,c,b)[1]
+        y=1/z if family == 'invgamma' else z*z/2
+        a=c if family == 'invgamma' else mp.mpf('1.5')
+        lower=(family == 'maxwell') == False
+        return mp.log(mp.gammainc(a,0,y)/mp.gamma(a) if lower else mp.gammainc(a,y,mp.inf)/mp.gamma(a))
     if family in ('dgamma','dweibull','loggamma'):
         x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -309,6 +369,30 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1.):
+    if family in ('invgamma','maxwell','betaprime'):
+        a,b,c,loc,scale=map(mp.mpf,(a,b,shape,loc,scale))
+        za,zb=max(0,(a-loc)/scale),(b-loc)/scale
+        if zb <= 0: return mp.ninf
+        if family == 'invgamma':
+            mass=gamma_interval_mass(c,1/zb,mp.inf if za == 0 else 1/za)
+        elif family == 'maxwell':
+            mass=gamma_interval_mass(mp.mpf('1.5'),za*za/2,zb*zb/2)
+        else:
+            d=mp.mpf(second_shape)
+            if c == 1:
+                la,lb=-d*mp.log1p(za),-d*mp.log1p(zb)
+                mass=mp.exp(la)*(-mp.expm1(lb-la))
+            elif d == 1:
+                la=mp.ninf if za == 0 else -c*mp.log1p(1/za)
+                lb=-c*mp.log1p(1/zb)
+                mass=mp.exp(lb)*(-mp.expm1(la-lb))
+            elif za*zb > 1: mass=mp.betainc(d,c,1/(1+zb),1/(1+za),regularized=True)
+            else: mass=mp.betainc(c,d,za/(1+za),zb/(1+zb),regularized=True)
+        if mass > mp.mpf('.5'):
+            omitted=mp.exp(logcdf(a,family,c,loc,scale,second_shape))
+            omitted+=mp.exp(logsf(b,family,c,loc,scale,second_shape))
+            return mp.log1p(-omitted)
+        return mp.log(mass)
     if family in ('dgamma','dweibull'):
         a,b,shape,loc,scale=map(mp.mpf,(a,b,shape,loc,scale))
         za,zb=(a-loc)/scale,(b-loc)/scale
@@ -492,6 +576,16 @@ def main():
         value+=sum(loginterval(a,b,family,shape,loc,scale) for a,b in [(1.1,1.4),(4.,4.4)])
         result[family+'_mixed']=float(value)
         result[family+'_fixed_loc_scale_fit']=list(getattr(stats,family).fit(data,floc=0.,fscale=1.3))
+    for family in ['invgamma','betaprime','maxwell']:
+        shape,loc,scale=1.7,0.,1.3
+        value=sum(logpdf(x,family,shape,loc,scale,2.3) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,shape,loc,scale,2.3)+logsf(3.5,family,shape,loc,scale,2.3)
+        value+=sum(loginterval(a,b,family,shape,loc,scale,2.3) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        if family == 'maxwell': fitted=stats.maxwell.fit(data,floc=0.)
+        elif family == 'betaprime': fitted=stats.betaprime.fit(data,f1=2.3,floc=0.,fscale=1.3)
+        else: fitted=stats.invgamma.fit(data,floc=0.,fscale=1.3)
+        result[family+'_constrained_fit']=list(fitted)
     print(json.dumps(result, indent=2))
 
 

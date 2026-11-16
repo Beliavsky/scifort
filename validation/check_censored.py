@@ -936,6 +936,63 @@ def main():
                     value=reference.loginterval(a,b,family,c,loc,scale)
                     cases.append((family+'_stress',float(value)))
                     stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
+    for number,family in enumerate(['invgamma','betaprime','maxwell'],42):
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            c,d=10**rng.uniform(-1.,1.),10**rng.uniform(-1.,1.)
+            exact=[loc+scale*rng.uniform(.1,4.) for _ in range(3)]
+            left=[loc+scale*rng.uniform(.1,5.)]
+            right=[loc+scale*rng.uniform(.1,5.)]
+            intervals=[]
+            for _ in range(2):
+                a=loc+scale*rng.uniform(.01,30.)
+                b=a+scale*10**rng.uniform(-14.,1.)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,c,loc,scale,d) for x in exact)
+            value+=sum(reference.logcdf(x,family,c,loc,scale,d) for x in left)
+            value+=sum(reference.logsf(x,family,c,loc,scale,d) for x in right)
+            value+=sum(reference.loginterval(a,b,family,c,loc,scale,d) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            if number == 43: stdin+=f'{d:.17g}\n'
+            for group in [exact,left,right,*intervals]:
+                stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+        with mp.workdps(100):
+            shapes=[(.01,.02),(.4,.6),(1.,1.),(3.,4.),(100.,120.)] if number != 44 else [(1.,1.)]
+            for c,d in shapes:
+                stress=[(1.,math.nextafter(1.,math.inf),0.,1.),
+                        (.01,.0101,0.,1.),(100.,100.00000001,0.,1.),
+                        (1e-300,2e-300,0.,1.),(1e300,math.nextafter(1e300,math.inf),0.,1e300),
+                        (-1.,2.,0.,1.),(1e-100,1e100,0.,1.)]
+                if number == 43:
+                    stress += [(1e-300,2e-300,0.,1e300),(1e300,1.1e300,0.,1e-300)]
+                elif number == 44:
+                    stress += [(0.,math.nextafter(0.,1.),0.,1.),
+                               (1e-300,2e-300,0.,1e300)]
+                else:
+                    stress[3]=(1e-300,2e-300,0.,1e-300)
+                for a,b,loc,scale in stress:
+                    value=reference.loginterval(a,b,family,c,loc,scale,d)
+                    cases.append((family+'_stress',float(value)))
+                    stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n'
+                    if number == 43: stdin+=f'{d:.17g}\n'
+                    stdin+=f'{a:.17g} {b:.17g}\n'
+    # Preserve complementary beta-prime tails beyond the oracle's mantissa range.
+    for mode,c,d,x,scale in [('left',.4,.01,1e300,1e-300),
+                            ('right',.01,.4,1e-300,1e300)]:
+        function=reference.logcdf if mode == 'left' else reference.logsf
+        value=function(x,'betaprime',c,0.,scale,d)
+        cases.append(('betaprime_near_unit_tail',float(value)))
+        nl,nr=(1,0) if mode == 'left' else (0,1)
+        stdin+=f'43 {c:.17g} 0 {scale:.17g} 0 {nl} {nr} 0\n{d:.17g}\n{x:.17g}\n'
+    for mode,c,d,x,scale in [('left',1.,float.fromhex('0x1.fffffffffffffp+1023'),1e-300,1e300),
+                            ('right',float.fromhex('0x1.fffffffffffffp+1023'),1.,1e300,1e-300)]:
+        function=reference.logcdf if mode == 'left' else reference.logsf
+        value=function(x,'betaprime',c,0.,scale,d)
+        cases.append(('betaprime_finite_shape_sum',float(value)))
+        nl,nr=(1,0) if mode == 'left' else (0,1)
+        stdin+=f'43 {c:.17g} 0 {scale:.17g} 0 {nl} {nr} 0\n{d:.17g}\n{x:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -965,6 +1022,7 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        positive_transform_errors = []
         reflected_errors = []
         piecewise_errors = []
         normal_transform_errors = []
@@ -975,6 +1033,8 @@ def main():
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('invgamma','betaprime','maxwell')):
+                positive_transform_errors.append(error)
             if family.startswith(('dgamma','dweibull','loggamma')):
                 reflected_errors.append(error)
             if family.startswith(('bradford','triang','trapezoid')):
@@ -1013,6 +1073,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Inverse gamma/beta prime/Maxwell: {len(positive_transform_errors)} comparisons; '
+              f'max scaled error={max(positive_transform_errors):.3g}', flush=True)
         print(f'  Double gamma/Weibull and log gamma: {len(reflected_errors)} comparisons; '
               f'max scaled error={max(reflected_errors):.3g}', flush=True)
         print(f'  Bradford/triangular/trapezoidal: {len(piecewise_errors)} comparisons; '

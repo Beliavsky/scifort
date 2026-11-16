@@ -31,6 +31,9 @@ module scifort_fit
     use scifort_censored, only : dgamma_censored_nnlf
     use scifort_censored, only : dweibull_censored_nnlf
     use scifort_censored, only : loggamma_censored_nnlf
+    use scifort_censored, only : invgamma_censored_nnlf
+    use scifort_censored, only : betaprime_censored_nnlf
+    use scifort_censored, only : maxwell_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -507,6 +510,18 @@ module scifort_fit
         module procedure loggamma_fit, loggamma_fit_censored
     end interface loggamma_fit
 
+    interface invgamma_fit
+        module procedure invgamma_fit, invgamma_fit_censored
+    end interface invgamma_fit
+
+    interface betaprime_fit
+        module procedure betaprime_fit, betaprime_fit_censored
+    end interface betaprime_fit
+
+    interface maxwell_fit
+        module procedure maxwell_fit, maxwell_fit_censored
+    end interface maxwell_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -622,6 +637,46 @@ module scifort_fit
     end interface gumbel_l_fit
 
 contains
+
+    subroutine invgamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in a, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_invgamma,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine invgamma_fit_censored
+
+    subroutine betaprime_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, b, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_betaprime,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine betaprime_fit_censored
+
+    subroutine maxwell_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds for support endpoint and scale
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting support endpoint and scale
+        integer, intent(in), optional :: max_iter !! maximum sweeps (default 1000)
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::], family_maxwell, lower, upper, result, guess, &
+            [.false., .false.], max_iter, tolerance, data)
+    end subroutine maxwell_fit_censored
+
 
     subroutine rayleigh_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1561,6 +1616,12 @@ contains
                 value = dweibull_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_loggamma)
                 value = loggamma_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_invgamma)
+                value = invgamma_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_betaprime)
+                value = betaprime_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_maxwell)
+                value = maxwell_censored_nnlf(censored,params(1),params(2))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

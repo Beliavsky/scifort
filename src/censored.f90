@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: invgamma_censored_loglikelihood, invgamma_censored_nnlf
+    public :: betaprime_censored_loglikelihood, betaprime_censored_nnlf
+    public :: maxwell_censored_loglikelihood, maxwell_censored_nnlf
     public :: dgamma_censored_loglikelihood, dgamma_censored_nnlf
     public :: dweibull_censored_loglikelihood, dweibull_censored_nnlf
     public :: loggamma_censored_loglikelihood, loggamma_censored_nnlf
@@ -89,6 +92,361 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function invgamma_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, logy
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        logy = -lognormal_logz(x,params)
+        value = loggamma_lpdf(logy,[params(1),0.0_dp,1.0_dp]) &
+            -log_distance(x,params(2))
+    end function invgamma_lpdf
+
+    pure function invgamma_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, logy
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        logy = -lognormal_logz(x,params)
+        value = loggamma_lsf(logy,[params(1),0.0_dp,1.0_dp])
+    end function invgamma_lcdf
+
+    pure function invgamma_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, logy
+        value = 0.0_dp
+        if (x <= params(2)) return
+        logy = -lognormal_logz(x,params)
+        value = loggamma_lcdf(logy,[params(1),0.0_dp,1.0_dp])
+    end function invgamma_lsf
+
+    pure function invgamma_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, logwidth, logq, logy, q, t(3), r(3), correction, omitted
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        if (a <= params(2)) then
+            value = invgamma_lcdf(b,params)
+            return
+        end if
+        logwidth = log_distance(b,a)
+        logq = logwidth-log_distance(a,params(2))
+        logy = -lognormal_logz(a,params)
+        if (logq+max(log(params(1)+1.0_dp),logy) <= log(0.001_dp)) then
+            q = exp(logq)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            r = -(params(1)+1.0_dp)*log1p_safe(t*q)+exp(logy+logq)*t/(1.0_dp+t*q)
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = invgamma_lpdf(a,params)+logwidth+log1p_safe(correction)
+        else
+            value = tail_interval(a,b,params,invgamma_lcdf,invgamma_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(invgamma_lcdf(a,params),invgamma_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function invgamma_interval
+
+    pure function maxwell_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, logy
+        value = negative_infinity(0.0_dp)
+        if (x <= params(1)) return
+        logy = 2.0_dp*lognormal_logz(x,[1.0_dp,params(1),params(2)])-scifort_log_two
+        value = loggamma_lpdf(logy,[1.5_dp,0.0_dp,1.0_dp]) &
+            -log_distance(x,params(1))+scifort_log_two
+    end function maxwell_lpdf
+
+    pure function maxwell_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, logy
+        value = negative_infinity(0.0_dp)
+        if (x <= params(1)) return
+        logy = 2.0_dp*lognormal_logz(x,[1.0_dp,params(1),params(2)])-scifort_log_two
+        value = loggamma_lcdf(logy,[1.5_dp,0.0_dp,1.0_dp])
+    end function maxwell_lcdf
+
+    pure function maxwell_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, logy
+        value = 0.0_dp
+        if (x <= params(1)) return
+        logy = 2.0_dp*lognormal_logz(x,[1.0_dp,params(1),params(2)])-scifort_log_two
+        value = loggamma_lsf(logy,[1.5_dp,0.0_dp,1.0_dp])
+    end function maxwell_lsf
+
+    pure function maxwell_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! finite location and positive scale
+        real(dp) :: value, logwidth, logq, logy, q, t(3), r(3), correction, omitted
+        value = negative_infinity(0.0_dp)
+        if (b <= params(1)) return
+        if (a <= params(1)) then
+            value = maxwell_lcdf(b,params)
+            return
+        end if
+        logwidth = log_distance(b,a)
+        logq = logwidth-log_distance(a,params(1))
+        logy = 2.0_dp*lognormal_logz(a,[1.0_dp,params(1),params(2)])-scifort_log_two
+        if (logq+max(0.0_dp,logy) <= log(0.001_dp)) then
+            q = exp(logq)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            r = 2.0_dp*log1p_safe(t*q)-exp(logy+logq)*t*(2.0_dp+t*q)
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = maxwell_lpdf(a,params)+logwidth+log1p_safe(correction)
+        else
+            value = tail_interval(a,b,params,maxwell_lcdf,maxwell_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(maxwell_lcdf(a,params),maxwell_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function maxwell_interval
+
+    pure subroutine betaprime_coordinates(x, params, u, v, logu, logv)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive shapes with finite sum, location, scale
+        real(dp), intent(out) :: u !! z/(1+z), possibly rounded to zero or one
+        real(dp), intent(out) :: v !! 1/(1+z), retained independently
+        real(dp), intent(out) :: logu !! log transformed lower coordinate
+        real(dp), intent(out) :: logv !! log transformed upper coordinate
+        real(dp) :: logz, e
+        logz = lognormal_logz(x,[1.0_dp,params(3),params(4)])
+        logu = -log1pexp(-logz)
+        logv = -log1pexp(logz)
+        if (logz <= 0.0_dp) then
+            e = exp(logz)
+            u = e/(1.0_dp+e)
+            v = 1.0_dp/(1.0_dp+e)
+        else
+            e = exp(-logz)
+            u = 1.0_dp/(1.0_dp+e)
+            v = e/(1.0_dp+e)
+        end if
+    end subroutine betaprime_coordinates
+
+    pure function betaprime_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shapes with finite sum, location, scale
+        real(dp) :: value, u, v, logu, logv
+        value = negative_infinity(0.0_dp)
+        if (x < params(3)) return
+        if (x == params(3)) then
+            if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp) value = log(params(2))-log(params(4))
+            return
+        end if
+        call betaprime_coordinates(x,params,u,v,logu,logv)
+        if (min(u,v) > 0.0_dp) then
+            value = log_beta_kernel(params(1),params(2),u,v)
+        else if (u == 0.0_dp) then
+            value = betaprime_endpoint_tail(params(1),params(2),logu)+log(params(1))
+        else
+            value = betaprime_endpoint_tail(params(2),params(1),logv)+log(params(2))
+        end if
+        value = value-log_distance(x,params(3))
+    end function betaprime_lpdf
+
+    pure function betaprime_endpoint_tail(a, b, logu) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! positive shape at a coordinate rounded to zero
+        real(dp), intent(in) :: b !! positive opposite shape; a+b finite
+        real(dp), intent(in) :: logu !! finite log coordinate below the subnormal range
+        real(dp) :: value, normalization, factor
+        if (a < 1.0_dp) then
+            value = beta_small_tail(a,b,logu)
+        else
+            ! Combine normalization before multiplication if a*logu overflows.
+            normalization = beta_small_tail(a,b,0.0_dp)
+            factor = logu+normalization/a
+            value = negative_infinity(0.0_dp)
+            if (a > huge(1.0_dp)/abs(factor)) return
+            value = a*factor
+        end if
+    end function betaprime_endpoint_tail
+
+    pure subroutine betaprime_logtails(x, params, logp, logq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! positive shapes with finite sum, location, scale
+        real(dp), intent(out) :: logp !! log lower probability
+        real(dp), intent(out) :: logq !! log upper probability
+        real(dp) :: u, v, logu, logv, p, q
+        logp = negative_infinity(0.0_dp)
+        logq = 0.0_dp
+        if (x <= params(3)) return
+        call betaprime_coordinates(x,params,u,v,logu,logv)
+        if (u == 0.0_dp) then
+            logp = betaprime_endpoint_tail(params(1),params(2),logu)
+            logq = log_difference(0.0_dp,logp)
+        else if (v == 0.0_dp) then
+            logq = betaprime_endpoint_tail(params(2),params(1),logv)
+            logp = log_difference(0.0_dp,logq)
+        else
+            call incomplete_beta_xy(params(1),params(2),u,v,p,q,logp,logq)
+        end if
+    end subroutine betaprime_logtails
+
+    pure function betaprime_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shapes with finite sum, location, scale
+        real(dp) :: value, logq
+        call betaprime_logtails(x,params,value,logq)
+    end function betaprime_lcdf
+
+    pure function betaprime_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shapes with finite sum, location, scale
+        real(dp) :: value, logp
+        call betaprime_logtails(x,params,logp,value)
+    end function betaprime_lsf
+
+    pure function betaprime_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shapes with finite sum, location, scale
+        real(dp) :: value, logwidth, logq, logq2, u, v, logu, logv, q, q2
+        real(dp) :: t(3), r(3), correction, omitted, shape_sum
+        value = negative_infinity(0.0_dp)
+        if (b <= params(3)) return
+        if (a <= params(3)) then
+            value = betaprime_lcdf(b,params)
+            return
+        end if
+        call betaprime_coordinates(a,params,u,v,logu,logv)
+        logwidth = log_distance(b,a)
+        logq = logwidth-log_distance(a,params(3))
+        logq2 = logq+logu
+        shape_sum = params(1)+params(2)
+        if (logq+log(max(1.0_dp,abs(params(1)-1.0_dp))) <= log(0.001_dp) &
+                .and. logq2+log(shape_sum) <= log(0.001_dp)) then
+            q = exp(logq)
+            q2 = exp(logq2)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            r = (params(1)-1.0_dp)*log1p_safe(t*q)-shape_sum*log1p_safe(t*q2)
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = betaprime_lpdf(a,params)+logwidth+log1p_safe(correction)
+        else
+            value = tail_interval(a,b,params,betaprime_lcdf,betaprime_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(betaprime_lcdf(a,params),betaprime_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function betaprime_interval
+
+
+    pure function invgamma_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive first shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [a,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(a,params(3)) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,invgamma_lpdf,invgamma_lcdf, &
+            invgamma_lsf,invgamma_interval)
+    end function invgamma_censored_loglikelihood
+
+    pure function invgamma_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive first shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -invgamma_censored_loglikelihood(data, a, loc, scale)
+    end function invgamma_censored_nnlf
+
+    pure function betaprime_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive first shape
+        real(dp), intent(in) :: b !! finite positive second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(4)
+        params = [a,b,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(a,b,params(4)) <= 0.0_dp) return
+        if (0.5_dp*a+0.5_dp*b > 0.5_dp*huge(1.0_dp)) return
+        value = censored_loglikelihood(data,params,betaprime_lpdf,betaprime_lcdf, &
+            betaprime_lsf,betaprime_interval)
+    end function betaprime_censored_loglikelihood
+
+    pure function betaprime_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite positive first shape
+        real(dp), intent(in) :: b !! finite positive second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -betaprime_censored_loglikelihood(data, a, b, loc, scale)
+    end function betaprime_censored_nnlf
+
+    pure function maxwell_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(2)
+        params = [0.0_dp,1.0_dp]
+        if (present(loc)) params(1) = loc
+        if (present(scale)) params(2) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(2) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,maxwell_lpdf,maxwell_lcdf, &
+            maxwell_lsf,maxwell_interval)
+    end function maxwell_censored_loglikelihood
+
+    pure function maxwell_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -maxwell_censored_loglikelihood(data, loc, scale)
+    end function maxwell_censored_nnlf
+
 
     pure function dgamma_lpdf(x, params) result(value)
         implicit none
@@ -276,7 +634,13 @@ contains
         real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
         real(dp) :: value, z, product
         ! Retain c*z even if z itself overflows for a very small shape.
-        product = negative_hazard(log(params(1))+log_distance(params(2),x)-log(params(3)))
+        z = location_scale_z(x,params(2:3))
+        if (ieee_is_finite(z)) then
+            product = negative_infinity(0.0_dp)
+            if (params(1) <= huge(1.0_dp)/abs(z)) product = params(1)*z
+        else
+            product = negative_hazard(log(params(1))+log_distance(params(2),x)-log(params(3)))
+        end if
         if (params(1) < 10.0_dp) then
             value = product-log_gamma_one_plus(params(1))
         else

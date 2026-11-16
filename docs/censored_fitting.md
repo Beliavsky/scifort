@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -73,6 +73,9 @@ weibull_max_censored_loglikelihood(data, c [, loc, scale])
 uniform_censored_loglikelihood(data [, loc, scale])
 powerlaw_censored_loglikelihood(data, a [, loc, scale])
 arcsine_censored_loglikelihood(data [, loc, scale])
+invgamma_censored_loglikelihood(data, a [, loc, scale])
+betaprime_censored_loglikelihood(data, a, b [, loc, scale])
+maxwell_censored_loglikelihood(data [, loc, scale])
 dgamma_censored_loglikelihood(data, a [, loc, scale])
 dweibull_censored_loglikelihood(data, c [, loc, scale])
 loggamma_censored_loglikelihood(data, c [, loc, scale])
@@ -97,7 +100,8 @@ log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
 power-function shape `a`, Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied.
 Bradford shape `c`, triangular mode `c`, trapezoidal edges `c,d`,
-double-gamma shape `a`, and double-Weibull/log-gamma shape `c` are also required.
+double-gamma/inverse-gamma shape `a`, beta-prime shapes `a,b`, and
+double-Weibull/log-gamma shape `c` are also required.
 Scale and shapes with positive domains must be positive and finite; location
 must be finite. Triangular/trapezoidal shapes use the bounded domains below.
 Invalid data or parameters return quiet NaN, including for empty data.
@@ -136,7 +140,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1199,3 +1203,64 @@ mode; subnormal results retain binary64 resolution limits. Existing scalar
 APIs and original array fit procedures keep their signatures. C ABI and
 wrapper additions remain deferred. See the
 [validation report](../validation/reflected_censored_2026-11-16.md).
+
+## Inverse-gamma, beta-prime, and Maxwell details
+
+These distributions have standardized support `z=(x-loc)/scale >= 0`.
+Location is a finite lower endpoint and scale is finite and positive.
+Inverse-gamma requires finite positive shape `a`; beta-prime requires finite
+positive shapes `a,b`. The current beta-prime censored interface additionally
+requires a finite rounded `a+b`, matching the incomplete-beta kernel's
+parameter range; otherwise it returns quiet NaN, including for empty data.
+Maxwell has no shape parameter and equals chi with three degrees of freedom.
+
+Inverse-gamma uses gamma shape `a` at `y=1/z`, with CDF `Q(a,y)` and survival
+`P(a,y)`. Maxwell uses gamma shape `3/2` at `y=z*z/2`. Transformed arguments
+are retained as logarithms so a reciprocal, square, or normalized distance
+can underflow or overflow without losing a representable log probability.
+Exact densities include the analytic Jacobians. At the lower endpoint both
+inverse-gamma and Maxwell have zero density. Inverse-gamma with shape one
+equals inverse-Weibull with shape one.
+
+Beta-prime maps to beta through `u=z/(1+z)`, `v=1/(1+z)`. Both complementary
+coordinates and their logarithms are retained independently. Endpoint-tail
+expansions retain probabilities when a transformed coordinate rounds to
+zero. At location, density is infinite for `a<1`, `b/scale` for `a=1`, and
+zero for `a>1`. At `a=1` beta-prime equals Lomax with shape `b`.
+
+Narrow intervals integrate relative densities with three-point Gauss-Legendre
+quadrature after bounding log-density variation. Interval widths come from
+the original observations, preserving adjacent and subnormal widths. Broader
+intervals use the better tail difference; nearly full intervals complement
+both omitted tails. Intervals below support have zero mass, and intervals
+crossing location are clipped to support. Equal finite endpoints represent
+exact observations under the shared `censored_data` convention.
+
+The `*_fit` overloads take `censored_data` and bounds in `(a,loc,scale)`,
+`(a,b,loc,scale)`, or `(loc,scale)` order for inverse-gamma, beta-prime, or
+Maxwell respectively. Any parameter can be free or fixed by equal bounds.
+Beta-prime free-location fits with `a<1` can have unbounded likelihood as
+location approaches an exact observation. A fully fixed singular or
+zero-density objective returns `fit_status_no_finite_objective`; a finite
+bounded optimizer result does not guarantee a global MLE.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    invgamma_fit, betaprime_fit, maxwell_fit
+type(censored_data) :: data
+type(fit_result) :: fitted
+
+data = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp], &
+    left=[0.3_dp],right=[3.5_dp],interval=reshape([1.1_dp,1.4_dp],[1,2]))
+call invgamma_fit(data,[0.1_dp,0.0_dp,0.2_dp],[5.0_dp,0.0_dp,5.0_dp],fitted)
+call betaprime_fit(data,[1.1_dp,0.5_dp,0.0_dp,0.2_dp], &
+    [5.0_dp,5.0_dp,0.0_dp,5.0_dp],fitted)
+call maxwell_fit(data,[0.0_dp,0.2_dp],[0.0_dp,5.0_dp],fitted)
+```
+
+Binary64 and the existing incomplete-gamma/beta kernels' numerical limits
+apply. For very large shapes, coordinate rounding can limit near-mode
+accuracy in sharply concentrated distributions. Subnormal values retain
+binary64 resolution limits. Existing scalar and array-fit APIs are preserved;
+C ABI and wrapper additions remain deferred. See the
+[validation report](../validation/positive_transform_censored_2026-11-16.md).

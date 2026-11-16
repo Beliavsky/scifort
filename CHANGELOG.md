@@ -1,3 +1,15 @@
+## 2026-11-16 - Inverse-gamma, beta-prime, and Maxwell censoring
+
+- Add mixed-censoring likelihood/NNLF and bounded fits for three more families,
+  with free or fixed native Fortran parameters.
+- Reuse gamma/beta kernels through logarithmic transformations, preserve narrow
+  interval widths, and retain both tails of nearly full intervals.
+- Improve the shared log-gamma small-argument product when direct multiplication
+  is safe, retaining the fallback for overflowing standardized coordinates.
+- Add numerical/API tests, independent references, fit comparisons, and docs.
+- Update coverage to forty-four censored families and 65 remaining candidates.
+  C ABI and wrapper work remain deferred.
+
 ## 2026-11-16 - Double-gamma, double-Weibull, and log-gamma censoring
 
 - Add mixed-censoring likelihood/NNLF and bounded fit overloads for three

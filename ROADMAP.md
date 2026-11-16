@@ -129,6 +129,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add Moyal, Levy, and reflected Levy censored likelihoods and bounded fits.
 - [x] Add Bradford, triangular, and trapezoidal censoring and bounded fits.
 - [x] Add double-gamma, double-Weibull, and log-gamma censoring and bounded fits.
+- [x] Add inverse-gamma, beta-prime, and Maxwell censoring and bounded fits.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 
