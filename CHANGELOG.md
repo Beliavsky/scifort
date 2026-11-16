@@ -1,3 +1,13 @@
+## 2026-11-15 - Log-Laplace censoring
+
+- Add log-Laplace mixed-censoring likelihood/NNLF and bounded fits with free
+  or fixed shape, location, and scale; preserve the existing array APIs.
+- Preserve narrow interval masses, extreme log tails, and endpoint density
+  limits using log-coordinate calculations and stable exponential increments.
+- Validate 286 native checks at checked `-O0` and `-O3`, 110 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to twenty-one censored families and 88 remaining candidates.
+
 ## 2026-11-15 - Asymmetric Laplace censoring
 
 - Add asymmetric Laplace mixed-censoring likelihood/NNLF and bounded fits with

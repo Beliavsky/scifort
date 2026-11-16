@@ -1,3 +1,20 @@
+## 2026-11-15 - Log-Laplace censored likelihoods and fitting
+
+The log-Laplace callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the piecewise density and log-Laplace/Laplace
+transformation in [SciPy's mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.loglaplace.html),
+inspected 2026-11-15. Integrating the density gives `F(z)=z**c/2` below one
+and `S(z)=z**(-c)/2` above one. The implementation uses the existing stable
+Weibull log-distance/scale kernel, log-distance, softplus, and log-hazard-mass
+helpers without modification. Same-side intervals use log-coordinate widths;
+crossing intervals add two positive pieces or complement omitted tails.
+Exact densities include the transformation Jacobian. No upstream implementation
+code was imported or translated. Existing helper provenance and license notices
+remain applicable. The fit overload reuses the existing bounded optimizer and
+preserves the array-specific procedure. Independent mpmath definitions and SciPy
+fits supply references. No dependency or third-party license text is added.
+See the [validation report](validation/loglaplace_censored_2026-11-15.md).
+
 ## 2026-11-15 - Asymmetric Laplace censored likelihoods and fitting
 
 The new asymmetric Laplace callbacks in `src/censored.f90` are original MIT

@@ -2,7 +2,7 @@
 
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
-minimum/maximum Weibull, Rayleigh, lognormal, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
+minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
 logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
@@ -64,6 +64,7 @@ gumbel_l_censored_loglikelihood(data [, loc, scale])
 exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
 weibull_max_censored_loglikelihood(data, c [, loc, scale])
+loglaplace_censored_loglikelihood(data, c [, loc, scale])
 lognormal_censored_loglikelihood(data, s [, loc, scale])
 gibrat_censored_loglikelihood(data [, loc, scale])
 gamma_censored_loglikelihood(data, a [, loc, scale])
@@ -72,7 +73,7 @@ beta_censored_loglikelihood(data, a, b [, loc, scale])
 ```
 
 The corresponding `*_censored_nnlf` procedures return the negative
-log-likelihood. Location defaults to 0 and scale to 1. Weibull shape `c`,
+log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace shape `c`,
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
 and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
 finite. Invalid data or parameters return quiet NaN, including for empty data.
@@ -112,7 +113,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
-`rayleigh_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
+`rayleigh_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -130,7 +131,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, and `[s, loc, scale]` for
+Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families and log-Laplace, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma and Erlang, `[kappa,loc,scale]` for asymmetric Laplace, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -143,6 +144,47 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Log-Laplace details
+
+`loglaplace_censored_loglikelihood(data, c [, loc, scale])` and its `_nnlf`
+companion use finite `c > 0`, finite lower support endpoint `loc` (default 0),
+and finite `scale > 0` (default 1). For `z=(x-loc)/scale > 0`,
+`log(z)` follows Laplace with center zero and scale `1/c`. The exact density
+includes the Jacobian `1/(x-loc)`; censoring contributions use the transformed
+probabilities without a density Jacobian.
+
+Below `loc`, density and CDF are zero and survival is one. At `loc`, density
+is infinite for `c < 1`, `1/(2*scale)` for `c = 1`, and zero for `c > 1`.
+The likelihood preserves these endpoint limits. Fits whose objective is
+nonfinite at every candidate return `fit_status_no_finite_objective`.
+Free-location fits can approach an unbounded endpoint density when `c < 1`;
+choose bounds and fixed parameters with care.
+
+The implementation reuses the stable Weibull log-distance/scale calculation,
+with guarded shape multiplication. Same-side interval masses retain
+`c*log1p((b-a)/(a-loc))` in the log domain. Intervals crossing `z=1` add positive
+pieces or complement both omitted tails, preserving tiny masses and tiny
+near-unit deficits. Log likelihoods beyond binary64 range return negative
+infinity. These guarantees apply to the new censored kernels, without changing
+the existing scalar kernels.
+
+`loglaplace_fit` accepts bounds, guesses, and returns parameters in
+`[c, loc, scale]` order. Any parameter can be free or fixed by equal bounds;
+no fixed-location restriction is imposed. For example:
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, loglaplace_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[1.0_dp,2.0_dp,4.0_dp])
+call loglaplace_fit(data, [0.1_dp,0.0_dp,2.0_dp], [10.0_dp,0.0_dp,2.0_dp], fit)
+! Fixed location 0 and scale 2: fitted shape is 3/(2*log(2)).
+```
+
+See the [validation report](../validation/loglaplace_censored_2026-11-15.md)
+for independent references and numerical checks.
 
 ## Asymmetric Laplace details
 

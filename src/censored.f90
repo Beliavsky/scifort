@@ -22,6 +22,7 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: loglaplace_censored_loglikelihood, loglaplace_censored_nnlf
 
     integer, parameter, public :: censored_status_success = 0
     integer, parameter, public :: censored_status_invalid_input = 1
@@ -68,6 +69,116 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function loglaplace_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c, 0.0_dp, 1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,loglaplace_lpdf,loglaplace_lcdf, &
+            loglaplace_lsf,loglaplace_interval)
+    end function loglaplace_censored_loglikelihood
+
+    pure function loglaplace_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -loglaplace_censored_loglikelihood(data,c,loc,scale)
+    end function loglaplace_censored_nnlf
+
+    pure function loglaplace_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (x == params(2)) then
+            if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp) value = -scifort_log_two-log(params(3))
+            return
+        end if
+        value = log(params(1))-scifort_log_two-log_distance(x,params(2)) &
+            -abs(weibull_log_hazard(x,params))
+    end function loglaplace_lpdf
+
+    pure function loglaplace_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        z = weibull_log_hazard(x,params)
+        if (z <= 0.0_dp) then
+            value = z-scifort_log_two
+        else
+            value = log1p_safe(-0.5_dp*exp(-z))
+        end if
+    end function loglaplace_lcdf
+
+    pure function loglaplace_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z
+        value = 0.0_dp
+        if (x <= params(2)) return
+        z = weibull_log_hazard(x,params)
+        if (z >= 0.0_dp) then
+            value = -z-scifort_log_two
+        else
+            value = log1p_safe(-0.5_dp*exp(z))
+        end if
+    end function loglaplace_lsf
+
+    pure function loglaplace_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, za, zb, logr, logspan, omitted, left, right, large, small
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        if (a <= params(2)) then
+            value = loglaplace_lcdf(b,params)
+            return
+        end if
+        za = lognormal_logz(a,params)
+        zb = lognormal_logz(b,params)
+        ! Work with the log of c*log((b-loc)/(a-loc)); retain adjacent widths.
+        logr = log_distance(b,a)-log_distance(a,params(2))
+        logspan = logr
+        if (logr >= log(epsilon(1.0_dp))-2.0_dp) logspan = log(log1pexp(logr))
+        if (zb <= 0.0_dp) then
+            value = loglaplace_lcdf(b,params)+log_hazard_mass(log(params(1))+logspan)
+        else if (za >= 0.0_dp) then
+            value = loglaplace_lsf(a,params)+log_hazard_mass(log(params(1))+logspan)
+        else
+            omitted = exp(loglaplace_lcdf(a,params))+exp(loglaplace_lsf(b,params))
+            if (omitted <= 0.5_dp) then
+                value = log1p_safe(-omitted)
+            else
+                left = -scifort_log_two+log_hazard_mass(log(params(1))+log(-za))
+                right = -scifort_log_two+log_hazard_mass(log(params(1))+log(zb))
+                large = max(left,right)
+                small = min(left,right)
+                value = large+log1p_safe(exp(small-large))
+            end if
+        end if
+    end function loglaplace_interval
+
 
     pure function laplace_asymmetric_censored_loglikelihood(data, kappa, loc, scale) result(value)
         implicit none

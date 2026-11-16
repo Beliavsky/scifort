@@ -18,6 +18,10 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     z = (x - loc) / scale
     if family == 'laplace_asymmetric':
         return -mp.log(shape+1/shape)-mp.log(scale)-(shape*z if z >= 0 else -z/shape)
+    if family == 'loglaplace':
+        if z < 0: return mp.ninf
+        if z == 0: return mp.inf if shape < 1 else (-mp.log(2*scale) if shape == 1 else mp.ninf)
+        return mp.log(shape/2)-mp.log(x-loc)-shape*abs(mp.log(z))
     if family == 'hypsecant':
         return -mp.log(mp.pi)-mp.log(mp.cosh(z))-mp.log(scale)
     if family == 'halfnorm':
@@ -66,6 +70,10 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'laplace_asymmetric':
         if z <= 0: return 2*mp.log(shape)-mp.log1p(shape*shape)+z/shape
         return mp.log1p(-mp.exp(-shape*z)/(1+shape*shape))
+    if family == 'loglaplace':
+        if z <= 0: return mp.ninf
+        t=shape*mp.log(z)
+        return t-mp.log(2) if t <= 0 else mp.log1p(-mp.exp(-t)/2)
     if family == 'hypsecant':
         t=2*mp.atan(mp.exp(-abs(z)))/mp.pi
         return mp.log(t) if z <= 0 else mp.log1p(-t)
@@ -117,6 +125,10 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family == 'loglaplace':
+        if z <= 0: return mp.mpf(0)
+        t=shape*mp.log(z)
+        return -t-mp.log(2) if t >= 0 else mp.log1p(-mp.exp(t)/2)
     if family == 'weibull_max':
         return mp.log(-mp.expm1(-(-z)**shape)) if z < 0 else mp.ninf
     if family == 'rayleigh':
@@ -173,6 +185,7 @@ def main():
         ('lognormal', stats.lognorm, .8, 0., 2.3),
         ('gamma', stats.gamma, .6, 0., 2.3),
         ('erlang', stats.erlang, 2., 0., 2.3),
+        ('loglaplace', stats.loglaplace, 1.7, 0., 1.3),
         ('gibrat', stats.gibrat, 1., 0., 1.3),
         ('halfnorm', stats.halfnorm, 1., 0., 1.3),
         ('hypsecant', stats.hypsecant, 1., .4, 1.3),
