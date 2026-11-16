@@ -1,3 +1,13 @@
+## 2026-11-15 - Lomax censoring
+
+- Add Lomax mixed-censoring likelihood/NNLF and bounded fits with free or fixed
+  shape, location, and scale; preserve existing scalar and array APIs.
+- Retain underflowed hazards, compensating shape/scale extremes, narrow tail
+  intervals, support boundaries, and nearly unit probabilities.
+- Validate 355 native checks at checked `-O0` and `-O3`, 115 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to twenty-three censored families and 86 remaining candidates.
+
 ## 2026-11-15 - Pareto censoring
 
 - Add Pareto mixed-censoring likelihood/NNLF and bounded fits with free or

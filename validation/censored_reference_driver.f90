@@ -8,6 +8,7 @@ program censored_reference_driver
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
         halfnorm_censored_loglikelihood, &
+        lomax_censored_loglikelihood, &
         hypsecant_censored_loglikelihood, pareto_censored_loglikelihood, &
         laplace_asymmetric_censored_loglikelihood, loglaplace_censored_loglikelihood, &
         beta_censored_loglikelihood, logistic_censored_loglikelihood, &
@@ -77,6 +78,8 @@ program censored_reference_driver
             value = loglaplace_censored_loglikelihood(data,c,loc,scale)
         case (22)
             value = pareto_censored_loglikelihood(data,c,loc,scale)
+        case (23)
+            value = lomax_censored_loglikelihood(data,c,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

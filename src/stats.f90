@@ -2,6 +2,7 @@
 ! Copyright (c) 2026 SciFort contributors
 
 module scifort_stats
+    use scifort_censored, only : lomax_censored_loglikelihood, lomax_censored_nnlf
     use scifort_censored, only : pareto_censored_loglikelihood, pareto_censored_nnlf
     use scifort_censored, only : loglaplace_censored_loglikelihood, loglaplace_censored_nnlf
     use scifort_censored, only : make_censored_data, censored_data_valid, &
@@ -709,6 +710,7 @@ module scifort_stats
     public :: normal_censored_loglikelihood, normal_censored_nnlf
     public :: exponential_censored_loglikelihood, exponential_censored_nnlf
     public :: weibull_censored_loglikelihood, weibull_censored_nnlf
+    public :: lomax_censored_loglikelihood, lomax_censored_nnlf
     public :: pareto_censored_loglikelihood, pareto_censored_nnlf
     public :: loglaplace_censored_loglikelihood, loglaplace_censored_nnlf
     public :: lognormal_censored_loglikelihood, lognormal_censored_nnlf

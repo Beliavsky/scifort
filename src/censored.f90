@@ -22,6 +22,7 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: lomax_censored_loglikelihood, lomax_censored_nnlf
     public :: pareto_censored_loglikelihood, pareto_censored_nnlf
     public :: loglaplace_censored_loglikelihood, loglaplace_censored_nnlf
 
@@ -70,6 +71,125 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function lomax_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c, 0.0_dp, 1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,lomax_lpdf,lomax_lcdf, &
+            lomax_lsf,lomax_interval)
+    end function lomax_censored_loglikelihood
+
+    pure function lomax_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -lomax_censored_loglikelihood(data,c,loc,scale)
+    end function lomax_censored_nnlf
+
+    pure function lomax_base(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z
+        z = location_scale_z(x,params(2:3))
+        if (ieee_is_finite(z)) then
+            value = log1p_safe(z)
+        else
+            value = log1pexp(lognormal_logz(x,params))
+        end if
+    end function lomax_base
+
+    pure function lomax_negative_hazard(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, base
+        base = lomax_base(x,params)
+        if (base < tiny(1.0_dp)) then
+            ! Subnormal displacements lose relative precision; shape can amplify it.
+            value = negative_hazard(log(params(1))+lognormal_logz(x,params))
+        else
+            value = negative_infinity(0.0_dp)
+            if (base > 1.0_dp) then
+                if (params(1) > huge(1.0_dp)/base) return
+            end if
+            value = -params(1)*base
+        end if
+    end function lomax_negative_hazard
+
+    pure function lomax_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        value = log(params(1))-log(params(3))
+        if (x == params(2)) return
+        value = value-lomax_base(x,params)+lomax_negative_hazard(x,params)
+    end function lomax_lpdf
+
+    pure function lomax_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, h, base, logh
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        h = lomax_negative_hazard(x,params)
+        if (h <= -scifort_log_two) then
+            value = log1p_safe(-exp(h))
+        else
+            base = lomax_base(x,params)
+            if (base < tiny(1.0_dp)) then
+                logh = log(params(1))+lognormal_logz(x,params)
+            else
+                logh = log(params(1))+log(base)
+            end if
+            value = log_hazard_mass(logh)
+        end if
+    end function lomax_lcdf
+
+    pure function lomax_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value
+        value = 0.0_dp
+        if (x <= params(2)) return
+        value = lomax_negative_hazard(x,params)
+    end function lomax_lsf
+
+    pure function lomax_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, logs, logd, logdenom, logr, logspan
+        value = lomax_lcdf(b,params)
+        if (a <= params(2)) return
+        ! Denominator scale+a-loc is a positive sum which may exceed huge().
+        logs = log(params(3))
+        logd = log_distance(a,params(2))
+        logdenom = max(logs,logd)+log1pexp(-abs(logs-logd))
+        logr = log_distance(b,a)-logdenom
+        logspan = logr
+        if (logr >= log(epsilon(1.0_dp))-2.0_dp) logspan = log(log1pexp(logr))
+        value = lomax_lsf(a,params)+log_hazard_mass(log(params(1))+logspan)
+    end function lomax_interval
 
     pure function pareto_censored_loglikelihood(data, b, loc, scale) result(value)
         implicit none

@@ -1,3 +1,24 @@
+## 2026-11-15 - Lomax censored likelihoods and fitting
+
+The Lomax callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the density and support in
+[SciPy's Lomax mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lomax.html),
+inspected 2026-11-15. Integrating `c*(1+z)**(-c-1)` for `z >= 0` gives
+`S(z)=(1+z)**(-c)` and cumulative hazard `c*log1p(z)`. The log transform is
+exponential and the Pareto location shift is `loc-scale`. The implementation
+avoids forming that shift. Tiny hazards retain log distances, including
+underflowed or subnormal standardized displacements compensated by large shapes. Large
+hazards use direct guarded multiplication. Interval increments use positive
+log sums and `c*log1p((b-a)/(scale+a-loc))`. Existing SciFort standardization,
+log-distance, softplus, negative-hazard, and log-hazard-mass helpers are reused
+without modification, retaining their existing provenance. No upstream
+implementation code was imported or translated. The fit overload preserves
+the array-specific procedure and reuses the bounded optimizer. Independent
+mpmath definitions, Pareto/exponential identities, an analytic shape MLE,
+and a fixed-location/scale SciPy fit provide validation. No C ABI, dependency,
+or third-party license text is added. See the
+[validation report](validation/lomax_censored_2026-11-15.md).
+
 ## 2026-11-15 - Pareto censored likelihoods and fitting
 
 The new Pareto callbacks in `src/censored.f90` are original MIT SciFort code,
