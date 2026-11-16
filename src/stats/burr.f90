@@ -96,7 +96,9 @@ contains
             lz = log(z)
             t = shape_times_log(-c, lz, x)
             l = log1pexp(t)
-            if (d > 1.0_dp .and. l > huge(1.0_dp) / d) then
+            if (d <= 1.0_dp) then
+                y = -d * l
+            else if (l > huge(1.0_dp) / d) then
                 y = negative_infinity(x)
             else
                 y = -d * l
@@ -245,7 +247,10 @@ contains
 
         if (lz == 0.0_dp .or. c == 0.0_dp) then
             t = 0.0_dp
-        else if (abs(c) > 1.0_dp .and. abs(lz) > huge(1.0_dp) / abs(c)) then
+        else if (abs(c) <= 1.0_dp) then
+            ! Do not rely on short-circuit evaluation before dividing huge().
+            t = c * lz
+        else if (abs(lz) > huge(1.0_dp) / abs(c)) then
             if ((c > 0.0_dp) .eqv. (lz > 0.0_dp)) then
                 t = positive_infinity(seed)
             else

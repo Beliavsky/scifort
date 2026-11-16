@@ -1,3 +1,37 @@
+## 2026-11-16 - Fisk and Burr III/XII censored likelihoods and fitting
+
+The new callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the public density/support specifications for
+[SciPy Fisk](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fisk.html),
+[Burr III](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr.html),
+and [Burr XII](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.burr12.html),
+inspected 2026-11-16. Integrating these densities gives
+`S_XII(z)=(1+z**c)**(-d)` and `F_III(z)=(1+z**(-c))**(-d)`; Fisk has `d=1`.
+These identities give exponential-hazard tails in `q=+/-c*log(z)`,
+`H=d*softplus(q)`, with exact-density Jacobian `1/(x-loc)`.
+
+The new family-specific helpers retain log hazards and log softplus differences.
+For `delta=q_hi-q_lo`, the identities
+`softplus(q_hi)-softplus(q_lo)=softplus(log(sigmoid(q_lo)*expm1(delta)))`
+and `1-exp(-difference)=sigmoid(q_hi)*(1-exp(-delta))` supply stable narrow
+and negative-tail interval increments. Positive tails separate the linear
+increment and bounded corrections. Crossing intervals use positive differences
+or complement both excluded tails. Large opposing shapes are grouped before
+multiplication to retain representable hazards when `c*log(z)` overflows.
+Existing SciFort log-distance, softplus, Weibull standardization, and
+log-hazard-mass helpers are reused without modification and retain their
+existing provenance. No upstream implementation code was imported or translated.
+
+Existing original SciFort scalar helpers in `src/stats/fisk.f90` and
+`src/stats/burr.f90` receive explicit small-multiplier branches: their previous
+`huge()/shape` tests could overflow for shapes below one, including when a
+logical guard was evaluated without short-circuiting. Their public formulas
+and API are unchanged. The bounded fit overloads preserve the array-specific
+procedures. Validation uses independent mpmath definitions, SciPy fixed-support
+fits, analytic second-shape MLEs, and cross-family identities. No new dependency,
+C ABI, or third-party license text is added. See the
+[validation report](validation/burr_family_censored_2026-11-16.md).
+
 ## 2026-11-15 - Lomax censored likelihoods and fitting
 
 The Lomax callbacks in `src/censored.f90` are original MIT SciFort code,

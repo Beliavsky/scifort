@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -64,6 +64,9 @@ gumbel_l_censored_loglikelihood(data [, loc, scale])
 exponential_censored_loglikelihood(data [, loc, scale])
 weibull_censored_loglikelihood(data, c [, loc, scale])
 weibull_max_censored_loglikelihood(data, c [, loc, scale])
+fisk_censored_loglikelihood(data, c [, loc, scale])
+burr_censored_loglikelihood(data, c, d [, loc, scale])
+burr12_censored_loglikelihood(data, c, d [, loc, scale])
 lomax_censored_loglikelihood(data, c [, loc, scale])
 pareto_censored_loglikelihood(data, b [, loc, scale])
 loglaplace_censored_loglikelihood(data, c [, loc, scale])
@@ -75,9 +78,9 @@ beta_censored_loglikelihood(data, a, b [, loc, scale])
 ```
 
 The corresponding `*_censored_nnlf` procedures return the negative
-log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax shape `c`,
+log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax/Fisk shape `c`,
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
-Pareto shape `b`, and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
+Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
 finite. Invalid data or parameters return quiet NaN, including for empty data.
 An empty valid sample has log-likelihood zero. An impossible observation
 contributes negative infinity. No finite penalty is substituted for impossible
@@ -115,7 +118,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
-`rayleigh_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
+`rayleigh_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -133,7 +136,7 @@ call exponential_fit(data, [0.0_dp, 0.1_dp], [0.0_dp, 100.0_dp], fit)
 ```
 
 Bounds and parameter order follow the existing API: `[loc, scale]` for normal,
-Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, log-Laplace, and Lomax, `[b, loc, scale]` for Pareto, and `[s, loc, scale]` for
+Gibrat, exponential, Rayleigh, Cauchy, symmetric Laplace, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel families, `[c, loc, scale]` for both Weibull families, log-Laplace, Lomax, and Fisk, `[c, d, loc, scale]` for Burr III/XII, `[b, loc, scale]` for Pareto, and `[s, loc, scale]` for
 lognormal, `[a, loc, scale]` for gamma and Erlang, `[kappa,loc,scale]` for asymmetric Laplace, and `[a, b, loc, scale]` for beta. Equal bounds fix a parameter.
 The optional `guess`, `max_iter`, and `tolerance` arguments retain their
 existing meanings. Empty samples are rejected. Results use `fit_result` and
@@ -146,6 +149,63 @@ All-censored samples can converge at a box boundary. Fully free location
 fits can also be ill-posed; use scientifically justified fixed parameters and
 bounds, and inspect results. SciPy and SciFort need not use the same optimizer
 or return identical iteration counts.
+
+## Burr family details
+
+`fisk_censored_loglikelihood(data, c [, loc, scale])`,
+`burr_censored_loglikelihood(data, c, d [, loc, scale])`, and
+`burr12_censored_loglikelihood(data, c, d [, loc, scale])` have `_nnlf`
+companions. All shapes and scale must be positive and finite; `loc` is the
+finite lower support endpoint. Location defaults to zero and scale to one.
+The names follow SciPy: `burr` is Type III and `burr12` is Type XII.
+
+For `z=(x-loc)/scale > 0` and `t=c*log(z)`, Burr XII has survival
+`exp(-d*log1p(exp(t)))`; Burr III has CDF `exp(-d*log1p(exp(-t)))`.
+Fisk is the `d=1` special case of both. At `c=1`, Burr XII reduces to Lomax;
+reciprocation of standardized Burr III gives Burr XII. The likelihoods use
+these mathematical identities in log coordinates without forming powers or
+reciprocal data. Exact densities include the logarithmic-transform Jacobian.
+
+Below `loc`, density and CDF are zero and survival is one. At `loc`, Fisk and
+Burr XII have infinite density for `c<1`, finite density `d/scale` for `c=1`
+(with `d=1` for Fisk), and zero density for `c>1`. Burr III uses `c*d` for
+this classification, with finite endpoint density `c*d/scale` when `c*d=1`.
+The endpoint CDF is zero and survival is one in all three families. Equal
+finite interval endpoints remain exact observations. Nonfinite likelihoods
+are preserved and rejected as fit objectives by the existing optimizer.
+
+Interval probabilities use increments of `d*softplus(t)` (Type XII) or
+`d*softplus(-t)` (Type III). Log widths and stable softplus differences retain
+adjacent intervals even when endpoint tail logs coincide. Nearly full-support
+intervals complement both excluded tails. Guarded products and log magnitudes
+allow compensating shapes even when `c*log(z)` exceeds binary64 range.
+Log likelihoods outside binary64 range return negative infinity. These are
+new censored-kernel guarantees; scalar routines retain their existing limits.
+The scalar Fisk/Burr overflow guards now also handle shapes below one with
+floating-point traps enabled, without relying on short-circuit evaluation.
+
+The existing fit generics accept `censored_data`, with `[c,loc,scale]` bounds
+and results for Fisk and `[c,d,loc,scale]` for Burr III/XII. Every parameter
+may be free or fixed by equal bounds. Fits are bounded local searches; shape,
+location and scale can be weakly identified. A successful fit does not prove
+an unconstrained MLE exists or is unique. Singular endpoint densities can make
+free-location fits ill-posed. Use scientifically justified bounds and inspect
+optimizer status; harder four-parameter fits may need more than 1000 sweeps.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    fisk_fit, burr_fit, burr12_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.5_dp,1.0_dp,2.0_dp])
+call fisk_fit(data, [0.1_dp,0.0_dp,1.0_dp], [10.0_dp,0.0_dp,1.0_dp], fit)
+call burr_fit(data, [1.0_dp,0.1_dp,0.0_dp,1.0_dp], [1.0_dp,10.0_dp,0.0_dp,1.0_dp], fit)
+call burr12_fit(data, [1.0_dp,0.1_dp,0.0_dp,1.0_dp], [1.0_dp,10.0_dp,0.0_dp,1.0_dp], fit)
+! With c=1 and fixed location/scale, d=3/sum(log(1+x)) for the reciprocal sample above.
+```
+
+See the [validation report](../validation/burr_family_censored_2026-11-16.md).
 
 ## Lomax details
 

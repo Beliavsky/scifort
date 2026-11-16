@@ -287,6 +287,9 @@ contains
 
         if (lz == 0.0_dp) then
             t = 0.0_dp
+        else if (c <= 1.0_dp) then
+            ! A multiplier at most one cannot overflow a finite logarithm.
+            t = c * lz
         else if (abs(lz) > huge(1.0_dp) / c) then
             if (lz > 0.0_dp) then
                 t = positive_infinity(seed)

@@ -123,6 +123,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add log-Laplace mixed-censoring likelihoods and bounded shape/location/scale fits.
 - [x] Add Pareto mixed-censoring likelihoods and bounded shape/location/scale fits.
 - [x] Add Lomax mixed-censoring likelihoods and bounded shape/location/scale fits.
+- [x] Add Fisk and Burr III/XII mixed-censoring likelihoods and bounded fits.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

@@ -18,6 +18,15 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     z = (x - loc) / scale
     if family == 'laplace_asymmetric':
         return -mp.log(shape+1/shape)-mp.log(scale)-(shape*z if z >= 0 else -z/shape)
+    if family in ('fisk','burr','burr12'):
+        d=mp.mpf(1) if family == 'fisk' else mp.mpf(second_shape)
+        if z < 0: return mp.ninf
+        if z == 0:
+            exponent=shape*d if family == 'burr' else shape
+            return mp.inf if exponent < 1 else (mp.log(shape*d/scale) if exponent == 1 else mp.ninf)
+        t=shape*mp.log(z)
+        if family == 'burr': t=-t
+        return mp.log(shape*d)-mp.log(x-loc)+t-(d+1)*mp.log1p(mp.exp(t))
     if family == 'lomax':
         return mp.log(shape/scale)-(shape+1)*mp.log1p(z) if z >= 0 else mp.ninf
     if family == 'pareto':
@@ -74,6 +83,12 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'laplace_asymmetric':
         if z <= 0: return 2*mp.log(shape)-mp.log1p(shape*shape)+z/shape
         return mp.log1p(-mp.exp(-shape*z)/(1+shape*shape))
+    if family in ('fisk','burr','burr12'):
+        if z <= 0: return mp.ninf
+        d=mp.mpf(1) if family == 'fisk' else mp.mpf(second_shape)
+        t=shape*mp.log(z)
+        if family == 'burr': return -d*mp.log1p(mp.exp(-t))
+        return mp.log(-mp.expm1(-d*mp.log1p(mp.exp(t))))
     if family == 'lomax':
         return mp.log(-mp.expm1(-shape*mp.log1p(z))) if z > 0 else mp.ninf
     if family == 'pareto':
@@ -133,6 +148,12 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
     z = (x-loc)/scale
+    if family in ('fisk','burr','burr12'):
+        if z <= 0: return mp.mpf(0)
+        d=mp.mpf(1) if family == 'fisk' else mp.mpf(second_shape)
+        t=shape*mp.log(z)
+        if family == 'burr': return mp.log(-mp.expm1(-d*mp.log1p(mp.exp(-t))))
+        return -d*mp.log1p(mp.exp(t))
     if family == 'lomax':
         return -shape*mp.log1p(z) if z > 0 else mp.mpf(0)
     if family == 'pareto':
@@ -197,6 +218,7 @@ def main():
         ('lognormal', stats.lognorm, .8, 0., 2.3),
         ('gamma', stats.gamma, .6, 0., 2.3),
         ('erlang', stats.erlang, 2., 0., 2.3),
+        ('fisk', stats.fisk, 1.7, 0., 1.3),
         ('lomax', stats.lomax, 1.7, 0., 1.3),
         ('pareto', stats.pareto, 1.7, 0., .2),
         ('loglaplace', stats.loglaplace, 1.7, 0., 1.3),
@@ -214,10 +236,17 @@ def main():
         kwargs = {} if family in ('normal','cauchy','laplace','logistic','gumbel_r',
                                   'gumbel_l','hypsecant') else {'floc': 0.}
         if family == 'laplace_asymmetric': kwargs = {'floc': loc}
-        if family in ('pareto','lomax'): kwargs = {'floc': loc, 'fscale': scale}
+        if family in ('pareto','lomax','fisk'): kwargs = {'floc': loc, 'fscale': scale}
         result[family+'_fit'] = list(distribution.fit(data, **kwargs))
         if family == 'laplace_asymmetric':
             result[family+'_fixed_shape_fit'] = list(distribution.fit(data,f0=shape,floc=loc))
+    for family in ('burr','burr12'):
+        shape, second, loc, scale = 1.7, .8, 0., 1.3
+        value=sum(logpdf(x,family,shape,loc,scale,second) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,shape,loc,scale,second)+logsf(3.5,family,shape,loc,scale,second)
+        value+=sum(loginterval(a,b,family,shape,loc,scale,second) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        result[family+'_fixed_c_fit']=list(getattr(stats,family).fit(data,f0=shape,floc=loc,fscale=scale))
     for family in ['halfcauchy','halflogistic']:
         loc,scale=0.,1.3
         value=sum(logpdf(x,family,1.,loc,scale) for x in [.5,1.2,2.5])

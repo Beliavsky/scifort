@@ -8,7 +8,8 @@ program censored_reference_driver
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
         halfnorm_censored_loglikelihood, &
-        lomax_censored_loglikelihood, &
+        lomax_censored_loglikelihood, fisk_censored_loglikelihood, &
+        burr_censored_loglikelihood, burr12_censored_loglikelihood, &
         hypsecant_censored_loglikelihood, pareto_censored_loglikelihood, &
         laplace_asymmetric_censored_loglikelihood, loglaplace_censored_loglikelihood, &
         beta_censored_loglikelihood, logistic_censored_loglikelihood, &
@@ -25,7 +26,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (family == 6) read(*, *) second_shape
+        if (family == 6 .or. family == 25 .or. family == 26) read(*, *) second_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -80,6 +81,12 @@ program censored_reference_driver
             value = pareto_censored_loglikelihood(data,c,loc,scale)
         case (23)
             value = lomax_censored_loglikelihood(data,c,loc,scale)
+        case (24)
+            value = fisk_censored_loglikelihood(data,c,loc,scale)
+        case (25)
+            value = burr_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (26)
+            value = burr12_censored_loglikelihood(data,c,second_shape,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

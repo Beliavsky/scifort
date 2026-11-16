@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: burr12_censored_loglikelihood, burr12_censored_nnlf
+    public :: burr_censored_loglikelihood, burr_censored_nnlf
+    public :: fisk_censored_loglikelihood, fisk_censored_nnlf
     public :: lomax_censored_loglikelihood, lomax_censored_nnlf
     public :: pareto_censored_loglikelihood, pareto_censored_nnlf
     public :: loglaplace_censored_loglikelihood, loglaplace_censored_nnlf
@@ -71,6 +74,310 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function fisk_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = burr12_censored_loglikelihood(data,c,1.0_dp,loc,scale)
+    end function fisk_censored_loglikelihood
+
+    pure function fisk_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -fisk_censored_loglikelihood(data,c,loc,scale)
+    end function fisk_censored_nnlf
+
+    pure function burr_censored_loglikelihood(data, c, d, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive first shape
+        real(dp), intent(in) :: d !! finite positive second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(4)
+        params = [c,d,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. d <= 0.0_dp .or. params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,burr_lpdf,burr_lcdf, &
+            burr_lsf,burr_interval)
+    end function burr_censored_loglikelihood
+
+    pure function burr_censored_nnlf(data, c, d, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive first shape
+        real(dp), intent(in) :: d !! finite positive second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -burr_censored_loglikelihood(data,c,d,loc,scale)
+    end function burr_censored_nnlf
+
+    pure function burr12_censored_loglikelihood(data, c, d, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive first shape
+        real(dp), intent(in) :: d !! finite positive second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(4)
+        params = [c,d,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. d <= 0.0_dp .or. params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,burr12_lpdf,burr12_lcdf, &
+            burr12_lsf,burr12_interval)
+    end function burr12_censored_loglikelihood
+
+    pure function burr12_censored_nnlf(data, c, d, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive first shape
+        real(dp), intent(in) :: d !! finite positive second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -burr12_censored_loglikelihood(data,c,d,loc,scale)
+    end function burr12_censored_nnlf
+
+    pure function burr_logsoftplus(x) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! log argument of log1p(exp(x)), possibly infinite
+        real(dp) :: value
+        ! For exp(x) below roundoff, log(log1p(exp(x))) = x + O(exp(x)).
+        value = x
+        if (x >= log(epsilon(1.0_dp))-2.0_dp) value = log(log1pexp(x))
+    end function burr_logsoftplus
+
+    pure subroutine burr_hazard(x, params, reverse, q, logh, nh)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        logical, intent(in) :: reverse !! true for Type III, false for Type XII
+        real(dp), intent(out) :: q !! signed c*log(z), possibly infinite
+        real(dp), intent(out) :: logh !! log(d*log1p(exp(q))), possibly infinite
+        real(dp), intent(out) :: nh !! negative d*log1p(exp(q)), possibly infinite
+        real(dp) :: v, logbase, base, product
+        v = lognormal_logz(x,[params(1),params(3),params(4)])
+        q = weibull_log_hazard(x,[params(1),params(3),params(4)])
+        if (reverse) q = -q
+        if (ieee_is_finite(q)) then
+            logbase = burr_logsoftplus(q)
+        else if (q > 0.0_dp) then
+            ! d can compensate c even when c*log(z) exceeds huge().
+            logbase = log(params(1))+log(abs(v))
+        else
+            logbase = negative_infinity(0.0_dp)
+        end if
+        logh = log(params(2))+logbase
+        nh = negative_hazard(logh)
+        if (.not. ieee_is_finite(q)) then
+            if (q > 0.0_dp) then
+                ! Here c is large and abs(log(z)) > 1. Group c*d first.
+                if (params(2) <= huge(1.0_dp)/params(1)) then
+                    product = params(1)*params(2)
+                    logh = log(product)+log(abs(v))
+                    nh = negative_infinity(0.0_dp)
+                    if (product <= huge(1.0_dp)/abs(v)) nh = -product*abs(v)
+                end if
+            end if
+            return
+        end if
+        base = log1pexp(q)
+        if (base < tiny(1.0_dp)) return
+        if (base > 1.0_dp) then
+            if (params(2) > huge(1.0_dp)/base) return
+        end if
+        ! Direct multiplication avoids amplifying log/exp rounding near unit mass.
+        nh = -params(2)*base
+    end subroutine burr_hazard
+
+    pure function burr_density(x, params, reverse) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        logical, intent(in) :: reverse !! true for Type III, false for Type XII
+        real(dp) :: value, exponent, q, logh, nh
+        value = negative_infinity(0.0_dp)
+        if (x < params(3)) return
+        if (x == params(3)) then
+            exponent = params(1)
+            if (reverse) then
+                if (params(1) > 1.0_dp) then
+                    if (params(2) > huge(1.0_dp)/params(1)) return
+                end if
+                exponent = params(1)*params(2)
+            end if
+            if (exponent < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (exponent == 1.0_dp) then
+                value = log(params(1))+log(params(2))-log(params(4))
+            end if
+            return
+        end if
+        call burr_hazard(x,params,reverse,q,logh,nh)
+        value = log(params(1))+log(params(2))-log_distance(x,params(3)) &
+            -log1pexp(-q)+nh
+    end function burr_density
+
+    pure function burr_tail(x, params, reverse, complement) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        logical, intent(in) :: reverse !! true for Type III, false for Type XII
+        logical, intent(in) :: complement !! true to complement the direct exp(-hazard) tail
+        real(dp) :: value, q, logh, nh
+        value = 0.0_dp
+        if (reverse .neqv. complement) value = negative_infinity(0.0_dp)
+        if (x <= params(3)) return
+        call burr_hazard(x,params,reverse,q,logh,nh)
+        value = nh
+        if (complement) then
+            if (nh <= -scifort_log_two) then
+                value = log1p_safe(-exp(nh))
+            else
+                value = log_hazard_mass(logh)
+            end if
+        end if
+    end function burr_tail
+
+    pure function burr_mass(a, b, params, reverse) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        logical, intent(in) :: reverse !! true for Type III, false for Type XII
+        real(dp) :: value, qa, qb, qlo, qhi, la, lb, logdelta, logr, span, delta
+        real(dp) :: logdiff, logu, omitted, anchor, unused, nh
+        value = burr_tail(b,params,reverse,.not. reverse)
+        if (a <= params(3)) return
+        omitted = exp(burr_tail(a,params,reverse,.not. reverse)) &
+            +exp(burr_tail(b,params,reverse,reverse))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call burr_hazard(a,params,reverse,qa,unused,nh)
+        anchor = nh
+        call burr_hazard(b,params,reverse,qb,unused,nh)
+        if (reverse) anchor = nh
+        qlo = min(qa,qb)
+        qhi = max(qa,qb)
+        logr = log_distance(b,a)-log_distance(a,params(3))
+        logdelta = log(params(1))+burr_logsoftplus(logr)
+        if (logdelta < log(0.5_dp)) then
+            ! softplus(qhi)-softplus(qlo)=softplus(log(sigmoid(qlo)*expm1(delta))).
+            logu = logdelta
+            if (logdelta >= log(epsilon(1.0_dp))-2.0_dp) then
+                delta = exp(logdelta)
+                logu = log(expm1_safe(delta))
+            end if
+            logdiff = burr_logsoftplus(-log1pexp(-qlo)+logu)
+        else if (qlo >= 0.0_dp) then
+            logdiff = logdelta
+            if (logdelta < log(huge(1.0_dp))) then
+                delta = exp(logdelta)
+                span = delta+log1pexp(-qhi)-log1pexp(-qlo)
+                logdiff = log(span)
+            end if
+        else if (qhi <= 0.0_dp) then
+            ! 1-exp(-difference)=sigmoid(qhi)*(1-exp(-delta)).
+            logu = -log1pexp(-qhi)+log_hazard_mass(logdelta)
+            logdiff = logu
+            if (logu >= log(epsilon(1.0_dp))-2.0_dp) then
+                logdiff = log(-log1p_safe(-exp(logu)))
+            end if
+        else if (ieee_is_finite(qhi)) then
+            logdiff = log(log1pexp(qhi)-log1pexp(qlo))
+        else
+            ! Crossing interval with an unrepresentably large positive endpoint.
+            la = abs(lognormal_logz(a,[params(1),params(3),params(4)]))
+            lb = abs(lognormal_logz(b,[params(1),params(3),params(4)]))
+            span = lb
+            if (reverse) span = la
+            logdiff = log(params(1))+log(span)
+        end if
+        value = anchor+log_hazard_mass(log(params(2))+logdiff)
+    end function burr_mass
+
+    pure function burr_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_density(x,params,.true.)
+    end function burr_lpdf
+
+    pure function burr_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_tail(x,params,.true.,.false.)
+    end function burr_lcdf
+
+    pure function burr_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_tail(x,params,.true.,.true.)
+    end function burr_lsf
+
+    pure function burr_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_mass(a,b,params,.true.)
+    end function burr_interval
+
+    pure function burr12_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_density(x,params,.false.)
+    end function burr12_lpdf
+
+    pure function burr12_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_tail(x,params,.false.,.true.)
+    end function burr12_lcdf
+
+    pure function burr12_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_tail(x,params,.false.,.false.)
+    end function burr12_lsf
+
+    pure function burr12_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! c, d, finite endpoint, positive scale
+        real(dp) :: value
+        value = burr_mass(a,b,params,.false.)
+    end function burr12_interval
+
 
     pure function lomax_censored_loglikelihood(data, c, loc, scale) result(value)
         implicit none

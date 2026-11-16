@@ -663,6 +663,60 @@ def main():
             cases.append(('lomax_extreme',float(expected)))
             counts={'left':'0 1 0 0','right':'0 0 1 0','exact':'1 0 0 0'}[group]
             stdin+=f'23 {shape:.17g} {loc:.17g} {scale:.17g} {counts}\n{x:.17g}\n'
+    for family, family_id in [('fisk',24),('burr',25),('burr12',26)]:
+        for _ in range(100):
+            shape=10**rng.uniform(-2.,2.)
+            second=1. if family == 'fisk' else 10**rng.uniform(-2.,2.)
+            loc=rng.uniform(-3.,3.)
+            scale=10**rng.uniform(-2.,2.)
+            exact=[loc+scale*10**rng.uniform(-3.,3.) for _ in range(3)]
+            left=[loc+scale*10**rng.uniform(-3.,3.)]
+            right=[loc+scale*10**rng.uniform(-3.,3.)]
+            intervals=[]
+            for _ in range(3):
+                a=loc+scale*10**rng.uniform(-3.,3.)
+                b=a+scale*10**rng.uniform(-14.,3.)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            expected=sum(reference.logpdf(x,family,shape,loc,scale,second) for x in exact)
+            expected+=sum(reference.logcdf(x,family,shape,loc,scale,second) for x in left)
+            expected+=sum(reference.logsf(x,family,shape,loc,scale,second) for x in right)
+            expected+=sum(reference.loginterval(a,b,family,shape,loc,scale,second) for a,b in intervals)
+            cases.append((family,float(expected)))
+            stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} 3 1 1 3\n'
+            if family_id != 24: stdin+=f'{second:.17g}\n'
+            stdin+='\n'.join(' '.join(f'{x:.17g}' for x in group)
+                              for group in [exact,left,right,*intervals])+'\n'
+        with mp.workdps(800):
+            for a,b,shape,second,loc,scale in [
+                (0.,math.nextafter(0.,1.),.4,.8,0.,1.),
+                (1.,math.nextafter(1.,math.inf),1.7,.8,0.,1.),
+                (1e-300,2e-300,1.7,.8,0.,1e300),
+                (1e300,math.nextafter(1e300,math.inf),1.7,.8,0.,1e-300),
+                (1e308,math.nextafter(1e308,math.inf),1.7,.8,-1e308,1e308),
+                (-1e308,1e308,1.7,.8,0.,1.),
+                (1e-100,1e100,1.7,.8,0.,1.),
+                (.5,2.,math.nextafter(0.,1.),.8,0.,1.),
+                (math.nextafter(1.,0.),math.nextafter(1.,math.inf),1e15,.8,0.,1.),
+                (math.exp(-2.),math.exp(-1.),1.7,.8,0.,1.),
+                (math.exp(1.),math.exp(2.),1.7,.8,0.,1.),
+            ]:
+                if family == 'fisk': second=1.
+                expected=reference.loginterval(a,b,family,shape,loc,scale,second)
+                cases.append((family+'_stress',float(expected)))
+                stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n'
+                if family_id != 24: stdin+=f'{second:.17g}\n'
+                stdin+=f'{a:.17g} {b:.17g}\n'
+            if family != 'fisk':
+                for group in ['exact','left','right']:
+                    shape,second,loc,scale=1e308,1e-308,0.,1.
+                    x=1e-300 if family == 'burr' else 1e300
+                    fn={'left':reference.logcdf,'right':reference.logsf,'exact':reference.logpdf}[group]
+                    expected=fn(x,family,shape,loc,scale,second)
+                    cases.append((family+'_compensated',float(expected)))
+                    counts={'left':'0 1 0 0','right':'0 0 1 0','exact':'1 0 0 0'}[group]
+                    stdin+=f'{family_id} {shape:.17g} {loc:.17g} {scale:.17g} {counts}\n'
+                    stdin+=f'{second:.17g}\n{x:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -691,11 +745,14 @@ def main():
         loglaplace_errors = []
         pareto_errors = []
         lomax_errors = []
+        burr_family_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('fisk','burr')):
+                burr_family_errors.append(error)
             if family.startswith('lomax'):
                 lomax_errors.append(error)
             if family.startswith('pareto'):
@@ -722,6 +779,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Fisk/Burr/Burr XII: {len(burr_family_errors)} comparisons; '
+              f'max scaled error={max(burr_family_errors):.3g}', flush=True)
         print(f'  Lomax: {len(lomax_errors)} comparisons; '
               f'max scaled error={max(lomax_errors):.3g}', flush=True)
         print(f'  Pareto: {len(pareto_errors)} comparisons; '

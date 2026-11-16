@@ -1,3 +1,14 @@
+## 2026-11-16 - Fisk and Burr III/XII censoring
+
+- Add censored likelihood/NNLF and bounded fits for Fisk, Burr III, and Burr XII,
+  allowing free or fixed shapes, location, and scale; preserve existing APIs.
+- Evaluate tails and interval increments in log coordinates, including adjacent
+  endpoints, extreme probabilities, and compensating large/small shapes.
+- Fix scalar Fisk/Burr small-shape overflow guards found by checked comparisons.
+- Validate 1,190 native checks at checked `-O0` and `-O3`, 339 new independent
+  reference cases per build, and the full `fpm test` suite.
+- Update coverage to twenty-six censored families and 83 remaining candidates.
+
 ## 2026-11-15 - Lomax censoring
 
 - Add Lomax mixed-censoring likelihood/NNLF and bounded fits with free or fixed
