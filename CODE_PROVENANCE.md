@@ -1,3 +1,32 @@
+## 2026-11-16 - Generalized logistic, Gompertz, and inverse Weibull censoring
+
+The new callbacks in `src/censored.f90` are original MIT SciFort code,
+independently implemented from the public density/support specifications for
+[SciPy generalized logistic](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genlogistic.html),
+[Gompertz](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gompertz.html),
+and [inverse Weibull](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.invweibull.html),
+inspected 2026-11-16. Integrating these densities yields
+`F_genlogistic(z)=exp(-c*softplus(-z))`, `S_gompertz(z)=exp(-c*expm1(z))`,
+and `F_invweibull(z)=exp(-z**(-c))`. The implementations evaluate these direct
+tails and complements in the log domain. Gompertz interval hazard increment
+is `c*exp(z_a)*expm1((b-a)/scale)`; inverse Weibull increment is
+`H(a)*(1-exp(-c*log((b-loc)/(a-loc))))`, anchored at `F(b)`.
+Generalized logistic uses the existing Burr softplus-difference identities
+in linear standardized coordinates. Narrow widths retain their logarithm;
+nearly full intervals complement both omitted tails. Existing SciFort
+log-distance, safe standardization, Weibull log hazard, log-softplus and
+log-hazard-mass helpers are reused unchanged, retaining their provenance.
+No upstream implementation code was imported or translated.
+
+The existing original SciFort `src/stats/invweibull.f90` multiplication guard
+now handles shapes at most one before testing `huge()/c`, avoiding overflow
+inside the guard itself. Formulas and public names are unchanged. The new
+fit overloads preserve the array-specific procedures and reuse the existing
+bounded local optimizer. Validation uses independent mpmath definitions,
+SciPy fixed-support fits, and logistic/reciprocal-Weibull identities. No
+dependency, C ABI, or third-party license text is added. See the
+[validation report](validation/hazard_family_censored_2026-11-16.md).
+
 ## 2026-11-16 - Uniform, power-function, and arcsine censoring
 
 The new likelihoods and interval callbacks in `src/censored.f90` are original

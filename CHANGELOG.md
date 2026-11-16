@@ -1,3 +1,14 @@
+## 2026-11-16 - Generalized logistic, Gompertz, and inverse Weibull censoring
+
+- Add mixed-censoring likelihood/NNLF and bounded fitting overloads for three
+  families, with free or fixed shape, location, and scale.
+- Retain log hazards and original interval widths for narrow intervals,
+  extreme tails, and compensating shape/scale combinations.
+- Correct the existing scalar inverse Weibull small-shape overflow guard.
+- Add independent high-precision comparisons and native API/numerical tests.
+- Update coverage to thirty-two censored families and 77 remaining candidates.
+  C ABI and wrapper work remain deferred.
+
 ## 2026-11-16 - Bounded uniform, power-function, and arcsine censoring
 
 - Add censored likelihood/NNLF and bounded fits for uniform, power-function,

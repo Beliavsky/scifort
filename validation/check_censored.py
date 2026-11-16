@@ -775,6 +775,48 @@ def main():
             cases.append(('powerlaw_upper_compensated',float(expected)))
             counts='0 1 0 0' if group == 'left' else '0 0 1 0'
             stdin+=f'28 1e300 1e-300 1e300 {counts}\n1e300\n'
+    for number,family in enumerate(['genlogistic','gompertz','invweibull'],30):
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            shape=10**rng.uniform(-1.,1.)
+            exact=[loc+scale*rng.uniform(.1,4.) for _ in range(3)]
+            left=[loc+scale*rng.uniform(.1,5.)]
+            right=[loc+scale*rng.uniform(.1,5.)]
+            intervals=[]
+            for _ in range(2):
+                a=loc+scale*rng.uniform(-30. if number == 30 else .01,30.)
+                b=a+scale*10**rng.uniform(-14.,.5)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,shape,loc,scale) for x in exact)
+            value+=sum(reference.logcdf(x,family,shape,loc,scale) for x in left)
+            value+=sum(reference.logsf(x,family,shape,loc,scale) for x in right)
+            value+=sum(reference.loginterval(a,b,family,shape,loc,scale) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} {shape:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            for group in [exact,left,right,*intervals]:
+                stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+        stress=[(1.,math.nextafter(1.,math.inf),.4,0.,1.),
+                (1e-300,2e-300,.4,0.,1e300),
+                (1e300,math.nextafter(1e300,math.inf),.4,0.,1e300),
+                (.1,100.,.4,0.,1.)]
+        if family == 'genlogistic':
+            stress += [(-1000.,math.nextafter(-1000.,math.inf),1.7,0.,1.),
+                       (1000.,math.nextafter(1000.,math.inf),1.7,0.,1.),
+                       (0.,math.nextafter(0.,1.),1.7,0.,1.),
+                       (-1e300,-.9e300,1e-300,0.,1e-300)]
+        elif family == 'gompertz':
+            stress += [(1000.,1000.01,1e-300,0.,1.),
+                       (1e-300,2e-300,1e300,0.,1e300)]
+        else:
+            stress += [(1e300,math.nextafter(1e300,math.inf),1.7,0.,1.),
+                       (.99,1.01,1e-300,0.,1.),
+                       (1.,math.nextafter(1.,math.inf),1e16,0.,1.)]
+        with mp.workdps(1000):
+            for a,b,shape,loc,scale in stress:
+                value=reference.loginterval(a,b,family,shape,loc,scale)
+                cases.append((family+'_stress',float(value)))
+                stdin+=f'{number} {shape:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n{a:.17g} {b:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -804,12 +846,15 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        new_hazard_errors = []
         bounded_errors = []
         for value, (family, expected) in zip(values, cases):
             error = abs(value-expected)/max(1., abs(expected))
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('genlogistic','gompertz','invweibull')):
+                new_hazard_errors.append(error)
             if family.startswith(('uniform','powerlaw','arcsine')):
                 bounded_errors.append(error)
             if family.startswith(('fisk','burr')):
@@ -840,6 +885,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Generalized logistic/Gompertz/inverse Weibull: {len(new_hazard_errors)} comparisons; '
+              f'max scaled error={max(new_hazard_errors):.3g}', flush=True)
         print(f'  Uniform/powerlaw/arcsine: {len(bounded_errors)} comparisons; '
               f'max scaled error={max(bounded_errors):.3g}', flush=True)
         print(f'  Fisk/Burr/Burr XII: {len(burr_family_errors)} comparisons; '

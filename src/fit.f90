@@ -19,6 +19,9 @@ module scifort_fit
     use scifort_censored, only : burr_censored_nnlf
     use scifort_censored, only : burr12_censored_nnlf
     use scifort_censored, only : uniform_censored_nnlf
+    use scifort_censored, only : genlogistic_censored_nnlf
+    use scifort_censored, only : gompertz_censored_nnlf
+    use scifort_censored, only : invweibull_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -447,6 +450,18 @@ module scifort_fit
         module procedure poisson_binom_fit_int
     end interface poisson_binom_fit
 
+    interface genlogistic_fit
+        module procedure genlogistic_fit, genlogistic_fit_censored
+    end interface genlogistic_fit
+
+    interface gompertz_fit
+        module procedure gompertz_fit, gompertz_fit_censored
+    end interface gompertz_fit
+
+    interface invweibull_fit
+        module procedure invweibull_fit, invweibull_fit_censored
+    end interface invweibull_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -654,6 +669,45 @@ contains
         call bounded_fit([real(dp) ::], family_hypsecant, lower, upper, result, guess, &
             [.false., .false.], max_iter, tolerance, data)
     end subroutine hypsecant_fit_censored
+
+    subroutine genlogistic_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_genlogistic,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine genlogistic_fit_censored
+
+    subroutine gompertz_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_gompertz,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine gompertz_fit_censored
+
+    subroutine invweibull_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_invweibull,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine invweibull_fit_censored
 
     subroutine fisk_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1321,6 +1375,12 @@ contains
                 value = halfnorm_censored_nnlf(censored, params(1), params(2))
             case (family_hypsecant)
                 value = hypsecant_censored_nnlf(censored, params(1), params(2))
+            case (family_genlogistic)
+                value = genlogistic_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_gompertz)
+                value = gompertz_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_invweibull)
+                value = invweibull_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

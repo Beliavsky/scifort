@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, generalized logistic, Gompertz, inverse Weibull, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -56,6 +56,9 @@ halfcauchy_censored_loglikelihood(data [, loc, scale])
 halfnorm_censored_loglikelihood(data [, loc, scale])
 hypsecant_censored_loglikelihood(data [, loc, scale])
 halflogistic_censored_loglikelihood(data [, loc, scale])
+genlogistic_censored_loglikelihood(data, c [, loc, scale])
+gompertz_censored_loglikelihood(data, c [, loc, scale])
+invweibull_censored_loglikelihood(data, c [, loc, scale])
 laplace_censored_loglikelihood(data [, loc, scale])
 laplace_asymmetric_censored_loglikelihood(data, kappa [, loc, scale])
 logistic_censored_loglikelihood(data [, loc, scale])
@@ -81,7 +84,7 @@ beta_censored_loglikelihood(data, a, b [, loc, scale])
 ```
 
 The corresponding `*_censored_nnlf` procedures return the negative
-log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax/Fisk shape `c`,
+log-likelihood. Location defaults to 0 and scale to 1. Weibull/log-Laplace/Lomax/Fisk/generalized-logistic/Gompertz/inverse-Weibull shape `c`,
 lognormal shape `s`, gamma/Erlang shape `a`, asymmetric Laplace shape `kappa`,
 power-function shape `a`, Burr III/XII shapes `c` and `d`, Pareto shape `b`, and beta shapes `a` and `b` must be supplied. Scale and shape must be positive and finite; location must be
 finite. Invalid data or parameters return quiet NaN, including for empty data.
@@ -121,7 +124,7 @@ responsibility for the generic procedure.
 ## Bounded fits
 
 The existing `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
-`rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
+`genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
 `censored_data` in place of the observation array:
@@ -988,3 +991,44 @@ for the logistic extension checks and commands.
 
 See the [Gumbel validation record](../validation/gumbel_censored_2026-11-12.md)
 for the two Gumbel families, reference checks, and reproducible commands.
+
+## Generalized logistic, Gompertz, and inverse Weibull details
+
+All three families use finite shape `c>0`, finite `loc` (default zero), and
+finite `scale>0` (default one). Generalized logistic has support on the whole
+real line; Gompertz and inverse Weibull have lower support endpoint `loc`.
+For standardized `z=(x-loc)/scale`, their direct exponential tails are
+`F_genlogistic=exp(-c*log1p(exp(-z)))`,
+`S_gompertz=exp(-c*expm1(z))`, and `F_invweibull=exp(-z**(-c))`.
+Their complements and interval increments retain log hazards and original
+interval widths, avoiding subtraction of rounded tail probabilities.
+Intervals outside the positive-support families have zero probability;
+crossing intervals are clipped at `loc`. At that endpoint Gompertz density
+is `c/scale`, while inverse Weibull density is zero. Equal interval endpoints
+still represent exact measurements.
+
+Each `*_fit` accepts `censored_data` and bounds in `(c,loc,scale)` order;
+equal bounds fix any parameter. All parameters can be free, with no additional
+location restriction. Existing array-specific fit procedures remain available.
+The existing local optimizer may encounter boundary optima or ill-posed MLEs;
+success does not establish global optimality. Nonfinite objectives are rejected.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    genlogistic_fit, gompertz_fit, invweibull_fit
+type(censored_data) :: data
+type(fit_result) :: fit
+
+data = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp], &
+    left=[0.3_dp],right=[3.5_dp])
+call genlogistic_fit(data,[0.1_dp,0.0_dp,1.3_dp],[10.0_dp,0.0_dp,1.3_dp],fit)
+call gompertz_fit(data,[0.1_dp,0.0_dp,1.3_dp],[10.0_dp,0.0_dp,1.3_dp],fit)
+call invweibull_fit(data,[0.1_dp,0.0_dp,1.3_dp],[10.0_dp,0.0_dp,1.3_dp],fit)
+```
+
+Generalized logistic shape one agrees with logistic; reciprocal standardized
+inverse Weibull observations follow minimum Weibull, with the density Jacobian
+included for exact data. The new likelihoods have additional extreme-range
+guards; this does not change other scalar kernels' representability limits.
+The scalar inverse Weibull small-shape multiplication guard is corrected.
+See the [validation report](../validation/hazard_family_censored_2026-11-16.md).

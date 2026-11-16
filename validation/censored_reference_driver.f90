@@ -5,6 +5,9 @@ program censored_reference_driver
     use scifort_censored, only : censored_data, normal_censored_loglikelihood, &
         exponential_censored_loglikelihood, weibull_censored_loglikelihood, &
         lognormal_censored_loglikelihood, gamma_censored_loglikelihood, &
+        genlogistic_censored_loglikelihood, &
+        gompertz_censored_loglikelihood, &
+        invweibull_censored_loglikelihood, &
         erlang_censored_loglikelihood, &
         gibrat_censored_loglikelihood, &
         halfnorm_censored_loglikelihood, &
@@ -95,6 +98,12 @@ program censored_reference_driver
             value = powerlaw_censored_loglikelihood(data,c,loc,scale)
         case (29)
             value = arcsine_censored_loglikelihood(data,loc,scale)
+        case (30)
+            value = genlogistic_censored_loglikelihood(data,c,loc,scale)
+        case (31)
+            value = gompertz_censored_loglikelihood(data,c,loc,scale)
+        case (32)
+            value = invweibull_censored_loglikelihood(data,c,loc,scale)
         case default
             error stop 'unknown comparison family'
         end select

@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: genlogistic_censored_loglikelihood, genlogistic_censored_nnlf
+    public :: gompertz_censored_loglikelihood, gompertz_censored_nnlf
+    public :: invweibull_censored_loglikelihood, invweibull_censored_nnlf
     public :: powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
     public :: uniform_censored_loglikelihood, uniform_censored_nnlf
@@ -77,6 +80,335 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function hazard_complement(logh, nh) result(value)
+        implicit none
+        real(dp), intent(in) :: logh !! log positive hazard, possibly infinite
+        real(dp), intent(in) :: nh !! negative hazard, possibly negative infinity
+        real(dp) :: value
+        value = log_hazard_mass(logh)
+        if (nh <= -scifort_log_two) value = log1p_safe(-exp(nh))
+    end function hazard_complement
+
+    pure subroutine genlogistic_hazard(x, params, z, logh, nh)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp), intent(out) :: z !! standardized coordinate, possibly infinite
+        real(dp), intent(out) :: logh !! log(c*softplus(-z)), possibly infinite
+        real(dp), intent(out) :: nh !! negative c*softplus(-z), possibly infinite
+        real(dp) :: base
+        z = location_scale_z(x,params(2:3))
+        logh = log(params(1))+burr_logsoftplus(-z)
+        if (.not. ieee_is_finite(z)) then
+            if (z < 0.0_dp) then
+                logh = log(params(1))+log_distance(params(2),x)-log(params(3))
+            end if
+        end if
+        nh = negative_hazard(logh)
+        if (.not. ieee_is_finite(z)) return
+        base = log1pexp(-z)
+        if (base < tiny(1.0_dp)) return
+        if (base > 1.0_dp) then
+            if (params(1) > huge(1.0_dp)/base) return
+        end if
+        nh = -params(1)*base
+    end subroutine genlogistic_hazard
+
+    pure function genlogistic_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, logh, nh
+        call genlogistic_hazard(x,params,z,logh,nh)
+        value = log(params(1))-log(params(3))-log1pexp(z)+nh
+    end function genlogistic_lpdf
+
+    pure function genlogistic_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, logh
+        call genlogistic_hazard(x,params,z,logh,value)
+    end function genlogistic_lcdf
+
+    pure function genlogistic_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, z, logh, nh
+        call genlogistic_hazard(x,params,z,logh,nh)
+        value = hazard_complement(logh,nh)
+    end function genlogistic_lsf
+
+    pure function genlogistic_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite location, positive scale
+        real(dp) :: value, za, zb, logh, anchor, nh, omitted, ld, delta, lu, diff
+        omitted = exp(genlogistic_lcdf(a,params))+exp(genlogistic_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call genlogistic_hazard(a,params,za,logh,nh)
+        call genlogistic_hazard(b,params,zb,logh,anchor)
+        value = anchor
+        if (.not. ieee_is_finite(anchor)) return
+        ld = log_distance(b,a)-log(params(3))
+        ! Difference softplus(-za)-softplus(-zb), retaining the original width.
+        if (ld < log(0.5_dp)) then
+            lu = ld
+            if (ld >= log(epsilon(1.0_dp))-2.0_dp) lu = log(expm1_safe(exp(ld)))
+            diff = burr_logsoftplus(-log1pexp(zb)+lu)
+        else if (zb <= 0.0_dp) then
+            diff = ld
+            if (ld < log(huge(1.0_dp))) then
+                delta = exp(ld)
+                diff = log(delta+log1pexp(za)-log1pexp(zb))
+            end if
+        else if (za >= 0.0_dp) then
+            lu = -log1pexp(za)+log_hazard_mass(ld)
+            diff = lu
+            if (lu >= log(epsilon(1.0_dp))-2.0_dp) diff = log(-log1p_safe(-exp(lu)))
+        else if (ieee_is_finite(za)) then
+            diff = log(log1pexp(-za)-log1pexp(-zb))
+        else
+            diff = log_distance(params(2),a)-log(params(3))
+        end if
+        value = anchor+log_hazard_mass(log(params(1))+diff)
+    end function genlogistic_interval
+
+    pure function log_expm1_from_log(logz) result(value)
+        implicit none
+        real(dp), intent(in) :: logz !! log positive standardized distance, possibly infinite
+        real(dp) :: value, z
+        value = logz
+        if (logz < log(epsilon(1.0_dp))-2.0_dp) return
+        value = positive_infinity(0.0_dp)
+        if (logz > log(huge(1.0_dp))) return
+        z = exp(logz)
+        value = z+log1p_safe(-exp(-z))
+        if (z < 0.5_dp) value = log(expm1_safe(z))
+    end function log_expm1_from_log
+
+    pure subroutine gompertz_hazard(x, params, z, logh, nh)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp), intent(out) :: z !! nonnegative standardized coordinate, possibly infinite
+        real(dp), intent(out) :: logh !! log(c*expm1(z)), possibly infinite
+        real(dp), intent(out) :: nh !! negative c*expm1(z), possibly negative infinity
+        real(dp) :: logz, base
+        z = location_scale_z(x,params(2:3))
+        logz = log_distance(x,params(2))-log(params(3))
+        logh = log(params(1))+log_expm1_from_log(logz)
+        ! Avoid a log/exp round trip for representable z, especially near unit mass.
+        if (z >= 0.5_dp) logh = log(params(1))+z+log1p_safe(-exp(-z))
+        nh = negative_hazard(logh)
+        if (z <= 0.0_dp .or. z > log(huge(1.0_dp))) return
+        base = expm1_safe(z)
+        if (base < tiny(1.0_dp)) return
+        if (base > 1.0_dp) then
+            if (params(1) > huge(1.0_dp)/base) return
+        end if
+        nh = -params(1)*base
+    end subroutine gompertz_hazard
+
+    pure function gompertz_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z, logh, nh
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (x == params(2)) then
+            value = log(params(1))-log(params(3))
+            return
+        end if
+        call gompertz_hazard(x,params,z,logh,nh)
+        if (.not. ieee_is_finite(nh)) return
+        value = log(params(1))-log(params(3))+z+nh
+    end function gompertz_lpdf
+
+    pure function gompertz_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z, logh, nh
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        call gompertz_hazard(x,params,z,logh,nh)
+        value = hazard_complement(logh,nh)
+    end function gompertz_lcdf
+
+    pure function gompertz_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z, logh
+        value = 0.0_dp
+        if (x <= params(2)) return
+        call gompertz_hazard(x,params,z,logh,value)
+    end function gompertz_lsf
+
+    pure function gompertz_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, z, logh, anchor, omitted, logwidth
+        value = gompertz_lcdf(b,params)
+        if (a <= params(2)) return
+        omitted = exp(gompertz_lcdf(a,params))+exp(gompertz_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call gompertz_hazard(a,params,z,logh,anchor)
+        value = anchor
+        if (.not. ieee_is_finite(anchor)) return
+        logwidth = log_distance(b,a)-log(params(3))
+        value = anchor+log_hazard_mass(log(params(1))+z+log_expm1_from_log(logwidth))
+    end function gompertz_interval
+
+    pure function invweibull_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, logh, nh
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        logh = -weibull_log_hazard(x,params)
+        if (.not. ieee_is_finite(logh)) return
+        nh = negative_hazard(logh)
+        value = log(params(1))-log_distance(x,params(2))+logh+nh
+    end function invweibull_lpdf
+
+    pure function invweibull_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        value = negative_hazard(-weibull_log_hazard(x,params))
+    end function invweibull_lcdf
+
+    pure function invweibull_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, logh
+        value = 0.0_dp
+        if (x <= params(2)) return
+        logh = -weibull_log_hazard(x,params)
+        value = hazard_complement(logh,negative_hazard(logh))
+    end function invweibull_lsf
+
+    pure function invweibull_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, finite endpoint, positive scale
+        real(dp) :: value, omitted, anchor, logdelta, logh
+        value = invweibull_lcdf(b,params)
+        if (a <= params(2)) return
+        omitted = exp(invweibull_lcdf(a,params))+exp(invweibull_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        anchor = value
+        if (.not. ieee_is_finite(anchor)) return
+        logdelta = log(params(1))+burr_logsoftplus( &
+            log_distance(b,a)-log_distance(a,params(2)))
+        logh = -weibull_log_hazard(a,params)
+        value = anchor+log_hazard_mass(logh+log_hazard_mass(logdelta))
+    end function invweibull_interval
+
+    pure function genlogistic_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,genlogistic_lpdf,genlogistic_lcdf, &
+            genlogistic_lsf,genlogistic_interval)
+    end function genlogistic_censored_loglikelihood
+
+    pure function genlogistic_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -genlogistic_censored_loglikelihood(data,c,loc,scale)
+    end function genlogistic_censored_nnlf
+
+    pure function gompertz_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,gompertz_lpdf,gompertz_lcdf, &
+            gompertz_lsf,gompertz_interval)
+    end function gompertz_censored_loglikelihood
+
+    pure function gompertz_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -gompertz_censored_loglikelihood(data,c,loc,scale)
+    end function gompertz_censored_nnlf
+
+    pure function invweibull_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,invweibull_lpdf,invweibull_lcdf, &
+            invweibull_lsf,invweibull_interval)
+    end function invweibull_censored_loglikelihood
+
+    pure function invweibull_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite positive shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! finite positive scale, default one
+        real(dp) :: value
+        value = -invweibull_censored_loglikelihood(data,c,loc,scale)
+    end function invweibull_censored_nnlf
+
 
     pure function uniform_censored_loglikelihood(data, loc, scale) result(value)
         implicit none
