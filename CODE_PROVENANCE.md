@@ -1,3 +1,47 @@
+## 2026-11-16 - Cosine, anglit, and semicircular censoring
+
+The new censored kernels, fitting overloads, native tests, and independent
+reference checker are original MIT SciFort code. They independently
+integrate the public mathematical density specifications inspected on
+2026-11-16:
+[SciPy cosine](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.cosine.html),
+[anglit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.anglit.html),
+and [semicircular](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.semicircular.html).
+No upstream implementation was copied, translated, or vendored. No new
+dependency or third-party license text is required. Existing compensated
+sum and generic likelihood/fitting helpers retain their provenance.
+
+With normalized nearer-endpoint gap q, the cosine smaller tail is
+`(q-sin(pi*q)/pi)/2`; its integrated Taylor series has leading term
+`pi**2*q**3/12`, and successive normalized terms multiply by
+`-(pi*q)**2/((2*k)*(2*k+1))`, starting with k=2. Sixteen terms at
+q <= 0.5 leave a negligible truncation relative to binary64 rounding.
+The anglit smaller tail is exactly `sin(pi*q/4)**2`.
+The semicircular smaller tail integrates `2*sqrt(q*(2-q))/pi`.
+For q <= 0.25 its binomial expansion factors out
+`4*sqrt(2)*q**1.5/(3*pi)` and integrates each power with factor
+`3/(2*k+3)`. The series uses 24 corrections, with magnitude ratio
+below 1/8. Its omitted normalized sum is bounded by
+`(1/8)**25/(1-1/8) < 4e-23`, even without the smaller binomial and
+integration coefficients. Larger arguments use direct positive integrals.
+The small-angle log-sine approximation omits a relative correction below
+epsilon/6. All thresholds and recurrences were checked against independent
+arbitrary-precision references.
+
+Three-point Gauss-Legendre nodes and weights follow
+[DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v). Narrow intervals have width
+below 0.001 times either endpoint gap. Quadrature varies the gap itself,
+avoiding rounded physical nodes. Broad intervals use the better tail
+difference or complement both omitted tails. The rounded physical
+half-width, finite-support restrictions, and subnormal scale differences
+are explicit in [the API guide](docs/censored_fitting.md).
+
+The independent checker uses 100-digit mpmath hypergeometric integration
+for cosine, the sine-square integral for anglit, and incomplete beta for
+semicircular; a subnormal endpoint case uses 800 digits. SciPy supplies
+separate constrained fit benchmarks only. See the
+[validation record](validation/compact_censored_2026-11-16.md).
+
 ## 2026-11-16 - Fatigue-life, Johnson SU, and generalized exponential censoring
 
 The new censored callbacks, fitting overloads, tests, and reference extensions

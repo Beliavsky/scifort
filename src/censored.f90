@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: cosine_censored_loglikelihood, cosine_censored_nnlf
+    public :: anglit_censored_loglikelihood, anglit_censored_nnlf
+    public :: semicircular_censored_loglikelihood, semicircular_censored_nnlf
     public :: fatiguelife_censored_loglikelihood, fatiguelife_censored_nnlf
     public :: johnsonsu_censored_loglikelihood, johnsonsu_censored_nnlf
     public :: genexpon_censored_loglikelihood, genexpon_censored_nnlf
@@ -101,6 +104,270 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function cosine_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite support center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3), sigma
+        params = [1.0_dp,0.0_dp,1.0_dp]
+        sigma = 1.0_dp
+        if (present(loc)) params(2) = loc
+        if (present(scale)) sigma = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. valid_loc_scale(params(2),sigma)) return
+        if (sigma > huge(1.0_dp)/3.1415926535897931_dp) return
+        params(3) = 3.1415926535897931_dp*sigma
+        if (params(3) > huge(1.0_dp)-abs(params(2))) return
+        if (params(2)+params(3) <= params(2)) return
+        if (params(2)-params(3) >= params(2)) return
+        value = censored_loglikelihood(data,params,compact_lpdf,compact_lcdf, &
+            compact_lsf,compact_interval)
+    end function cosine_censored_loglikelihood
+
+    pure function cosine_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite support center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -cosine_censored_loglikelihood(data,loc,scale)
+    end function cosine_censored_nnlf
+
+    pure function anglit_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite support center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3), sigma
+        params = [2.0_dp,0.0_dp,1.0_dp]
+        sigma = 1.0_dp
+        if (present(loc)) params(2) = loc
+        if (present(scale)) sigma = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. valid_loc_scale(params(2),sigma)) return
+        params(3) = 0.78539816339744828_dp*sigma
+        if (params(3) > huge(1.0_dp)-abs(params(2))) return
+        if (params(2)+params(3) <= params(2)) return
+        if (params(2)-params(3) >= params(2)) return
+        value = censored_loglikelihood(data,params,compact_lpdf,compact_lcdf, &
+            compact_lsf,compact_interval)
+    end function anglit_censored_loglikelihood
+
+    pure function anglit_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite support center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -anglit_censored_loglikelihood(data,loc,scale)
+    end function anglit_censored_nnlf
+
+    pure function semicircular_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite support center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3), sigma
+        params = [3.0_dp,0.0_dp,1.0_dp]
+        sigma = 1.0_dp
+        if (present(loc)) params(2) = loc
+        if (present(scale)) sigma = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. valid_loc_scale(params(2),sigma)) return
+        params(3) = 1_dp*sigma
+        if (params(3) > huge(1.0_dp)-abs(params(2))) return
+        if (params(2)+params(3) <= params(2)) return
+        if (params(2)-params(3) >= params(2)) return
+        value = censored_loglikelihood(data,params,compact_lpdf,compact_lcdf, &
+            compact_lsf,compact_interval)
+    end function semicircular_censored_loglikelihood
+
+    pure function semicircular_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite support center, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -semicircular_censored_loglikelihood(data,loc,scale)
+    end function semicircular_censored_nnlf
+
+    ! Independent integration of the SciPy public density specifications.
+    ! The rounded half-width is the numerical support contract; see the guide.
+    pure subroutine compact_gap(x, params, gap, logq)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp), intent(out) :: gap !! signed distance below the nearer support edge
+        real(dp), intent(out) :: logq !! log distance to the nearer edge divided by half-width
+        real(dp) :: unused
+        if (x >= params(2)) then
+            call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(3)],unused,gap)
+        else
+            call beta_distances(-x,[1.0_dp,1.0_dp,-params(2),params(3)],unused,gap)
+        end if
+        logq = negative_infinity(0.0_dp)
+        if (gap > 0.0_dp) logq = min(0.0_dp,log(gap)-log(params(3)))
+    end subroutine compact_gap
+
+    pure function compact_logsin(logx) result(value)
+        implicit none
+        real(dp), intent(in) :: logx !! log angle in (0, pi/2]
+        real(dp) :: value
+        value = logx
+        ! The omitted relative correction is x**2/6 < epsilon/6.
+        if (logx > 0.5_dp*log(epsilon(1.0_dp))) value = log(sin(exp(logx)))
+    end function compact_logsin
+
+    pure function compact_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp) :: value, gap, lq
+        call compact_gap(x,params,gap,lq)
+        value = negative_infinity(0.0_dp)
+        if (gap <= 0.0_dp) return
+        value = compact_density(lq,params)
+    end function compact_lpdf
+
+    pure function compact_density(lq, params) result(value)
+        implicit none
+        real(dp), intent(in) :: lq !! log nearer endpoint gap divided by half-width
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp) :: value
+        select case (int(params(1)))
+        case (1)
+            value = 2.0_dp*compact_logsin(lq+log(scifort_pi/2.0_dp))
+        case (2)
+            value = log(scifort_pi/4.0_dp)+compact_logsin(lq+log(scifort_pi/2.0_dp))
+        case (3)
+            value = log(2.0_dp/scifort_pi)+0.5_dp*(lq+log(2.0_dp-exp(lq)))
+        end select
+        value = value-log(params(3))
+    end function compact_density
+
+    pure function compact_small_tail(logq, family) result(value)
+        implicit none
+        real(dp), intent(in) :: logq !! log distance to the nearer endpoint in half-width units
+        integer, intent(in) :: family !! 1 cosine, 2 anglit, 3 semicircular
+        real(dp) :: value, q, term, total, v
+        integer :: k
+        q = exp(logq)
+        select case (family)
+        case (1)
+            if (q <= 0.5_dp) then
+                ! Integrate sin(pi*q/2)**2: q-sin(pi*q)/pi, without subtraction.
+                v = (scifort_pi*q)**2
+                term = 1.0_dp
+                total = term
+                do k = 2, 16
+                    term = -term*v/real((2*k)*(2*k+1),dp)
+                    total = total+term
+                end do
+                value = 3.0_dp*logq+2.0_dp*log(scifort_pi)-log(12.0_dp)+log(total)
+            else
+                value = log((q-sin(scifort_pi*q)/scifort_pi)/2.0_dp)
+            end if
+        case (2)
+            value = 2.0_dp*compact_logsin(logq+log(scifort_pi/4.0_dp))
+        case (3)
+            if (q <= 0.25_dp) then
+                ! Integrate sqrt(q*(2-q)) using the binomial series for sqrt(1-q/2).
+                term = 1.0_dp
+                total = term
+                do k = 1, 24
+                    term = term*(real(k,dp)-1.5_dp)*q/(2.0_dp*real(k,dp))
+                    total = total+term*3.0_dp/real(2*k+3,dp)
+                end do
+                value = 1.5_dp*logq+log(4.0_dp*sqrt(2.0_dp)/(3.0_dp*scifort_pi)) &
+                    +log(total)
+            else
+                value = log((acos(1.0_dp-q)-(1.0_dp-q)*sqrt(q*(2.0_dp-q)))/scifort_pi)
+            end if
+        end select
+    end function compact_small_tail
+
+    pure subroutine compact_tails(x, params, logp, logq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp), intent(out) :: logp !! log lower-tail probability
+        real(dp), intent(out) :: logq !! log upper-tail probability
+        real(dp) :: gap, lq, small, large
+        call compact_gap(x,params,gap,lq)
+        small = negative_infinity(0.0_dp)
+        large = 0.0_dp
+        if (gap > 0.0_dp) then
+            small = min(-scifort_log_two,compact_small_tail(lq,int(params(1))))
+            large = log1p_safe(-exp(small))
+        end if
+        logp = small
+        logq = large
+        if (x >= params(2)) then
+            logp = large
+            logq = small
+        end if
+    end subroutine compact_tails
+
+    pure function compact_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp) :: value, unused
+        call compact_tails(x,params,value,unused)
+    end function compact_lcdf
+
+    pure function compact_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp) :: value, unused
+        call compact_tails(x,params,unused,value)
+    end function compact_lsf
+
+    pure function compact_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! family number, center, rounded half-width
+        real(dp) :: value, ga, gb, la, lb, lw, anchor, correction, rho, lq, t(3), r(3)
+        integer :: k
+        call compact_gap(a,params,ga,la)
+        call compact_gap(b,params,gb,lb)
+        lw = log_distance(b,a)
+        if (min(ga,gb) > 0.0_dp .and. lw < log(huge(1.0_dp))-1.0_dp) then
+            if (lw-min(la,lb)-log(params(3)) <= log(0.001_dp)) then
+                anchor = compact_lpdf(a,params)
+                t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                    0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+                do k = 1, 3
+                    ! Integrate in gap coordinates: physical quadrature nodes can
+                    ! round to the original endpoints for adjacent observations.
+                    if (a >= params(2)) then
+                        rho = exp(lw-log(params(3))-la)
+                        lq = la+log1p_safe(-t(k)*rho)
+                    else if (b <= params(2)) then
+                        rho = exp(lw-log(params(3))-la)
+                        lq = min(0.0_dp,la+log1p_safe(t(k)*rho))
+                    else
+                        rho = exp(lw-log(params(3)))
+                        lq = log1p_safe(-abs(expm1_safe(la)+t(k)*rho))
+                    end if
+                    r(k) = compact_density(lq,params)-anchor
+                end do
+                correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                    +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+                value = anchor+lw+log1p_safe(correction)
+                return
+            end if
+        end if
+        value = tail_interval(a,b,params,compact_lcdf,compact_lsf)
+        if (value > -scifort_log_two) then
+            value = log1p_safe(-exp(bounded_logadd(compact_lcdf(a,params),compact_lsf(b,params))))
+        end if
+    end function compact_interval
+
 
     pure function finite_normal_lpdf(z) result(value)
         implicit none

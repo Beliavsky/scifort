@@ -43,6 +43,9 @@ module scifort_fit
     use scifort_censored, only : fatiguelife_censored_nnlf
     use scifort_censored, only : johnsonsu_censored_nnlf
     use scifort_censored, only : genexpon_censored_nnlf
+    use scifort_censored, only : cosine_censored_nnlf
+    use scifort_censored, only : anglit_censored_nnlf
+    use scifort_censored, only : semicircular_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -567,6 +570,18 @@ module scifort_fit
         module procedure genexpon_fit, genexpon_fit_censored
     end interface genexpon_fit
 
+    interface cosine_fit
+        module procedure cosine_fit, cosine_fit_censored
+    end interface cosine_fit
+
+    interface anglit_fit
+        module procedure anglit_fit, anglit_fit_censored
+    end interface anglit_fit
+
+    interface semicircular_fit
+        module procedure semicircular_fit, semicircular_fit_censored
+    end interface semicircular_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -682,6 +697,46 @@ module scifort_fit
     end interface gumbel_l_fit
 
 contains
+
+    subroutine cosine_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_cosine,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine cosine_fit_censored
+
+    subroutine anglit_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_anglit,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine anglit_fit_censored
+
+    subroutine semicircular_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_semicircular,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine semicircular_fit_censored
+
 
     subroutine fatiguelife_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1806,6 +1861,12 @@ contains
             case (family_genexpon)
                 value = genexpon_censored_nnlf(censored,params(1),params(2),params(3), &
                     params(4),params(5))
+            case (family_cosine)
+                value = cosine_censored_nnlf(censored,params(1),params(2))
+            case (family_anglit)
+                value = anglit_censored_nnlf(censored,params(1),params(2))
+            case (family_semicircular)
+                value = semicircular_censored_nnlf(censored,params(1),params(2))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

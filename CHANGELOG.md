@@ -1,3 +1,13 @@
+## 2026-11-16 - Cosine, anglit, and semicircular censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded location/scale fit overloads,
+  and statistics exports for three further bounded distributions.
+- Preserve tiny endpoint probabilities with integrated series and adjacent
+  interval widths with integration in endpoint-gap coordinates.
+- Document the rounded physical half-width support contract and fit limits.
+- Add native and independent reference checks; coverage is 56 families,
+  with 53 remaining. Existing scalar and array APIs remain available.
+
 ## 2026-11-16 - Fatigue-life, Johnson SU, and generalized exponential censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded fitting overloads, and

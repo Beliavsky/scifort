@@ -38,6 +38,8 @@ program censored_reference_driver
         exponweib_censored_loglikelihood, mielke_censored_loglikelihood
     use scifort_censored, only : fatiguelife_censored_loglikelihood, &
         johnsonsu_censored_loglikelihood, genexpon_censored_loglikelihood
+    use scifort_censored, only : cosine_censored_loglikelihood, &
+        anglit_censored_loglikelihood, semicircular_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -57,6 +59,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (54)
+            value = cosine_censored_loglikelihood(data,loc,scale)
+        case (55)
+            value = anglit_censored_loglikelihood(data,loc,scale)
+        case (56)
+            value = semicircular_censored_loglikelihood(data,loc,scale)
         case (45)
             value = powernorm_censored_loglikelihood(data,c,loc,scale)
         case (46)

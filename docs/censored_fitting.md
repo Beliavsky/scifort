@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+cosine_censored_loglikelihood(data [, loc, scale])
+anglit_censored_loglikelihood(data [, loc, scale])
+semicircular_censored_loglikelihood(data [, loc, scale])
 fatiguelife_censored_loglikelihood(data, c [, loc, scale])
 johnsonsu_censored_loglikelihood(data, a, b [, loc, scale])
 genexpon_censored_loglikelihood(data, a, b, c [, loc, scale])
@@ -149,7 +152,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1495,3 +1498,67 @@ The formulas follow the specifications for
 [Johnson SU](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.johnsonsu.html),
 and [generalized exponential](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genexpon.html).
 See [validation and commands](../validation/transform_hazard_censored_2026-11-16.md).
+
+
+## Cosine, anglit, and semicircular details
+
+The three likelihood/NNLF pairs accept optional finite `loc` and positive
+finite `scale`. Their fit generics accept bounds in `[loc, scale]` order;
+equal bounds fix either parameter. Original scalar and array-fit calls
+remain available. Invalid parameters return NaN even for empty data.
+Empty valid likelihoods are zero. Exact observations outside the support,
+and exact observations at a mathematical support endpoint, contribute
+negative infinity because the endpoint density is zero.
+
+These censored likelihoods use a **rounded physical half-width** contract.
+Compute `r=h*scale` in binary64, where `h=pi`, `pi/4`, or `1` for cosine,
+anglit, or semicircular, respectively. The probability law uses center
+`loc` and this `r`, with density normalization based on `r`. This explicitly
+retains a normalized law even when multiplication rounds a subnormal scale.
+The rounded half-width must be finite and positive; both rounded support
+edges `loc-r` and `loc+r` must be finite and strictly straddle `loc`.
+Otherwise likelihood/NNLF returns NaN, including for empty samples.
+This restricts representable supports compared with the scalar APIs.
+
+Endpoint gaps include the error-free residual of the center/half-width
+sum. Consequently a point at a *rounded* edge may lie just inside or
+outside the mathematical endpoint `loc +/- r`; it is not automatically
+an endpoint observation. For ordinary scales, the rounded-half-width law
+agrees with the scalar parameterization to rounding accuracy. At subnormal
+scales, multiplication can have a large relative rounding error, so scalar
+and censored likelihood values need not agree closely. This numerical
+contract is intentional and limited to these censored likelihoods/fits.
+
+Let `q=(r-abs(x-loc))/r` be the nearer endpoint gap, formed with compensated
+distances before division. The smaller tail probabilities are
+`(q-sin(pi*q)/pi)/2`, `sin(pi*q/4)**2`, and
+`(acos(1-q)-(1-q)*sqrt(q*(2-q)))/pi`, respectively. The implementation uses
+integrated sine and binomial series where these expressions cancel, and
+retains logarithmic gaps when a standardized gap underflows. Densities use
+positive sine or square-root identities instead of cancellation-prone
+trigonometric sums. The other tail uses `log1p` of the smaller probability.
+
+For narrow intervals, three-point Gauss-Legendre integration operates in
+endpoint-gap coordinates, preserving widths between adjacent floating-point
+observations. Broad intervals select a tail difference; nearly full
+intervals complement both omitted tails. Fits are bounded local searches,
+with the same iteration and identifiability limits as other censored fits;
+they do not guarantee a global maximum.
+
+For example, fit anglit location and scale to a mixed sample:
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    anglit_fit, anglit_censored_nnlf
+type(censored_data) :: sample
+type(fit_result) :: fit
+
+sample = make_censored_data(uncensored=[-0.2_dp,0.1_dp,0.35_dp],left=[-0.4_dp], &
+    right=[0.45_dp],interval=reshape([-0.3_dp,0.2_dp,-0.1_dp,0.25_dp],[2,2]))
+call anglit_fit(sample,[-0.2_dp,0.7_dp],[0.2_dp,2.0_dp],fit,max_iter=10000)
+if (fit%success) print *, fit%params, &
+    anglit_censored_nnlf(sample,fit%params(1),fit%params(2))
+```
+
+See the [validation record](../validation/compact_censored_2026-11-16.md)
+for checked/optimized results, independent reference checks, and commands.
