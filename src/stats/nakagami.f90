@@ -83,7 +83,7 @@ contains
             y = 0.0_dp
         else
             z = (x - mu) / sigma
-            if (z > sqrt(huge(1.0_dp) / nu)) then
+            if (z > max_gamma_coordinate(nu)) then
                 y = 0.0_dp
             else
                 t = nu * z * z
@@ -109,7 +109,7 @@ contains
             y = negative_infinity(x)
         else
             z = (x - mu) / sigma
-            if (z > sqrt(huge(1.0_dp) / nu)) then
+            if (z > max_gamma_coordinate(nu)) then
                 y = negative_infinity(x)
             else
                 t = nu * z * z
@@ -195,6 +195,20 @@ contains
         logical :: ok
         ok = ieee_is_finite(nu) .and. nu > 0.0_dp
     end function valid_shape
+
+    pure function max_gamma_coordinate(nu) result(limit)
+        implicit none
+        real(dp), intent(in) :: nu !! finite positive Nakagami shape
+        real(dp) :: limit
+        ! Bound nu*z*z without overflowing huge/nu when nu is below one.
+        if (nu >= 1.0_dp) then
+            limit = sqrt(huge(1.0_dp)/nu)
+        else if (nu >= 1.0_dp/huge(1.0_dp)) then
+            limit = sqrt(huge(1.0_dp))/sqrt(nu)
+        else
+            limit = huge(1.0_dp)
+        end if
+    end function max_gamma_coordinate
 
     pure subroutine get_loc_scale(loc, scale, mu, sigma)
         real(dp), intent(in), optional :: loc !! location argument, if present

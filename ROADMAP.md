@@ -139,6 +139,8 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add folded normal, folded Cauchy, and generalized Pareto censored fitting.
 - [x] Add generalized normal, half generalized normal, and R censored fits within documented ranges.
 - [ ] Extend censored generalized-normal reciprocal-power and R large-shape ranges.
+- [x] Add chi-squared, chi, and Nakagami censored likelihoods and bounded fits.
+- [ ] Extend censored chi/chi-squared and Nakagami beyond gamma shape 1e6.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

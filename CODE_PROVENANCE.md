@@ -1,3 +1,58 @@
+## 2026-11-17 - Chi-squared, chi, and Nakagami censoring
+
+The new private gamma-power callbacks, public likelihoods, fit overloads,
+native test, and independent checker are original MIT SciFort code, derived
+from public mathematical specifications inspected on 2026-11-17:
+[chi-squared](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html),
+[chi](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi.html),
+and [Nakagami](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.nakagami.html).
+No upstream implementation was copied, translated, or vendored. Existing
+gamma, log-gamma, distance, and optimizer helpers retain their provenance.
+No dependency or third-party license text is added.
+
+Substitution `Y=rate*z**power` gives Gamma(a,1). The parameter triples
+(a,rate,power) are (fl(df/2),1/2,1), (fl(df/2),1/2,2), and (nu,nu,2).
+The density follows by the Jacobian `power*Y/(x-loc)`, with support endpoint
+limits taken directly from the density's power. Keeping log(Y) avoids
+overflow/underflow of a squared or divided coordinate. The rounded positive
+half-shape defines the numerical law at subnormal df; zero half-shapes are
+rejected. Existing gamma kernels supply logarithmic tails and saddle density.
+The gamma shape is restricted to at most 1e6 (df<=2e6 or nu<=1e6), bounding
+the near-center series/continued-fraction work and avoiding unsupported
+extreme-shape arguments. Larger shapes remain a documented coverage gap.
+
+For a<=epsilon/4096 and Y<=1.5, `Q(a,Y)=a*E1(Y)*(1+O(a*(1+abs(log(Y)))))`
+keeps log(a) separate from the upper incomplete gamma limit at a=0.
+The definition and small-Y expansion of E1 follow
+[DLMF 8.19](https://dlmf.nist.gov/8.19); the existing original SciFort
+`exp1` implementation is reused without importing or copying its source.
+For underflowed Y the leading `-EulerGamma-log(Y)` retains the original log
+coordinate. The Euler constant is the same mathematical constant already
+used by that module and is checked against high-precision references.
+Since finite binary64 input/scale log distances are below 4000 in magnitude,
+the neglected relative correction is below roundoff in this branch. This
+prevents rounding a subnormal Q before evaluating log(Q).
+
+For a narrow physical interval, q=(b-a)/(a-loc) and an interior fraction t
+give the exact log-density ratio
+`(power*a_shape-1)*log1p(t*q)-Y1*expm1(power*log1p(t*q))`.
+Logarithmic coefficients and ratio limits retain it even when q underflows.
+Three-point Gauss-Legendre nodes and weights are reused from the existing
+implementation based on [DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v).
+The branch requires q, power*a_shape*q, and power*Y1*q at most 0.001,
+bounding density variation. Wider intervals use gamma tail differences
+and complement omitted tails when appropriate.
+
+The original SciFort scalar Nakagami guard now forms sqrt(huge/nu) only
+for nu>=1, uses sqrt(huge)/sqrt(nu) when representable below one, and caps
+an unrepresentable threshold at huge. This avoids overflow in the guard
+itself without changing the mathematical tail formula.
+
+Independent mpmath gamma integrals, with the small-argument expansion from
+[DLMF 8.7](https://dlmf.nist.gov/8.7), and SciPy constrained-fit benchmarks
+validate the new callbacks. See the [API guide](docs/censored_fitting.md)
+and [validation record](validation/radial_gamma_censored_2026-11-17.md).
+
 ## 2026-11-17 - Generalized normal, half generalized normal, and R censoring
 
 The new callbacks, fitting overloads, tests, and independent reference

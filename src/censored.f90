@@ -16,12 +16,16 @@ module scifort_censored
         stirling_threshold, log_gamma_difference, log_gamma_ratio_scaled
     use scifort_incomplete_beta, only : incomplete_beta_xy, log_beta_kernel
     use scifort_gamma, only : gamma_logpdf
+    use scifort_exponential_integrals, only : exp1
     use scifort_incomplete_gamma, only : log_gammainc, log_gammaincc, log_gamma_kernel
     use scifort_weibull, only : weibull_logpdf, weibull_logcdf, weibull_logsf
     implicit none
     private
 
     public :: censored_data
+    public :: chi2_censored_loglikelihood, chi2_censored_nnlf
+    public :: chi_censored_loglikelihood, chi_censored_nnlf
+    public :: nakagami_censored_loglikelihood, nakagami_censored_nnlf
     public :: gennorm_censored_loglikelihood, gennorm_censored_nnlf
     public :: halfgennorm_censored_loglikelihood, halfgennorm_censored_nnlf
     public :: rdist_censored_loglikelihood, rdist_censored_nnlf
@@ -116,6 +120,203 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Gamma-power laws: Y = rate*((x-loc)/scale)**power ~ Gamma(a,1).
+    ! Derived from the public density specifications; see CODE_PROVENANCE.md.
+    pure function gamma_power_logy(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, log rate, power
+        real(dp) :: value
+        value = params(5)*lognormal_logz(x,params(1:3))+params(4)
+    end function gamma_power_logy
+
+    pure function gamma_power_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, log rate, power
+        real(dp) :: value, logy
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (x == params(2)) then
+            if (params(1) < 1.0_dp/params(5)) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp/params(5)) value = log(params(5)) &
+                +params(1)*params(4)-log_gamma(params(1))-log(params(3))
+            return
+        end if
+        logy = gamma_power_logy(x,params)
+        value = loggamma_lpdf(logy,[params(1),0.0_dp,1.0_dp]) &
+            +log(params(5))-log_distance(x,params(2))
+    end function gamma_power_lpdf
+
+    pure function gamma_power_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, log rate, power
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        if (params(1) <= epsilon(1.0_dp)/4096.0_dp) then
+            value = log_difference(0.0_dp,gamma_power_lsf(x,params))
+            return
+        end if
+        value = loggamma_lcdf(gamma_power_logy(x,params),[params(1),0.0_dp,1.0_dp])
+    end function gamma_power_lcdf
+
+    pure function gamma_power_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, log rate, power
+        real(dp) :: value, logy
+        real(dp), parameter :: euler_gamma = 0.577215664901532860606512090082402431_dp
+        value = 0.0_dp
+        if (x <= params(2)) return
+        logy = gamma_power_logy(x,params)
+        if (params(1) <= epsilon(1.0_dp)/4096.0_dp .and. logy <= log(1.5_dp)) then
+            ! Q(a,Y)=a*E1(Y)*(1+O(a*(1+abs(log(Y))))). Keep log(a).
+            if (logy < log(tiny(1.0_dp))) then
+                value = log(params(1))+log(-logy-euler_gamma)
+            else
+                value = log(params(1))+log(exp1(exp(logy)))
+            end if
+        else
+            value = loggamma_lsf(logy,[params(1),0.0_dp,1.0_dp])
+        end if
+    end function gamma_power_lsf
+
+    pure function gamma_power_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, log rate, power
+        real(dp) :: value, logwidth, logq, logy, q, t(3), d(3), r(3)
+        real(dp) :: first(3), second(3), correction, omitted
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        if (a <= params(2)) then
+            value = gamma_power_lcdf(b,params)
+            return
+        end if
+        logwidth = log_distance(b,a)
+        logq = logwidth-log_distance(a,params(2))
+        logy = gamma_power_logy(a,params)
+        ! Bound relative width and both terms of the log-density variation.
+        if (logq+max(0.0_dp,log(params(5))+log(params(1)), &
+                log(params(5))+logy) <= log(0.001_dp)) then
+            q = exp(logq)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            d = log1p_safe(t*q)
+            first = t
+            second = params(5)*t
+            if (q > 0.0_dp) then
+                first = d/q
+                second = expm1_safe(params(5)*d)/q
+            end if
+            r = exp(log(params(1))+log(params(5))+logq)*first-d &
+                -exp(logy+logq)*second
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = gamma_power_lpdf(a,params)+logwidth+log1p_safe(correction)
+        else
+            value = tail_interval(a,b,params,gamma_power_lcdf,gamma_power_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(gamma_power_lcdf(a,params),gamma_power_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function gamma_power_interval
+
+    pure function chi2_censored_loglikelihood(data, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in (0,2e6], with positive fl(df/2)
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        if (.not. ieee_is_finite(df)) return
+        if (df <= 0.0_dp) return
+        params = [0.5_dp*df,0.0_dp,1.0_dp,-scifort_log_two,1.0_dp]
+        if (params(1) > 1.0e6_dp) return
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(1) <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,gamma_power_lpdf,gamma_power_lcdf, &
+            gamma_power_lsf,gamma_power_interval)
+    end function chi2_censored_loglikelihood
+
+    pure function chi2_censored_nnlf(data, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in (0,2e6], with positive fl(df/2)
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -chi2_censored_loglikelihood(data,df,loc,scale)
+    end function chi2_censored_nnlf
+
+    pure function chi_censored_loglikelihood(data, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in (0,2e6], with positive fl(df/2)
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        if (.not. ieee_is_finite(df)) return
+        if (df <= 0.0_dp) return
+        params = [0.5_dp*df,0.0_dp,1.0_dp,-scifort_log_two,2.0_dp]
+        if (params(1) > 1.0e6_dp) return
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(1) <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,gamma_power_lpdf,gamma_power_lcdf, &
+            gamma_power_lsf,gamma_power_interval)
+    end function chi_censored_loglikelihood
+
+    pure function chi_censored_nnlf(data, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in (0,2e6], with positive fl(df/2)
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -chi_censored_loglikelihood(data,df,loc,scale)
+    end function chi_censored_nnlf
+
+    pure function nakagami_censored_loglikelihood(data, nu, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: nu !! Nakagami shape in (0,1e6]
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        if (.not. ieee_is_finite(nu)) return
+        if (nu <= 0.0_dp) return
+        params = [nu,0.0_dp,1.0_dp,log(nu),2.0_dp]
+        if (params(1) > 1.0e6_dp) return
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(1) <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,gamma_power_lpdf,gamma_power_lcdf, &
+            gamma_power_lsf,gamma_power_interval)
+    end function nakagami_censored_loglikelihood
+
+    pure function nakagami_censored_nnlf(data, nu, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: nu !! Nakagami shape in (0,1e6]
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -nakagami_censored_loglikelihood(data,nu,loc,scale)
+    end function nakagami_censored_nnlf
+
 
     pure function rdist_lpdf(x, params) result(value)
         implicit none

@@ -1,3 +1,12 @@
+## 2026-11-17 - Chi-squared, chi, and Nakagami censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded fit overloads, and statistics exports.
+- Retain logarithmic transformed distances, adjacent intervals, extreme scales,
+  and endpoint behavior through existing gamma kernels.
+- Fix the Nakagami scalar-tail overflow guard for shapes below one.
+- Add numerical/reference tests, provenance, and API documentation; coverage
+  is now 71 named families with 38 remaining, subject to documented limits.
+
 ## 2026-11-17 - Generalized normal, half generalized normal, and R censoring
 
 - Add mixed likelihoods, NNLF, bounded fitting overloads, and statistics exports.

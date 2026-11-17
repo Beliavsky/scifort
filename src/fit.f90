@@ -55,6 +55,9 @@ module scifort_fit
     use scifort_censored, only : foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_nnlf
+    use scifort_censored, only : chi2_censored_nnlf
+    use scifort_censored, only : chi_censored_nnlf
+    use scifort_censored, only : nakagami_censored_nnlf
     use scifort_censored, only : gennorm_censored_nnlf
     use scifort_censored, only : halfgennorm_censored_nnlf
     use scifort_censored, only : rdist_censored_nnlf
@@ -756,7 +759,59 @@ module scifort_fit
         module procedure gumbel_l_fit, gumbel_l_fit_censored
     end interface gumbel_l_fit
 
+    interface chi2_fit
+        module procedure chi2_fit, chi2_fit_censored
+    end interface chi2_fit
+
+    interface chi_fit
+        module procedure chi_fit, chi_fit_censored
+    end interface chi_fit
+
+    interface nakagami_fit
+        module procedure nakagami_fit, nakagami_fit_censored
+    end interface nakagami_fit
+
 contains
+
+    subroutine chi2_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in df, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_chi2,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine chi2_fit_censored
+
+    subroutine chi_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in df, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_chi,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine chi_fit_censored
+
+    subroutine nakagami_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in nu, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_nakagami,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine nakagami_fit_censored
+
 
     subroutine gennorm_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2105,6 +2160,12 @@ contains
                 value = foldcauchy_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_genpareto)
                 value = genpareto_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_chi2)
+                value = chi2_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_chi)
+                value = chi_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_nakagami)
+                value = nakagami_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_gennorm)
                 value = gennorm_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_halfgennorm)

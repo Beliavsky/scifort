@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+chi2_censored_loglikelihood(data, df [, loc, scale])
+chi_censored_loglikelihood(data, df [, loc, scale])
+nakagami_censored_loglikelihood(data, nu [, loc, scale])
 gennorm_censored_loglikelihood(data, beta [, loc, scale])
 halfgennorm_censored_loglikelihood(data, beta [, loc, scale])
 rdist_censored_loglikelihood(data, c [, loc, scale])
@@ -164,7 +167,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1975,3 +1978,65 @@ if (fit%success) print *, fit%params, &
 
 See the [validation record](../validation/generalized_normal_censored_2026-11-17.md)
 for checked/optimized results, references, and exact commands.
+
+
+## Chi-squared, chi, and Nakagami details
+
+The likelihoods and matching `*_censored_nnlf` functions are exported by
+`scifort_censored` and `scifort_stats`. The existing fit generics accept
+`censored_data` with three bounds in `[df,loc,scale]` order for `chi2`/`chi`,
+or `[nu,loc,scale]` for `nakagami`. Equal bounds fix any parameter; all three
+may vary. Location defaults to zero and scale to one. Shape and scale must
+be positive and finite, location finite. Chi and chi-squared additionally
+require the rounded binary64 half-shape `fl(df/2)>0`; an underflowed half-shape
+returns NaN, including for empty data. Valid empty likelihoods are zero.
+
+The current numerical contract limits gamma shape a to at most 1e6:
+`df<=2e6` for chi/chi-squared and `nu<=1e6` for Nakagami. Larger shapes
+return NaN even for empty data. Extending this range needs a validated
+large-shape treatment; it remains a compatibility gap.
+
+All three laws have support `[loc,infinity)`. In standardized coordinates
+`z=(x-loc)/scale`, the transformed variable `Y=rate*z**power` is gamma:
+
+| Distribution | Gamma shape a | Rate | Power |
+| --- | --- | --- | --- |
+| Chi-squared | fl(df/2) | 1/2 | 1 |
+| Chi | fl(df/2) | 1/2 | 2 |
+| Nakagami | nu | nu | 2 |
+
+The positive half-shape defines the numerical law at subnormal degrees of
+freedom, where rounding can differ from the ideal real-number half-shape.
+The density is `power*rate**a*z**(power*a-1)*exp(-Y)/(Gamma(a)*scale)`.
+Its endpoint density is infinite, finite, or zero according as `power*a`
+is below, equal to, or above one. CDF/SF at loc are 0/1; below loc the
+density/CDF are zero and SF one. The finite endpoint density is
+`power*rate**a/(Gamma(a)*scale)`.
+
+Compensated log distances avoid forming overflowing physical differences
+or squared standardized coordinates. Log-gamma density and independent
+gamma tails handle extreme transformed distances. The implementation retains
+tiny-shape survival logarithms through `Q(a,Y)=a*E1(Y)*(1+O(a*(1+abs(log(Y)))))`
+when a<=epsilon/4096 and Y<=1.5. The omitted relative correction is below
+roundoff for finite binary64 observation/scale log distances. For underflowed
+Y, `E1(Y)=-EulerGamma-log(Y)+O(Y)` uses the original log distance. This avoids
+rounding a subnormal survival probability before taking its logarithm.
+Narrow intervals retain
+their original physical log width and use three-point Gauss-Legendre
+integration only when relative width and both log-density variation terms
+are small. The analytic density ratios retain subnormal increments. Other
+intervals use the better-conditioned gamma tail, or complement both omitted
+tails for nearly full support. Existing special-function accuracy and
+representability limits apply; this adds no new large-shape asymptotic kernel.
+
+Chi with df=1/2/3 agrees with half-normal/Rayleigh/Maxwell respectively.
+Chi-squared is gamma with shape df/2 and scale twice its supplied scale;
+the implementation need not form that doubled scale. Nakagami with nu=1/2
+is half-normal, and nu=1 is Rayleigh with scale divided by sqrt(2).
+
+Fits use the existing local bounded optimizer. Check success, status, and
+objective; an iteration limit can leave a useful finite candidate without
+declaring convergence. Moving endpoints and singular limits may make a fit
+unbounded. Bounds and a successful local fit do not establish global
+optimality or identifiability. See the
+[validation record](../validation/radial_gamma_censored_2026-11-17.md).
