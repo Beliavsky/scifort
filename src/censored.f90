@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
+    public :: foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
+    public :: genpareto_censored_loglikelihood, genpareto_censored_nnlf
     public :: loguniform_censored_loglikelihood, loguniform_censored_nnlf
     public :: truncpareto_censored_loglikelihood, truncpareto_censored_nnlf
     public :: genhalflogistic_censored_loglikelihood, genhalflogistic_censored_nnlf
@@ -110,6 +113,398 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure subroutine folded_coordinates(x, params, minus, plus, lm, lp, lz)
+        implicit none
+        real(dp), intent(in) :: x !! finite point at or above location
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp), intent(out) :: minus !! standardized distance minus offset
+        real(dp), intent(out) :: plus !! standardized distance plus offset
+        real(dp), intent(out) :: lm !! log absolute minus coordinate
+        real(dp), intent(out) :: lp !! log plus coordinate
+        real(dp), intent(out) :: lz !! log standardized distance
+        real(dp) :: z, half, lc
+        lz = negative_infinity(0.0_dp)
+        if (x > params(2)) lz = log_distance(x,params(2))-log(params(3))
+        lc = bounded_log(params(1))
+        lp = bounded_logadd(lz,lc)
+        z = location_scale_z(x,params(2:3))
+        plus = finite_sum(z,params(1))
+        minus = z-params(1)
+        if (.not. ieee_is_finite(z)) then
+            half = location_scale_z(0.5_dp*x,[0.5_dp*params(2),params(3)])
+            minus = half-0.5_dp*params(1)
+            minus = finite_sum(minus,minus)
+        end if
+        if (ieee_is_finite(minus)) then
+            lm = bounded_log(abs(minus))
+        else
+            lm = lz+log1p_safe(-exp(lc-lz))
+        end if
+    end subroutine folded_coordinates
+
+    pure function folded_normal_mass(a, b, lw) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! standardized lower endpoint, possibly infinite
+        real(dp), intent(in) :: b !! standardized upper endpoint, possibly coincident after rounding
+        real(dp), intent(in) :: lw !! log exact standardized positive interval width
+        real(dp) :: value, omitted
+        value = normal_small_interval(a,lw)
+        if (.not. ieee_is_nan(value)) return
+        if (a >= 0.0_dp) then
+            value = log_difference(normal_logsf(a),normal_logsf(b))
+        else
+            value = log_difference(normal_logcdf(b),normal_logcdf(a))
+            if (b > 0.0_dp) then
+                omitted = exp(normal_logcdf(a))+exp(normal_logsf(b))
+                if (omitted <= 0.5_dp) value = log1p_safe(-omitted)
+            end if
+        end if
+    end function folded_normal_mass
+
+    pure function folded_cauchy_mass(a, b, la, lb, lw) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! standardized lower endpoint
+        real(dp), intent(in) :: b !! standardized upper endpoint
+        real(dp), intent(in) :: la !! log absolute exact lower coordinate
+        real(dp), intent(in) :: lb !! log absolute exact upper coordinate
+        real(dp), intent(in) :: lw !! log exact positive standardized interval width
+        real(dp) :: value, omitted
+        if (a >= 0.0_dp .or. b <= 0.0_dp) then
+            value = cauchy_logatan_exp(lw-log1pexp(la+lb))-log(scifort_pi)
+        else if (min(la,lb) >= 0.0_dp) then
+            omitted = exp(cauchy_log_small_tail(la))+exp(cauchy_log_small_tail(lb))
+            value = log1p_safe(-omitted)
+        else
+            value = bounded_logadd(cauchy_logatan_exp(la),cauchy_logatan_exp(lb)) &
+                -log(scifort_pi)
+        end if
+    end function folded_cauchy_mass
+
+    pure function foldnorm_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value, a, b, la, lb, lz
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        call folded_coordinates(x,params,a,b,la,lb,lz)
+        value = bounded_logadd(finite_normal_lpdf(a),finite_normal_lpdf(b))-log(params(3))
+    end function foldnorm_lpdf
+
+    pure function foldcauchy_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value, a, b, la, lb, lz
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        call folded_coordinates(x,params,a,b,la,lb,lz)
+        value = bounded_logadd(-log1pexp(2.0_dp*la),-log1pexp(2.0_dp*lb)) &
+            -log(scifort_pi)-log(params(3))
+    end function foldcauchy_lpdf
+
+    pure subroutine folded_tails(x, params, normal, lcdf, lsf)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        logical, intent(in) :: normal !! normal rather than Cauchy base law
+        real(dp), intent(out) :: lcdf !! log lower-tail probability
+        real(dp), intent(out) :: lsf !! log upper-tail probability
+        real(dp) :: a, b, la, lb, lz, first
+        lcdf = negative_infinity(0.0_dp)
+        lsf = 0.0_dp
+        if (x <= params(2)) return
+        call folded_coordinates(x,params,a,b,la,lb,lz)
+        if (normal) then
+            lcdf = folded_normal_mass(-b,a,scifort_log_two+lz)
+            lsf = bounded_logadd(normal_logsf(a),normal_logsf(b))
+        else
+            lcdf = folded_cauchy_mass(-b,a,lb,la,scifort_log_two+lz)
+            first = cauchy_log_small_tail(la)
+            if (a < 0.0_dp) first = log1p_safe(-exp(first))
+            lsf = bounded_logadd(first,cauchy_log_small_tail(lb))
+        end if
+        if (lcdf <= lsf) then
+            lcdf = min(lcdf,0.0_dp)
+            lsf = log1p_safe(-exp(lcdf))
+        else
+            lsf = min(lsf,0.0_dp)
+            lcdf = log1p_safe(-exp(lsf))
+        end if
+    end subroutine folded_tails
+
+    pure function folded_interval(a, b, params, normal) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint greater than a
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        logical, intent(in) :: normal !! normal rather than Cauchy base law
+        real(dp) :: value, lo, am, ap, bm, bp, lam, lap, lbm, lbp, lz, lw, omitted, unused
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        lo = max(a,params(2))
+        call folded_coordinates(lo,params,am,ap,lam,lap,lz)
+        call folded_coordinates(b,params,bm,bp,lbm,lbp,lz)
+        lw = log_distance(b,lo)-log(params(3))
+        if (normal) then
+            value = bounded_logadd(folded_normal_mass(am,bm,lw),folded_normal_mass(ap,bp,lw))
+        else
+            value = bounded_logadd(folded_cauchy_mass(am,bm,lam,lbm,lw), &
+                folded_cauchy_mass(ap,bp,lap,lbp,lw))
+        end if
+        if (value > -scifort_log_two) then
+            call folded_tails(lo,params,normal,omitted,unused)
+            call folded_tails(b,params,normal,unused,lz)
+            value = log1p_safe(-(exp(omitted)+exp(lz)))
+        end if
+    end function folded_interval
+
+    pure function genpareto_logh(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! interior point strictly above location
+        real(dp), intent(in) :: params(:) !! shape, location, scale, bounded width if negative
+        real(dp) :: value, lu, lw, nh
+        if (params(1) < 0.0_dp) then
+            call genhalflogistic_coordinates(x,[-params(1),params(2),params(4)],lu,lw,nh,value)
+        else
+            value = log_distance(x,params(2))-log(params(3))
+            if (params(1) > 0.0_dp) value = &
+                burr_logsoftplus(log(params(1))+value)-log(params(1))
+        end if
+    end function genpareto_logh
+
+    pure function genpareto_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! shape, location, scale, bounded width if negative
+        real(dp) :: value, left, right, lu, lw, nh, lh
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (params(1) < 0.0_dp) then
+            call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(4)],left,right)
+            if (right < 0.0_dp) return
+            if (right == 0.0_dp) then
+                if (params(1) == -1.0_dp) value = -log(params(4))
+                if (params(1) < -1.0_dp) value = positive_infinity(0.0_dp)
+                return
+            end if
+            value = -log(-params(1))-log(params(4))
+            if (left == 0.0_dp) return
+            call genhalflogistic_coordinates(x,[-params(1),params(2),params(4)],lu,lw,nh,lh)
+            if (params(1) <= -0.5_dp) then
+                value = value+((1.0_dp+params(1))/(-params(1)))*lw
+            else
+                value = value+nh-lw
+            end if
+        else
+            value = -log(params(3))
+            if (x == params(2)) return
+            value = value+negative_hazard(genpareto_logh(x,params))
+            if (params(1) > 0.0_dp) value = value &
+                -log1pexp(log(params(1))+log_distance(x,params(2))-log(params(3)))
+        end if
+    end function genpareto_lpdf
+
+    pure function genpareto_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! shape, location, scale, bounded width if negative
+        real(dp) :: value, left, right
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        if (params(1) < 0.0_dp) then
+            call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(4)],left,right)
+            value = 0.0_dp
+            if (right <= 0.0_dp) return
+        end if
+        value = log_hazard_mass(genpareto_logh(x,params))
+    end function genpareto_lcdf
+
+    pure function genpareto_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! shape, location, scale, bounded width if negative
+        real(dp) :: value, left, right
+        value = 0.0_dp
+        if (x <= params(2)) return
+        if (params(1) < 0.0_dp) then
+            call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(4)],left,right)
+            value = negative_infinity(0.0_dp)
+            if (right <= 0.0_dp) return
+        end if
+        value = negative_hazard(genpareto_logh(x,params))
+    end function genpareto_lsf
+
+    pure function genpareto_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! shape, location, scale, bounded width if negative
+        real(dp) :: value, lo, left, right, delta, denom
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        lo = max(a,params(2))
+        if (params(1) < 0.0_dp) then
+            call beta_distances(b,[1.0_dp,1.0_dp,params(2),params(4)],left,right)
+            if (right <= 0.0_dp) then
+                value = genpareto_lsf(lo,params)
+                return
+            end if
+            delta = burr_logsoftplus(log_distance(b,lo)-log(right))-log(-params(1))
+        else if (params(1) == 0.0_dp) then
+            delta = log_distance(b,lo)-log(params(3))
+        else
+            denom = log(params(3))
+            if (lo > params(2)) denom = bounded_logadd(denom, &
+                log(params(1))+log_distance(lo,params(2)))
+            delta = burr_logsoftplus(log(params(1))+log_distance(b,lo)-denom)-log(params(1))
+        end if
+        value = genpareto_lsf(lo,params)+log_hazard_mass(delta)
+    end function genpareto_interval
+
+    pure function foldnorm_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value, unused
+        call folded_tails(x,params,.true.,value,unused)
+    end function foldnorm_lcdf
+
+    pure function foldnorm_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value, unused
+        call folded_tails(x,params,.true.,unused,value)
+    end function foldnorm_lsf
+
+    pure function foldnorm_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value
+        value = folded_interval(a,b,params,.true.)
+    end function foldnorm_interval
+
+    pure function foldcauchy_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value, unused
+        call folded_tails(x,params,.false.,value,unused)
+    end function foldcauchy_lcdf
+
+    pure function foldcauchy_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value, unused
+        call folded_tails(x,params,.false.,unused,value)
+    end function foldcauchy_lsf
+
+    pure function foldcauchy_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! nonnegative offset, location, positive scale
+        real(dp) :: value
+        value = folded_interval(a,b,params,.false.)
+    end function foldcauchy_interval
+
+
+    pure function foldnorm_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! nonnegative finite folding offset
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c < 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,foldnorm_lpdf,foldnorm_lcdf, &
+            foldnorm_lsf,foldnorm_interval)
+    end function foldnorm_censored_loglikelihood
+
+    pure function foldnorm_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! nonnegative finite folding offset
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -foldnorm_censored_loglikelihood(data, c, loc, scale)
+    end function foldnorm_censored_nnlf
+
+    pure function foldcauchy_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! nonnegative finite folding offset
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c < 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,foldcauchy_lpdf,foldcauchy_lcdf, &
+            foldcauchy_lsf,foldcauchy_interval)
+    end function foldcauchy_censored_loglikelihood
+
+    pure function foldcauchy_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! nonnegative finite folding offset
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -foldcauchy_censored_loglikelihood(data, c, loc, scale)
+    end function foldcauchy_censored_nnlf
+
+    pure function genpareto_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite generalized Pareto shape, including zero
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [c,0.0_dp,1.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (c < 0.0_dp) then
+            if (-c < 1.0_dp) then
+                if (params(3) > huge(1.0_dp)*(-c)) return
+            end if
+            params(4) = params(3)/(-c)
+            if (.not. beta_parameters_valid([1.0_dp,1.0_dp,params(2),params(4)])) return
+            if (params(2)+params(4) <= params(2)) return
+        end if
+        value = censored_loglikelihood(data,params,genpareto_lpdf,genpareto_lcdf, &
+            genpareto_lsf,genpareto_interval)
+    end function genpareto_censored_loglikelihood
+
+    pure function genpareto_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! finite generalized Pareto shape, including zero
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -genpareto_censored_loglikelihood(data, c, loc, scale)
+    end function genpareto_censored_nnlf
+
 
     pure function bounded_cutoff_product(a, b) result(value)
         implicit none

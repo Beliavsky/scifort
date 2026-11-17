@@ -52,6 +52,9 @@ module scifort_fit
     use scifort_censored, only : loguniform_censored_nnlf
     use scifort_censored, only : truncpareto_censored_nnlf
     use scifort_censored, only : genhalflogistic_censored_nnlf
+    use scifort_censored, only : foldnorm_censored_nnlf
+    use scifort_censored, only : foldcauchy_censored_nnlf
+    use scifort_censored, only : genpareto_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -612,6 +615,18 @@ module scifort_fit
         module procedure genhalflogistic_fit, genhalflogistic_fit_censored
     end interface genhalflogistic_fit
 
+    interface foldnorm_fit
+        module procedure foldnorm_fit, foldnorm_fit_censored
+    end interface foldnorm_fit
+
+    interface foldcauchy_fit
+        module procedure foldcauchy_fit, foldcauchy_fit_censored
+    end interface foldcauchy_fit
+
+    interface genpareto_fit
+        module procedure genpareto_fit, genpareto_fit_censored
+    end interface genpareto_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -727,6 +742,46 @@ module scifort_fit
     end interface gumbel_l_fit
 
 contains
+
+    subroutine foldnorm_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_foldnorm,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine foldnorm_fit_censored
+
+    subroutine foldcauchy_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_foldcauchy,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine foldcauchy_fit_censored
+
+    subroutine genpareto_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_genpareto,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine genpareto_fit_censored
+
 
     subroutine loguniform_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1989,6 +2044,12 @@ contains
                 value = truncpareto_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_genhalflogistic)
                 value = genhalflogistic_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_foldnorm)
+                value = foldnorm_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_foldcauchy)
+                value = foldcauchy_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_genpareto)
+                value = genpareto_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

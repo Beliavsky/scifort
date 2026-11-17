@@ -1,3 +1,51 @@
+## 2026-11-17 - Folded normal, folded Cauchy, and generalized Pareto censoring
+
+The new callbacks, fitting overloads, tests, and independent checker are
+original MIT SciFort code, independently derived from public mathematical
+specifications inspected on 2026-11-17:
+[SciPy folded normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.foldnorm.html),
+[folded Cauchy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.foldcauchy.html),
+and [generalized Pareto](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genpareto.html).
+No upstream implementation was copied, translated, or vendored. No new
+dependency or third-party license text is required. Existing normal and
+Cauchy tails, compensated endpoint gaps, logarithmic hazard helpers, and
+bounded fitting retain their original provenance and notices.
+
+The folded density is the sum of the base density at z-c and z+c.
+Its CDF integrates the base density over [-z-c,z-c], while SF adds the
+base SF at z-c and z+c. Interior censoring intervals integrate both
+positive branches. Normal masses reuse the existing three-point
+Gauss-Legendre narrow-interval kernel, whose nodes/weights follow
+[DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v), and stable normal-tail
+differences. Cauchy masses use the exact same-side identity
+`tan(angle)=(b-a)/(1+a*b)` and crossing-interval angle sums or complements,
+reusing the original Cauchy likelihood derivation. The exact positive
+interval width is retained logarithmically independently of rounded
+coordinates. Guarded sums and half-scaled distances prevent intermediate
+overflow. Cancellation near a large folding offset remains ill-conditioned
+and is explicitly documented.
+
+Integrating the generalized Pareto density gives cumulative hazard
+`H=log1p(c*z)/c` with exponential limit H=z. For c>0, logarithmic softplus
+coordinates retain both tiny and huge c*z. For c<0 the documented normalized
+law on rounded physical width r=fl(scale/(-c)) has
+`H=-log(1-(x-loc)/r)/(-c)`. It reuses the generalized half-logistic
+log-hazard coordinates and their documented small-coordinate error bound.
+The bounded log-density coefficient is grouped as `(1+c)/(-c)` near c=-1
+to retain its uniform limit without subtracting reciprocal shapes.
+
+Positive interior hazard increments are
+`log1p(c*(x2-x1)/(scale+c*(x1-loc)))/c` for c>0 and
+`log1p((x2-x1)/(loc+r-x2))/(-c)` for c<0. Thus interval mass is
+`exp(-H1)*(1-exp(-DeltaH))`, with its zero-shape exponential limit.
+No CDF subtraction or generated fitted constants are introduced.
+
+Independent mpmath checks evaluate the mathematical integrals at 100 or
+1100 decimal digits, using the existing independent normal-erfc oracle.
+SciPy supplies separate constrained-fit benchmarks. See the
+[API guide](docs/censored_fitting.md) and
+[validation record](validation/fold_pareto_censored_2026-11-17.md).
+
 ## 2026-11-17 - Log-uniform, truncated Pareto, and generalized half-logistic censoring
 
 The new likelihood callbacks, fitting overloads, tests, and independent

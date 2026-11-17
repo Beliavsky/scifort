@@ -1,3 +1,13 @@
+## 2026-11-17 - Folded normal, folded Cauchy, and generalized Pareto censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded fitting overloads, and
+  statistics exports for three more families.
+- Integrate folded intervals as positive branch masses, retain tiny widths
+  and extreme Cauchy log tails, and use stable generalized Pareto hazards
+  across zero and both shape signs.
+- Document rounded bounded supports and fitting limits, add native and
+  independent checks, and update coverage to 65 families with 44 remaining.
+
 ## 2026-11-17 - Three more bounded censored distributions
 
 - Add log-uniform, truncated Pareto, and generalized half-logistic mixed

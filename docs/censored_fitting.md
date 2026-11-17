@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+foldnorm_censored_loglikelihood(data, c [, loc, scale])
+foldcauchy_censored_loglikelihood(data, c [, loc, scale])
+genpareto_censored_loglikelihood(data, c [, loc, scale])
 loguniform_censored_loglikelihood(data, a, b [, loc, scale])
 truncpareto_censored_loglikelihood(data, b, c [, loc, scale])
 genhalflogistic_censored_loglikelihood(data, c [, loc, scale])
@@ -158,7 +161,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1774,3 +1777,98 @@ if (fit%success) print *, fit%params, &
 
 See the [validation record](../validation/bounded_power_censored_2026-11-17.md)
 for checked/optimized tests, independent references, and exact commands.
+
+
+## Folded normal, folded Cauchy, and generalized Pareto details
+
+These families provide `_censored_loglikelihood` and `_censored_nnlf` from
+`scifort_censored` and `scifort_stats`. Their fit generics accept
+`censored_data` with bounds in `[c,loc,scale]` order. Equal bounds fix
+parameters. The original scalar and array-fit APIs remain available.
+All parameters must be finite, scale positive. Invalid parameters return
+NaN even for empty samples; valid empty likelihoods are zero.
+
+### Folded normal and folded Cauchy
+
+The folding offset `c` is nonnegative, including zero. In standardized
+coordinates `z=(x-loc)/scale`, support is `[0,infinity)`. The density is
+the sum of the base normal or Cauchy densities at `z-c` and `z+c`, divided
+by scale. At the lower endpoint it is twice the base density at `c`,
+divided by scale. CDF/SF values there are 0/1. Below support the density
+and CDF are zero, and SF is one. At zero folding offset these laws agree
+with half-normal and half-Cauchy.
+
+The lower tail is a base-law interval `[-z-c,z-c]`; the upper tail is the
+sum of the two base survival probabilities. Censoring intervals add the
+positive masses in the two folded branches. Normal intervals use the
+existing narrow-interval quadrature or stable normal-tail differences.
+Cauchy intervals use positive arctangent identities and logarithmic
+coordinates. Both retain the physical interval width independently of
+rounded standardized endpoints, including subnormal widths. Nearly full
+intervals complement both omitted tails.
+
+Guarded standardized coordinates and logarithmic Cauchy distances avoid
+overflow in squared distances, sums, and ratios. A normal log density or
+log tail becomes negative infinity when its magnitude exceeds the binary64
+magnitude range. Cauchy log densities and tails remain finite even when
+the standardized distance overflows. Halving can recover a representable
+normal displacement from an overflowing standardized distance. However,
+subtraction of a large folding offset from a nearly equal standardized
+distance is ill-conditioned; uniform relative accuracy through such
+cancellations is not promised.
+
+### Generalized Pareto
+
+Shape `c` is any finite real. For `c>=0`, support is `[loc,infinity)`.
+For positive shape the cumulative hazard is
+`H=log1p(c*(x-loc)/scale)/c`; the zero-shape limit is exponential with
+`H=(x-loc)/scale`. The implementation retains H logarithmically, avoiding
+an overflowing reciprocal shape or an underflowed shape-distance product.
+There is no representable location-plus-scale requirement in these cases.
+
+For `c<0`, define a **rounded physical width** `r=fl(scale/(-c))`, with
+binary64 rounding `fl`. Support is `[loc,loc+r]` and the normalized SF is
+`(1-(x-loc)/r)**(-1/c)`. Width r must be positive and finite, and the
+rounded upper edge must be finite and strictly greater than loc.
+Underflowed, overflowed, or collapsed supports return NaN. Compensated
+endpoint gaps retain the addition residual of loc+r, so a rounded edge
+need not equal the exact mathematical endpoint. Normalization uses r;
+this intentional numerical difference from the scalar API is especially
+visible for subnormal widths.
+
+The bounded lower endpoint density is `1/((-c)*r)`. At the upper endpoint
+it is zero for `-1<c<0`, `1/r` for `c=-1`, and positive infinity for
+`c<-1`. The unbounded lower endpoint density is `1/scale`. Endpoint tails
+follow the support conventions. At c=-1 the law is uniform on the bounded
+support; at c=1 it agrees with Lomax shape one.
+
+An interior interval has probability `exp(-H1)*(1-exp(-DeltaH))`.
+For positive c,
+`DeltaH=log1p(c*(x2-x1)/(scale+c*(x1-loc)))/c`;
+for negative c,
+`DeltaH=log1p((x2-x1)/(loc+r-x2))/(-c)`.
+Logarithmic positive increments retain adjacent intervals without
+subtracting CDF values. Tiny bounded coordinates reuse the independently
+validated logarithmic hazard transformation from generalized half-logistic.
+
+Free support endpoints and singular limits can make likelihood maximization
+unbounded. Fits are bounded local searches and do not establish global
+optimality or unique identifiable parameters.
+
+For example, fit a generalized Pareto shape with location and scale fixed:
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    genpareto_fit, genpareto_censored_nnlf
+type(censored_data) :: sample
+type(fit_result) :: fit
+
+sample = make_censored_data(uncensored=[0.2_dp,0.4_dp,0.6_dp],left=[0.1_dp], &
+    right=[0.7_dp],interval=reshape([0.25_dp,0.5_dp,0.35_dp,0.55_dp],[2,2]))
+call genpareto_fit(sample,[-1.0_dp,0.0_dp,1.3_dp],[3.0_dp,0.0_dp,1.3_dp],fit)
+if (fit%success) print *, fit%params, &
+    genpareto_censored_nnlf(sample,fit%params(1),fit%params(2),fit%params(3))
+```
+
+See the [validation record](../validation/fold_pareto_censored_2026-11-17.md)
+for checked/optimized results, independent references, and exact commands.

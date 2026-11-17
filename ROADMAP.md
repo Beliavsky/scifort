@@ -136,6 +136,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add cosine, anglit, and semicircular censoring and bounded location/scale fits.
 - [x] Add truncated exponential, Johnson SB, and kappa3 censoring and bounded fits.
 - [x] Add log-uniform, truncated Pareto, and generalized half-logistic censored fits.
+- [x] Add folded normal, folded Cauchy, and generalized Pareto censored fitting.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 
