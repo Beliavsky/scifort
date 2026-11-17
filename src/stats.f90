@@ -38,6 +38,9 @@ module scifort_stats
     use scifort_censored, only : foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    use scifort_censored, only : t_censored_loglikelihood, t_censored_nnlf
+    use scifort_censored, only : f_censored_loglikelihood, f_censored_nnlf
+    use scifort_censored, only : jf_skew_t_censored_loglikelihood, jf_skew_t_censored_nnlf
     use scifort_censored, only : chi2_censored_loglikelihood, chi2_censored_nnlf
     use scifort_censored, only : chi_censored_loglikelihood, chi_censored_nnlf
     use scifort_censored, only : nakagami_censored_loglikelihood, nakagami_censored_nnlf
@@ -784,6 +787,9 @@ module scifort_stats
     public :: foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     public :: foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     public :: genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    public :: t_censored_loglikelihood, t_censored_nnlf
+    public :: f_censored_loglikelihood, f_censored_nnlf
+    public :: jf_skew_t_censored_loglikelihood, jf_skew_t_censored_nnlf
     public :: chi2_censored_loglikelihood, chi2_censored_nnlf
     public :: chi_censored_loglikelihood, chi_censored_nnlf
     public :: nakagami_censored_loglikelihood, nakagami_censored_nnlf

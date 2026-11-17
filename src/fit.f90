@@ -55,6 +55,9 @@ module scifort_fit
     use scifort_censored, only : foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_nnlf
+    use scifort_censored, only : t_censored_nnlf
+    use scifort_censored, only : f_censored_nnlf
+    use scifort_censored, only : jf_skew_t_censored_nnlf
     use scifort_censored, only : chi2_censored_nnlf
     use scifort_censored, only : chi_censored_nnlf
     use scifort_censored, only : nakagami_censored_nnlf
@@ -771,7 +774,59 @@ module scifort_fit
         module procedure nakagami_fit, nakagami_fit_censored
     end interface nakagami_fit
 
+    interface t_fit
+        module procedure t_fit, t_fit_censored
+    end interface t_fit
+
+    interface f_fit
+        module procedure f_fit, f_fit_censored
+    end interface f_fit
+
+    interface jf_skew_t_fit
+        module procedure jf_skew_t_fit, jf_skew_t_fit_censored
+    end interface jf_skew_t_fit
+
 contains
+
+    subroutine t_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in df, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_t,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine t_fit_censored
+
+    subroutine f_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in dfn, dfd, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_f,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine f_fit_censored
+
+    subroutine jf_skew_t_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, b, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_jf_skew_t,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine jf_skew_t_fit_censored
+
 
     subroutine chi2_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2160,6 +2215,12 @@ contains
                 value = foldcauchy_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_genpareto)
                 value = genpareto_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_t)
+                value = t_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_f)
+                value = f_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_jf_skew_t)
+                value = jf_skew_t_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_chi2)
                 value = chi2_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_chi)

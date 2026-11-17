@@ -1,3 +1,11 @@
+## 2026-11-17 - Student t, F, and Jones-Faddy censoring
+
+- Add mixed likelihoods, NNLF, bounded fit overloads, and statistics exports.
+- Retain transformed beta tails, virtual F scales, adjacent intervals, and
+  tiny-shape finite interval masses; support Student t's normal limit.
+- Document normal beta-shape and shape-sum limits; add independent/native
+  validation and provenance. Coverage is 74 families with 35 remaining.
+
 ## 2026-11-17 - Chi-squared, chi, and Nakagami censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded fit overloads, and statistics exports.

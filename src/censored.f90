@@ -23,6 +23,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: t_censored_loglikelihood, t_censored_nnlf
+    public :: f_censored_loglikelihood, f_censored_nnlf
+    public :: jf_skew_t_censored_loglikelihood, jf_skew_t_censored_nnlf
     public :: chi2_censored_loglikelihood, chi2_censored_nnlf
     public :: chi_censored_loglikelihood, chi_censored_nnlf
     public :: nakagami_censored_loglikelihood, nakagami_censored_nnlf
@@ -120,6 +123,303 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Beta coordinates for Jones-Faddy and its symmetric Student-t special case.
+    ! Independent mathematical derivation: see CODE_PROVENANCE.md.
+    pure subroutine skew_t_coordinates(x, params, u, v, lu, lv, lh)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or limit
+        real(dp), intent(in) :: params(:) !! positive a, b, finite loc, positive scale
+        real(dp), intent(out) :: u !! lower beta coordinate
+        real(dp), intent(out) :: v !! independently formed upper beta coordinate
+        real(dp), intent(out) :: lu !! log lower coordinate, retained through underflow
+        real(dp), intent(out) :: lv !! log upper coordinate, retained through underflow
+        real(dp), intent(out) :: lh !! log sqrt(a+b+z*z), with z=(x-loc)/scale
+        real(dp) :: lz, ls, ratio, small, lsmall
+        ls = log(params(1)+params(2))
+        lh = 0.5_dp*ls
+        u = 0.5_dp
+        v = u
+        lu = -scifort_log_two
+        lv = lu
+        if (x == params(3)) return
+        if (x > params(3)) then
+            lz = log_distance(x,params(3))-log(params(4))
+        else
+            lz = log_distance(params(3),x)-log(params(4))
+        end if
+        lh = 0.5_dp*ls+0.5_dp*log1pexp(2.0_dp*lz-ls)
+        ratio = exp(min(0.0_dp,lz-lh))
+        lsmall = ls-scifort_log_two-2.0_dp*lh-log1p_safe(ratio)
+        small = exp(lsmall)
+        if (x > params(3)) then
+            lv = lsmall
+            v = small
+            u = 1.0_dp-small
+            lu = log1p_safe(-small)
+        else
+            lu = lsmall
+            u = small
+            v = 1.0_dp-small
+            lv = log1p_safe(-small)
+        end if
+    end subroutine skew_t_coordinates
+
+    pure function skew_t_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! normal positive a, b, finite loc, positive scale
+        real(dp) :: value, u, v, lu, lv, lh, kernel
+        call skew_t_coordinates(x,params,u,v,lu,lv,lh)
+        if (min(u,v) > 0.0_dp) then
+            kernel = log_beta_kernel(params(1),params(2),u,v)
+        else
+            kernel = params(1)*lu+params(2)*lv-log_beta(params(1),params(2))
+        end if
+        value = kernel+0.5_dp*(lu+lv)+2.0_dp*scifort_log_two &
+            -0.5_dp*log(params(1)+params(2))-log(params(4))
+    end function skew_t_lpdf
+
+    pure subroutine skew_t_tails(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! normal positive a, b, finite loc, positive scale
+        real(dp), intent(out) :: lp !! log lower probability
+        real(dp), intent(out) :: lq !! log upper probability
+        real(dp) :: u, v, lu, lv, lh, p, q
+        call skew_t_coordinates(x,params,u,v,lu,lv,lh)
+        if (max(params(1),params(2)) <= epsilon(1.0_dp)/16384.0_dp) then
+            lp = -log1pexp(log(params(1))-log(params(2)))
+            lq = -log1pexp(log(params(2))-log(params(1)))
+        else if (params(1) == params(2) .and. x == params(3)) then
+            lp = -scifort_log_two
+            lq = lp
+        else if (u == 0.0_dp) then
+            lp = betaprime_endpoint_tail(params(1),params(2),lu)
+            lq = log_difference(0.0_dp,lp)
+        else if (v == 0.0_dp) then
+            lq = betaprime_endpoint_tail(params(2),params(1),lv)
+            lp = log_difference(0.0_dp,lq)
+        else
+            call incomplete_beta_xy(params(1),params(2),u,v,p,q,lp,lq)
+        end if
+    end subroutine skew_t_tails
+
+    pure function skew_t_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! normal positive a, b, finite loc, positive scale
+        real(dp) :: value, unused
+        call skew_t_tails(x,params,value,unused)
+    end function skew_t_lcdf
+
+    pure function skew_t_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! normal positive a, b, finite loc, positive scale
+        real(dp) :: value, unused
+        call skew_t_tails(x,params,unused,value)
+    end function skew_t_lsf
+
+    pure function skew_t_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! normal positive a, b, finite loc, positive scale
+        real(dp) :: value, lh, u, v, lu, lv, near, logwidth, shape_sum
+        real(dp) :: t(3), points(3), densities(3), reference, omitted
+        shape_sum = params(1)+params(2)
+        near = max(a,min(b,params(3)))
+        call skew_t_coordinates(near,params,u,v,lu,lv,lh)
+        logwidth = log_distance(b,a)
+        ! |d log(f)/dz| <= (2*(a_shape+b_shape)+1)/sqrt(a_shape+b_shape+z*z).
+        if (logwidth-log(params(4))-lh+log(2.0_dp*shape_sum+1.0_dp) <= log(0.001_dp)) then
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            if (a >= 0.0_dp .or. b <= 0.0_dp) then
+                points = a+t*(b-a)
+            else
+                points = (1.0_dp-t)*a+t*b
+            end if
+            densities(1) = skew_t_lpdf(points(1),params)
+            densities(2) = skew_t_lpdf(points(2),params)
+            densities(3) = skew_t_lpdf(points(3),params)
+            reference = maxval(densities)
+            value = reference+logwidth+log((4.0_dp/9.0_dp)*exp(densities(1)-reference) &
+                +(5.0_dp/18.0_dp)*(exp(densities(2)-reference)+exp(densities(3)-reference)))
+        else if (max(params(1),params(2)) <= epsilon(1.0_dp)/16384.0_dp) then
+            value = skew_t_small_interval(a,b,params)
+        else
+            value = tail_interval(a,b,params,skew_t_lcdf,skew_t_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(skew_t_lcdf(a,params),skew_t_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function skew_t_interval
+
+    pure function skew_t_logasinh(lr) result(value)
+        implicit none
+        real(dp), intent(in) :: lr !! log positive standardized distance divided by sqrt(a+b)
+        real(dp) :: value
+        if (lr < log(tiny(1.0_dp))) then
+            value = lr
+        else if (lr <= 0.0_dp) then
+            value = log(asinh(exp(lr)))
+        else
+            value = log(lr+log1p_safe(sqrt(1.0_dp+exp(-2.0_dp*lr))))
+        end if
+    end function skew_t_logasinh
+
+    pure function skew_t_small_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! tiny positive a, b, finite loc, positive scale
+        real(dp) :: value, first, last, lnear, lfar, hnear, hfar, ls, logs, delta, ratio
+        real(dp) :: u, v, lu, lv
+        ls = log(params(1)+params(2))
+        logs = log(params(4))
+        if (a < params(3) .and. b > params(3)) then
+            first = skew_t_logasinh(log_distance(params(3),a)-logs-0.5_dp*ls)
+            last = skew_t_logasinh(log_distance(b,params(3))-logs-0.5_dp*ls)
+            delta = bounded_logadd(first,last)
+        else
+            first = a
+            last = b
+            if (b <= params(3)) then
+                first = b
+                last = a
+            end if
+            call skew_t_coordinates(first,params,u,v,lu,lv,hnear)
+            call skew_t_coordinates(last,params,u,v,lu,lv,hfar)
+            if (first == params(3)) then
+                lnear = negative_infinity(0.0_dp)
+            else
+                lnear = log_distance(max(first,params(3)),min(first,params(3)))-logs
+            end if
+            lfar = log_distance(max(last,params(3)),min(last,params(3)))-logs
+            ratio = exp(min(0.0_dp,bounded_logadd(lnear,lfar)-bounded_logadd(hnear,hfar)))
+            delta = burr_logsoftplus(log_distance(b,a)-logs-bounded_logadd(lnear,hnear) &
+                +log1p_safe(ratio))
+        end if
+        value = scifort_log_two+log(params(1))+log(params(2))-ls+delta
+    end function skew_t_small_interval
+
+    pure function f_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! beta half-shapes, loc, scale, log dfn/dfd
+        real(dp) :: value
+        if (max(params(1),params(2)) > epsilon(1.0_dp)/16384.0_dp .or. a <= params(3)) then
+            value = betaprime_interval(a,b,params)
+        else
+            value = log(params(1))+log(params(2))-log(params(1)+params(2)) &
+                +burr_logsoftplus(log_distance(b,a)-log_distance(a,params(3)))
+        end if
+    end function f_interval
+
+    pure function t_censored_loglikelihood(data, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in [2*tiny,1e6], or +infinity
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        value = quiet_nan(0.0_dp)
+        if (ieee_is_nan(df)) return
+        if (df == positive_infinity(0.0_dp)) then
+            value = normal_censored_loglikelihood(data,loc,scale)
+            return
+        end if
+        if (.not. ieee_is_finite(df)) return
+        if (df <= 0.0_dp) return
+        params = [0.5_dp*df,0.5_dp*df,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (minval(params(1:2)) < tiny(1.0_dp)) return
+        if (maxval(params(1:2)) > 1.0e6_dp) return
+        if (params(1)+params(2) > 1.0e6_dp .or. params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,skew_t_lpdf,skew_t_lcdf, &
+            skew_t_lsf,skew_t_interval)
+    end function t_censored_loglikelihood
+
+    pure function t_censored_nnlf(data, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in [2*tiny,1e6], or +infinity
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -t_censored_loglikelihood(data,df,loc,scale)
+    end function t_censored_nnlf
+
+    pure function f_censored_loglikelihood(data, dfn, dfd, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: dfn !! numerator degrees >=2*tiny; dfn+dfd <=2e6
+        real(dp), intent(in) :: dfd !! denominator degrees >=2*tiny; dfn+dfd <=2e6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        if (.not. ieee_is_finite(dfn) .or. .not. ieee_is_finite(dfd)) return
+        if (min(dfn,dfd) <= 0.0_dp) return
+        params = [0.5_dp*dfn,0.5_dp*dfd,0.0_dp,1.0_dp,log(dfn)-log(dfd)]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (minval(params(1:2)) < tiny(1.0_dp)) return
+        if (maxval(params(1:2)) > 1.0e6_dp) return
+        if (params(1)+params(2) > 1.0e6_dp .or. params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,betaprime_lpdf,betaprime_lcdf, &
+            betaprime_lsf,f_interval)
+    end function f_censored_loglikelihood
+
+    pure function f_censored_nnlf(data, dfn, dfd, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: dfn !! numerator degrees >=2*tiny; dfn+dfd <=2e6
+        real(dp), intent(in) :: dfd !! denominator degrees >=2*tiny; dfn+dfd <=2e6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -f_censored_loglikelihood(data,dfn, dfd,loc,scale)
+    end function f_censored_nnlf
+
+    pure function jf_skew_t_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! first beta shape >=tiny; a+b <=1e6
+        real(dp), intent(in) :: b !! second beta shape >=tiny; a+b <=1e6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        value = quiet_nan(0.0_dp)
+        params = [a,b,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (minval(params(1:2)) < tiny(1.0_dp)) return
+        if (maxval(params(1:2)) > 1.0e6_dp) return
+        if (params(1)+params(2) > 1.0e6_dp .or. params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,skew_t_lpdf,skew_t_lcdf, &
+            skew_t_lsf,skew_t_interval)
+    end function jf_skew_t_censored_loglikelihood
+
+    pure function jf_skew_t_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! first beta shape >=tiny; a+b <=1e6
+        real(dp), intent(in) :: b !! second beta shape >=tiny; a+b <=1e6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -jf_skew_t_censored_loglikelihood(data,a, b,loc,scale)
+    end function jf_skew_t_censored_nnlf
+
 
     ! Gamma-power laws: Y = rate*((x-loc)/scale)**power ~ Gamma(a,1).
     ! Derived from the public density specifications; see CODE_PROVENANCE.md.
@@ -3650,6 +3950,7 @@ contains
         real(dp), intent(out) :: logv !! log transformed upper coordinate
         real(dp) :: logz, e
         logz = lognormal_logz(x,[1.0_dp,params(3),params(4)])
+        if (size(params) == 5) logz = logz+params(5)
         logu = -log1pexp(-logz)
         logv = -log1pexp(logz)
         if (logz <= 0.0_dp) then
@@ -3673,6 +3974,9 @@ contains
         if (x == params(3)) then
             if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
             if (params(1) == 1.0_dp) value = log(params(2))-log(params(4))
+            if (size(params) == 5 .and. params(1) == 1.0_dp) then
+                value = value+params(5)
+            end if
             return
         end if
         call betaprime_coordinates(x,params,u,v,logu,logv)
@@ -3715,6 +4019,13 @@ contains
         logq = 0.0_dp
         if (x <= params(3)) return
         call betaprime_coordinates(x,params,u,v,logu,logv)
+        if (size(params) == 5) then
+            if (max(params(1),params(2)) <= epsilon(1.0_dp)/16384.0_dp) then
+                logp = -log1pexp(log(params(1))-log(params(2)))
+                logq = -log1pexp(log(params(2))-log(params(1)))
+                return
+            end if
+        end if
         if (u == 0.0_dp) then
             logp = betaprime_endpoint_tail(params(1),params(2),logu)
             logq = log_difference(0.0_dp,logp)

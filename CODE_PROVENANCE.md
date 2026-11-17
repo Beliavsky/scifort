@@ -1,3 +1,52 @@
+## 2026-11-17 - Student t, F, and Jones-Faddy censoring
+
+The new likelihoods, callbacks, fit overloads, tests, and checker are
+original MIT SciFort code derived from mathematical specifications inspected
+on 2026-11-17:
+[Student t](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.t.html),
+[F](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.f.html),
+[Jones-Faddy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.jf_skew_t.html),
+and [DLMF 8.17](https://dlmf.nist.gov/8.17).
+No upstream implementation was copied, translated, or vendored. Existing
+SciFort beta, beta-prime, normal, distance, and optimizer code retains its
+provenance and notices. No dependency or license text is added.
+
+For Jones-Faddy, u=(1+z/sqrt(a+b+z*z))/2 has Beta(a,b) density by the
+Jacobian. The density becomes `4*sqrt(u*v)*u**a*v**b/(sqrt(a+b)*B(a,b))`.
+Student t is the a=b=df/2 case, and infinite df reuses normal censoring.
+The small coordinate `s/(2*h*(h+abs(z)))` and log hypot identity retain
+tails through overflowed standardized coordinates. Endpoint limits reuse
+existing logarithmic beta formulas. F is beta-prime with shapes df/2 and
+a logarithmic rate log(dfn)-log(dfd). Its optional private fifth callback
+parameter adds this rate to the old beta-prime coordinates and finite
+endpoint density; four-parameter beta-prime calls are unchanged.
+
+The Student/Jones-Faddy log-density derivative is
+`((a-b)-(a+b+1)*z/h)/h`, bounded in magnitude by `(2*(a+b)+1)/h`.
+Using the smallest h on the interval bounds physical density variation
+before reusing three-point Gauss-Legendre nodes and weights from the
+existing [DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v) implementation.
+F uses the existing beta-prime log-density increment formula.
+
+For both shapes at most epsilon/16384, B(a,b) has leading value (a+b)/(a*b),
+and finite-point beta probabilities have weights b/(a+b), a/(a+b).
+Stable logistic logarithms retain extremely unequal complementary weights.
+The finite input log-coordinate magnitude is below 4000, bounding omitted
+relative terms below roundoff at this threshold. Finite interval densities
+integrate to (a*b/(a+b))*log((upper-loc)/(lower-loc)) for F and
+`2*a*b/(a+b)` times an asinh increment for Jones-Faddy. The stable latter
+increment uses `(h2-h1)=(z2-z1)*(z2+z1)/(h2+h1)` before log1p, or adds the
+two positive asinh branches across the center. No fitted coefficients are used.
+
+The new APIs require normal positive beta parameters and shape sum <=1e6,
+bounding the validated continued-fraction regime and avoiding unsupported
+subnormal gamma normalization. These numerical gaps remain explicit.
+The mpmath checker evaluates beta integrals independently, with direct
+high-precision density integration for large symmetric near-center tails
+and adjacent intervals. SciPy supplies independent bounded-fit benchmarks.
+See the [API guide](docs/censored_fitting.md) and
+[validation record](validation/beta_t_censored_2026-11-17.md).
+
 ## 2026-11-17 - Chi-squared, chi, and Nakagami censoring
 
 The new private gamma-power callbacks, public likelihoods, fit overloads,

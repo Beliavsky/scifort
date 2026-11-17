@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+t_censored_loglikelihood(data, df [, loc, scale])
+f_censored_loglikelihood(data, dfn, dfd [, loc, scale])
+jf_skew_t_censored_loglikelihood(data, a, b [, loc, scale])
 chi2_censored_loglikelihood(data, df [, loc, scale])
 chi_censored_loglikelihood(data, df [, loc, scale])
 nakagami_censored_loglikelihood(data, nu [, loc, scale])
@@ -167,7 +170,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -2040,3 +2043,64 @@ declaring convergence. Moving endpoints and singular limits may make a fit
 unbounded. Bounds and a successful local fit do not establish global
 optimality or identifiability. See the
 [validation record](../validation/radial_gamma_censored_2026-11-17.md).
+
+
+## Student t, F, and Jones-Faddy skew-t details
+
+The likelihoods and corresponding `*_censored_nnlf` functions are exported
+by `scifort_censored` and `scifort_stats`. Their existing fit generics accept
+`censored_data`, with bounds in `[df,loc,scale]`, `[dfn,dfd,loc,scale]`, or
+`[a,b,loc,scale]` order respectively. Equal bounds fix any parameter; all
+parameters may vary. Original array-based fitting calls remain available.
+Invalid parameters return NaN even for empty data; valid empty likelihoods
+are zero. Location defaults to zero and scale to one.
+
+The current numerical contract requires positive normal binary64 beta
+parameters, each at least `tiny(1.0_dp)`, and their sum at most 1e6:
+
+| Distribution | Beta parameters | Native shape limits |
+| --- | --- | --- |
+| Student t | df/2, df/2 | 2*tiny <= df <= 1e6 |
+| F | dfn/2, dfd/2 | dfn,dfd >= 2*tiny; (dfn+dfd)/2 <= 1e6 |
+| Jones-Faddy | a, b | a,b >= tiny; a+b <= 1e6 |
+
+Student t additionally
+accepts `df=+infinity` in its likelihood/NNLF as the normal limit. The
+bounded fitter requires finite bounds, as elsewhere. Subnormal beta shapes
+and larger finite shape sums remain explicit compatibility gaps. Existing
+beta-kernel accuracy and representability limits apply.
+
+Student t and Jones-Faddy have support on the whole real line. With
+`z=(x-loc)/scale`, `s=a+b`, and `h=sqrt(s+z*z)`, Jones-Faddy maps monotonically
+to a beta variable `u=(1+z/h)/2`, `v=1-u`. Student t is the symmetric case
+`a=b=df/2`. Independent log distances and the small-coordinate identity
+`s/(2*h*(h+abs(z)))` retain both tails when z or z*z would overflow.
+Endpoint-rounded beta coordinates use logarithmic beta-tail limits.
+
+For F, support is `[loc,infinity)`, and `y=(dfn/dfd)*z` is beta-prime with
+shapes dfn/2 and dfd/2. The implementation retains log(dfn/dfd), avoiding
+overflow in an effective scale or ratio. CDF/SF at loc are 0/1. Endpoint
+density is infinite for dfn<2, `1/scale` for dfn=2, and zero for dfn>2.
+Below loc the density/CDF are zero and SF one.
+
+Narrow Student/Jones-Faddy intervals use a three-point physical-coordinate
+density integral when log width, scale, h, and shape sum bound log-density
+variation by 0.001. The bound is `abs(d log(f)/dz)<=(2*s+1)/h`, using the
+smallest h on the interval. F reuses the validated beta-prime interval
+formula. Other intervals use the better-conditioned logarithmic tail, or
+complement both omitted tails for nearly full support.
+
+When both beta shapes are at most epsilon/16384, finite-point CDF/SF use
+the endpoint mixture weights b/(a+b) and a/(a+b) with stable logarithms.
+The neglected relative terms are below binary64 roundoff for the finite
+input log-coordinate range. Finite interval masses are still retained:
+F integrates its leading log-ratio density, and Student/Jones-Faddy use
+`2*a*b/(a+b)` times the increment of `asinh(z/sqrt(a+b))`. Stable increment
+identities preserve widths even when rounded CDFs are equal.
+
+Student t with df=1 agrees with Cauchy; symmetric Jones-Faddy agrees with
+Student t; F agrees with the corresponding scaled beta-prime law. Fits
+use the existing local bounded optimizer. Check status, success, and the
+objective; iteration limits can leave finite improving candidates without
+convergence. Success does not prove global optimality or identifiability.
+See the [validation record](../validation/beta_t_censored_2026-11-17.md).

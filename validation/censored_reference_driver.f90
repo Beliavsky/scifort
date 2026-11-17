@@ -51,6 +51,9 @@ program censored_reference_driver
     use scifort_censored, only : chi2_censored_loglikelihood
     use scifort_censored, only : chi_censored_loglikelihood
     use scifort_censored, only : nakagami_censored_loglikelihood
+    use scifort_censored, only : t_censored_loglikelihood
+    use scifort_censored, only : f_censored_loglikelihood
+    use scifort_censored, only : jf_skew_t_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -60,7 +63,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61])) read(*, *) second_shape
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74])) read(*, *) second_shape
         if (family == 53) read(*, *) third_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
@@ -70,6 +73,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (72)
+            value = t_censored_loglikelihood(data,c,loc,scale)
+        case (73)
+            value = f_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (74)
+            value = jf_skew_t_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (69)
             value = chi2_censored_loglikelihood(data,c,loc,scale)
         case (70)
