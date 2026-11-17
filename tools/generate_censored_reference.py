@@ -45,6 +45,17 @@ def betaprime_logtails(z, a, b):
     return mp.log1p(-q),mp.log(q)
 
 
+def power_normal_reference(z, c):
+    """Log survival and log density from the normal-power specification."""
+    if z >= 0:
+        logq=logerfc_large_safe(z/mp.sqrt(2))-mp.log(2)
+    else:
+        logp=logerfc_large_safe(-z/mp.sqrt(2))-mp.log(2)
+        logq=mp.log1p(-mp.exp(logp))
+    loghazard=mp.log(z) if z > mp.mpf('1e50') else -z*z/2-mp.log(2*mp.pi)/2-logq
+    return c*logq,mp.log(c)+loghazard+c*logq
+
+
 def polygon_cdf(z,c,d):
     if z <= 0: return mp.mpf(0)
     if z >= 1: return mp.mpf(1)
@@ -55,6 +66,20 @@ def polygon_cdf(z,c,d):
 
 
 def logpdf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('powernorm','powerlognorm'):
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if family == 'powerlognorm':
+            if z <= 0: return mp.ninf
+            z=mp.log(z)/mp.mpf(second_shape)
+        logq,logdensity=power_normal_reference(z,shape)
+        jacobian=mp.log(scale) if family == 'powernorm' else mp.log(mp.mpf(second_shape)*(x-loc))
+        return logdensity-jacobian
+    if family == 'skewcauchy':
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        h=1-shape if z < 0 else 1+shape
+        return -mp.log(mp.pi*scale)-mp.log1p((z/h)**2)
     if family == 'gibrat': family, shape = 'lognormal', 1.
     if family == 'erlang': family = 'gamma'
     x, shape, loc, scale = map(mp.mpf, (x, shape, loc, scale))
@@ -165,6 +190,20 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logcdf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('powernorm','powerlognorm'):
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if family == 'powerlognorm':
+            if z <= 0: return mp.ninf
+            z=mp.log(z)/mp.mpf(second_shape)
+        logq,logdensity=power_normal_reference(z,shape)
+        return mp.log(-mp.expm1(logq))
+    if family == 'skewcauchy':
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        h=1-shape if z < 0 else 1+shape
+        tail=h*mp.atan2(h,abs(z))/mp.pi
+        return mp.log(tail) if z < 0 else mp.log1p(-tail)
     if family in ('invgamma','maxwell','betaprime'):
         x,c,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -263,6 +302,20 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('powernorm','powerlognorm'):
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        if family == 'powerlognorm':
+            if z <= 0: return mp.mpf(0)
+            z=mp.log(z)/mp.mpf(second_shape)
+        logq,logdensity=power_normal_reference(z,shape)
+        return logq
+    if family == 'skewcauchy':
+        x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
+        z=(x-loc)/scale
+        h=1-shape if z < 0 else 1+shape
+        tail=h*mp.atan2(h,abs(z))/mp.pi
+        return mp.log(tail) if z >= 0 else mp.log1p(-tail)
     if family in ('invgamma','maxwell','betaprime'):
         x,c,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -369,6 +422,17 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1.):
+    if family in ('powernorm','powerlognorm','skewcauchy'):
+        la=logcdf(a,family,shape,loc,scale,second_shape)
+        lb=logcdf(b,family,shape,loc,scale,second_shape)
+        qa=logsf(a,family,shape,loc,scale,second_shape)
+        qb=logsf(b,family,shape,loc,scale,second_shape)
+        if lb < qa:
+            result=lb+mp.log(-mp.expm1(la-lb))
+        else:
+            result=qa+mp.log(-mp.expm1(qb-qa))
+        if result > -mp.log(2): return mp.log1p(-mp.exp(la)-mp.exp(qb))
+        return result
     if family in ('invgamma','maxwell','betaprime'):
         a,b,c,loc,scale=map(mp.mpf,(a,b,shape,loc,scale))
         za,zb=max(0,(a-loc)/scale),(b-loc)/scale
@@ -586,6 +650,15 @@ def main():
         elif family == 'betaprime': fitted=stats.betaprime.fit(data,f1=2.3,floc=0.,fscale=1.3)
         else: fitted=stats.invgamma.fit(data,floc=0.,fscale=1.3)
         result[family+'_constrained_fit']=list(fitted)
+    for family in ['powernorm','powerlognorm','skewcauchy']:
+        shape,loc,scale=(.4 if family == 'skewcauchy' else 1.7),0.,1.3
+        value=sum(logpdf(x,family,shape,loc,scale,.8) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,shape,loc,scale,.8)+logsf(3.5,family,shape,loc,scale,.8)
+        value+=sum(loginterval(a,b,family,shape,loc,scale,.8) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        options=dict(floc=0.,fscale=1.3)
+        if family == 'powerlognorm': options['f1']=.8
+        result[family+'_constrained_fit']=list(getattr(stats,family).fit(data,**options))
     print(json.dumps(result, indent=2))
 
 

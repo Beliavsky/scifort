@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: powernorm_censored_loglikelihood, powernorm_censored_nnlf
+    public :: powerlognorm_censored_loglikelihood, powerlognorm_censored_nnlf
+    public :: skewcauchy_censored_loglikelihood, skewcauchy_censored_nnlf
     public :: invgamma_censored_loglikelihood, invgamma_censored_nnlf
     public :: betaprime_censored_loglikelihood, betaprime_censored_nnlf
     public :: maxwell_censored_loglikelihood, maxwell_censored_nnlf
@@ -92,6 +95,415 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function normal_log_mills(logz) result(value)
+        implicit none
+        real(dp), intent(in) :: logz !! log positive standardized point, z >= 20
+        real(dp) :: value, inverse_square, term, series
+        integer :: k
+        ! Q(z)*z/phi(z), DLMF 7.12.1. At z >= 20 the first omitted
+        ! term after twelve corrections is below 2e-20.
+        inverse_square = exp(-2.0_dp*logz)
+        term = 1.0_dp
+        series = 1.0_dp
+        do k = 1, 12
+            term = -term*real(2*k-1,dp)*inverse_square
+            series = series+term
+        end do
+        value = log(series)
+    end function normal_log_mills
+
+    pure function normal_log_hazard(z, logz) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized point, possibly infinite
+        real(dp), intent(in) :: logz !! log absolute standardized point
+        real(dp) :: value
+        if (z >= 20.0_dp) then
+            value = logz-normal_log_mills(logz)
+        else if (z < -20.0_dp) then
+            value = negative_hazard(2.0_dp*logz-scifort_log_two)-scifort_log_sqrt_two_pi
+        else
+            value = normal_logpdf(z)-normal_logsf(z)
+        end if
+    end function normal_log_hazard
+
+    pure function power_normal_logh(z, logz, c) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized point, possibly infinite
+        real(dp), intent(in) :: logz !! log absolute standardized point
+        real(dp), intent(in) :: c !! positive finite power
+        real(dp) :: value, correction
+        if (z >= 20.0_dp) then
+            correction = 2.0_dp*(logz+scifort_log_sqrt_two_pi-normal_log_mills(logz))
+            correction = correction*exp(-2.0_dp*logz)
+            value = log(c)+2.0_dp*logz-scifort_log_two+log1p_safe(correction)
+        else if (z < -8.0_dp) then
+            ! -log(1-Phi(z)) / Phi(z) differs from one by < 4e-16.
+            value = log(c)+normal_logcdf(z)
+        else
+            value = log(c)+log(-normal_logsf(z))
+        end if
+    end function power_normal_logh
+
+    pure subroutine power_coordinates(x, params, z, logz)
+        implicit none
+        real(dp), intent(in) :: x !! finite evaluation point
+        real(dp), intent(in) :: params(:) !! power, location, positive scale
+        real(dp), intent(out) :: z !! standardized point, possibly infinite
+        real(dp), intent(out) :: logz !! log absolute standardized point
+        z = location_scale_z(x,params(2:3))
+        logz = cauchy_log_distance(x,params(2:3))
+        if (z /= 0.0_dp .and. ieee_is_finite(z)) logz = log(abs(z))
+    end subroutine power_coordinates
+
+    pure function powernorm_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! power, location, positive scale
+        real(dp) :: value, z, logz
+        call power_coordinates(x,params,z,logz)
+        value = log(params(1))+normal_log_hazard(z,logz)-log(params(3)) &
+            +negative_hazard(power_normal_logh(z,logz,params(1)))
+    end function powernorm_lpdf
+
+    pure function powernorm_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, positive scale
+        real(dp) :: value, z, logz
+        call power_coordinates(x,params,z,logz)
+        value = log_hazard_mass(power_normal_logh(z,logz,params(1)))
+    end function powernorm_lcdf
+
+    pure function powernorm_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, positive scale
+        real(dp) :: value, z, logz
+        call power_coordinates(x,params,z,logz)
+        value = negative_hazard(power_normal_logh(z,logz,params(1)))
+    end function powernorm_lsf
+
+    pure function power_normal_small_interval(z, logz, logwidth, c) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized lower endpoint, possibly infinite
+        real(dp), intent(in) :: logz !! log absolute standardized lower endpoint
+        real(dp), intent(in) :: logwidth !! log width in normal coordinates
+        real(dp), intent(in) :: c !! positive finite power
+        real(dp) :: value, logdelta, q, nodes(3), ratios(3), w, hazard, correction
+        integer :: i
+        value = quiet_nan(0.0_dp)
+        if (z >= 20.0_dp) then
+            if (logwidth-logz > log(0.001_dp)) return
+        else
+            if (logwidth+max(0.0_dp,logz) > log(0.001_dp)) return
+        end if
+        hazard = normal_log_hazard(z,logz)
+        if (.not. ieee_is_finite(hazard)) then
+            value = negative_infinity(0.0_dp)
+            return
+        end if
+        if (z >= 1.0e8_dp) then
+            ! The Mills correction to the integrated hazard is <= 1/z**2.
+            q = exp(logwidth-logz)
+            correction = log1p_safe(0.5_dp*q)
+        else
+            ! Integrate the normal hazard, rather than subtract nearly equal
+            ! log survivals. Three-point Gauss-Legendre, DLMF 3.5(v).
+            nodes = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            do i = 1, 3
+                w = z+nodes(i)*exp(logwidth)
+                if (w == 0.0_dp) then
+                    ratios(i) = normal_log_hazard(w,negative_infinity(0.0_dp))-hazard
+                else
+                    ratios(i) = normal_log_hazard(w,log(abs(w)))-hazard
+                end if
+            end do
+            correction = log1p_safe((4.0_dp/9.0_dp)*expm1_safe(ratios(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(ratios(2))+expm1_safe(ratios(3))))
+        end if
+        logdelta = log(c)+logwidth+hazard+correction
+        value = negative_hazard(power_normal_logh(z,logz,c))+log_hazard_mass(logdelta)
+    end function power_normal_small_interval
+
+    pure function powernorm_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! power, location, positive scale
+        real(dp) :: value, z, logz, omitted
+        call power_coordinates(a,params,z,logz)
+        value = power_normal_small_interval(z,logz, &
+            log_distance(b,a)-log(params(3)),params(1))
+        if (ieee_is_nan(value)) then
+            value = tail_interval(a,b,params,powernorm_lcdf,powernorm_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(powernorm_lcdf(a,params),powernorm_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function powernorm_interval
+
+    pure subroutine powerlog_coordinates(x, params, z, logz)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! power, lognormal shape, location, scale
+        real(dp), intent(out) :: z !! normal coordinate, possibly infinite
+        real(dp), intent(out) :: logz !! log absolute normal coordinate
+        real(dp) :: lz
+        lz = lognormal_logz(x,params(2:4))
+        z = lognormal_standardized(x,params(2:4))
+        logz = negative_infinity(0.0_dp)
+        if (lz /= 0.0_dp) logz = log(abs(lz))-log(params(2))
+        if (z /= 0.0_dp .and. ieee_is_finite(z)) logz = log(abs(z))
+    end subroutine powerlog_coordinates
+
+    pure function powerlognorm_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! power, lognormal shape, location, scale
+        real(dp) :: value, z, logz
+        value = negative_infinity(0.0_dp)
+        if (x <= params(3)) return
+        call powerlog_coordinates(x,params,z,logz)
+        value = log(params(1))+normal_log_hazard(z,logz)-log(params(2)) &
+            -log_distance(x,params(3))+negative_hazard(power_normal_logh(z,logz,params(1)))
+    end function powerlognorm_lpdf
+
+    pure function powerlognorm_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! power, lognormal shape, location, scale
+        real(dp) :: value, z, logz
+        value = negative_infinity(0.0_dp)
+        if (x <= params(3)) return
+        call powerlog_coordinates(x,params,z,logz)
+        value = log_hazard_mass(power_normal_logh(z,logz,params(1)))
+    end function powerlognorm_lcdf
+
+    pure function powerlognorm_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! power, lognormal shape, location, scale
+        real(dp) :: value, z, logz
+        value = 0.0_dp
+        if (x <= params(3)) return
+        call powerlog_coordinates(x,params,z,logz)
+        value = negative_hazard(power_normal_logh(z,logz,params(1)))
+    end function powerlognorm_lsf
+
+    pure function powerlognorm_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! power, lognormal shape, location, scale
+        real(dp) :: value, z, logz, logr, logspan, omitted
+        value = negative_infinity(0.0_dp)
+        if (b <= params(3)) return
+        if (a <= params(3)) then
+            value = powerlognorm_lcdf(b,params)
+            return
+        end if
+        logr = log_distance(b,a)-log_distance(a,params(3))
+        logspan = logr
+        if (logr >= log(epsilon(1.0_dp))-2.0_dp) logspan = log(log1pexp(logr))
+        call powerlog_coordinates(a,params,z,logz)
+        value = power_normal_small_interval(z,logz,logspan-log(params(2)),params(1))
+        if (ieee_is_nan(value)) then
+            value = tail_interval(a,b,params,powerlognorm_lcdf,powerlognorm_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(powerlognorm_lcdf(a,params),powerlognorm_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function powerlognorm_interval
+
+    pure function skewcauchy_logside(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite evaluation point
+        real(dp), intent(in) :: params(:) !! skewness, location, positive scale
+        real(dp) :: value
+        value = log1p_safe(params(1))
+        if (x < params(2)) value = log1p_safe(-params(1))
+    end function skewcauchy_logside
+
+    pure function skewcauchy_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! skewness, location, positive scale
+        real(dp) :: value, logz
+        logz = cauchy_log_distance(x,params(2:3))-skewcauchy_logside(x,params)
+        value = -log(scifort_pi)-log(params(3))-log1pexp(2.0_dp*logz)
+    end function skewcauchy_lpdf
+
+    pure function skewcauchy_outer_tail(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite evaluation point
+        real(dp), intent(in) :: params(:) !! skewness, location, positive scale
+        real(dp) :: value, logh, logz
+        logh = skewcauchy_logside(x,params)
+        logz = cauchy_log_distance(x,params(2:3))-logh
+        value = logh-log(scifort_pi)+cauchy_logatan_exp(-logz)
+    end function skewcauchy_outer_tail
+
+    pure function skewcauchy_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! skewness, location, positive scale
+        real(dp) :: value, center, logh, logz
+        center = log1p_safe(-params(1))-scifort_log_two
+        if (params(1) < 0.0_dp) center = log1p_safe(-0.5_dp*(1.0_dp+params(1)))
+        value = center
+        if (x == params(2)) return
+        value = skewcauchy_outer_tail(x,params)
+        if (x > params(2)) then
+            if (value < -scifort_log_two) then
+                value = log1p_safe(-exp(value))
+            else
+                logh = log1p_safe(params(1))
+                logz = cauchy_log_distance(x,params(2:3))-logh
+                value = bounded_logadd(center,logh-log(scifort_pi)+cauchy_logatan_exp(logz))
+            end if
+        end if
+    end function skewcauchy_lcdf
+
+    pure function skewcauchy_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! skewness, location, positive scale
+        real(dp) :: value, center, logh, logz
+        center = log1p_safe(params(1))-scifort_log_two
+        if (params(1) > 0.0_dp) center = log1p_safe(-0.5_dp*(1.0_dp-params(1)))
+        value = center
+        if (x == params(2)) return
+        value = skewcauchy_outer_tail(x,params)
+        if (x < params(2)) then
+            if (value < -scifort_log_two) then
+                value = log1p_safe(-exp(value))
+            else
+                logh = log1p_safe(-params(1))
+                logz = cauchy_log_distance(x,params(2:3))-logh
+                value = bounded_logadd(center,logh-log(scifort_pi)+cauchy_logatan_exp(logz))
+            end if
+        end if
+    end function skewcauchy_lsf
+
+    pure function skewcauchy_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! skewness, location, positive scale
+        real(dp) :: value, logh, loga, logb, ratio, left, right, omitted
+        if (b <= params(2) .or. a >= params(2)) then
+            logh = log1p_safe(params(1))
+            if (b <= params(2)) logh = log1p_safe(-params(1))
+            loga = cauchy_log_distance(a,params(2:3))-logh
+            logb = cauchy_log_distance(b,params(2:3))-logh
+            ratio = log_distance(b,a)-log(params(3))-logh-log1pexp(loga+logb)
+            value = logh-log(scifort_pi)+cauchy_logatan_exp(ratio)
+        else
+            logh = log1p_safe(-params(1))
+            loga = cauchy_log_distance(a,params(2:3))-logh
+            left = logh-log(scifort_pi)+cauchy_logatan_exp(loga)
+            logh = log1p_safe(params(1))
+            logb = cauchy_log_distance(b,params(2:3))-logh
+            right = logh-log(scifort_pi)+cauchy_logatan_exp(logb)
+            value = min(0.0_dp,bounded_logadd(left,right))
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(skewcauchy_lcdf(a,params),skewcauchy_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function skewcauchy_interval
+
+
+    pure function powernorm_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite normal power
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,powernorm_lpdf,powernorm_lcdf, &
+            powernorm_lsf,powernorm_interval)
+    end function powernorm_censored_loglikelihood
+
+    pure function powernorm_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite normal power
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -powernorm_censored_loglikelihood(data, c, loc, scale)
+    end function powernorm_censored_nnlf
+
+    pure function powerlognorm_censored_loglikelihood(data, c, s, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite normal power
+        real(dp), intent(in) :: s !! positive finite lognormal shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [c,s,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(c,s) <= 0.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,powerlognorm_lpdf,powerlognorm_lcdf, &
+            powerlognorm_lsf,powerlognorm_interval)
+    end function powerlognorm_censored_loglikelihood
+
+    pure function powerlognorm_censored_nnlf(data, c, s, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite normal power
+        real(dp), intent(in) :: s !! positive finite lognormal shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -powerlognorm_censored_loglikelihood(data, c, s, loc, scale)
+    end function powerlognorm_censored_nnlf
+
+    pure function skewcauchy_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! skewness, strictly between -1 and 1
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [a,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (abs(a) >= 1.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,skewcauchy_lpdf,skewcauchy_lcdf, &
+            skewcauchy_lsf,skewcauchy_interval)
+    end function skewcauchy_censored_loglikelihood
+
+    pure function skewcauchy_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! skewness, strictly between -1 and 1
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -skewcauchy_censored_loglikelihood(data, a, loc, scale)
+    end function skewcauchy_censored_nnlf
+
 
     pure function invgamma_lpdf(x, params) result(value)
         implicit none

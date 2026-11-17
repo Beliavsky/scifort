@@ -993,6 +993,65 @@ def main():
         cases.append(('betaprime_finite_shape_sum',float(value)))
         nl,nr=(1,0) if mode == 'left' else (0,1)
         stdin+=f'43 {c:.17g} 0 {scale:.17g} 0 {nl} {nr} 0\n{d:.17g}\n{x:.17g}\n'
+    # Append new families to preserve the existing seeded reference samples.
+    for number,family in [(45,'powernorm'),(46,'powerlognorm'),(47,'skewcauchy')]:
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            c=rng.uniform(-.99,.99) if number == 47 else 10**rng.uniform(-2.,2.)
+            second=10**rng.uniform(-1.,1.)
+            def point():
+                return loc+scale*(10**rng.uniform(-2.,2.) if number == 46 else rng.uniform(-10.,10.))
+            exact=[point() for _ in range(3)]
+            left,right=[point()],[point()]
+            intervals=[]
+            for _ in range(2):
+                a=point();b=a+scale*10**rng.uniform(-14.,1.)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,c,loc,scale,second) for x in exact)
+            value+=sum(reference.logcdf(x,family,c,loc,scale,second) for x in left)
+            value+=sum(reference.logsf(x,family,c,loc,scale,second) for x in right)
+            value+=sum(reference.loginterval(a,b,family,c,loc,scale,second) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            if number == 46: stdin+=f'{second:.17g}\n'
+            for group in [exact,left,right,*intervals]:
+                stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+    with mp.workdps(750):
+        for number,family in [(45,'powernorm'),(46,'powerlognorm'),(47,'skewcauchy')]:
+            shapes=[1e-300,.1,1.,1e2,1e300] if number != 47 else [-math.nextafter(1.,0.),-.7,0.,.7,math.nextafter(1.,0.)]
+            tests=[(0.,math.nextafter(0.,1.),0.,1.,.8),
+                   (1.,math.nextafter(1.,math.inf),0.,1.,.8),
+                   (1e-300,2e-300,0.,1e300,.8),
+                   (-1e300,1e300,0.,1e-300,.8),
+                   (40.,math.nextafter(40.,math.inf),0.,1.,.8),
+                   (-40.,math.nextafter(-40.,math.inf),0.,1.,.8)]
+            if number == 46:
+                tests=[(1.,math.nextafter(1.,math.inf),0.,1.,.8),
+                       (1e-300,2e-300,0.,1e300,.8),
+                       (1e300,math.nextafter(1e300,math.inf),0.,1e-300,.8),
+                       (1e100,math.nextafter(1e100,math.inf),0.,1e100,.8),
+                       (1.,math.nextafter(1.,math.inf),0.,1.,1e-300)]
+            for c in shapes:
+                for a,b,loc,scale,second in tests:
+                    value=float(reference.loginterval(a,b,family,c,loc,scale,second))
+                    if not math.isfinite(value): continue
+                    cases.append((family+'_stress',value))
+                    stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n'
+                    if number == 46: stdin+=f'{second:.17g}\n'
+                    stdin+=f'{a:.17g} {b:.17g}\n'
+            # All censoring types at opposing extreme shapes and scales.
+            points=[(-40.,1.,1e300,.8),(40.,1.,1e-300,.8),(1e300,1.,1e-300,.8)]
+            if number == 46: points=[(1e300,1e-300,1e-300,1e-300),(1e-300,1e300,1e300,.8)]
+            if number == 47: points=[(1e300,1e-300,.9,.8),(-1e300,1e-300,-.9,.8),(1e-300,1e300,math.nextafter(1.,0.),.8)]
+            for x,scale,c,second in points:
+                for obs,fn in [('1 0 0',reference.logpdf),('0 1 0',reference.logcdf),('0 0 1',reference.logsf)]:
+                    value=float(fn(x,family,c,0.,scale,second))
+                    if not math.isfinite(value): continue
+                    cases.append((family+'_extreme_point',value))
+                    stdin+=f'{number} {c:.17g} 0 {scale:.17g} {obs} 0\n'
+                    if number == 46: stdin+=f'{second:.17g}\n'
+                    stdin+=f'{x:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -1022,6 +1081,7 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        power_skew_errors = []
         positive_transform_errors = []
         reflected_errors = []
         piecewise_errors = []
@@ -1033,6 +1093,8 @@ def main():
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('powernorm','powerlognorm','skewcauchy')):
+                power_skew_errors.append(error)
             if family.startswith(('invgamma','betaprime','maxwell')):
                 positive_transform_errors.append(error)
             if family.startswith(('dgamma','dweibull','loggamma')):
@@ -1073,6 +1135,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Power normal/lognormal/skew Cauchy: {len(power_skew_errors)} comparisons; '
+              f'max scaled error={max(power_skew_errors):.3g}', flush=True)
         print(f'  Inverse gamma/beta prime/Maxwell: {len(positive_transform_errors)} comparisons; '
               f'max scaled error={max(positive_transform_errors):.3g}', flush=True)
         print(f'  Double gamma/Weibull and log gamma: {len(reflected_errors)} comparisons; '

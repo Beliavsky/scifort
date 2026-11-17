@@ -1,3 +1,14 @@
+## 2026-11-16 - Power-normal, power-lognormal, and skew-Cauchy censoring
+
+- Add mixed-censoring log likelihoods, negative log likelihoods, bounded
+  censored-data fit overloads, and `scifort_stats` exports for three families.
+- Retain tiny-power normal tails and densities without overflowing squared
+  coordinates; integrate narrow-interval hazard increments before subtraction.
+- Keep skew-Cauchy side scales logarithmic and preserve center probabilities
+  near the skewness boundaries. Existing scalar/array APIs remain available.
+- Add native and independent high-precision checks and document numerical
+  behavior and fit convergence limits. Coverage is 47 families with 62 remaining.
+
 ## 2026-11-16 - Inverse-gamma, beta-prime, and Maxwell censoring
 
 - Add mixed-censoring likelihood/NNLF and bounded fits for three more families,

@@ -17,6 +17,9 @@ module scifort_stats
     use scifort_censored, only : invgamma_censored_loglikelihood, invgamma_censored_nnlf
     use scifort_censored, only : betaprime_censored_loglikelihood, betaprime_censored_nnlf
     use scifort_censored, only : maxwell_censored_loglikelihood, maxwell_censored_nnlf
+    use scifort_censored, only : powernorm_censored_loglikelihood, powernorm_censored_nnlf
+    use scifort_censored, only : powerlognorm_censored_loglikelihood, powerlognorm_censored_nnlf
+    use scifort_censored, only : skewcauchy_censored_loglikelihood, skewcauchy_censored_nnlf
     use scifort_censored, only : arcsine_censored_loglikelihood, arcsine_censored_nnlf
     use scifort_censored, only : powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     use scifort_censored, only : uniform_censored_loglikelihood, uniform_censored_nnlf
@@ -736,6 +739,9 @@ module scifort_stats
     public :: burr12_censored_loglikelihood, burr12_censored_nnlf
     public :: uniform_censored_loglikelihood, uniform_censored_nnlf
     public :: powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
+    public :: powernorm_censored_loglikelihood, powernorm_censored_nnlf
+    public :: powerlognorm_censored_loglikelihood, powerlognorm_censored_nnlf
+    public :: skewcauchy_censored_loglikelihood, skewcauchy_censored_nnlf
     public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
     public :: invgamma_censored_loglikelihood, invgamma_censored_nnlf
     public :: betaprime_censored_loglikelihood, betaprime_censored_nnlf

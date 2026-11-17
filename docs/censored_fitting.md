@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+powernorm_censored_loglikelihood(data, c [, loc, scale])
+powerlognorm_censored_loglikelihood(data, c, s [, loc, scale])
+skewcauchy_censored_loglikelihood(data, a [, loc, scale])
 normal_censored_loglikelihood(data [, loc, scale])
 moyal_censored_loglikelihood(data [, loc, scale])
 levy_censored_loglikelihood(data [, loc, scale])
@@ -140,7 +143,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1264,3 +1267,66 @@ accuracy in sharply concentrated distributions. Subnormal values retain
 binary64 resolution limits. Existing scalar and array-fit APIs are preserved;
 C ABI and wrapper additions remain deferred. See the
 [validation report](../validation/positive_transform_censored_2026-11-16.md).
+
+## Power-normal, power-lognormal, and skew-Cauchy details
+
+`powernorm` uses finite `c > 0`, location `loc`, and positive scale.
+Writing `z=(x-loc)/scale`, its survival is `Phi(-z)**c` and its density is
+`c*phi(z)*Phi(-z)**(c-1)/scale`. At `c=1` it is the normal distribution.
+`powerlognorm` has shapes `(c,s)` in that order, both positive and finite.
+It applies the same power-normal law at `w=log((x-loc)/scale)/s`, with
+Jacobian `1/(s*(x-loc))`. Its support is `x > loc`; density and CDF at or
+below `loc` are zero and survival is one. At `c=1` it equals lognormal with
+shape `s`. All parameters must be finite, and invalid parameters return NaN
+even for empty samples. Optional location and scale default to zero and one.
+
+The power kernels retain the logarithm of cumulative hazard
+`H=-c*log(Phi(-w))`. Normal upper-tail asymptotics avoid overflowing `w*w`
+before multiplying by a tiny power and avoid subtracting two large log
+probabilities in the density. For narrow intervals the hazard increment
+is integrated in normal coordinates before evaluating
+`-H(a)+log(1-exp(-(H(b)-H(a))))`. Original interval widths are retained
+when transformed endpoint coordinates round together. Broader intervals
+use the better tail difference and complement both omitted tails for
+nearly full intervals. These routines do not change the existing scalar
+distribution implementations, whose extreme-parameter accuracy can differ.
+
+`skewcauchy` uses finite `-1 < a < 1`. Its left and right scale factors are
+`1-a` and `1+a`, respectively, and its density is
+`1/(pi*scale*(1+(z/h)**2))` on each side with the appropriate `h`.
+The probability to the left of location is `(1-a)/2`; to the right it is
+`(1+a)/2`. At `a=0` it equals Cauchy. Both sides have unbounded support.
+Logarithmic side scales avoid overflowing their products with `scale`;
+positive arctangent differences retain adjacent and crossing interval masses.
+Center probabilities and small inner masses are added directly when
+complementing a nearly unit tail would lose accuracy near `a=+/-1`.
+
+Each family has matching `_censored_nnlf` and a censored-data `_fit`
+overload, exported by `scifort_stats`. Bounds follow `(c,loc,scale)`,
+`(c,s,loc,scale)`, and `(a,loc,scale)`, respectively. Any parameter may be
+free or fixed with equal bounds. The bounded local optimizer can require
+more than its default 1,000 sweeps when power, location, and scale are
+jointly free; check `success` and `status`, and adjust `max_iter` or bounds
+when needed. Success does not certify a global maximum or identifiability.
+Existing array-based fits and specific procedure names remain available.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    powernorm_fit, powerlognorm_fit, skewcauchy_fit
+type(censored_data) :: sample
+type(fit_result) :: fitted
+sample = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp], &
+    left=[0.3_dp],right=[3.5_dp],interval=reshape([1.1_dp,1.4_dp],[1,2]))
+call powernorm_fit(sample,[0.05_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,0.0_dp,1.3_dp],fitted)
+call powerlognorm_fit(sample,[0.05_dp,0.8_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,0.8_dp,0.0_dp,1.3_dp],fitted)
+call skewcauchy_fit(sample,[-0.95_dp,0.0_dp,1.3_dp], &
+    [0.95_dp,0.0_dp,1.3_dp],fitted)
+```
+
+The formulas follow the mathematical specifications for
+[power-normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.powernorm.html),
+[power-lognormal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.powerlognorm.html),
+and [skew-Cauchy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.skewcauchy.html).
+See [validation and commands](../validation/power_skew_censored_2026-11-16.md).

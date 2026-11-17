@@ -32,6 +32,8 @@ program censored_reference_driver
         halfcauchy_censored_loglikelihood, halflogistic_censored_loglikelihood, &
         rayleigh_censored_loglikelihood, weibull_max_censored_loglikelihood, &
         gumbel_r_censored_loglikelihood, gumbel_l_censored_loglikelihood
+    use scifort_censored, only : powernorm_censored_loglikelihood, &
+        powerlognorm_censored_loglikelihood, skewcauchy_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -41,7 +43,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (family == 6 .or. family == 25 .or. family == 26 .or. family == 38 .or. family == 43) read(*, *) second_shape
+        if (any(family == [6,25,26,38,43,46])) read(*, *) second_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -50,6 +52,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (45)
+            value = powernorm_censored_loglikelihood(data,c,loc,scale)
+        case (46)
+            value = powerlognorm_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (47)
+            value = skewcauchy_censored_loglikelihood(data,c,loc,scale)
         case (1)
             value = normal_censored_loglikelihood(data, loc, scale)
         case (2)
