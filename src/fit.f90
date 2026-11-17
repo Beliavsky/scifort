@@ -55,6 +55,9 @@ module scifort_fit
     use scifort_censored, only : foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_nnlf
+    use scifort_censored, only : invgauss_censored_nnlf
+    use scifort_censored, only : wald_censored_nnlf
+    use scifort_censored, only : recipinvgauss_censored_nnlf
     use scifort_censored, only : t_censored_nnlf
     use scifort_censored, only : f_censored_nnlf
     use scifort_censored, only : jf_skew_t_censored_nnlf
@@ -786,7 +789,59 @@ module scifort_fit
         module procedure jf_skew_t_fit, jf_skew_t_fit_censored
     end interface jf_skew_t_fit
 
+    interface invgauss_fit
+        module procedure invgauss_fit, invgauss_fit_censored
+    end interface invgauss_fit
+
+    interface wald_fit
+        module procedure wald_fit, wald_fit_censored
+    end interface wald_fit
+
+    interface recipinvgauss_fit
+        module procedure recipinvgauss_fit, recipinvgauss_fit_censored
+    end interface recipinvgauss_fit
+
 contains
+
+    subroutine invgauss_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in mu_shape, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_invgauss,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine invgauss_fit_censored
+
+    subroutine wald_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_wald,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine wald_fit_censored
+
+    subroutine recipinvgauss_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in mu_shape, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_recipinvgauss,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine recipinvgauss_fit_censored
+
 
     subroutine t_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2215,6 +2270,12 @@ contains
                 value = foldcauchy_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_genpareto)
                 value = genpareto_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_invgauss)
+                value = invgauss_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_wald)
+                value = wald_censored_nnlf(censored,params(1),params(2))
+            case (family_recipinvgauss)
+                value = recipinvgauss_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_t)
                 value = t_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_f)

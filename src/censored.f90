@@ -10,6 +10,7 @@ module scifort_censored
     use scifort_empirical_distribution, only : censored_data
     use scifort_math, only : quiet_nan, negative_infinity, positive_infinity, valid_loc_scale, &
         expm1_safe, log1p_safe, log1pexp
+    use scifort_error_fresnel, only : erfcx
     use scifort_normal, only : normal_logpdf, normal_logcdf, normal_logsf
     use scifort_exponential, only : exponential_logpdf, exponential_logcdf, exponential_logsf
     use scifort_log_gamma, only : log_gamma_one_plus, stirling_remainder, log_beta, &
@@ -23,6 +24,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: invgauss_censored_loglikelihood, invgauss_censored_nnlf
+    public :: wald_censored_loglikelihood, wald_censored_nnlf
+    public :: recipinvgauss_censored_loglikelihood, recipinvgauss_censored_nnlf
     public :: t_censored_loglikelihood, t_censored_nnlf
     public :: f_censored_loglikelihood, f_censored_nnlf
     public :: jf_skew_t_censored_loglikelihood, jf_skew_t_censored_nnlf
@@ -123,6 +127,396 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Independent density and normal-tail identities; see CODE_PROVENANCE.md.
+    pure subroutine ig_coordinates(x, params, lz, la, lb, sign_a, logphi)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above loc
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp), intent(out) :: lz !! log standardized inverse-Gaussian coordinate
+        real(dp), intent(out) :: la !! log absolute normal coordinate A
+        real(dp), intent(out) :: lb !! log positive normal coordinate B
+        real(dp), intent(out) :: sign_a !! sign of A, zero at the shape
+        real(dp), intent(out) :: logphi !! log standard normal density at A
+        real(dp) :: lv, lw, delta
+        lz = params(4)*(log_distance(x,params(2))-log(params(3)))
+        lv = 0.5_dp*lz-log(params(1))
+        lw = -0.5_dp*lz
+        lb = bounded_logadd(lv,lw)
+        delta = lz-log(params(1))
+        sign_a = sign(1.0_dp,delta)
+        if (delta == 0.0_dp) then
+            la = negative_infinity(0.0_dp)
+            sign_a = 0.0_dp
+        else
+            la = max(lv,lw)+log(-expm1_safe(-abs(delta)))
+        end if
+        if (abs(delta) < 0.01_dp) call ig_center_coordinate(x,params,la,sign_a)
+        logphi = negative_hazard(2.0_dp*la-scifort_log_two)-scifort_log_sqrt_two_pi
+    end subroutine ig_coordinates
+
+    pure subroutine ig_two_sum(a, b, high, low)
+        implicit none
+        real(dp), intent(in) :: a, b !! finite addends without overflow
+        real(dp), intent(out) :: high !! rounded sum
+        real(dp), intent(out) :: low !! exact rounding remainder
+        real(dp) :: v
+        high = a+b
+        v = high-a
+        low = (a-(high-v))+(b-v)
+    end subroutine ig_two_sum
+
+    pure subroutine ig_center_coordinate(x, params, la, sign_a)
+        implicit none
+        real(dp), intent(in) :: x !! finite point above loc, near the shape coordinate
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp), intent(out) :: la !! log absolute normal coordinate A
+        real(dp), intent(out) :: sign_a !! sign of A, zero for exact cancellation
+        real(dp) :: dh, dl, sh, sl, fm, ph, pl, c, ah, al, bh, bl, h, l, residual
+        real(dp), parameter :: splitter = real(2**((digits(1.0_dp)+1)/2),dp)+1.0_dp
+        integer :: ed, es, em, common
+        ! Form d=x-loc as a scaled two-component sum. Near the mode,
+        ! subtracting logarithms would erase a small but significant A.
+        ed = exponent(x)
+        if (x == 0.0_dp) ed = minexponent(x)-digits(x)
+        if (params(2) /= 0.0_dp) ed = max(ed,exponent(params(2)))
+        call ig_two_sum(scale(x,-ed),-scale(params(2),-ed),dh,dl)
+        sh = fraction(params(3))
+        sl = 0.0_dp
+        es = exponent(params(3))
+        if (params(4) < 0.0_dp) then
+            c = dh
+            dh = sh
+            sh = c
+            sl = dl
+            dl = 0.0_dp
+            common = ed
+            ed = es
+            es = common
+        end if
+        fm = fraction(params(1))
+        em = exponent(params(1))
+        common = max(ed,em+es)
+        ph = fm*sh
+        ! Error-free product of normalized factors by a binary split.
+        c = splitter*fm
+        ah = c-(c-fm)
+        al = fm-ah
+        c = splitter*sh
+        bh = c-(c-sh)
+        bl = sh-bh
+        pl = ((ah*bh-ph)+ah*bl+al*bh)+al*bl+fm*sl
+        call ig_two_sum(scale(dh,ed-common),-scale(ph,em+es-common),h,l)
+        residual = h+(l+scale(dl,ed-common)-scale(pl,em+es-common))
+        sign_a = sign(1.0_dp,residual)
+        la = negative_infinity(0.0_dp)
+        if (residual == 0.0_dp) then
+            sign_a = 0.0_dp
+        else
+            la = log(abs(residual))+real(common,dp)*scifort_log_two-log(params(1)) &
+                -0.5_dp*(log_distance(x,params(2))+log(params(3)))
+        end if
+    end subroutine ig_center_coordinate
+
+    pure function ig_logmills(lx) result(value)
+        implicit none
+        real(dp), intent(in) :: lx !! log positive normal argument
+        real(dp) :: value, term, total, inverse_square, next_term
+        integer :: n
+        if (lx < log(12.0_dp)) then
+            value = log(erfcx(exp(lx)/sqrt(2.0_dp))) &
+                +0.5_dp*log(scifort_pi/2.0_dp)
+        else
+            inverse_square = exp(-2.0_dp*lx)
+            term = 1.0_dp
+            total = term
+            do n = 1, 100
+                next_term = -term*real(2*n-1,dp)*inverse_square
+                if (abs(next_term) >= abs(term)) exit
+                total = total+next_term
+                term = next_term
+                if (abs(term) <= epsilon(total)*abs(total)/4.0_dp) exit
+            end do
+            value = -lx+log(total)
+        end if
+    end function ig_logmills
+
+    pure function ig_mills_difference(la, lb, ldelta) result(value)
+        implicit none
+        real(dp), intent(in) :: la !! log positive A >= 12
+        real(dp), intent(in) :: lb !! log B > log A, possibly rounded equal
+        real(dp), intent(in) :: ldelta !! log exact B-A, retained independently
+        real(dp) :: value, ratio, power, polynomial, term, total, next_term, inverse_square
+        integer :: n
+        ratio = exp(min(0.0_dp,la-lb))
+        inverse_square = exp(-2.0_dp*la)
+        term = 1.0_dp
+        total = term
+        polynomial = 1.0_dp
+        power = 1.0_dp
+        ! Divide each inverse-power difference by (1-A/B) before summing.
+        do n = 1, 100
+            power = power*ratio
+            polynomial = polynomial+power
+            power = power*ratio
+            polynomial = polynomial+power
+            next_term = -term*real(2*n-1,dp)*inverse_square
+            if (abs(next_term*polynomial) >= abs(term)*(2.0_dp*n+1.0_dp)) exit
+            term = next_term
+            total = total+term*polynomial
+            if (abs(term*polynomial) <= epsilon(total)*abs(total)/4.0_dp) exit
+        end do
+        value = -la+ldelta-lb+log(total)
+    end function ig_mills_difference
+
+    pure function ig_complement(logp) result(value)
+        implicit none
+        real(dp), intent(in) :: logp !! log probability in [-infinity,0]
+        real(dp) :: value
+        if (logp < -scifort_log_two) then
+            value = log1p_safe(-exp(logp))
+        else
+            value = log_difference(0.0_dp,logp)
+        end if
+    end function ig_complement
+
+    pure subroutine ig_tails(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp), intent(out) :: lp !! log lower probability
+        real(dp), intent(out) :: lq !! log upper probability
+        real(dp) :: lz, la, lb, sign_a, logphi, a, delta, terms(3), t(3), v, other, swap
+        integer :: i
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (x <= params(2)) return
+        call ig_coordinates(x,params,lz,la,lb,sign_a,logphi)
+        if (sign_a > 0.0_dp .and. la >= log(12.0_dp)) then
+            lq = logphi+ig_mills_difference(la,lb,scifort_log_two-0.5_dp*lz)
+            lp = ig_complement(lq)
+        else if (sign_a < 0.0_dp .and. la >= log(12.0_dp)) then
+            lp = logphi+bounded_logadd(ig_logmills(la),ig_logmills(lb))
+            lq = ig_complement(lp)
+        else
+            a = sign_a*exp(la)
+            if (scifort_log_two-0.5_dp*lz < log(0.001_dp/(1.0_dp+abs(a)))) then
+                ! R(A)-R(B) = integral_A^B (1-t*R(t)) dt.
+                ! Three-point Gauss-Legendre avoids cancellation as B-A -> 0.
+                delta = exp(scifort_log_two-0.5_dp*lz)
+                t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                    0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+                do i = 1, 3
+                    v = a+t(i)*delta
+                    terms(i) = 1.0_dp-v*sqrt(scifort_pi/2.0_dp)*erfcx(v/sqrt(2.0_dp))
+                end do
+                lq = logphi+scifort_log_two-0.5_dp*lz &
+                    +log((4.0_dp/9.0_dp)*terms(1)+(5.0_dp/18.0_dp)*(terms(2)+terms(3)))
+                lp = ig_complement(lq)
+            else
+                other = logphi+ig_logmills(lb)
+                if (a <= 0.0_dp) then
+                    lp = bounded_logadd(normal_logcdf(a),other)
+                    lq = ig_complement(lp)
+                else
+                    lq = log_difference(normal_logsf(a),other)
+                    lp = ig_complement(lq)
+                end if
+            end if
+        end if
+        if (params(4) < 0.0_dp) then
+            swap = lp
+            lp = lq
+            lq = swap
+        end if
+    end subroutine ig_tails
+
+    pure function ig_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp) :: value, lz, la, lb, sign_a, logphi
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        call ig_coordinates(x,params,lz,la,lb,sign_a,logphi)
+        value = logphi-(1.0_dp+0.5_dp*params(4))*params(4)*lz-log(params(3))
+    end function ig_lpdf
+
+    pure function ig_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp) :: value, unused
+        call ig_tails(x,params,value,unused)
+    end function ig_lcdf
+
+    pure function ig_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp) :: value, unused
+        call ig_tails(x,params,unused,value)
+    end function ig_lsf
+
+    pure function ig_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, loc, scale, reciprocal direction
+        real(dp) :: value, lza, lzb, slope, width, t(3), points(3), densities(3), ref, omitted
+        real(dp) :: positive, negative, endpoint, rate
+        integer :: i
+        if (a > params(2)) then
+            lza = log_distance(a,params(2))-log(params(3))
+            lzb = log_distance(b,params(2))-log(params(3))
+            if (params(4) > 0.0_dp) then
+                slope = bounded_logadd(log(1.5_dp), &
+                    bounded_logadd(lzb-2.0_dp*log(params(1)),-lza)-scifort_log_two)
+            else
+                slope = bounded_logadd(-scifort_log_two, &
+                    bounded_logadd(lzb,-lza-2.0_dp*log(params(1)))-scifort_log_two)
+            end if
+            width = log_distance(b,a)
+            if (width-log_distance(a,params(2)) < log(1.0e-6_dp)) then
+                if (params(4) > 0.0_dp) then
+                    positive = -lza-scifort_log_two
+                    negative = bounded_logadd(log(1.5_dp), &
+                        lza-2.0_dp*log(params(1))-scifort_log_two)
+                else
+                    positive = -lza-2.0_dp*log(params(1))-scifort_log_two
+                    negative = bounded_logadd(-scifort_log_two,lza-scifort_log_two)
+                end if
+                ! In an extremely steep monotone interval, rounded log tails
+                ! can coincide. An endpoint Laplace integral has relative
+                ! curvature error O(1/abs(d log(f)/d log(z))).
+                if (abs(positive-negative) > log(1.0e16_dp)) then
+                    endpoint = a
+                    if (positive > negative) endpoint = b
+                    lzb = log_distance(endpoint,params(2))-log(params(3))
+                    if (params(4) > 0.0_dp) then
+                        positive = -lzb-scifort_log_two
+                        negative = bounded_logadd(log(1.5_dp), &
+                            lzb-2.0_dp*log(params(1))-scifort_log_two)
+                    else
+                        positive = -lzb-2.0_dp*log(params(1))-scifort_log_two
+                        negative = bounded_logadd(-scifort_log_two,lzb-scifort_log_two)
+                    end if
+                    slope = max(positive,negative)
+                    rate = slope-log_distance(endpoint,params(2))
+                    if (slope > log(1.0e16_dp) .and. rate+width > log(1.0e8_dp)) then
+                        value = ig_lpdf(endpoint,params)-rate &
+                            +log_exponential_mass(rate+width)
+                        return
+                    end if
+                end if
+                ! Restore the variation bound used by the smooth integral.
+                lzb = log_distance(b,params(2))-log(params(3))
+                if (params(4) > 0.0_dp) then
+                    slope = bounded_logadd(log(1.5_dp), &
+                        bounded_logadd(lzb-2.0_dp*log(params(1)),-lza)-scifort_log_two)
+                else
+                    slope = bounded_logadd(-scifort_log_two, &
+                        bounded_logadd(lzb,-lza-2.0_dp*log(params(1)))-scifort_log_two)
+                end if
+            end if
+            if (width-log_distance(a,params(2))+slope < log(0.001_dp)) then
+                t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                    0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+                points = (1.0_dp-t)*a+t*b
+                do i = 1, 3
+                    densities(i) = ig_lpdf(points(i),params)
+                end do
+                ref = maxval(densities)
+                value = ref
+                if (.not. ieee_is_finite(ref)) return
+                value = ref+width+log((4.0_dp/9.0_dp)*exp(densities(1)-ref) &
+                    +(5.0_dp/18.0_dp)*(exp(densities(2)-ref)+exp(densities(3)-ref)))
+                return
+            end if
+        end if
+        value = tail_interval(a,b,params,ig_lcdf,ig_lsf)
+        if (value > -scifort_log_two) then
+            omitted = bounded_logadd(ig_lcdf(a,params),ig_lsf(b,params))
+            value = log1p_safe(-exp(omitted))
+        end if
+    end function ig_interval
+
+    pure function invgauss_censored_loglikelihood(data, mu_shape, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: mu_shape !! positive finite inverse-Gaussian shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        value = quiet_nan(0.0_dp)
+        params = [mu_shape,0.0_dp,1.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(1) <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,ig_lpdf,ig_lcdf,ig_lsf,ig_interval)
+    end function invgauss_censored_loglikelihood
+
+    pure function invgauss_censored_nnlf(data, mu_shape, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: mu_shape !! positive finite inverse-Gaussian shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -invgauss_censored_loglikelihood(data,mu_shape, loc,scale)
+    end function invgauss_censored_nnlf
+
+    pure function wald_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        value = quiet_nan(0.0_dp)
+        params = [1.0_dp,0.0_dp,1.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(1) <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,ig_lpdf,ig_lcdf,ig_lsf,ig_interval)
+    end function wald_censored_loglikelihood
+
+    pure function wald_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -wald_censored_loglikelihood(data,loc,scale)
+    end function wald_censored_nnlf
+
+    pure function recipinvgauss_censored_loglikelihood(data, mu_shape, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: mu_shape !! positive finite inverse-Gaussian shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        value = quiet_nan(0.0_dp)
+        params = [mu_shape,0.0_dp,1.0_dp,-1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(1) <= 0.0_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,ig_lpdf,ig_lcdf,ig_lsf,ig_interval)
+    end function recipinvgauss_censored_loglikelihood
+
+    pure function recipinvgauss_censored_nnlf(data, mu_shape, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: mu_shape !! positive finite inverse-Gaussian shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -recipinvgauss_censored_loglikelihood(data,mu_shape, loc,scale)
+    end function recipinvgauss_censored_nnlf
+
 
     ! Beta coordinates for Jones-Faddy and its symmetric Student-t special case.
     ! Independent mathematical derivation: see CODE_PROVENANCE.md.

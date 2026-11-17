@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+invgauss_censored_loglikelihood(data, mu_shape [, loc, scale])
+wald_censored_loglikelihood(data [, loc, scale])
+recipinvgauss_censored_loglikelihood(data, mu_shape [, loc, scale])
 t_censored_loglikelihood(data, df [, loc, scale])
 f_censored_loglikelihood(data, dfn, dfd [, loc, scale])
 jf_skew_t_censored_loglikelihood(data, a, b [, loc, scale])
@@ -170,7 +173,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -2104,3 +2107,73 @@ use the existing local bounded optimizer. Check status, success, and the
 objective; iteration limits can leave finite improving candidates without
 convergence. Success does not prove global optimality or identifiability.
 See the [validation record](../validation/beta_t_censored_2026-11-17.md).
+
+
+## Inverse Gaussian, Wald, and reciprocal inverse Gaussian details
+
+`invgauss_censored_loglikelihood`, `wald_censored_loglikelihood`, and
+`recipinvgauss_censored_loglikelihood`, and their `*_censored_nnlf`
+counterparts, are exported by `scifort_censored` and `scifort_stats`.
+Each accepts mixed exact, left-, right-, and interval-censored data.
+The existing fit generics accept `censored_data`, with bounds in
+`[mu_shape,loc,scale]` order for inverse Gaussian and its reciprocal,
+and `[loc,scale]` for Wald. Equal bounds fix any parameter; all may vary.
+The original array-fit calls remain available. SciPy names this shape `mu`;
+SciFort preserves its established `mu_shape` dummy argument name.
+
+Shape and scale must be positive and finite; loc must be finite. Defaults
+are loc=0 and scale=1. Invalid parameters return NaN even for empty data;
+valid empty likelihoods are zero, and empty fits are invalid. With
+`z=(x-loc)/scale`, the support is x>loc: density and CDF are zero at/below
+loc, and SF is one. Equal finite interval endpoints represent an exact
+observation. Infinite one-sided interval endpoints follow the shared
+conventions above; infinite exact/left/right observations are invalid.
+
+For inverse Gaussian, the log density is
+`-log(sqrt(2*pi))-1.5*log(z)-0.5*(z/mu_shape-1)**2/z-log(scale)`.
+Wald is exactly the mu_shape=1 case. Reciprocal inverse Gaussian is
+`1/Y` for standardized `Y~invgauss(mu_shape)`, then shifted and scaled;
+its CDF/SF swap inverse-Gaussian SF/CDF at 1/z, and its standardized log
+density has the Jacobian correction -2*log(z). These transformations
+are applied through log distances, avoiding a rounded/overflowed 1/z.
+
+Let `A=sqrt(z)/mu_shape-1/sqrt(z)`, `B=sqrt(z)/mu_shape+1/sqrt(z)`,
+and `R(t)=Phi(-t)/phi(t)` be the normal Mills ratio. The second CDF term
+`exp(2/mu_shape)*Phi(-B)` equals `phi(A)*R(B)`. This identity avoids
+overflow and exponent cancellation. For A>=12 the SF uses the
+inverse-power expansion of `R(A)-R(B)`, factoring out `(B-A)/B` before
+summing so a nearly equal A and B do not erase the tail. The expansion
+stops at binary64 roundoff or before terms grow. For nearly coincident
+moderate coordinates, a three-point integral of `1-t*R(t)` computes the
+difference. Other regions use the better normal/log-tail identity;
+small complementary log probabilities use log1p. Near the center,
+scaled two-component sums and a binary-split product retain the signed
+normal coordinate when log(z)-log(mu_shape) rounds to zero.
+
+Narrow intervals use three-point Gauss-Legendre integration in physical
+coordinates when a bound on log-density variation is below 0.001.
+For inverse Gaussian the bound is based on
+`abs(d log(f)/d log(z)) <= 1.5+(z/mu_shape**2+1/z)/2`;
+for the reciprocal it is `0.5+(z+1/(mu_shape**2*z))/2`.
+Other intervals subtract the better-conditioned logarithmic tail;
+nearly full intervals complement both omitted tails.
+
+For extremely steep monotone intervals narrower than 1e-6 times the lower
+support distance, an endpoint Laplace integral avoids coincident rounded
+log tails. It is used only when one signed density-slope term dominates
+the other by more than 1e16, the absolute log-coordinate slope exceeds
+1e16, and slope times interval width exceeds 1e8. The neglected relative
+curvature correction is then of order the reciprocal log-coordinate slope.
+The integral retains the endpoint log density, logarithmic physical slope,
+and exponential interval-mass factor without forming their probabilities.
+
+These likelihood callbacks accept every positive finite binary64 shape,
+including subnormals, without widening the scalar distribution API's
+existing numerical guarantees. Finite mathematical log probabilities
+beyond binary64 range return negative infinity; exponentiated masses
+may underflow while their logarithms remain finite. Extremely concentrated
+affine models can be ill-conditioned relative to input rounding, despite
+the compensated center calculation. Bounds and fitted parameter
+identifiability remain the caller's responsibility; optimizer success is
+local convergence and does not establish a global optimum.
+See the [validation record](../validation/inverse_gaussian_censored_2026-11-17.md).

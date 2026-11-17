@@ -1,3 +1,12 @@
+## 2026-11-17 - Inverse-Gaussian family censoring
+
+- Add inverse Gaussian, Wald, and reciprocal inverse Gaussian mixed censored
+  likelihoods, NNLF, bounded-fit overloads, and statistics exports.
+- Retain small normal-tail differences, narrow interval masses, extreme
+  affine scales, and concentrated center coordinates with compensated sums.
+- Add native and independent high-precision validation, API documentation,
+  and provenance. Coverage is 77 continuous families with 32 remaining.
+
 ## 2026-11-17 - Student t, F, and Jones-Faddy censoring
 
 - Add mixed likelihoods, NNLF, bounded fit overloads, and statistics exports.

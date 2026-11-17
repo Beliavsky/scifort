@@ -1,3 +1,51 @@
+## 2026-11-17 - Inverse-Gaussian family censoring
+
+The new private inverse-Gaussian callbacks, public likelihoods, fit overloads,
+native test, and independent checker are original MIT SciFort implementation
+from mathematical specifications inspected on 2026-11-17:
+[inverse Gaussian](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.invgauss.html),
+[Wald](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wald.html),
+[reciprocal inverse Gaussian](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.recipinvgauss.html),
+and [DLMF 7.12.1](https://dlmf.nist.gov/7.12.E1).
+The compensated center arithmetic uses mathematical error-free binary sum
+and split-product identities described by T. J. Dekker,
+[*A floating-point technique for extending the available precision*,
+MR 118/70 (1970)](https://ir.cwi.nl/pub/9159/9159D.pdf), sections 4-6.
+No upstream implementation, ALGOL procedure, or third-party library source
+was copied, translated, or vendored. Existing normal, error-function,
+distance, censoring, and optimizer code retains its provenance and notices.
+No dependency or license text is added.
+
+For standardized inverse Gaussian, A=sqrt(z)/mu-1/sqrt(z),
+B=sqrt(z)/mu+1/sqrt(z), and B*B-A*A=4/mu. Therefore the second CDF term
+exp(2/mu)*Phi(-B) is phi(A)*R(B), with R the normal Mills ratio.
+The SF for positive A is phi(A)*(R(A)-R(B)). Applying DLMF's erfc
+inverse-power expansion and factoring each difference by (1-A/B)
+gives a stable polynomial/geometric-sum series. The exact log(B-A)
+is retained as log(2)-log(z)/2 even when A/B rounds to one.
+For close moderate coordinates, differentiating R gives
+R'(t)=t*R(t)-1; a three-point integral evaluates their positive difference.
+The separate log tails and complements preserve small log probabilities.
+The reciprocal law applies the monotone inverse/Jacobian and exchanges tails;
+Wald fixes mu=1. Physical-coordinate interval integration reuses the existing
+three-point Gauss-Legendre nodes and weights with family-specific density
+variation bounds. The API guide records representability and conditioning
+limits.
+
+For narrow intervals with extremely large monotone density slope, rounded
+log tails can coincide. A local endpoint Laplace integral evaluates
+`log(f(endpoint))-log(rate)+log(1-exp(-rate*width))`. The dominant signed
+log-coordinate slope must exceed 1e16, dominate the opposite term by 1e16,
+and yield rate*width>1e8, with width/support-distance<1e-6. Differentiating
+the density shows a relative curvature correction O(1/slope), below the
+binary64 error scale in this branch. This is a direct mathematical
+endpoint expansion, not an imported quadrature implementation.
+
+The optional checker evaluates independent high-precision normal/erfc formulas
+and rescaled density integrals using mpmath; SciPy supplies bounded-fit
+benchmarks only. See the [API guide](docs/censored_fitting.md) and
+[validation record](validation/inverse_gaussian_censored_2026-11-17.md).
+
 ## 2026-11-17 - Student t, F, and Jones-Faddy censoring
 
 The new likelihoods, callbacks, fit overloads, tests, and checker are

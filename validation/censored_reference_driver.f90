@@ -54,6 +54,9 @@ program censored_reference_driver
     use scifort_censored, only : t_censored_loglikelihood
     use scifort_censored, only : f_censored_loglikelihood
     use scifort_censored, only : jf_skew_t_censored_loglikelihood
+    use scifort_censored, only : invgauss_censored_loglikelihood
+    use scifort_censored, only : wald_censored_loglikelihood
+    use scifort_censored, only : recipinvgauss_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -73,6 +76,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (75)
+            value = invgauss_censored_loglikelihood(data,c,loc,scale)
+        case (76)
+            value = wald_censored_loglikelihood(data,loc,scale)
+        case (77)
+            value = recipinvgauss_censored_loglikelihood(data,c,loc,scale)
         case (72)
             value = t_censored_loglikelihood(data,c,loc,scale)
         case (73)

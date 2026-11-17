@@ -143,6 +143,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [ ] Extend censored chi/chi-squared and Nakagami beyond gamma shape 1e6.
 - [x] Add Student t, F, and Jones-Faddy skew-t censored likelihoods and bounded fits.
 - [ ] Extend censored t/F/Jones-Faddy beta-shape ranges beyond the documented limits.
+- [x] Add inverse Gaussian, Wald, and reciprocal inverse Gaussian censored likelihoods and bounded fits.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 
