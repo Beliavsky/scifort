@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+truncexpon_censored_loglikelihood(data, b [, loc, scale])
+johnsonsb_censored_loglikelihood(data, a, b [, loc, scale])
+kappa3_censored_loglikelihood(data, a [, loc, scale])
 cosine_censored_loglikelihood(data [, loc, scale])
 anglit_censored_loglikelihood(data [, loc, scale])
 semicircular_censored_loglikelihood(data [, loc, scale])
@@ -152,7 +155,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1562,3 +1565,110 @@ if (fit%success) print *, fit%params, &
 
 See the [validation record](../validation/compact_censored_2026-11-16.md)
 for checked/optimized results, independent reference checks, and commands.
+
+
+## Truncated exponential, Johnson SB, and kappa3 details
+
+These families support likelihoods and matching `_censored_nnlf` procedures
+from `scifort_censored` and `scifort_stats`. Their fit generics accept
+`censored_data` with bounds in `[b, loc, scale]`, `[a, b, loc, scale]`, or
+`[a, loc, scale]` order, respectively. Equal bounds fix parameters. The
+original scalar and array-fitting APIs remain available. Invalid parameters
+return NaN even for empty samples; valid empty likelihoods are zero.
+
+### Truncated exponential
+
+Shape `b` is positive and finite. The censored implementation uses a
+**rounded physical width**: `r=b*scale` is evaluated in binary64, and the
+probability density is proportional to `exp(-(x-loc)/scale)` on
+`[loc,loc+r]`. Its exact mathematical normalizer uses `r/scale`, rather
+than replacing that ratio by `b`. Thus the law stays normalized when the
+width multiplication rounds. This intentional numerical difference from
+the scalar API is most visible for subnormal widths.
+
+The rounded width must be positive and finite; the rounded upper support
+edge must be finite and strictly greater than `loc`. Underflowed,
+overflowed, and collapsed supports return NaN, including for empty samples.
+Endpoint gaps retain the error-free residual of `loc+r`, so a point at
+the rounded edge need not be the exact mathematical endpoint.
+
+The endpoint density is positive, with log density
+`-(x-loc)/scale-log(scale)-log(1-exp(-r/scale))`. Lower/upper support
+endpoints have CDF 0/1 and SF 1/0. Exact observations outside support
+contribute negative infinity. Tails and interval probabilities use positive
+exponential mass increments. Nearly full intervals complement both omitted
+tails. A centered hyperbolic-sine identity retains the log density in the
+nearly uniform limit, including representable corrections as small as
+`2.5e-301` that would be lost by subtracting large logarithms. Subnormal
+widths avoid forming an incorrectly rounded half-width midpoint.
+
+### Johnson SB
+
+The first shape `a` is any finite real; `b` is positive and finite.
+Support is `[loc,loc+scale]`, with positive finite width `scale`.
+The rounded upper edge must be finite and strictly above `loc`.
+Otherwise the likelihood/NNLF returns NaN. Compensated distances follow
+the same upper-edge convention as the beta likelihood. Endpoint and
+outside-support densities are zero. Endpoint CDF/SF behavior follows the
+usual bounded-support conventions.
+
+For `z=(x-loc)/scale`, the normal coordinate is
+`q=a+b*log(z/(1-z))`. Independent endpoint gaps preserve both sides of
+the logit. Near the midpoint, a compensated center displacement preserves
+changes that a large `b` can amplify, even when `z` rounds to one half.
+Odd subnormal widths use the difference between the full endpoint gaps
+instead of a rounded midpoint. Products and sums are guarded against
+overflow, including an opposing `a` that rescues an overflowing product.
+Severe cancellation between large opposing shape terms remains
+ill-conditioned; uniform relative accuracy through that cancellation is
+not promised.
+
+For an interior interval `(x1,x2)`, the exact logit width is
+`log1p((x2-x1)/(x1-loc))+log1p((x2-x1)/(loc+scale-x2))`.
+The implementation retains that width logarithmically and integrates in
+normal coordinates before falling back to stable tail differences.
+
+### Kappa3
+
+Shape `a` is positive and finite, with support `[loc,infinity)`.
+There is no finite upper-edge or representable `loc+scale` requirement.
+The endpoint density is `a**(-1/a)/scale`; its log can be positive infinity
+for a sufficiently small valid shape. Endpoint CDF/SF values are 0/1.
+Below-support densities and probabilities follow the usual support rules.
+
+The implementation computes the reversed cumulative hazard
+`H=log1p(a*z**(-a))/a`, where `z=(x-loc)/scale`. Logarithmic softplus
+identities retain tiny shapes and shape-times-log-distance products that
+overflow individually. Compensated displacement at the scale point also
+preserves large-shape effects when the ordinary standardized distance
+rounds to one. For `a=1`, kappa3 agrees with Lomax shape one. As `a`
+tends to zero, finite positive standardized observations have CDF tending
+to `exp(-1)`; the code retains this limit instead of underflowing a
+reciprocal shape or normalizing constant.
+
+Interval probabilities use positive reversed-hazard increments. The
+large-positive softplus branch has a relative correction below `5e-18`.
+Allowing free location with exact endpoint observations can produce
+unbounded likelihoods as parameters approach singular limits. Bound the
+parameters appropriately and inspect fit diagnostics; bounded local
+searches do not establish a global maximum or a unique identifiable fit.
+
+For example, fit a Johnson SB shape with the other parameters fixed:
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    johnsonsb_fit, johnsonsb_censored_nnlf
+type(censored_data) :: sample
+type(fit_result) :: fit
+
+sample = make_censored_data(uncensored=[0.2_dp,0.4_dp,0.6_dp],left=[0.1_dp], &
+    right=[0.7_dp],interval=reshape([0.25_dp,0.5_dp,0.35_dp,0.55_dp],[2,2]))
+call johnsonsb_fit(sample,[-3.0_dp,1.2_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,1.2_dp,0.0_dp,1.3_dp],fit)
+if (fit%success) print *, fit%params, &
+    johnsonsb_censored_nnlf(sample,fit%params(1),fit%params(2), &
+        fit%params(3),fit%params(4))
+```
+
+See the [validation record](../validation/bounded_shape_censored_2026-11-17.md)
+for checked/optimized results, independent references, and commands.

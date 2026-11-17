@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: truncexpon_censored_loglikelihood, truncexpon_censored_nnlf
+    public :: johnsonsb_censored_loglikelihood, johnsonsb_censored_nnlf
+    public :: kappa3_censored_loglikelihood, kappa3_censored_nnlf
     public :: cosine_censored_loglikelihood, cosine_censored_nnlf
     public :: anglit_censored_loglikelihood, anglit_censored_nnlf
     public :: semicircular_censored_loglikelihood, semicircular_censored_nnlf
@@ -104,6 +107,509 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Independently integrated public density specifications; see CODE_PROVENANCE.md.
+    pure subroutine truncexpon_gaps(x, params, left, right)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, rate scale, rounded width
+        real(dp), intent(out) :: left !! signed distance above lower support edge
+        real(dp), intent(out) :: right !! compensated distance below upper support edge
+        call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(4)],left,right)
+    end subroutine truncexpon_gaps
+
+    pure function truncexpon_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, rate scale, rounded width
+        real(dp) :: value, left, right, cutoff, logcutoff, term, series, v2, gap, unused
+        integer :: k
+        call truncexpon_gaps(x,params,left,right)
+        value = negative_infinity(0.0_dp)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        logcutoff = log(params(4))-log(params(3))
+        if (logcutoff <= 0.0_dp) then
+            ! exp(-z)/(1-exp(-cutoff)) = exp(cutoff/2-z)
+            ! / (cutoff*sinh(cutoff/2)/(cutoff/2)). Retain the nearly uniform log density.
+            cutoff = exp(logcutoff)
+            v2 = (0.5_dp*cutoff)**2
+            term = 1.0_dp
+            series = 0.0_dp
+            do k = 1, 10
+                term = term*v2/real((2*k)*(2*k+1),dp)
+                series = series+term
+            end do
+            if (params(4) >= 2.0_dp*tiny(1.0_dp)) then
+                call beta_distances(x,[1.0_dp,1.0_dp,params(2),0.5_dp*params(4)],unused,gap)
+                value = gap/params(3)
+            else
+                value = 0.5_dp*cutoff-location_scale_z(x,params(2:3))
+            end if
+            value = value-log(params(4))-log1p_safe(series)
+            return
+        end if
+        value = -location_scale_z(x,params(2:3))-log(params(3)) &
+            -log_hazard_mass(logcutoff)
+    end function truncexpon_lpdf
+
+    pure subroutine truncexpon_tails(x, params, logp, logq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, rate scale, rounded width
+        real(dp), intent(out) :: logp !! log lower-tail probability
+        real(dp), intent(out) :: logq !! log upper-tail probability
+        real(dp) :: left, right, normalization
+        logp = negative_infinity(0.0_dp)
+        logq = 0.0_dp
+        call truncexpon_gaps(x,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            logp = 0.0_dp
+            logq = negative_infinity(0.0_dp)
+            return
+        end if
+        normalization = log_hazard_mass(log(params(4))-log(params(3)))
+        logp = log_hazard_mass(log_distance(x,params(2))-log(params(3)))-normalization
+        logq = -location_scale_z(x,params(2:3)) &
+            +log_hazard_mass(log(right)-log(params(3)))-normalization
+        if (logp <= logq) then
+            logp = min(0.0_dp,logp)
+            logq = log1p_safe(-exp(logp))
+        else
+            logq = min(0.0_dp,logq)
+            logp = log1p_safe(-exp(logq))
+        end if
+    end subroutine truncexpon_tails
+
+    pure function truncexpon_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, rate scale, rounded width
+        real(dp) :: value, unused
+        call truncexpon_tails(x,params,value,unused)
+    end function truncexpon_lcdf
+
+    pure function truncexpon_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, rate scale, rounded width
+        real(dp) :: value, unused
+        call truncexpon_tails(x,params,unused,value)
+    end function truncexpon_lsf
+
+    pure function truncexpon_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, location, rate scale, rounded width
+        real(dp) :: value, left, right, omitted
+        call truncexpon_gaps(b,params,left,right)
+        value = negative_infinity(0.0_dp)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            value = truncexpon_lsf(a,params)
+            return
+        end if
+        call truncexpon_gaps(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = truncexpon_lcdf(b,params)
+            return
+        end if
+        omitted = exp(truncexpon_lcdf(a,params))+exp(truncexpon_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+        else
+            value = -location_scale_z(a,params(2:3)) &
+                +log_hazard_mass(log_distance(b,a)-log(params(3))) &
+                -log_hazard_mass(log(params(4))-log(params(3)))
+        end if
+    end function truncexpon_interval
+
+    pure function johnsonsb_affine(a, b, t) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite first Johnson shape
+        real(dp), intent(in) :: b !! positive finite second Johnson shape
+        real(dp), intent(in) :: t !! finite logit coordinate
+        real(dp) :: value, halfsum
+        if (abs(t) > 1.0_dp) then
+            if (b > huge(1.0_dp)/abs(t)) then
+                value = sign(positive_infinity(0.0_dp),t)
+                if (0.5_dp*b > huge(1.0_dp)/abs(t)) return
+                halfsum = finite_sum(0.5_dp*a,(0.5_dp*b)*t)
+                if (abs(halfsum) > 0.5_dp*huge(1.0_dp)) return
+                value = 2.0_dp*halfsum
+                return
+            end if
+        end if
+        value = finite_sum(a,b*t)
+    end function johnsonsb_affine
+
+    pure subroutine johnsonsb_coordinates(x, params, q, lz, lw)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly inside support
+        real(dp), intent(in) :: params(:) !! finite a, positive b, lower edge, positive width
+        real(dp), intent(out) :: q !! transformed normal coordinate, possibly infinite
+        real(dp), intent(out) :: lz !! log standardized distance above lower edge
+        real(dp), intent(out) :: lw !! log standardized distance below upper edge
+        real(dp) :: left, right, z, w, t, gap, unused, v, product
+        call beta_distances(x,params,left,right)
+        call beta_coordinates(x,params,left,right,z,w,lz,lw)
+        t = lz-lw
+        if (abs(t) < 0.1_dp .and. params(4) < 2.0_dp*tiny(1.0_dp)) then
+            ! Subnormal widths can have an unrepresentable half-step midpoint.
+            v = (left-right)/params(4)
+            t = log1p_safe(v)-log1p_safe(-v)
+            q = johnsonsb_affine(params(1),params(2),t)
+            return
+        end if
+        if (abs(t) < 0.1_dp .and. 0.5_dp*params(4) > 0.0_dp) then
+            call beta_distances(x,[1.0_dp,1.0_dp,params(3),0.5_dp*params(4)],unused,gap)
+            if (gap == 0.0_dp) then
+                q = params(1)
+                return
+            end if
+            v = (-2.0_dp*gap)/params(4)
+            if (abs(v) < sqrt(epsilon(1.0_dp))) then
+                product = signed_exp(log(params(2))+log(abs(gap))-log(params(4)) &
+                    +2.0_dp*scifort_log_two,-sign(1.0_dp,gap))
+                q = finite_sum(params(1),product)
+                return
+            end if
+            t = log1p_safe(v)-log1p_safe(-v)
+        end if
+        q = johnsonsb_affine(params(1),params(2),t)
+    end subroutine johnsonsb_coordinates
+
+    pure function johnsonsb_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite a, positive b, lower edge, positive width
+        real(dp) :: value, left, right, q, lz, lw
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (min(left,right) <= 0.0_dp) return
+        call johnsonsb_coordinates(x,params,q,lz,lw)
+        value = finite_normal_lpdf(q)+log(params(2))-log(params(4))-lz-lw
+    end function johnsonsb_lpdf
+
+    pure subroutine johnsonsb_tails(x, params, logp, logq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! finite a, positive b, lower edge, positive width
+        real(dp), intent(out) :: logp !! log lower-tail probability
+        real(dp), intent(out) :: logq !! log upper-tail probability
+        real(dp) :: left, right, q, lz, lw
+        logp = negative_infinity(0.0_dp)
+        logq = 0.0_dp
+        call beta_distances(x,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            logp = 0.0_dp
+            logq = negative_infinity(0.0_dp)
+            return
+        end if
+        call johnsonsb_coordinates(x,params,q,lz,lw)
+        logp = normal_logcdf(q)
+        logq = normal_logsf(q)
+    end subroutine johnsonsb_tails
+
+    pure function johnsonsb_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite a, positive b, lower edge, positive width
+        real(dp) :: value, unused
+        call johnsonsb_tails(x,params,value,unused)
+    end function johnsonsb_lcdf
+
+    pure function johnsonsb_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite a, positive b, lower edge, positive width
+        real(dp) :: value, unused
+        call johnsonsb_tails(x,params,unused,value)
+    end function johnsonsb_lsf
+
+    pure function johnsonsb_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! finite a, positive b, lower edge, positive width
+        real(dp) :: value, left, right, q, lz, lw, span, first, second, omitted
+        call beta_distances(b,params,left,right)
+        value = negative_infinity(0.0_dp)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            value = johnsonsb_lsf(a,params)
+            return
+        end if
+        second = log(right)
+        call beta_distances(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = johnsonsb_lcdf(b,params)
+            return
+        end if
+        span = log_distance(b,a)
+        first = burr_logsoftplus(span-log_distance(a,params(3)))
+        second = burr_logsoftplus(span-second)
+        call johnsonsb_coordinates(a,params,q,lz,lw)
+        value = normal_small_interval(q,log(params(2))+bounded_logadd(first,second))
+        if (ieee_is_nan(value)) then
+            value = tail_interval(a,b,params,johnsonsb_lcdf,johnsonsb_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(johnsonsb_lcdf(a,params),johnsonsb_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function johnsonsb_interval
+
+    pure subroutine kappa3_power(x, params, lz, power)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above lower support edge
+        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(out) :: lz !! log standardized distance, possibly rounded to zero
+        real(dp), intent(out) :: power !! shape times log standardized distance
+        real(dp) :: z, gap, unused, logr
+        z = location_scale_z(x,params(2:3))
+        if (z >= 0.5_dp .and. z <= 2.0_dp) then
+            if (params(2) > 0.0_dp) then
+                if (params(3) > huge(1.0_dp)-params(2)) then
+                    ! Reorder scale-(x-loc) when loc+scale is unrepresentable.
+                    call beta_distances(-params(2),[1.0_dp,1.0_dp,-x,params(3)],unused,gap)
+                else
+                    call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(3)],unused,gap)
+                end if
+            else
+                call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(3)],unused,gap)
+            end if
+            lz = 0.0_dp
+            power = 0.0_dp
+            if (gap == 0.0_dp) return
+            logr = log(abs(gap))-log(params(3))
+            if (logr < log(epsilon(1.0_dp))-2.0_dp) then
+                lz = -gap/params(3)
+                power = signed_exp(log(params(1))+logr,-sign(1.0_dp,gap))
+                return
+            end if
+            lz = log1p_safe(-gap/params(3))
+        else
+            lz = log_distance(x,params(2))-log(params(3))
+        end if
+        power = sign(positive_infinity(0.0_dp),lz)
+        if (params(1) > 1.0_dp) then
+            if (abs(lz) > huge(1.0_dp)/params(1)) return
+        end if
+        power = params(1)*lz
+    end subroutine kappa3_power
+
+    pure subroutine kappa3_hazard(x, params, q, logh, nh)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above lower support edge
+        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(out) :: q !! log(a)-a*log(z), possibly infinite
+        real(dp), intent(out) :: logh !! log reversed cumulative hazard
+        real(dp), intent(out) :: nh !! negative reversed cumulative hazard
+        real(dp) :: power, lz
+        call kappa3_power(x,params,lz,power)
+        q = -power
+        if (ieee_is_finite(power)) q = finite_sum(log(params(1)),-power)
+        if (q >= 40.0_dp) then
+            nh = lz-log(params(1))/params(1)-log1pexp(-q)/params(1)
+            logh = log(-nh)
+        else
+            logh = burr_logsoftplus(q)-log(params(1))
+            nh = negative_hazard(logh)
+        end if
+    end subroutine kappa3_hazard
+
+    pure function kappa3_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp) :: value, q, logh, nh, la
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        la = log(params(1))
+        if (x == params(2)) then
+            value = -log(params(3))
+            if (la < 0.0_dp) value = signed_exp(log(-la)-la,1.0_dp)-log(params(3))
+            if (la > 0.0_dp) value = -la/params(1)-log(params(3))
+            return
+        end if
+        call kappa3_hazard(x,params,q,logh,nh)
+        if (q >= 40.0_dp) then
+            value = -la/params(1)-log(params(3)) &
+                -(1.0_dp+1.0_dp/params(1))*log1pexp(-q)
+        else
+            value = nh-log_distance(x,params(2))-log1pexp(-q)
+        end if
+    end function kappa3_lpdf
+
+    pure function kappa3_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp) :: value, q, logh
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        call kappa3_hazard(x,params,q,logh,value)
+    end function kappa3_lcdf
+
+    pure function kappa3_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp) :: value, q, logh, nh
+        value = 0.0_dp
+        if (x <= params(2)) return
+        call kappa3_hazard(x,params,q,logh,nh)
+        value = hazard_complement(logh,nh)
+    end function kappa3_lsf
+
+    pure function kappa3_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp) :: value, qa, qb, logh, nh, span, delta, diff, u, omitted, d
+        value = kappa3_lcdf(b,params)
+        if (a <= params(2)) return
+        omitted = exp(kappa3_lcdf(a,params))+exp(kappa3_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call kappa3_hazard(a,params,qa,logh,nh)
+        call kappa3_hazard(b,params,qb,logh,value)
+        span = burr_logsoftplus(log_distance(b,a)-log_distance(a,params(2)))
+        if (qb >= 40.0_dp) then
+            diff = span
+        else
+            delta = log(params(1))+span
+            if (delta < log(0.5_dp)) then
+                u = log_expm1_from_log(delta)
+                diff = burr_logsoftplus(-log1pexp(-qb)+u)-log(params(1))
+            else if (qb >= 0.0_dp) then
+                diff = delta
+                if (delta < log(huge(1.0_dp))) then
+                    d = exp(delta)
+                    diff = log(d+log1pexp(-qa)-log1pexp(-qb))
+                end if
+                diff = diff-log(params(1))
+            else if (qa <= 0.0_dp) then
+                u = -log1pexp(-qa)+log_hazard_mass(delta)
+                diff = u
+                if (u >= log(epsilon(1.0_dp))-2.0_dp) &
+                    diff = log(-log1p_safe(-exp(u)))
+                diff = diff-log(params(1))
+            else if (ieee_is_finite(qa)) then
+                diff = log(log1pexp(qa)-log1pexp(qb))-log(params(1))
+            else
+                diff = log(-lognormal_logz(a,params))
+            end if
+        end if
+        value = value+log_hazard_mass(diff)
+    end function kappa3_interval
+
+
+    pure function truncexpon_censored_loglikelihood(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! positive finite standardized cutoff
+        real(dp), intent(in), optional :: loc !! finite lower support edge, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [b,0.0_dp,1.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (b <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        if (b > 1.0_dp) then
+            if (params(3) > huge(1.0_dp)/b) return
+        end if
+        params(4) = b*params(3)
+        if (params(4) <= 0.0_dp) return
+        if (params(2) > 0.0_dp) then
+            if (params(4) > huge(1.0_dp)-params(2)) return
+        end if
+        if (params(2)+params(4) <= params(2)) return
+        value = censored_loglikelihood(data,params,truncexpon_lpdf,truncexpon_lcdf, &
+            truncexpon_lsf,truncexpon_interval)
+    end function truncexpon_censored_loglikelihood
+
+    pure function truncexpon_censored_nnlf(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! positive finite standardized cutoff
+        real(dp), intent(in), optional :: loc !! finite lower support edge, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -truncexpon_censored_loglikelihood(data, b, loc, scale)
+    end function truncexpon_censored_nnlf
+
+    pure function johnsonsb_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite normal-logit shift
+        real(dp), intent(in) :: b !! positive finite normal-logit scale
+        real(dp), intent(in), optional :: loc !! finite lower support edge, default zero
+        real(dp), intent(in), optional :: scale !! positive finite support width, default one
+        real(dp) :: value, params(4)
+        params = [a,b,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (b <= 0.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        if (.not. beta_parameters_valid([1.0_dp,1.0_dp,params(3),params(4)])) return
+        if (params(3)+params(4) <= params(3)) return
+        value = censored_loglikelihood(data,params,johnsonsb_lpdf,johnsonsb_lcdf, &
+            johnsonsb_lsf,johnsonsb_interval)
+    end function johnsonsb_censored_loglikelihood
+
+    pure function johnsonsb_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite normal-logit shift
+        real(dp), intent(in) :: b !! positive finite normal-logit scale
+        real(dp), intent(in), optional :: loc !! finite lower support edge, default zero
+        real(dp), intent(in), optional :: scale !! positive finite support width, default one
+        real(dp) :: value
+        value = -johnsonsb_censored_loglikelihood(data, a, b, loc, scale)
+    end function johnsonsb_censored_nnlf
+
+    pure function kappa3_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite kappa exponent
+        real(dp), intent(in), optional :: loc !! finite lower support edge, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [a,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (a <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,kappa3_lpdf,kappa3_lcdf, &
+            kappa3_lsf,kappa3_interval)
+    end function kappa3_censored_loglikelihood
+
+    pure function kappa3_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite kappa exponent
+        real(dp), intent(in), optional :: loc !! finite lower support edge, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -kappa3_censored_loglikelihood(data, a, loc, scale)
+    end function kappa3_censored_nnlf
+
 
     pure function cosine_censored_loglikelihood(data, loc, scale) result(value)
         implicit none

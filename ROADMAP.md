@@ -134,6 +134,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add exponential-power, exponentiated Weibull, and Mielke censoring and bounded fits.
 - [x] Add fatigue-life, Johnson SU, and generalized exponential censoring and bounded fits.
 - [x] Add cosine, anglit, and semicircular censoring and bounded location/scale fits.
+- [x] Add truncated exponential, Johnson SB, and kappa3 censoring and bounded fits.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

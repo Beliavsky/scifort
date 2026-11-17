@@ -29,6 +29,9 @@ module scifort_stats
     use scifort_censored, only : cosine_censored_loglikelihood, cosine_censored_nnlf
     use scifort_censored, only : anglit_censored_loglikelihood, anglit_censored_nnlf
     use scifort_censored, only : semicircular_censored_loglikelihood, semicircular_censored_nnlf
+    use scifort_censored, only : truncexpon_censored_loglikelihood, truncexpon_censored_nnlf
+    use scifort_censored, only : johnsonsb_censored_loglikelihood, johnsonsb_censored_nnlf
+    use scifort_censored, only : kappa3_censored_loglikelihood, kappa3_censored_nnlf
     use scifort_censored, only : arcsine_censored_loglikelihood, arcsine_censored_nnlf
     use scifort_censored, only : powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     use scifort_censored, only : uniform_censored_loglikelihood, uniform_censored_nnlf
@@ -760,6 +763,9 @@ module scifort_stats
     public :: cosine_censored_loglikelihood, cosine_censored_nnlf
     public :: anglit_censored_loglikelihood, anglit_censored_nnlf
     public :: semicircular_censored_loglikelihood, semicircular_censored_nnlf
+    public :: truncexpon_censored_loglikelihood, truncexpon_censored_nnlf
+    public :: johnsonsb_censored_loglikelihood, johnsonsb_censored_nnlf
+    public :: kappa3_censored_loglikelihood, kappa3_censored_nnlf
     public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
     public :: invgamma_censored_loglikelihood, invgamma_censored_nnlf
     public :: betaprime_censored_loglikelihood, betaprime_censored_nnlf

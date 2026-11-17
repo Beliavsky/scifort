@@ -40,6 +40,8 @@ program censored_reference_driver
         johnsonsu_censored_loglikelihood, genexpon_censored_loglikelihood
     use scifort_censored, only : cosine_censored_loglikelihood, &
         anglit_censored_loglikelihood, semicircular_censored_loglikelihood
+    use scifort_censored, only : truncexpon_censored_loglikelihood, &
+        johnsonsb_censored_loglikelihood, kappa3_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -49,7 +51,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53])) read(*, *) second_shape
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58])) read(*, *) second_shape
         if (family == 53) read(*, *) third_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
@@ -59,6 +61,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (57)
+            value = truncexpon_censored_loglikelihood(data,c,loc,scale)
+        case (58)
+            value = johnsonsb_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (59)
+            value = kappa3_censored_loglikelihood(data,c,loc,scale)
         case (54)
             value = cosine_censored_loglikelihood(data,loc,scale)
         case (55)

@@ -1,3 +1,60 @@
+## 2026-11-17 - Truncated exponential, Johnson SB, and kappa3 censoring
+
+The new censored callbacks, fitting overloads, tests, and independent
+reference checker are original MIT SciFort code. They independently
+implement mathematical density specifications inspected on 2026-11-17:
+[SciPy truncated exponential](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncexpon.html),
+[Johnson SB](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.johnsonsb.html),
+and [kappa3](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kappa3.html).
+No upstream implementation was copied, translated, or vendored. No new
+dependency or third-party license text is required. Existing beta-distance,
+normal-tail, log-distance, Mielke/Burr softplus-increment, and generic fitting
+helpers retain their original provenance and notices.
+
+Truncated exponential integrates `exp(-z)` over the rounded physical
+support width. Positive mass increments use `1-exp(-delta)` with stable
+logarithmic hazards. For effective cutoff beta <= 1, the density identity
+`exp(beta/2-z)/(r*sinh(beta/2)/(beta/2))` avoids cancellation of the large
+log-scale and log-normalizer terms. The positive power series for
+`sinh(v)/v` starts with 1 and multiplies successive terms by
+`v*v/((2*k)*(2*k+1))`. Ten corrections for v <= 0.5 leave a remainder
+below `1e-29`. A compensated center gap retains tiny linear corrections;
+subnormal support widths use the direct dimensionless expression because
+their half-step midpoint may be unrepresentable.
+
+Johnson SB uses `q=a+b*log(z/(1-z))` and the exact normal Jacobian.
+The exact interval logit width is the sum of the log ratios across the
+lower and upper endpoint gaps. Near the midpoint, `logit(z)=2*atanh(v)`,
+where `v=2*z-1`. Replacing atanh(v) by v for abs(v) < sqrt(epsilon)
+has relative correction below epsilon/3. Its product with b is computed
+in logarithms if a standardized displacement underflows. Odd subnormal
+widths use the difference of the full endpoint gaps. Guarded products and
+finite sums follow SciFort's existing Johnson SU method; no third-party
+implementation is introduced. Severe opposing-term cancellation is
+explicitly documented as ill-conditioned.
+
+Kappa3 integrates its public density to
+`F=z/(a+z**a)**(1/a)`. Thus its reversed cumulative hazard is
+`softplus(log(a)-a*log(z))/a`. Independent log and product coordinates
+retain tiny shapes and overflowing products. The nearly unit standardized
+coordinate uses a compensated gap from the scale point, reordering sums
+when loc+scale overflows. Replacing log1p(v) by v below
+epsilon/exp(2) has relative correction below epsilon/(2*exp(2)).
+The density uses an algebraically grouped expression in the large-positive
+softplus branch. Its interval increment uses the exact softplus-difference
+identities already derived for the Mielke family. If the upper-end q >= 40,
+replacing its sigmoid derivative by one has relative error below
+`exp(-40)/(1-exp(-40)) < 5e-18` throughout the interval.
+
+Normal narrow-interval quadrature reuses SciFort's three-point
+Gauss-Legendre kernel, whose nodes and weights follow
+[DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v). Broad intervals select the
+better tail difference or complement both omitted tails. The independent
+checker evaluates the density integrals, normal erfc tails, and elementary
+hazards at 100 or 800 decimal digits. SciPy supplies separate constrained
+fit benchmarks. See [the API guide](docs/censored_fitting.md) and
+[validation record](validation/bounded_shape_censored_2026-11-17.md).
+
 ## 2026-11-16 - Cosine, anglit, and semicircular censoring
 
 The new censored kernels, fitting overloads, native tests, and independent

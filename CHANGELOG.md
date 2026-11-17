@@ -1,3 +1,14 @@
+## 2026-11-17 - Truncated exponential, Johnson SB, and kappa3 censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded fitting overloads, and
+  statistics exports for three more families; preserve existing scalar APIs.
+- Retain endpoint gaps, amplified midpoint/scale-point displacements,
+  extreme-shape reversed hazards, and adjacent interval widths.
+- Preserve nearly uniform truncated-exponential log densities and avoid
+  half-step midpoint rounding for odd subnormal support widths.
+- Add native and independent checks, document support and fitting limits,
+  and update coverage to 59 supported families, with 50 remaining.
+
 ## 2026-11-16 - Cosine, anglit, and semicircular censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded location/scale fit overloads,

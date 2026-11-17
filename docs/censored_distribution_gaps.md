@@ -1,6 +1,6 @@
 # Censored distribution coverage gaps
 
-Inventory updated: 2026-11-16.
+Inventory updated: 2026-11-17.
 
 For complete native Fortran coverage, the eventual target is censored
 likelihoods for all named univariate continuous families, with explicit
@@ -9,11 +9,11 @@ interval conventions for angular distributions. SciPy's
 API targets univariate continuous fitting.
 
 The current SciFort fitting registry in [src/fit.f90](../src/fit.f90)
-contains 109 continuous families. Fifty-six already have family-specific censored
+contains 109 continuous families. Fifty-nine already have family-specific censored
 likelihoods in [src/censored.f90](../src/censored.f90): `normal`,
 `exponential`, `weibull`, `lognormal`, `gamma`, `beta`, `logistic`,
 `gumbel_r`, `gumbel_l`, `laplace`, `cauchy`, `halfcauchy`, `halflogistic`,
-`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, and `semicircular`. That leaves 53 candidates below.
+`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, and `kappa3`. That leaves 50 candidates below.
 
 Names follow SciFort's API. The count covers named distribution families in
 the current fitting registry, rather than histogram-backed or custom models.
@@ -32,11 +32,11 @@ has the same numerical difficulty or can use the same fitting algorithm.
 | Basic location/scale and skew models | 1 | `t` |
 | Related families and transformations | 6 | `chi2`, `chi`, `wald`, `f`, `foldnorm`, `foldcauchy` |
 | Lifetime and tail models | 6 | `genpareto`, `invgauss`, `recipinvgauss`, `nakagami`, `rice`, `gengamma` |
-| Bounded and truncated distributions | 11 | `truncexpon`, `loguniform`, `truncnorm`, `truncpareto`, `truncweibull_min`, `rdist`, `argus`, `johnsonsb`, `gausshyper`, `irwinhall`, `vonmises_line` |
-| Additional shape and skew families | 14 | `alpha`, `gennorm`, `halfgennorm`, `genhalflogistic`, `exponnorm`, `genextreme`, `kappa3`, `kappa4`, `crystalball`, `jf_skew_t`, `pearson3`, `skewnorm`, `tukeylambda`, `dpareto_lognorm` |
+| Bounded and truncated distributions | 9 | `loguniform`, `truncnorm`, `truncpareto`, `truncweibull_min`, `rdist`, `argus`, `gausshyper`, `irwinhall`, `vonmises_line` |
+| Additional shape and skew families | 13 | `alpha`, `gennorm`, `halfgennorm`, `genhalflogistic`, `exponnorm`, `genextreme`, `kappa4`, `crystalball`, `jf_skew_t`, `pearson3`, `skewnorm`, `tukeylambda`, `dpareto_lognorm` |
 | Numerically demanding or specialist families | 13 | `ncx2`, `ncf`, `nct`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `landau`, `levy_stable`, `rel_breitwigner`, `studentized_range`, `ksone`, `kstwo`, `kstwobign` |
 | Angular distributions requiring explicit interval conventions | 2 | `vonmises`, `wrapcauchy` |
-| **Total** | **53** | |
+| **Total** | **50** | |
 
 For angular distributions, distinguish intervals in a fixed coordinate range
 from arcs crossing the angular boundary. `vonmises_line` belongs in the
@@ -69,7 +69,7 @@ joint probability calculations; it is outside this univariate inventory.
    and numerical correctness over raw distribution counts.
 
 Several additions can share validated kernels, so the remaining work need
-not mean 53 independent numerical implementations. Likelihood support and
+not mean 50 independent numerical implementations. Likelihood support and
 fitting restrictions should be tracked separately as families are added.
 Native Fortran coverage takes priority; C ABI and wrapper expansion remain
 deferred. See the broader [SciPy gaps inventory](scipy_gaps.md).
