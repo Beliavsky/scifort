@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: gennorm_censored_loglikelihood, gennorm_censored_nnlf
+    public :: halfgennorm_censored_loglikelihood, halfgennorm_censored_nnlf
+    public :: rdist_censored_loglikelihood, rdist_censored_nnlf
     public :: foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     public :: foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     public :: genpareto_censored_loglikelihood, genpareto_censored_nnlf
@@ -113,6 +116,433 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function rdist_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! equal half-shapes, rounded lower edge, full width
+        real(dp) :: value, left, right, z, w, lz, lw
+        if (params(1) > epsilon(1.0_dp)/4096.0_dp) then
+            value = beta_lpdf(x,params)
+            return
+        end if
+        value = negative_infinity(0.0_dp)
+        call beta_distances(x,params,left,right)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        value = positive_infinity(0.0_dp)
+        if (left == 0.0_dp .or. right == 0.0_dp) return
+        call beta_coordinates(x,params,left,right,z,w,lz,lw)
+        value = log(params(1))-scifort_log_two-log(params(4))-lz-lw
+    end function rdist_lpdf
+
+    pure subroutine rdist_tails(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! equal half-shapes, rounded lower edge, full width
+        real(dp), intent(out) :: lp !! log lower probability
+        real(dp), intent(out) :: lq !! log upper probability
+        real(dp) :: left, right
+        call beta_distances(x,params,left,right)
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (left <= 0.0_dp) return
+        lp = 0.0_dp
+        lq = negative_infinity(0.0_dp)
+        if (right <= 0.0_dp) return
+        if (params(1) <= epsilon(1.0_dp)/4096.0_dp .or. left == right) then
+            lp = -scifort_log_two
+            lq = lp
+        else
+            call beta_logtails(x,params,lp,lq)
+        end if
+    end subroutine rdist_tails
+
+    pure function rdist_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! equal half-shapes, rounded lower edge, full width
+        real(dp) :: value, unused
+        call rdist_tails(x,params,value,unused)
+    end function rdist_lcdf
+
+    pure function rdist_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! equal half-shapes, rounded lower edge, full width
+        real(dp) :: value, unused
+        call rdist_tails(x,params,unused,value)
+    end function rdist_lsf
+
+    pure function rdist_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! equal half-shapes, rounded lower edge, full width
+        real(dp) :: value, left, right, lower, upper, span
+        if (params(1) > epsilon(1.0_dp)/4096.0_dp) then
+            value = beta_interval(a,b,params)
+            return
+        end if
+        value = negative_infinity(0.0_dp)
+        call beta_distances(b,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            value = rdist_lsf(a,params)
+            return
+        end if
+        upper = log(right)
+        call beta_distances(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = rdist_lcdf(b,params)
+            return
+        end if
+        lower = log_distance(a,params(3))
+        span = log_distance(b,a)
+        value = log(params(1))-scifort_log_two &
+            +bounded_logadd(burr_logsoftplus(span-lower),burr_logsoftplus(span-upper))
+    end function rdist_interval
+
+    pure function generalized_normal_norm(a) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! positive finite reciprocal power
+        real(dp) :: value, product
+        if (a < stirling_threshold) then
+            value = -log_gamma_one_plus(a)
+        else
+            product = bounded_cutoff_product(a,log(a)-1.0_dp)
+            value = negative_infinity(0.0_dp)
+            if (.not. ieee_is_finite(product)) return
+            value = -product-0.5_dp*log(a)-scifort_log_sqrt_two_pi-stirling_remainder(a)
+        end if
+    end function generalized_normal_norm
+
+    pure function generalized_normal_power(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite point at or above location
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, lz
+        value = negative_infinity(0.0_dp)
+        if (x == params(2)) return
+        call kappa3_power(x,params,lz,value)
+    end function generalized_normal_power
+
+    pure subroutine generalized_normal_gamma(ly, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: ly !! log powered coordinate, possibly infinite
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp), intent(out) :: lp !! log probability between location and positive observation
+        real(dp), intent(out) :: lq !! log positive half-law survival probability
+        real(dp) :: y
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (ly == negative_infinity(0.0_dp)) return
+        if (params(6) /= 0.0_dp) return
+        if (ly > log(huge(1.0_dp))) then
+            lp = 0.0_dp
+            lq = negative_infinity(0.0_dp)
+        else if (ly < log(tiny(1.0_dp))) then
+            lp = gamma_small_kernel(params(4),ly)
+            lq = log_difference(0.0_dp,lp)
+        else
+            y = exp(ly)
+            if (params(4) > 1.0_dp) then
+                if (params(4) > huge(1.0_dp)/max(1.0_dp,log(params(4)))) then
+                    ! Here y is near one: the lower-gamma series correction is O(1/a).
+                    lp = params(5)+params(4)*ly-y
+                    lq = log_difference(0.0_dp,lp)
+                    return
+                end if
+            end if
+            lp = log_gammainc(params(4),y)
+            lq = log_gammaincc(params(4),y)
+        end if
+    end subroutine generalized_normal_gamma
+
+    pure subroutine generalized_normal_point(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite point at or above the half-law location
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, normalizer, flag
+        real(dp), intent(out) :: lp !! log positive half-law CDF
+        real(dp), intent(out) :: lq !! log positive half-law SF
+        real(dp) :: lz, ly
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (x == params(2) .or. params(6) /= 0.0_dp) return
+        call kappa3_power(x,params,lz,ly)
+        if (ly < log(tiny(1.0_dp))) then
+            ! (z**beta)**(1/beta) = z, even if beta*log(z) overflows.
+            lp = lz+params(5)
+            lq = log_difference(0.0_dp,lp)
+        else
+            call generalized_normal_gamma(ly,params,lp,lq)
+        end if
+    end subroutine generalized_normal_point
+
+    pure function halfgennorm_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (params(6) /= 0.0_dp) return
+        value = params(5)-log(params(3))+negative_hazard(generalized_normal_power(x,params))
+    end function halfgennorm_lpdf
+
+    pure function gennorm_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, reflected(6)
+        reflected = params
+        reflected(2) = -params(2)
+        if (x < params(2)) then
+            value = halfgennorm_lpdf(-x,reflected)-scifort_log_two
+        else
+            value = halfgennorm_lpdf(x,params)-scifort_log_two
+        end if
+    end function gennorm_lpdf
+
+    pure subroutine generalized_normal_tails(x, params, half, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        logical, intent(in) :: half !! restrict support to the positive half
+        real(dp), intent(out) :: lp !! log lower-tail probability
+        real(dp), intent(out) :: lq !! log upper-tail probability
+        real(dp) :: first, second, reflected(6)
+        if (half) then
+            lp = negative_infinity(0.0_dp)
+            lq = 0.0_dp
+            if (x <= params(2)) return
+            call generalized_normal_point(x,params,lp,lq)
+        else
+            reflected = params
+            reflected(2) = -params(2)
+            if (x < params(2)) then
+                call generalized_normal_point(-x,reflected,first,second)
+                lp = second-scifort_log_two
+                lq = log1p_safe(-exp(lp))
+            else
+                call generalized_normal_point(x,params,first,second)
+                lq = second-scifort_log_two
+                lp = log1p_safe(-exp(lq))
+            end if
+        end if
+    end subroutine generalized_normal_tails
+
+    pure function halfgennorm_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, lo, la, lb, lr, ld, lp, lq, rp, rq, t(3), r(3), correction
+        integer :: j
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        lo = max(a,params(2))
+        lb = generalized_normal_power(b,params)
+        if (lb < log(epsilon(1.0_dp))-2.0_dp) then
+            value = params(5)-log(params(3))+log_distance(b,lo)
+            if (params(6) /= 0.0_dp) value = negative_infinity(0.0_dp)
+            return
+        end if
+        call generalized_normal_point(b,params,rp,rq)
+        if (lo == params(2)) then
+            value = rp
+            return
+        end if
+        la = generalized_normal_power(lo,params)
+        call generalized_normal_point(lo,params,lp,lq)
+        if (la > log(huge(1.0_dp))) return
+        lr = log_distance(b,lo)-log_distance(lo,params(2))
+        ld = la+log_expm1_from_log(log(params(1))+burr_logsoftplus(lr))
+        if (lr <= log(0.001_dp) .and. ld <= log(0.001_dp) &
+                .and. log(params(1))+burr_logsoftplus(lr) <= log(0.001_dp)) then
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            do j = 1, 3
+                ld = la+log_expm1_from_log(log(params(1))+burr_logsoftplus(log(t(j))+lr))
+                r(j) = negative_hazard(ld)
+            end do
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = halfgennorm_lpdf(lo,params)+log_distance(b,lo)+log1p_safe(correction)
+        else if (rp <= lq) then
+            value = log_difference(rp,lp)
+        else
+            value = log_difference(lq,rq)
+        end if
+        if (value > -scifort_log_two) value = log1p_safe(-exp(bounded_logadd(lp,rq)))
+    end function halfgennorm_interval
+
+    pure function gennorm_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, reflected(6), left, right, unused
+        reflected = params
+        reflected(2) = -params(2)
+        if (b <= params(2)) then
+            value = halfgennorm_interval(-b,-a,reflected)-scifort_log_two
+        else if (a >= params(2)) then
+            value = halfgennorm_interval(a,b,params)-scifort_log_two
+        else
+            call generalized_normal_point(-a,reflected,left,unused)
+            call generalized_normal_point(b,params,right,unused)
+            value = bounded_logadd(left,right)-scifort_log_two
+        end if
+        if (value > -scifort_log_two) then
+            call generalized_normal_tails(a,params,.false.,left,unused)
+            call generalized_normal_tails(b,params,.false.,unused,right)
+            value = log1p_safe(-exp(bounded_logadd(left,right)))
+        end if
+    end function gennorm_interval
+
+    pure function gennorm_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, unused
+        call generalized_normal_tails(x,params,.false.,value,unused)
+    end function gennorm_lcdf
+
+    pure function gennorm_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, unused
+        call generalized_normal_tails(x,params,.false.,unused,value)
+    end function gennorm_lsf
+
+    pure function halfgennorm_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, unused
+        call generalized_normal_tails(x,params,.true.,value,unused)
+    end function halfgennorm_lcdf
+
+    pure function halfgennorm_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! power, location, scale, reciprocal power, log normalizer, overflow flag
+        real(dp) :: value, unused
+        call generalized_normal_tails(x,params,.true.,unused,value)
+    end function halfgennorm_lsf
+
+
+    pure function gennorm_censored_loglikelihood(data, beta, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: beta !! positive finite generalized-normal power
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(6)
+        params = [beta,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (beta <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        params(4) = location_scale_z(1.0_dp,[0.0_dp,beta])
+        if (.not. ieee_is_finite(params(4))) return
+        params(5) = generalized_normal_norm(params(4))
+        if (.not. ieee_is_finite(params(5))) then
+            params(5) = 0.0_dp
+            params(6) = 1.0_dp
+        end if
+        value = censored_loglikelihood(data,params,gennorm_lpdf,gennorm_lcdf, &
+            gennorm_lsf,gennorm_interval)
+    end function gennorm_censored_loglikelihood
+
+    pure function gennorm_censored_nnlf(data, beta, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: beta !! positive finite generalized-normal power
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -gennorm_censored_loglikelihood(data, beta, loc, scale)
+    end function gennorm_censored_nnlf
+
+    pure function halfgennorm_censored_loglikelihood(data, beta, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: beta !! positive finite generalized-normal power
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(6)
+        params = [beta,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (beta <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        params(4) = location_scale_z(1.0_dp,[0.0_dp,beta])
+        if (.not. ieee_is_finite(params(4))) return
+        params(5) = generalized_normal_norm(params(4))
+        if (.not. ieee_is_finite(params(5))) then
+            params(5) = 0.0_dp
+            params(6) = 1.0_dp
+        end if
+        value = censored_loglikelihood(data,params,halfgennorm_lpdf,halfgennorm_lcdf, &
+            halfgennorm_lsf,halfgennorm_interval)
+    end function halfgennorm_censored_loglikelihood
+
+    pure function halfgennorm_censored_nnlf(data, beta, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: beta !! positive finite generalized-normal power
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -halfgennorm_censored_loglikelihood(data, beta, loc, scale)
+    end function halfgennorm_censored_nnlf
+
+    pure function rdist_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite symmetric-beta shape, at most 1e6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4), center, width
+        params = [c,0.0_dp,1.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp) return
+        if (c > 1.0e6_dp) return
+        if (params(3) <= 0.0_dp) return
+        if (0.5_dp*c <= 0.0_dp) return
+        if (params(3) > 0.5_dp*huge(1.0_dp)) return
+        center = params(2)
+        width = 2.0_dp*params(3)
+        if (center < 0.0_dp) then
+            if (params(3) > huge(1.0_dp)+center) return
+        end if
+        params = [0.5_dp*c,0.5_dp*c,center-params(3),width]
+        if (.not. beta_parameters_valid(params)) return
+        if (params(3) >= center .or. params(3)+width <= center) return
+        value = censored_loglikelihood(data,params,rdist_lpdf,rdist_lcdf, &
+            rdist_lsf,rdist_interval)
+    end function rdist_censored_loglikelihood
+
+    pure function rdist_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite symmetric-beta shape, at most 1e6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -rdist_censored_loglikelihood(data, c, loc, scale)
+    end function rdist_censored_nnlf
+
 
     pure subroutine folded_coordinates(x, params, minus, plus, lm, lp, lz)
         implicit none

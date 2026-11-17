@@ -137,6 +137,8 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add truncated exponential, Johnson SB, and kappa3 censoring and bounded fits.
 - [x] Add log-uniform, truncated Pareto, and generalized half-logistic censored fits.
 - [x] Add folded normal, folded Cauchy, and generalized Pareto censored fitting.
+- [x] Add generalized normal, half generalized normal, and R censored fits within documented ranges.
+- [ ] Extend censored generalized-normal reciprocal-power and R large-shape ranges.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

@@ -38,6 +38,9 @@ module scifort_stats
     use scifort_censored, only : foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    use scifort_censored, only : gennorm_censored_loglikelihood, gennorm_censored_nnlf
+    use scifort_censored, only : halfgennorm_censored_loglikelihood, halfgennorm_censored_nnlf
+    use scifort_censored, only : rdist_censored_loglikelihood, rdist_censored_nnlf
     use scifort_censored, only : arcsine_censored_loglikelihood, arcsine_censored_nnlf
     use scifort_censored, only : powerlaw_censored_loglikelihood, powerlaw_censored_nnlf
     use scifort_censored, only : uniform_censored_loglikelihood, uniform_censored_nnlf
@@ -778,6 +781,9 @@ module scifort_stats
     public :: foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     public :: foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     public :: genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    public :: gennorm_censored_loglikelihood, gennorm_censored_nnlf
+    public :: halfgennorm_censored_loglikelihood, halfgennorm_censored_nnlf
+    public :: rdist_censored_loglikelihood, rdist_censored_nnlf
     public :: arcsine_censored_loglikelihood, arcsine_censored_nnlf
     public :: invgamma_censored_loglikelihood, invgamma_censored_nnlf
     public :: betaprime_censored_loglikelihood, betaprime_censored_nnlf

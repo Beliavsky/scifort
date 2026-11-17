@@ -1,3 +1,70 @@
+## 2026-11-17 - Generalized normal, half generalized normal, and R censoring
+
+The new callbacks, fitting overloads, tests, and independent reference
+checker are original MIT SciFort code, independently derived from public
+mathematical specifications inspected on 2026-11-17:
+[SciPy generalized normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gennorm.html),
+[half generalized normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.halfgennorm.html),
+and [R distribution](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rdist.html).
+No upstream implementation was copied, translated, or vendored. Existing
+gamma, beta, compensated-distance, and fitting helpers retain their
+original provenance and notices. No new dependency or license text is required.
+
+For generalized normals, substituting Y=abs(z)**beta gives a unit-scale
+gamma law of shape a=1/beta. The half-law density is
+`exp(-Y)/(scale*Gamma(1+a))`; the symmetric law divides this by two.
+Normalization reuses log-gamma-one-plus and a grouped Stirling expression
+`-a*(log(a)-1)-log(a)/2-log(sqrt(2*pi))-R(a)`, from
+[DLMF 5.11](https://dlmf.nist.gov/5.11). A guarded product avoids overflow
+before the grouped result is formed. A private finite flag represents an
+overflowed log normalizer without failing the generic finite-parameter check.
+
+The lower-gamma positive series follows
+[DLMF 8.7.1](https://dlmf.nist.gov/8.7.E1): its leading logarithm is
+`a*log(Y)-Y-log(Gamma(a+1))`, with corrections starting at Y/(a+1).
+In the branch where a*log(a) overflows, the coupled generalized-normal
+coordinate Y is near one, and this relative correction is below 1e-300.
+The independent oracle sums this positive series at arbitrary precision.
+Ordinary tails reuse the existing incomplete-gamma kernels. For tiny Y,
+the coupled identity `a*log(Y)=log(abs(z))` uses the original log distance,
+preserving finite CDFs when the intermediate beta*log(abs(z)) overflows
+negatively. It also retains subnormal endpoint log CDFs at the largest
+finite power.
+
+Powered distances reuse the compensated scale-point calculation derived
+for kappa3. Interior interval power increments use
+`Y1*expm1(beta*log1p((x2-x1)/(x1-loc)))`, retained logarithmically.
+Three-point Gauss-Legendre integration uses the existing nodes/weights from
+[DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v). It requires relative physical
+width, change in log powered coordinate, and change in powered coordinate
+all at most 0.001. The powered-coordinate condition prevents a steep thin
+boundary layer from being mistaken for a slowly varying density. If Y2 is
+below epsilon/exp(2), replacing exp(-Y) by one incurs relative error below
+that threshold. Wider intervals use gamma tail differences, reflections,
+or complements of both omitted tails. No fitted coefficients are introduced.
+
+R uses its stated symmetric-beta representation with a=fl(c/2), rounded
+lower physical edge L=fl(loc-scale), and width 2*scale. For
+a<=epsilon/4096, the elementary expansion B(a,a)=2/a*(1+O(a*a)) gives
+density `a/(2*width*u*(1-u))` and an interior interval mass
+`a*(logit(u2)-logit(u1))/2`. The logit width is the sum of the positive
+lower- and upper-gap log ratios, as previously derived for Johnson SB.
+Binary64 endpoint log coordinates have magnitude below 1500, so the
+omitted first-order density factor a*log(u*(1-u)) is below roundoff;
+interior CDF/SF errors from one half are below epsilon. Ordinary shapes
+reuse the existing beta implementation. The explicit c<=1e6 limit bounds
+the validated continued-fraction and near-center regime; extending that
+range remains a documented compatibility gap.
+
+Independent mpmath integrals use 90, 100, or 1100 digits and precision-keyed
+memoization. They operate on half-law gamma logs before constructing
+symmetric interval masses, avoiding subtraction of probabilities rounded
+to one half. Upper-cap R tail and adjacent-interval references also use
+direct density quadrature in concentration-scaled coordinates. SciPy
+supplies independent constrained-fit benchmarks. See
+the [API guide](docs/censored_fitting.md) and
+[validation record](validation/generalized_normal_censored_2026-11-17.md).
+
 ## 2026-11-17 - Folded normal, folded Cauchy, and generalized Pareto censoring
 
 The new callbacks, fitting overloads, tests, and independent checker are

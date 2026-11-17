@@ -1,3 +1,13 @@
+## 2026-11-17 - Generalized normal, half generalized normal, and R censoring
+
+- Add mixed likelihoods, NNLF, bounded fitting overloads, and statistics exports.
+- Retain logarithmic powered distances, gamma tails, adjacent intervals,
+  nearly uniform endpoint densities, and small symmetric-beta shapes.
+- Document finite-reciprocal and affine-support requirements; R censoring
+  currently supports shapes up to 1e6, with larger shapes tracked as a gap.
+- Add native/independent checks and update coverage to 68 families with
+  41 remaining named families, subject to documented numerical limits.
+
 ## 2026-11-17 - Folded normal, folded Cauchy, and generalized Pareto censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded fitting overloads, and

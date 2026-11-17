@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+gennorm_censored_loglikelihood(data, beta [, loc, scale])
+halfgennorm_censored_loglikelihood(data, beta [, loc, scale])
+rdist_censored_loglikelihood(data, c [, loc, scale])
 foldnorm_censored_loglikelihood(data, c [, loc, scale])
 foldcauchy_censored_loglikelihood(data, c [, loc, scale])
 genpareto_censored_loglikelihood(data, c [, loc, scale])
@@ -161,7 +164,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1872,3 +1875,103 @@ if (fit%success) print *, fit%params, &
 
 See the [validation record](../validation/fold_pareto_censored_2026-11-17.md)
 for checked/optimized results, independent references, and exact commands.
+
+
+## Generalized normal, half generalized normal, and R details
+
+The likelihoods and matching `_censored_nnlf` functions are available from
+`scifort_censored` and `scifort_stats`. Their fit generics accept
+`censored_data` with bounds ordered `[beta,loc,scale]` for generalized normal
+and its half law, or `[c,loc,scale]` for R. Equal bounds fix parameters.
+Original scalar and array-fit APIs remain available. Invalid parameters
+return NaN even for empty data; valid empty likelihoods are zero.
+
+### Generalized normal and half generalized normal
+
+Power beta is positive and finite, and its binary64 reciprocal must be
+finite. Location is finite and scale positive and finite. A reciprocal
+that overflows returns NaN; extending that range remains a compatibility
+gap. An overflowing gamma log normalizer for a valid reciprocal produces
+the appropriate infinite log likelihood, while valid empty data still
+returns zero.
+
+With `z=(x-loc)/scale`, the half-law density on `[loc,infinity)` is
+`exp(-z**beta)/(scale*Gamma(1+1/beta))`. The symmetric law has half this
+density, with z replaced by abs(z), on the whole real line. Its CDF/SF at
+loc are both one half. The half-law CDF/SF at loc are 0/1, with positive
+endpoint density `1/(scale*Gamma(1+1/beta))`; below loc its density/CDF are
+zero and SF one.
+
+The powered distance `Y=abs(z)**beta` follows a unit-scale gamma law with
+shape `1/beta`. Independent gamma lower/upper logarithmic tails retain
+small probabilities. Log-gamma-one-plus and a grouped Stirling expression
+avoid cancellation and intermediate overflow in the normalization. The
+implementation retains the tiny positive endpoint log density in the
+nearly uniform half-law limit. Compensated scale-point displacements
+preserve effects amplified by large beta even if the ordinary standardized
+coordinate rounds to one.
+
+For very small Y, the identity `Y**(1/beta)=abs(z)` is evaluated using
+the original log distance. This preserves finite CDFs even when the
+intermediate product beta*log(abs(z)) overflows negatively. Subnormal
+log CDFs at the largest finite power remain representable.
+
+Intervals on one side use gamma tail differences or three-point quadrature
+in the original coordinate. Quadrature requires small relative width,
+powered-coordinate change, and density change. Independently stored log
+widths retain adjacent floating-point intervals. If the powered coordinate
+is uniformly below epsilon/exp(2), a constant-density integral has relative
+error below that threshold. Symmetric intervals reflect negative ranges,
+split at loc when needed, and complement omitted tails for nearly full
+support. At beta=1 these laws agree with Laplace and exponential; at
+beta=2 they agree with normal and half-normal with scale divided by sqrt(2).
+
+### R distribution
+
+The current censored implementation supports finite `0<c<=1e6` and requires
+the rounded half-shape `a=fl(c/2)>0`. Larger c and an underflowed half-shape
+return NaN, including for empty data. This explicit upper limit bounds the
+validated beta continued-fraction regime; extending it is a remaining
+numerical compatibility gap.
+
+The implementation uses a normalized symmetric beta law with shapes a,a
+on physical support `[L,L+w]`, where `L=fl(loc-scale)` and `w=2*scale`.
+Require positive finite scale, finite positive w, finite L and rounded upper
+edge, and `L<loc<fl(L+w)`. Underflowed/overflowed/collapsed transforms return
+NaN. The rounded lower edge defines the numerical law; subnormal or shifted
+supports can differ from the scalar API. Compensated distances retain the
+residual of L+w. R scale denotes a half-width; its loc denotes the requested
+center before lower-edge rounding.
+
+Endpoint density is infinite for c<2, `1/w` for c=2, and zero for c>2.
+Endpoint CDF/SF values are 0/1 and 1/0. R with c=1,2,3 agrees with the
+corresponding arcsine, uniform, and semicircular laws when their physical
+supports coincide.
+
+For half-shape at most epsilon/4096, positive density and logit-interval
+formulas avoid intrinsic gamma overflow at a subnormal shape. Interior
+tails round to one half with absolute error below epsilon. The leading
+density/interval formulas have relative errors below binary64 roundoff
+over representable endpoint coordinates. The remaining range reuses the
+existing beta tails and interval kernels. At an exactly symmetric stored
+coordinate, both tails are one half. All parameters can vary in bounded
+fits; movable endpoints and shape/scale limits can make unrestricted
+likelihoods unbounded. Fit success denotes a local bounded search.
+
+For example, fit a half generalized-normal power with location and scale fixed:
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    halfgennorm_fit, halfgennorm_censored_nnlf
+type(censored_data) :: sample
+type(fit_result) :: fit
+
+sample = make_censored_data(uncensored=[0.2_dp,0.4_dp,0.6_dp],left=[0.1_dp], &
+    right=[0.7_dp],interval=reshape([0.25_dp,0.5_dp,0.35_dp,0.55_dp],[2,2]))
+call halfgennorm_fit(sample,[0.3_dp,0.0_dp,1.3_dp],[5.0_dp,0.0_dp,1.3_dp],fit)
+if (fit%success) print *, fit%params, &
+    halfgennorm_censored_nnlf(sample,fit%params(1),fit%params(2),fit%params(3))
+```
+
+See the [validation record](../validation/generalized_normal_censored_2026-11-17.md)
+for checked/optimized results, references, and exact commands.

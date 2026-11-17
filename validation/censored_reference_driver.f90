@@ -46,6 +46,8 @@ program censored_reference_driver
         truncpareto_censored_loglikelihood, genhalflogistic_censored_loglikelihood
     use scifort_censored, only : foldnorm_censored_loglikelihood, &
         foldcauchy_censored_loglikelihood, genpareto_censored_loglikelihood
+    use scifort_censored, only : gennorm_censored_loglikelihood, &
+        halfgennorm_censored_loglikelihood, rdist_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -65,6 +67,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (66)
+            value = gennorm_censored_loglikelihood(data,c,loc,scale)
+        case (67)
+            value = halfgennorm_censored_loglikelihood(data,c,loc,scale)
+        case (68)
+            value = rdist_censored_loglikelihood(data,c,loc,scale)
         case (63)
             value = foldnorm_censored_loglikelihood(data,c,loc,scale)
         case (64)
