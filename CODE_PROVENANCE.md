@@ -1,3 +1,59 @@
+## 2026-11-16 - Exponential-power, exponentiated Weibull, and Mielke censoring
+
+The new censored callbacks, fit overloads, tests, and reference extensions
+are original MIT SciFort implementations of public mathematical specifications,
+inspected 2026-11-16:
+[SciPy exponpow](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponpow.html),
+[exponweib](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponweib.html),
+and [mielke](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mielke.html).
+No upstream implementation source was copied or translated. Existing
+SciFort Weibull/Burr/log-distance kernels retain their established
+provenance and notices. No dependency, third-party source/license, or C ABI
+has been added.
+
+With `z=(x-loc)/scale`, exponential-power uses `t=z**b` and cumulative
+hazard `expm1(t)`. Its density and interval formulas follow by
+differentiation and `expm1(tb)-expm1(ta)=exp(ta)*expm1(tb-ta)`.
+The common Weibull increment uses
+`tb-ta=ta*expm1(c*log((b-loc)/(a-loc)))`, retaining the original gap.
+When the log-coordinate increment exceeds 50, replacing the increment
+in `t` by `tb` has relative error below `exp(-50) < 2e-22`.
+
+Exponentiated Weibull uses CDF `F=(1-exp(-t))**a`, with reversed cumulative
+hazard `H=-a*log(1-exp(-t))`. Its log density is equivalently
+`log(a*c)-log(x-loc)+log(t/expm1(t))-H`. This algebra prevents cancellation
+between the original large shape terms. For tiny `t < epsilon/exp(2)`,
+`H=-a*log(t)` has relative correction bounded by approximately
+`t/(2*abs(log(t)))`; the density's omitted `log(t/expm1(t))` is below
+`t/2` in magnitude. For `t>36`, `H=a*exp(-t)` has relative error below
+`2e-16`. Opposing shapes are combined in log form before an overflowing
+`c*log(z)` can lose a finite `a*c*log(z)` result.
+
+For intervals, reversed-hazard difference is
+`a*log1p(exp(-ta)*(1-exp(-(tb-ta)))/(1-exp(-ta)))`.
+If both powers are tiny, it reduces to `a*c*log((b-loc)/(a-loc))` at
+roundoff accuracy. Tail complements retain both omitted masses for
+nearly full intervals. The scalar exponentiated-Weibull log-CDF now
+selects `log1p(-exp(-t))` for `t>log(2)` and `log(-expm1(-t))` otherwise;
+this is an elementary identity from the same CDF specification.
+
+Mielke is Burr III with `c=s,d=k/s`, as explicitly documented by SciPy.
+Its reversed cumulative hazard is `(k/s)*log1p(exp(q))`, `q=-s*log(z)`;
+its log density is `log(k)-log(x-loc)-log1p(exp(-q))-H`.
+The new callbacks evaluate these identities directly in `(k,s)` coordinates
+without requiring finite `k/s`. For `q>=40`, replacing the softplus by
+`q` changes the cumulative hazard relatively by less than `exp(-40)/40`.
+The analogous interval increment has relative correction below `exp(-40)`.
+Other interval branches reuse the established positive softplus-difference
+identities from SciFort's Burr implementation.
+
+The mpmath oracle evaluates high-precision power/exponential/Burr integrals
+and algebraic density identities independently of the Fortran branches.
+Reference tails beyond the representable log range are returned as
+infinite logs or unit probabilities before attempting nested exponentials.
+SciPy supplies constrained fit comparisons. See
+[validation](validation/lifetime_censored_2026-11-16.md).
+
 ## 2026-11-16 - Power-normal, power-lognormal, and skew-Cauchy censoring
 
 The new callbacks in `src/censored.f90`, fit overloads, tests, and reference

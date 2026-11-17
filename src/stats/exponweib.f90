@@ -88,6 +88,8 @@ contains
             t = safe_power_from_log(c * lz, x)
             if (.not. ieee_is_finite(t)) then
                 y = 0.0_dp
+            else if (t > log(2.0_dp)) then
+                y = a * log1p_safe(-exp(-t))
             else
                 y = a * log(-expm1_safe(-t))
             end if

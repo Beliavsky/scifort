@@ -66,6 +66,27 @@ def polygon_cdf(z,c,d):
 
 
 def logpdf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('exponpow','exponweib','mielke'):
+        x,shape,loc,scale,second=map(mp.mpf,(x,shape,loc,scale,second_shape))
+        z=(x-loc)/scale
+        if z < 0: return mp.ninf
+        if z == 0:
+            exponent=shape*second if family == 'exponweib' else shape
+            return mp.inf if exponent < 1 else (-mp.log(scale) if exponent == 1 else mp.ninf)
+        if family == 'exponpow':
+            if shape*mp.log(z) > mp.log(mp.log(mp.mpf(float.fromhex('0x1.fffffffffffffp+1023')))):
+                return mp.ninf
+            t=z**shape
+            return mp.log(shape)+(shape-1)*mp.log(z)+t-mp.expm1(t)-mp.log(scale)
+        if family == 'exponweib':
+            if second*mp.log(z) > mp.log(mp.mpf(float.fromhex('0x1.fffffffffffffp+1023'))):
+                return mp.ninf
+            t=z**second
+            lp=shape*mp.log(-mp.expm1(-t))
+            lr=mp.log(t)-t if t > 1000 else mp.log(t)-mp.log(mp.expm1(t))
+            return mp.log(shape*second)-mp.log(x-loc)+lr+lp
+        lp=-(shape/second)*mp.log1p(z**(-second))
+        return mp.log(shape)-mp.log(x-loc)-mp.log1p(z**second)+lp
     if family in ('powernorm','powerlognorm'):
         x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -190,6 +211,23 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logcdf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('exponpow','exponweib','mielke'):
+        x,shape,loc,scale,second=map(mp.mpf,(x,shape,loc,scale,second_shape))
+        z=(x-loc)/scale
+        if z <= 0: return mp.ninf
+        if family == 'exponpow':
+            if shape*mp.log(z) > mp.log(mp.log(mp.mpf(float.fromhex('0x1.fffffffffffffp+1023')))):
+                return mp.mpf(0)
+            ls=-mp.expm1(z**shape)
+            return mp.log(-mp.expm1(ls))
+        if family == 'exponweib':
+            if second*mp.log(z) > mp.log(mp.mpf(float.fromhex('0x1.fffffffffffffp+1023'))):
+                return mp.mpf(0)
+            t=z**second
+            logh=mp.log(shape)-t if t > 1000 else mp.log(-shape*mp.log(-mp.expm1(-t)))
+            return -mp.exp(logh)
+        lp=-(shape/second)*mp.log1p(z**(-second))
+        return lp
     if family in ('powernorm','powerlognorm'):
         x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -302,6 +340,23 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def logsf(x, family, shape, loc, scale, second_shape=1.):
+    if family in ('exponpow','exponweib','mielke'):
+        x,shape,loc,scale,second=map(mp.mpf,(x,shape,loc,scale,second_shape))
+        z=(x-loc)/scale
+        if z <= 0: return mp.mpf(0)
+        if family == 'exponpow':
+            if shape*mp.log(z) > mp.log(mp.log(mp.mpf(float.fromhex('0x1.fffffffffffffp+1023')))):
+                return mp.ninf
+            ls=-mp.expm1(z**shape)
+            return ls
+        if family == 'exponweib':
+            if second*mp.log(z) > mp.log(mp.mpf(float.fromhex('0x1.fffffffffffffp+1023'))):
+                return mp.ninf
+            t=z**second
+            logh=mp.log(shape)-t if t > 1000 else mp.log(-shape*mp.log(-mp.expm1(-t)))
+            return mp.log(-mp.expm1(-mp.exp(logh)))
+        lp=-(shape/second)*mp.log1p(z**(-second))
+        return mp.log(-mp.expm1(lp))
     if family in ('powernorm','powerlognorm'):
         x,shape,loc,scale=map(mp.mpf,(x,shape,loc,scale))
         z=(x-loc)/scale
@@ -422,6 +477,15 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
 
 
 def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1.):
+    if family in ('exponpow','exponweib','mielke'):
+        la=logcdf(a,family,shape,loc,scale,second_shape)
+        lb=logcdf(b,family,shape,loc,scale,second_shape)
+        qa=logsf(a,family,shape,loc,scale,second_shape)
+        qb=logsf(b,family,shape,loc,scale,second_shape)
+        if lb < qa: result=lb+mp.log(-mp.expm1(la-lb))
+        else: result=qa+mp.log(-mp.expm1(qb-qa))
+        if result > -mp.log(2): return mp.log1p(-mp.exp(la)-mp.exp(qb))
+        return result
     if family in ('powernorm','powerlognorm','skewcauchy'):
         la=logcdf(a,family,shape,loc,scale,second_shape)
         lb=logcdf(b,family,shape,loc,scale,second_shape)
@@ -658,6 +722,15 @@ def main():
         result[family+'_mixed']=float(value)
         options=dict(floc=0.,fscale=1.3)
         if family == 'powerlognorm': options['f1']=.8
+        result[family+'_constrained_fit']=list(getattr(stats,family).fit(data,**options))
+    for family in ['exponpow','exponweib','mielke']:
+        shape,loc,scale=1.7,0.,1.3
+        value=sum(logpdf(x,family,shape,loc,scale,1.2) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,shape,loc,scale,1.2)+logsf(3.5,family,shape,loc,scale,1.2)
+        value+=sum(loginterval(a,b,family,shape,loc,scale,1.2) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        options=dict(floc=0.,fscale=1.3)
+        if family != 'exponpow': options['f1']=1.2
         result[family+'_constrained_fit']=list(getattr(stats,family).fit(data,**options))
     print(json.dumps(result, indent=2))
 

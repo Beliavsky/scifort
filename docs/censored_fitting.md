@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+exponpow_censored_loglikelihood(data, b [, loc, scale])
+exponweib_censored_loglikelihood(data, a, c [, loc, scale])
+mielke_censored_loglikelihood(data, k, s [, loc, scale])
 powernorm_censored_loglikelihood(data, c [, loc, scale])
 powerlognorm_censored_loglikelihood(data, c, s [, loc, scale])
 skewcauchy_censored_loglikelihood(data, a [, loc, scale])
@@ -143,7 +146,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1330,3 +1333,79 @@ The formulas follow the mathematical specifications for
 [power-lognormal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.powerlognorm.html),
 and [skew-Cauchy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.skewcauchy.html).
 See [validation and commands](../validation/power_skew_censored_2026-11-16.md).
+
+## Exponential-power, exponentiated Weibull, and Mielke details
+
+All three families use finite `loc` (default zero), positive finite `scale`
+(default one), and positive finite shapes. Their support is `x >= loc`;
+CDF is zero at and below location, survival is one, and intervals are
+clipped to the support. A nonempty interval entirely below the support
+has log probability negative infinity. Invalid parameters return NaN even
+for empty samples. Shape order matches SciPy and existing SciFort APIs.
+
+- `exponpow`, shape `b`: write `z=(x-loc)/scale`, `t=z**b`. Survival is
+  `exp(-expm1(t))`, with log density
+  `log(b)-log(x-loc)+log(t)+t-expm1(t)` above location. At location the
+  density is infinite for `b<1`, `1/scale` for `b=1`, and zero for `b>1`.
+  At `b=1` it equals Gompertz with shape one. This is SciPy's
+  exponential-power family, distinct from generalized normal (`gennorm`).
+- `exponweib`, shapes `(a,c)`: `t=z**c` and CDF is
+  `(1-exp(-t))**a`. At location, the binary64 product `a*c` determines
+  infinite, finite `1/scale`, or zero density as it is below, equal to,
+  or above one. An overflowing positive product gives zero endpoint
+  density. At `a=1` the family equals minimum Weibull with shape `c`.
+- `mielke`, shapes `(k,s)`: CDF is `(1+z**(-s))**(-k/s)` above location.
+  At location, density is infinite for `k<1`, `1/scale` for `k=1`, and
+  zero for `k>1`. It equals Burr III with `c=s,d=k/s` when the ratio is
+  representable, and Fisk with shape `s` when `k=s`. The censored kernels
+  also handle shape ratios outside the binary64 range in log form.
+
+The new kernels keep powers, cumulative hazards, and shape ratios in log
+form until safe to evaluate. Exponentiated Weibull combines opposing
+shapes before an overflowing transformed log can discard a finite result.
+Its density uses `a*c/(x-loc)` times `t/expm1(t)` times its CDF, which
+avoids cancellation between large shape-dependent terms. Mielke uses
+the equivalent Burr III identities directly in `(k,s)` coordinates.
+
+Narrow intervals retain the original endpoint gap when transformed
+endpoints round together. If `delta=c*log((b-loc)/(a-loc))`, the increment
+in `t` is `t(a)*expm1(delta)`. Exponential-power then increments its
+hazard by `exp(t(a))*expm1(t(b)-t(a))`. Exponentiated Weibull and Mielke
+use positive differences of reversed cumulative hazards. Broader and
+nearly full intervals preserve the smaller tail or both omitted tails.
+
+Matching `_censored_nnlf` and `_fit` overloads are exported from
+`scifort_stats`. Bounds follow `(b,loc,scale)`, `(a,c,loc,scale)`, and
+`(k,s,loc,scale)`, respectively. Any parameter can be free or fixed with
+equal bounds; existing array-based fits remain available. The optimizer
+is bounded and local. Jointly free shapes/location/scale can need more
+than the default 1,000 sweeps, so inspect `success` and `status`.
+Unrestricted location fits may have unbounded likelihood at exact
+observations when the endpoint density is singular; a successful bounded
+local fit does not establish a finite global MLE.
+
+The scalar exponentiated-Weibull log-CDF now uses a complementary `log1p`
+identity in the upper tail, fixing the observed loss in scalar log-SF.
+Other scalar extreme-parameter limitations are unchanged; the new censored
+kernels are independently validated for their documented ranges.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    exponpow_fit, exponweib_fit, mielke_fit
+type(censored_data) :: sample
+type(fit_result) :: fitted
+sample = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp], &
+    left=[0.3_dp],right=[3.5_dp],interval=reshape([1.1_dp,1.4_dp],[1,2]))
+call exponpow_fit(sample,[0.05_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,0.0_dp,1.3_dp],fitted)
+call exponweib_fit(sample,[0.05_dp,1.2_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,1.2_dp,0.0_dp,1.3_dp],fitted)
+call mielke_fit(sample,[0.05_dp,1.2_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,1.2_dp,0.0_dp,1.3_dp],fitted)
+```
+
+The formulas follow the mathematical specifications for
+[exponential-power](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponpow.html),
+[exponentiated Weibull](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponweib.html),
+and [Mielke](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mielke.html).
+See [validation and commands](../validation/lifetime_censored_2026-11-16.md).

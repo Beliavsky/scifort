@@ -37,6 +37,9 @@ module scifort_fit
     use scifort_censored, only : powernorm_censored_nnlf
     use scifort_censored, only : powerlognorm_censored_nnlf
     use scifort_censored, only : skewcauchy_censored_nnlf
+    use scifort_censored, only : exponpow_censored_nnlf
+    use scifort_censored, only : exponweib_censored_nnlf
+    use scifort_censored, only : mielke_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -537,6 +540,18 @@ module scifort_fit
         module procedure skewcauchy_fit, skewcauchy_fit_censored
     end interface skewcauchy_fit
 
+    interface exponpow_fit
+        module procedure exponpow_fit, exponpow_fit_censored
+    end interface exponpow_fit
+
+    interface exponweib_fit
+        module procedure exponweib_fit, exponweib_fit_censored
+    end interface exponweib_fit
+
+    interface mielke_fit
+        module procedure mielke_fit, mielke_fit_censored
+    end interface mielke_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -652,6 +667,46 @@ module scifort_fit
     end interface gumbel_l_fit
 
 contains
+
+    subroutine exponpow_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in b, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_exponpow,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine exponpow_fit_censored
+
+    subroutine exponweib_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, c, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_exponweib,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine exponweib_fit_censored
+
+    subroutine mielke_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in k, s, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_mielke,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine mielke_fit_censored
+
 
     subroutine powernorm_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1683,6 +1738,12 @@ contains
                 value = powerlognorm_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_skewcauchy)
                 value = skewcauchy_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_exponpow)
+                value = exponpow_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_exponweib)
+                value = exponweib_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_mielke)
+                value = mielke_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

@@ -34,6 +34,8 @@ program censored_reference_driver
         gumbel_r_censored_loglikelihood, gumbel_l_censored_loglikelihood
     use scifort_censored, only : powernorm_censored_loglikelihood, &
         powerlognorm_censored_loglikelihood, skewcauchy_censored_loglikelihood
+    use scifort_censored, only : exponpow_censored_loglikelihood, &
+        exponweib_censored_loglikelihood, mielke_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -43,7 +45,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46])) read(*, *) second_shape
+        if (any(family == [6,25,26,38,43,46,49,50])) read(*, *) second_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -58,6 +60,12 @@ program censored_reference_driver
             value = powerlognorm_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (47)
             value = skewcauchy_censored_loglikelihood(data,c,loc,scale)
+        case (48)
+            value = exponpow_censored_loglikelihood(data,c,loc,scale)
+        case (49)
+            value = exponweib_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (50)
+            value = mielke_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (1)
             value = normal_censored_loglikelihood(data, loc, scale)
         case (2)

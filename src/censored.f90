@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: exponpow_censored_loglikelihood, exponpow_censored_nnlf
+    public :: exponweib_censored_loglikelihood, exponweib_censored_nnlf
+    public :: mielke_censored_loglikelihood, mielke_censored_nnlf
     public :: powernorm_censored_loglikelihood, powernorm_censored_nnlf
     public :: powerlognorm_censored_loglikelihood, powerlognorm_censored_nnlf
     public :: skewcauchy_censored_loglikelihood, skewcauchy_censored_nnlf
@@ -95,6 +98,404 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function weibull_log_increment(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower endpoint strictly above location
+        real(dp), intent(in) :: b !! finite upper endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive Weibull shape, location, scale
+        real(dp) :: value, logspan, logdelta
+        ! exp(logt(b))-exp(logt(a)), preserving the original endpoint gap.
+        logspan = log(params(1))+burr_logsoftplus( &
+            log_distance(b,a)-log_distance(a,params(2)))
+        if (logspan > log(50.0_dp)) then
+            value = weibull_log_hazard(b,params)
+        else
+            logdelta = log_expm1_from_log(logspan)
+            value = weibull_log_hazard(a,params)+logdelta
+        end if
+    end function weibull_log_increment
+
+    pure function exponpow_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive power shape, location, scale
+        real(dp) :: value, logt, t
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (x == params(2)) then
+            if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp) value = -log(params(3))
+            return
+        end if
+        logt = weibull_log_hazard(x,params)
+        if (logt > log(log(huge(1.0_dp)))) return
+        t = exp(logt)
+        value = log(params(1))-log_distance(x,params(2))+logt+t-expm1_safe(t)
+    end function exponpow_lpdf
+
+    pure function exponpow_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive power shape, location, scale
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        value = log_hazard_mass(log_expm1_from_log(weibull_log_hazard(x,params)))
+    end function exponpow_lcdf
+
+    pure function exponpow_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive power shape, location, scale
+        real(dp) :: value, logt
+        value = 0.0_dp
+        if (x <= params(2)) return
+        logt = weibull_log_hazard(x,params)
+        value = negative_hazard(log_expm1_from_log(logt))
+        if (logt >= log(tiny(1.0_dp)) .and. logt <= log(log(huge(1.0_dp)))) &
+            value = -expm1_safe(exp(logt))
+    end function exponpow_lsf
+
+    pure function exponpow_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive power shape, location, scale
+        real(dp) :: value, logt, logdelta, omitted
+        value = exponpow_lcdf(b,params)
+        if (a <= params(2)) return
+        omitted = exp(exponpow_lcdf(a,params))+exp(exponpow_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        value = exponpow_lsf(a,params)
+        if (.not. ieee_is_finite(value)) return
+        logt = weibull_log_hazard(a,params)
+        logdelta = weibull_log_increment(a,b,params)
+        value = value+log_hazard_mass(exp(logt)+log_expm1_from_log(logdelta))
+    end function exponpow_interval
+
+    pure subroutine exponweib_hazard(x, params, logt, logh, nh)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive a, c, location, scale
+        real(dp), intent(out) :: logt !! c*log(z), possibly infinite
+        real(dp), intent(out) :: logh !! log(-a*log(1-exp(-z**c)))
+        real(dp), intent(out) :: nh !! negative reversed cumulative hazard
+        real(dp) :: v, base, a
+        a = params(1)
+        logt = weibull_log_hazard(x,params(2:4))
+        if (logt < log(epsilon(1.0_dp))-2.0_dp) then
+            ! For tiny z**c, log(F_weibull) = c*log(z) to relative roundoff.
+            ! Form a*c*abs(log(z)) without requiring c*log(z) to be finite.
+            v = lognormal_logz(x,params(2:4))
+            logh = log(a)+log(params(2))+log(-v)
+            nh = negative_hazard(logh)
+            if (ieee_is_finite(logt)) then
+                if (a <= 1.0_dp) then
+                    nh = a*logt
+                else if (abs(logt) <= huge(1.0_dp)/a) then
+                    nh = a*logt
+                end if
+            end if
+        else if (logt > log(36.0_dp)) then
+            ! -log(1-exp(-t)) / exp(-t) differs from one by < 2e-16.
+            logh = log(a)+negative_hazard(logt)
+            nh = negative_hazard(logh)
+        else
+            base = -log_hazard_mass(logt)
+            logh = log(a)+log(base)
+            nh = negative_hazard(logh)
+            if (base <= 1.0_dp) then
+                nh = -a*base
+            else if (a <= huge(1.0_dp)/base) then
+                nh = -a*base
+            end if
+        end if
+    end subroutine exponweib_hazard
+
+    pure function exponweib_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive a, c, location, scale
+        real(dp) :: value, logt, logh, nh, product
+        value = negative_infinity(0.0_dp)
+        if (x < params(3)) return
+        if (x == params(3)) then
+            if (params(1) > 1.0_dp) then
+                if (params(2) > huge(1.0_dp)/params(1)) return
+            end if
+            product = params(1)*params(2)
+            if (product < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (product == 1.0_dp) value = -log(params(4))
+            return
+        end if
+        call exponweib_hazard(x,params,logt,logh,nh)
+        if (.not. ieee_is_finite(nh)) return
+        if (logt > log(huge(1.0_dp))) return
+        value = log(params(1))+log(params(2))-log_distance(x,params(3))+nh
+        if (logt >= log(epsilon(1.0_dp))-2.0_dp) &
+            value = value+logt-log_expm1_from_log(logt)
+    end function exponweib_lpdf
+
+    pure function exponweib_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive a, c, location, scale
+        real(dp) :: value, logt, logh
+        value = negative_infinity(0.0_dp)
+        if (x <= params(3)) return
+        call exponweib_hazard(x,params,logt,logh,value)
+    end function exponweib_lcdf
+
+    pure function exponweib_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive a, c, location, scale
+        real(dp) :: value, logt, logh, nh
+        value = 0.0_dp
+        if (x <= params(3)) return
+        call exponweib_hazard(x,params,logt,logh,nh)
+        value = hazard_complement(logh,nh)
+    end function exponweib_lsf
+
+    pure function exponweib_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive a, c, location, scale
+        real(dp) :: value, logta, logtb, logha, loghb, nha, nhb, logdelta, logu, omitted
+        value = exponweib_lcdf(b,params)
+        if (a <= params(3)) return
+        omitted = exp(exponweib_lcdf(a,params))+exp(exponweib_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call exponweib_hazard(a,params,logta,logha,nha)
+        call exponweib_hazard(b,params,logtb,loghb,nhb)
+        if (logtb < log(epsilon(1.0_dp))-2.0_dp) then
+            logdelta = log(params(1))+log(params(2))+burr_logsoftplus( &
+                log_distance(b,a)-log_distance(a,params(3)))
+        else if (logta == negative_infinity(0.0_dp)) then
+            logdelta = logha
+        else
+            value = negative_infinity(0.0_dp)
+            if (logta > log(huge(1.0_dp))) return
+            logdelta = weibull_log_increment(a,b,params(2:4))
+            logu = -exp(logta)+log_hazard_mass(logdelta)-log_hazard_mass(logta)
+            logdelta = log(params(1))+burr_logsoftplus(logu)
+        end if
+        value = nhb+log_hazard_mass(logdelta)
+    end function exponweib_interval
+
+    pure subroutine mielke_hazard(x, params, q, logh, nh)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive k, s, location, scale
+        real(dp), intent(out) :: q !! -s*log(z), possibly infinite
+        real(dp), intent(out) :: logh !! log((k/s)*log1p(z**(-s)))
+        real(dp), intent(out) :: nh !! negative reversed cumulative hazard
+        real(dp) :: v, base, ratio
+        q = -weibull_log_hazard(x,params(2:4))
+        if (q >= 40.0_dp) then
+            v = -lognormal_logz(x,params(2:4))
+            logh = log(params(1))+log(v)
+            nh = negative_hazard(logh)
+            if (params(1) <= 1.0_dp) then
+                nh = -params(1)*v
+            else if (v <= huge(1.0_dp)/params(1)) then
+                nh = -params(1)*v
+            end if
+        else
+            logh = log(params(1))-log(params(2))+burr_logsoftplus(q)
+            nh = negative_hazard(logh)
+            ! Direct finite ratios/products retain ordinary-tail accuracy.
+            if (params(2) < 1.0_dp) then
+                if (params(1) > huge(1.0_dp)*params(2)) return
+            end if
+            ratio = params(1)/params(2)
+            base = log1pexp(q)
+            if (ratio < tiny(1.0_dp) .or. base < tiny(1.0_dp)) return
+            if (ratio > 1.0_dp) then
+                if (base > huge(1.0_dp)/ratio) return
+            end if
+            nh = -ratio*base
+        end if
+    end subroutine mielke_hazard
+
+    pure function mielke_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive k, s, location, scale
+        real(dp) :: value, q, logh, nh
+        value = negative_infinity(0.0_dp)
+        if (x < params(3)) return
+        if (x == params(3)) then
+            if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp) value = -log(params(4))
+            return
+        end if
+        call mielke_hazard(x,params,q,logh,nh)
+        value = log(params(1))-log_distance(x,params(3))-log1pexp(-q)+nh
+    end function mielke_lpdf
+
+    pure function mielke_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive k, s, location, scale
+        real(dp) :: value, q, logh
+        value = negative_infinity(0.0_dp)
+        if (x <= params(3)) return
+        call mielke_hazard(x,params,q,logh,value)
+    end function mielke_lcdf
+
+    pure function mielke_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive k, s, location, scale
+        real(dp) :: value, q, logh, nh
+        value = 0.0_dp
+        if (x <= params(3)) return
+        call mielke_hazard(x,params,q,logh,nh)
+        value = hazard_complement(logh,nh)
+    end function mielke_lsf
+
+    pure function mielke_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive k, s, location, scale
+        real(dp) :: value, qa, qb, logh, nh, logspan, logdelta, logdiff, logu, delta, omitted
+        value = mielke_lcdf(b,params)
+        if (a <= params(3)) return
+        omitted = exp(mielke_lcdf(a,params))+exp(mielke_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call mielke_hazard(a,params,qa,logh,nh)
+        call mielke_hazard(b,params,qb,logh,value)
+        logspan = burr_logsoftplus(log_distance(b,a)-log_distance(a,params(3)))
+        if (qb >= 40.0_dp) then
+            logdiff = log(params(1))+logspan
+        else
+            logdelta = log(params(2))+logspan
+            if (logdelta < log(0.5_dp)) then
+                logu = log_expm1_from_log(logdelta)
+                logdiff = burr_logsoftplus(-log1pexp(-qb)+logu)
+            else if (qb >= 0.0_dp) then
+                logdiff = logdelta
+                if (logdelta < log(huge(1.0_dp))) then
+                    delta = exp(logdelta)
+                    logdiff = log(delta+log1pexp(-qa)-log1pexp(-qb))
+                end if
+            else if (qa <= 0.0_dp) then
+                logu = -log1pexp(-qa)+log_hazard_mass(logdelta)
+                logdiff = logu
+                if (logu >= log(epsilon(1.0_dp))-2.0_dp) &
+                    logdiff = log(-log1p_safe(-exp(logu)))
+            else if (ieee_is_finite(qa)) then
+                logdiff = log(log1pexp(qa)-log1pexp(qb))
+            else
+                logdiff = log(params(2))+log(-lognormal_logz(a,params(2:4)))
+            end if
+            logdiff = log(params(1))-log(params(2))+logdiff
+        end if
+        value = value+log_hazard_mass(logdiff)
+    end function mielke_interval
+
+
+    pure function exponpow_censored_loglikelihood(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! positive finite power shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [b,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (b <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,exponpow_lpdf,exponpow_lcdf, &
+            exponpow_lsf,exponpow_interval)
+    end function exponpow_censored_loglikelihood
+
+    pure function exponpow_censored_nnlf(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! positive finite power shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -exponpow_censored_loglikelihood(data, b, loc, scale)
+    end function exponpow_censored_nnlf
+
+    pure function exponweib_censored_loglikelihood(data, a, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite exponentiation shape
+        real(dp), intent(in) :: c !! positive finite Weibull shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [a,c,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(a,c) <= 0.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,exponweib_lpdf,exponweib_lcdf, &
+            exponweib_lsf,exponweib_interval)
+    end function exponweib_censored_loglikelihood
+
+    pure function exponweib_censored_nnlf(data, a, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite exponentiation shape
+        real(dp), intent(in) :: c !! positive finite Weibull shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -exponweib_censored_loglikelihood(data, a, c, loc, scale)
+    end function exponweib_censored_nnlf
+
+    pure function mielke_censored_loglikelihood(data, k, s, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: k !! positive finite first shape
+        real(dp), intent(in) :: s !! positive finite second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [k,s,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(k,s) <= 0.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,mielke_lpdf,mielke_lcdf, &
+            mielke_lsf,mielke_interval)
+    end function mielke_censored_loglikelihood
+
+    pure function mielke_censored_nnlf(data, k, s, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: k !! positive finite first shape
+        real(dp), intent(in) :: s !! positive finite second shape
+        real(dp), intent(in), optional :: loc !! finite lower support endpoint, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -mielke_censored_loglikelihood(data, k, s, loc, scale)
+    end function mielke_censored_nnlf
+
 
     pure function normal_log_mills(logz) result(value)
         implicit none

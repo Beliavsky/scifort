@@ -1,3 +1,14 @@
+## 2026-11-16 - Exponential-power, exponentiated Weibull, and Mielke censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded censored-data fit overloads,
+  and statistics-module exports for three further lifetime families.
+- Retain adjacent interval masses, opposing extreme shapes, and shape ratios
+  outside the binary64 range through log-domain hazard identities.
+- Fix scalar exponentiated-Weibull upper-tail log-CDF cancellation, improving
+  its log-SF and SF; add a unit-shape upper-tail regression.
+- Add native and independent reference checks, provenance, API documentation,
+  and a fitting example. Coverage is now 50 families, with 59 remaining.
+
 ## 2026-11-16 - Power-normal, power-lognormal, and skew-Cauchy censoring
 
 - Add mixed-censoring log likelihoods, negative log likelihoods, bounded
