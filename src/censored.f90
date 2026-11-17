@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: fatiguelife_censored_loglikelihood, fatiguelife_censored_nnlf
+    public :: johnsonsu_censored_loglikelihood, johnsonsu_censored_nnlf
+    public :: genexpon_censored_loglikelihood, genexpon_censored_nnlf
     public :: exponpow_censored_loglikelihood, exponpow_censored_nnlf
     public :: exponweib_censored_loglikelihood, exponweib_censored_nnlf
     public :: mielke_censored_loglikelihood, mielke_censored_nnlf
@@ -98,6 +101,399 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function finite_normal_lpdf(z) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! normal coordinate, possibly infinite
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (abs(z) > sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+        value = (-0.5_dp*z)*z-scifort_log_sqrt_two_pi
+    end function finite_normal_lpdf
+
+    pure function signed_exp(logabs, direction) result(value)
+        implicit none
+        real(dp), intent(in) :: logabs !! log nonnegative magnitude
+        real(dp), intent(in) :: direction !! sign to apply, zero treated as positive
+        real(dp) :: value
+        value = sign(positive_infinity(0.0_dp),direction)
+        if (logabs <= log(huge(1.0_dp))) value = sign(exp(logabs),direction)
+    end function signed_exp
+
+    pure subroutine fatiguelife_coordinates(x, params, w, v, logjac)
+        implicit none
+        real(dp), intent(in) :: x !! finite point strictly above location
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp), intent(out) :: w !! transformed normal coordinate
+        real(dp), intent(out) :: v !! log standardized distance
+        real(dp), intent(out) :: logjac !! log derivative of the normal coordinate
+        real(dp) :: logw
+        v = lognormal_logz(x,params)
+        logjac = 0.5_dp*abs(v)+log1p_safe(exp(-abs(v)))-scifort_log_two &
+            -log(params(1))-log_distance(x,params(2))
+        w = 0.0_dp
+        if (v == 0.0_dp) return
+        if (abs(v) < 0.5_dp) then
+            logw = log(abs(expm1_safe(v)))-0.5_dp*v-log(params(1))
+        else
+            logw = 0.5_dp*abs(v)+log1p_safe(-exp(-abs(v)))-log(params(1))
+        end if
+        w = signed_exp(logw,v)
+    end subroutine fatiguelife_coordinates
+
+    pure function fatiguelife_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, w, v, logjac
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        call fatiguelife_coordinates(x,params,w,v,logjac)
+        value = finite_normal_lpdf(w)+logjac
+    end function fatiguelife_lpdf
+
+    pure function fatiguelife_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, w, v, logjac
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        call fatiguelife_coordinates(x,params,w,v,logjac)
+        value = normal_logcdf(w)
+    end function fatiguelife_lcdf
+
+    pure function fatiguelife_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, w, v, logjac
+        value = 0.0_dp
+        if (x <= params(2)) return
+        call fatiguelife_coordinates(x,params,w,v,logjac)
+        value = normal_logsf(w)
+    end function fatiguelife_lsf
+
+    pure function fatiguelife_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive shape, location, scale
+        real(dp) :: value, wa, wb, va, vb, logjac, logspan, logwidth, omitted
+        value = fatiguelife_lcdf(b,params)
+        if (a <= params(2)) return
+        call fatiguelife_coordinates(a,params,wa,va,logjac)
+        call fatiguelife_coordinates(b,params,wb,vb,logjac)
+        logspan = burr_logsoftplus(log_distance(b,a)-log_distance(a,params(2)))
+        logwidth = log_expm1_from_log(logspan-scifort_log_two) &
+            +bounded_logadd(0.5_dp*va,-0.5_dp*vb)-log(params(1))
+        value = normal_small_interval(wa,logwidth)
+        if (ieee_is_nan(value)) then
+            value = tail_interval(a,b,params,fatiguelife_lcdf,fatiguelife_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(fatiguelife_lcdf(a,params),fatiguelife_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function fatiguelife_interval
+
+    pure function finite_sum(a, b) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite first summand
+        real(dp), intent(in) :: b !! finite second summand
+        real(dp) :: value
+        if (a > 0.0_dp .and. b > 0.0_dp) then
+            if (b > huge(1.0_dp)-a) then
+                value = positive_infinity(0.0_dp)
+                return
+            end if
+        else if (a < 0.0_dp .and. b < 0.0_dp) then
+            if (b < -huge(1.0_dp)-a) then
+                value = negative_infinity(0.0_dp)
+                return
+            end if
+        end if
+        value = a+b
+    end function finite_sum
+
+    pure subroutine johnsonsu_coordinates(x, params, q, t, loghypot)
+        implicit none
+        real(dp), intent(in) :: x !! finite evaluation point
+        real(dp), intent(in) :: params(:) !! finite a, positive b, location, scale
+        real(dp), intent(out) :: q !! transformed normal coordinate
+        real(dp), intent(out) :: t !! inverse hyperbolic sine of standardized point
+        real(dp), intent(out) :: loghypot !! log sqrt(1+z*z)
+        real(dp) :: z, logz, product, halfsum
+        logz = cauchy_log_distance(x,params(3:4))
+        z = location_scale_z(x,params(3:4))
+        loghypot = 0.5_dp*log1pexp(2.0_dp*logz)
+        if (logz < log(epsilon(1.0_dp))-2.0_dp) then
+            t = z
+            product = signed_exp(log(params(2))+logz,sign(1.0_dp,z))
+            if (x < params(3)) product = -abs(product)
+            q = finite_sum(params(1),product)
+            return
+        else if (logz > log(1.0e8_dp)) then
+            t = sign(logz+scifort_log_two,z)
+        else
+            t = asinh(z)
+        end if
+        if (abs(t) > 1.0_dp) then
+            if (params(2) > huge(1.0_dp)/abs(t)) then
+                ! Halving before the product allows an opposing finite a
+                ! to rescue a product between huge() and 2*huge().
+                q = sign(positive_infinity(0.0_dp),t)
+                if (0.5_dp*params(2) > huge(1.0_dp)/abs(t)) return
+                halfsum = finite_sum(0.5_dp*params(1),(0.5_dp*params(2))*t)
+                if (abs(halfsum) > 0.5_dp*huge(1.0_dp)) return
+                q = 2.0_dp*halfsum
+                return
+            end if
+        end if
+        q = finite_sum(params(1),params(2)*t)
+    end subroutine johnsonsu_coordinates
+
+    pure function johnsonsu_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! finite a, positive b, location, scale
+        real(dp) :: value, q, t, loghypot
+        call johnsonsu_coordinates(x,params,q,t,loghypot)
+        value = finite_normal_lpdf(q)+log(params(2))-log(params(4))-loghypot
+    end function johnsonsu_lpdf
+
+    pure function johnsonsu_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! finite a, positive b, location, scale
+        real(dp) :: value, q, t, loghypot
+        call johnsonsu_coordinates(x,params,q,t,loghypot)
+        value = normal_logcdf(q)
+    end function johnsonsu_lcdf
+
+    pure function johnsonsu_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! finite a, positive b, location, scale
+        real(dp) :: value, q, t, loghypot
+        call johnsonsu_coordinates(x,params,q,t,loghypot)
+        value = normal_logsf(q)
+    end function johnsonsu_lsf
+
+    pure function johnsonsu_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! finite a, positive b, location, scale
+        real(dp) :: value, qa, qb, ta, tb, la, lb, logr, logwidth, r, omitted
+        call johnsonsu_coordinates(a,params,qa,ta,la)
+        call johnsonsu_coordinates(b,params,qb,tb,lb)
+        ! tanh((asinh(zb)-asinh(za))/2)=(zb-za)/(hypot(1,za)+hypot(1,zb)).
+        logr = log_distance(b,a)-log(params(4))-bounded_logadd(la,lb)
+        if (logr < log(epsilon(1.0_dp))-2.0_dp) then
+            logwidth = scifort_log_two+logr
+        else if (logr <= -scifort_log_two) then
+            r = exp(logr)
+            logwidth = log(log1p_safe(2.0_dp*r/(1.0_dp-r)))
+        else
+            logwidth = log(tb-ta)
+        end if
+        logwidth = log(params(2))+logwidth
+        value = normal_small_interval(qa,logwidth)
+        if (ieee_is_nan(value)) then
+            value = tail_interval(a,b,params,johnsonsu_lcdf,johnsonsu_lsf)
+            if (value > -scifort_log_two) then
+                omitted = bounded_logadd(johnsonsu_lcdf(a,params),johnsonsu_lsf(b,params))
+                value = log1p_safe(-exp(omitted))
+            end if
+        end if
+    end function johnsonsu_interval
+
+    pure function genexpon_log_remainder(logv) result(value)
+        implicit none
+        real(dp), intent(in) :: logv !! log nonnegative v in v+expm1(-v)
+        real(dp) :: value, v, term, series
+        integer :: k
+        if (logv < log(epsilon(1.0_dp))-2.0_dp) then
+            value = 2.0_dp*logv-scifort_log_two
+        else if (logv <= log(0.5_dp)) then
+            v = exp(logv)
+            term = 1.0_dp
+            series = 1.0_dp
+            do k = 3, 22
+                term = -term*v/real(k,dp)
+                series = series+term
+            end do
+            value = 2.0_dp*logv-scifort_log_two+log(series)
+        else if (logv > log(40.0_dp)) then
+            value = logv+log1p_safe(-exp(-logv))
+        else
+            v = exp(logv)
+            value = log(v+expm1_safe(-v))
+        end if
+    end function genexpon_log_remainder
+
+    pure function genexpon_logh(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite evaluation point
+        real(dp), intent(in) :: params(:) !! positive a, b, c, location, scale
+        real(dp) :: value, logz
+        value = negative_infinity(0.0_dp)
+        if (x <= params(4)) return
+        logz = lognormal_logz(x,[1.0_dp,params(4),params(5)])
+        value = bounded_logadd(log(params(1))+logz,log(params(2))-log(params(3)) &
+            +genexpon_log_remainder(log(params(3))+logz))
+    end function genexpon_logh
+
+    pure function genexpon_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! positive a, b, c, location, scale
+        real(dp) :: value, logv
+        value = negative_infinity(0.0_dp)
+        if (x < params(4)) return
+        value = log(params(1))-log(params(5))
+        if (x == params(4)) return
+        logv = log(params(3))+lognormal_logz(x,[1.0_dp,params(4),params(5)])
+        value = bounded_logadd(log(params(1)),log(params(2))+log_hazard_mass(logv)) &
+            -log(params(5))+negative_hazard(genexpon_logh(x,params))
+    end function genexpon_lpdf
+
+    pure function genexpon_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! positive a, b, c, location, scale
+        real(dp) :: value
+        value = log_hazard_mass(genexpon_logh(x,params))
+    end function genexpon_lcdf
+
+    pure function genexpon_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! positive a, b, c, location, scale
+        real(dp) :: value
+        value = negative_hazard(genexpon_logh(x,params))
+    end function genexpon_lsf
+
+    pure function genexpon_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, > a
+        real(dp), intent(in) :: params(:) !! positive a, b, c, location, scale
+        real(dp) :: value, lower, logdelta, logv, logdv, first, second, third, omitted
+        value = negative_infinity(0.0_dp)
+        if (b <= params(4)) return
+        lower = max(a,params(4))
+        omitted = exp(genexpon_lcdf(lower,params))+exp(genexpon_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        logdelta = log_distance(b,lower)-log(params(5))
+        logv = negative_infinity(0.0_dp)
+        if (lower > params(4)) then
+            logv = log(params(3))+lognormal_logz(lower,[1.0_dp,params(4),params(5)])
+        end if
+        logdv = log(params(3))+logdelta
+        first = log(params(1))+logdelta
+        second = log(params(2))+logdelta+log_hazard_mass(logv)
+        third = log(params(2))-log(params(3))+negative_hazard(logv) &
+            +genexpon_log_remainder(logdv)
+        value = negative_hazard(genexpon_logh(lower,params)) &
+            +log_hazard_mass(bounded_logadd(first,bounded_logadd(second,third)))
+    end function genexpon_interval
+
+
+    pure function fatiguelife_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite fatigue-life shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,fatiguelife_lpdf,fatiguelife_lcdf, &
+            fatiguelife_lsf,fatiguelife_interval)
+    end function fatiguelife_censored_loglikelihood
+
+    pure function fatiguelife_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite fatigue-life shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -fatiguelife_censored_loglikelihood(data, c, loc, scale)
+    end function fatiguelife_censored_nnlf
+
+    pure function johnsonsu_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite first Johnson shape
+        real(dp), intent(in) :: b !! positive finite Johnson scale shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [a,b,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (b <= 0.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,johnsonsu_lpdf,johnsonsu_lcdf, &
+            johnsonsu_lsf,johnsonsu_interval)
+    end function johnsonsu_censored_loglikelihood
+
+    pure function johnsonsu_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! finite first Johnson shape
+        real(dp), intent(in) :: b !! positive finite Johnson scale shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -johnsonsu_censored_loglikelihood(data, a, b, loc, scale)
+    end function johnsonsu_censored_nnlf
+
+    pure function genexpon_censored_loglikelihood(data, a, b, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite baseline rate
+        real(dp), intent(in) :: b !! positive finite additional rate
+        real(dp), intent(in) :: c !! positive finite rate-transition parameter
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        params = [a,b,c,0.0_dp,1.0_dp]
+        if (present(loc)) params(4) = loc
+        if (present(scale)) params(5) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(a,b,c) <= 0.0_dp) return
+        if (params(5) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,genexpon_lpdf,genexpon_lcdf, &
+            genexpon_lsf,genexpon_interval)
+    end function genexpon_censored_loglikelihood
+
+    pure function genexpon_censored_nnlf(data, a, b, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite baseline rate
+        real(dp), intent(in) :: b !! positive finite additional rate
+        real(dp), intent(in) :: c !! positive finite rate-transition parameter
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -genexpon_censored_loglikelihood(data, a, b, c, loc, scale)
+    end function genexpon_censored_nnlf
+
 
     pure function weibull_log_increment(a, b, params) result(value)
         implicit none

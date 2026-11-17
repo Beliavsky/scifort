@@ -45,6 +45,18 @@ def betaprime_logtails(z, a, b):
     return mp.log1p(-q),mp.log(q)
 
 
+def transformed_normal_logs(w):
+    small=logerfc_large_safe(abs(w)/mp.sqrt(2))-mp.log(2)
+    other=mp.log1p(-mp.exp(small))
+    return (small,other) if w <= 0 else (other,small)
+
+
+def genexpon_remainder(v):
+    if v < mp.mpf('.5'):
+        return v*v*mp.hyp1f1(1,3,-v)/2
+    return v+mp.expm1(-v)
+
+
 def power_normal_reference(z, c):
     """Log survival and log density from the normal-power specification."""
     if z >= 0:
@@ -65,7 +77,21 @@ def polygon_cdf(z,c,d):
     return h*(z-c/2)
 
 
-def logpdf(x, family, shape, loc, scale, second_shape=1.):
+def logpdf(x, family, shape, loc, scale, second_shape=1., third_shape=1.):
+    if family in ('fatiguelife','johnsonsu','genexpon'):
+        x,shape,loc,scale,second,third=map(mp.mpf,(x,shape,loc,scale,second_shape,third_shape))
+        z=(x-loc)/scale
+        if family != 'johnsonsu' and z < 0: return mp.ninf
+        if family == 'fatiguelife':
+            if z == 0: return mp.ninf
+            w=(mp.sqrt(z)-1/mp.sqrt(z))/shape
+            jac=(mp.sqrt(z)+1/mp.sqrt(z))/(2*shape*(x-loc))
+            return -w*w/2-mp.log(2*mp.pi)/2+mp.log(jac)
+        if family == 'johnsonsu':
+            w=shape+second*mp.asinh(z)
+            return -w*w/2-mp.log(2*mp.pi)/2+mp.log(second/(scale*mp.sqrt(1+z*z)))
+        h=shape*z+(second/third)*genexpon_remainder(third*z)
+        return mp.log(shape-second*mp.expm1(-third*z))-h-mp.log(scale)
     if family in ('exponpow','exponweib','mielke'):
         x,shape,loc,scale,second=map(mp.mpf,(x,shape,loc,scale,second_shape))
         z=(x-loc)/scale
@@ -210,7 +236,19 @@ def logpdf(x, family, shape, loc, scale, second_shape=1.):
     return mp.log(shape/scale) + (shape-1)*mp.log(z) - z**shape
 
 
-def logcdf(x, family, shape, loc, scale, second_shape=1.):
+def logcdf(x, family, shape, loc, scale, second_shape=1., third_shape=1.):
+    if family in ('fatiguelife','johnsonsu','genexpon'):
+        x,shape,loc,scale,second,third=map(mp.mpf,(x,shape,loc,scale,second_shape,third_shape))
+        z=(x-loc)/scale
+        if family != 'johnsonsu' and z <= 0: return mp.ninf
+        if family == 'fatiguelife':
+            w=(mp.sqrt(z)-1/mp.sqrt(z))/shape
+            return transformed_normal_logs(w)[0]
+        if family == 'johnsonsu':
+            w=shape+second*mp.asinh(z)
+            return transformed_normal_logs(w)[0]
+        h=shape*z+(second/third)*genexpon_remainder(third*z)
+        return mp.log(-mp.expm1(-h))
     if family in ('exponpow','exponweib','mielke'):
         x,shape,loc,scale,second=map(mp.mpf,(x,shape,loc,scale,second_shape))
         z=(x-loc)/scale
@@ -339,7 +377,19 @@ def logcdf(x, family, shape, loc, scale, second_shape=1.):
     return mp.log(-mp.expm1(-z**shape))
 
 
-def logsf(x, family, shape, loc, scale, second_shape=1.):
+def logsf(x, family, shape, loc, scale, second_shape=1., third_shape=1.):
+    if family in ('fatiguelife','johnsonsu','genexpon'):
+        x,shape,loc,scale,second,third=map(mp.mpf,(x,shape,loc,scale,second_shape,third_shape))
+        z=(x-loc)/scale
+        if family != 'johnsonsu' and z <= 0: return mp.mpf(0)
+        if family == 'fatiguelife':
+            w=(mp.sqrt(z)-1/mp.sqrt(z))/shape
+            return transformed_normal_logs(w)[1]
+        if family == 'johnsonsu':
+            w=shape+second*mp.asinh(z)
+            return transformed_normal_logs(w)[1]
+        h=shape*z+(second/third)*genexpon_remainder(third*z)
+        return -h
     if family in ('exponpow','exponweib','mielke'):
         x,shape,loc,scale,second=map(mp.mpf,(x,shape,loc,scale,second_shape))
         z=(x-loc)/scale
@@ -476,7 +526,16 @@ def logsf(x, family, shape, loc, scale, second_shape=1.):
     return -max(z, mp.mpf(0))**shape
 
 
-def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1.):
+def loginterval(a, b, family, shape=1., loc=0., scale=1., second_shape=1., third_shape=1.):
+    if family in ('fatiguelife','johnsonsu','genexpon'):
+        la=logcdf(a,family,shape,loc,scale,second_shape,third_shape)
+        lb=logcdf(b,family,shape,loc,scale,second_shape,third_shape)
+        qa=logsf(a,family,shape,loc,scale,second_shape,third_shape)
+        qb=logsf(b,family,shape,loc,scale,second_shape,third_shape)
+        if lb < qa: result=lb+mp.log(-mp.expm1(la-lb))
+        else: result=qa+mp.log(-mp.expm1(qb-qa))
+        if result > -mp.log(2): return mp.log1p(-mp.exp(la)-mp.exp(qb))
+        return result
     if family in ('exponpow','exponweib','mielke'):
         la=logcdf(a,family,shape,loc,scale,second_shape)
         lb=logcdf(b,family,shape,loc,scale,second_shape)
@@ -731,6 +790,16 @@ def main():
         result[family+'_mixed']=float(value)
         options=dict(floc=0.,fscale=1.3)
         if family != 'exponpow': options['f1']=1.2
+        result[family+'_constrained_fit']=list(getattr(stats,family).fit(data,**options))
+    for family in ['fatiguelife','johnsonsu','genexpon']:
+        shape,loc,scale=1.7,0.,1.3
+        value=sum(logpdf(x,family,shape,loc,scale,1.2,.8) for x in [.5,1.2,2.5])
+        value+=logcdf(.3,family,shape,loc,scale,1.2,.8)+logsf(3.5,family,shape,loc,scale,1.2,.8)
+        value+=sum(loginterval(a,b,family,shape,loc,scale,1.2,.8) for a,b in [(1.1,1.4),(4.,4.4)])
+        result[family+'_mixed']=float(value)
+        options=dict(floc=0.,fscale=1.3)
+        if family != 'fatiguelife': options['f1']=1.2
+        if family == 'genexpon': options['f2']=.8
         result[family+'_constrained_fit']=list(getattr(stats,family).fit(data,**options))
     print(json.dumps(result, indent=2))
 

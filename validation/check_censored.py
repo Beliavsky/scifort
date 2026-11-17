@@ -1115,6 +1115,73 @@ def main():
                     stdin+=f'{number} {c:.17g} 0 {scale:.17g} {obs} 0\n'
                     if number != 48: stdin+=f'{second:.17g}\n'
                     stdin+=f'{x:.17g}\n'
+    # Normal transformations and generalized exponential preserve earlier samples.
+    for number,family in [(51,'fatiguelife'),(52,'johnsonsu'),(53,'genexpon')]:
+        for _ in range(args.cases):
+            loc,scale=rng.uniform(-3.,3.),10**rng.uniform(-4.,4.)
+            c=rng.uniform(-3.,3.) if number == 52 else 10**rng.uniform(-1.,.7)
+            second,third=10**rng.uniform(-1.,.7),10**rng.uniform(-1.,.7)
+            def point(): return loc+scale*rng.uniform(-10. if number == 52 else .01,10.)
+            exact,left,right=[point() for _ in range(3)],[point()],[point()]
+            intervals=[]
+            for _ in range(2):
+                a=point();b=a+scale*10**rng.uniform(-14.,1.)
+                if b == a: b=math.nextafter(a,math.inf)
+                intervals.append((a,b))
+            value=sum(reference.logpdf(x,family,c,loc,scale,second,third) for x in exact)
+            value+=sum(reference.logcdf(x,family,c,loc,scale,second,third) for x in left)
+            value+=sum(reference.logsf(x,family,c,loc,scale,second,third) for x in right)
+            value+=sum(reference.loginterval(a,b,family,c,loc,scale,second,third) for a,b in intervals)
+            cases.append((family,float(value)))
+            stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 3 1 1 2\n'
+            if number != 51: stdin+=f'{second:.17g}\n'
+            if number == 53: stdin+=f'{third:.17g}\n'
+            for group in [exact,left,right,*intervals]: stdin+=' '.join(f'{x:.17g}' for x in group)+'\n'
+    with mp.workdps(750):
+        for number,family in [(51,'fatiguelife'),(52,'johnsonsu'),(53,'genexpon')]:
+            tests=[]
+            for c in [1e-300,.4,1.,3.,1e300]:
+                for a,b,loc,scale in [(0.,math.nextafter(0.,1.),0.,1.),
+                                      (1.,math.nextafter(1.,math.inf),0.,1.),
+                                      (1e-300,2e-300,0.,1e300),
+                                      (1e300,math.nextafter(1e300,math.inf),0.,1e-300),
+                                      (-1e300,1e300,0.,1.),
+                                      (1e100,math.nextafter(1e100,math.inf),0.,1e100)]:
+                    tests.append((a,b,c,1.2,.8,loc,scale))
+            if number == 51:
+                tests += [(1e300,math.nextafter(1e300,math.inf),1e300,1.,1.,0.,1e-300),
+                          (1e-300,2e-300,1e300,1.,1.,0.,1e300),
+                          (1.,math.nextafter(1.,math.inf),1e-300,1.,1.,0.,1.)]
+            if number == 52:
+                tests += [(-1.,1.,-.5,1e300,1.,0.,1.),
+                          (1e300,math.nextafter(1e300,math.inf),0.,1e-300,1.,0.,1e-300),
+                          (1e-300,2e-300,0.,1e300,1.,0.,1e300),
+                          (-1e-300,1e-300,0.,1e300,1.,0.,1e300)]
+            if number == 53:
+                tests += [(1.,math.nextafter(1.,math.inf),1e-300,1e300,1e-300,0.,1.),
+                          (1e-300,2e-300,1e308,1e308,.8,0.,1.),
+                          (0.,1e-300,1e-300,1e300,1e300,0.,1.),
+                          (1e300,math.nextafter(1e300,math.inf),1e-300,1e-300,1e300,0.,1.)]
+            for a,b,c,second,third,loc,scale in tests:
+                value=float(reference.loginterval(a,b,family,c,loc,scale,second,third))
+                if not math.isfinite(value): continue
+                cases.append((family+'_stress',value))
+                stdin+=f'{number} {c:.17g} {loc:.17g} {scale:.17g} 0 0 0 1\n'
+                if number != 51: stdin+=f'{second:.17g}\n'
+                if number == 53: stdin+=f'{third:.17g}\n'
+                stdin+=f'{a:.17g} {b:.17g}\n'
+            points=[(1e-300,1e300,.4,1.2,.8),(1e300,1e-300,1e300,1.2,.8),(1.,1.,1e-300,1e300,1e-300)]
+            if number == 52: points += [(-1e-300,1e300,0.,1e300,1.),(0.,1.,0.,1e300,1.)]
+            if number == 53: points += [(1e-300,1.,1e308,1e308,.8),(1.,1.,1e-300,1e300,1e-300)]
+            for x,scale,c,second,third in points:
+                for obs,fn in [('1 0 0',reference.logpdf),('0 1 0',reference.logcdf),('0 0 1',reference.logsf)]:
+                    value=float(fn(x,family,c,0.,scale,second,third))
+                    if not math.isfinite(value): continue
+                    cases.append((family+'_extreme_point',value))
+                    stdin+=f'{number} {c:.17g} 0 {scale:.17g} {obs} 0\n'
+                    if number != 51: stdin+=f'{second:.17g}\n'
+                    if number == 53: stdin+=f'{third:.17g}\n'
+                    stdin+=f'{x:.17g}\n'
     for mode, flags in [('checked', ['-O0','-g','-fcheck=all',
                                      '-ffpe-trap=invalid,zero,overflow','-fbacktrace']),
                         ('optimized', ['-O3','-fcheck=bounds'])]:
@@ -1144,6 +1211,7 @@ def main():
         pareto_errors = []
         lomax_errors = []
         burr_family_errors = []
+        transform_hazard_errors = []
         lifetime_errors = []
         power_skew_errors = []
         positive_transform_errors = []
@@ -1157,6 +1225,8 @@ def main():
             if not math.isfinite(expected) or not math.isfinite(value) or error > 2e-11:
                 raise AssertionError((mode, family, value, expected, error))
             worst = max(worst, (error, family))
+            if family.startswith(('fatiguelife','johnsonsu','genexpon')):
+                transform_hazard_errors.append(error)
             if family.startswith(('exponpow','exponweib','mielke')):
                 lifetime_errors.append(error)
             if family.startswith(('powernorm','powerlognorm','skewcauchy')):
@@ -1201,6 +1271,8 @@ def main():
                 laplace_errors.append(error)
         print(f'{mode}: {len(cases)} comparisons passed; '
               f'max scaled log-likelihood error={worst[0]:.3g} ({worst[1]})', flush=True)
+        print(f'  Fatigue life/Johnson SU/generalized exponential: {len(transform_hazard_errors)} comparisons; '
+              f'max scaled error={max(transform_hazard_errors):.3g}', flush=True)
         print(f'  Exponential power/Weibull/Mielke: {len(lifetime_errors)} comparisons; '
               f'max scaled error={max(lifetime_errors):.3g}', flush=True)
         print(f'  Power normal/lognormal/skew Cauchy: {len(power_skew_errors)} comparisons; '

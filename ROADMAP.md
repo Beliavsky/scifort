@@ -132,6 +132,7 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add inverse-gamma, beta-prime, and Maxwell censoring and bounded fits.
 - [x] Add power-normal, power-lognormal, and skew-Cauchy censoring and bounded fits.
 - [x] Add exponential-power, exponentiated Weibull, and Mielke censoring and bounded fits.
+- [x] Add fatigue-life, Johnson SU, and generalized exponential censoring and bounded fits.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

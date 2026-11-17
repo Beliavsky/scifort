@@ -1,3 +1,14 @@
+## 2026-11-16 - Fatigue-life, Johnson SU, and generalized exponential censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded fitting overloads, and
+  statistics exports for three more distribution families.
+- Retain normal-transform interval widths and generalized-exponential
+  nonnegative hazard increments for adjacent and extreme observations.
+- Support signed Johnson shapes and three generalized-exponential rates;
+  preserve existing scalar/array APIs and document numerical limitations.
+- Add native and independent reference checks, provenance, a fitting example,
+  and coverage updates: 53 families supported, 56 remaining.
+
 ## 2026-11-16 - Exponential-power, exponentiated Weibull, and Mielke censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded censored-data fit overloads,

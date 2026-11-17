@@ -36,16 +36,19 @@ program censored_reference_driver
         powerlognorm_censored_loglikelihood, skewcauchy_censored_loglikelihood
     use scifort_censored, only : exponpow_censored_loglikelihood, &
         exponweib_censored_loglikelihood, mielke_censored_loglikelihood
+    use scifort_censored, only : fatiguelife_censored_loglikelihood, &
+        johnsonsu_censored_loglikelihood, genexpon_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
     integer :: family, nu, nl, nr, ni, ios, i
-    real(dp) :: c, second_shape, loc, scale, value
+    real(dp) :: c, second_shape, third_shape, loc, scale, value
     do
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50])) read(*, *) second_shape
+        if (any(family == [6,25,26,38,43,46,49,50,52,53])) read(*, *) second_shape
+        if (family == 53) read(*, *) third_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -66,6 +69,12 @@ program censored_reference_driver
             value = exponweib_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (50)
             value = mielke_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (51)
+            value = fatiguelife_censored_loglikelihood(data,c,loc,scale)
+        case (52)
+            value = johnsonsu_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (53)
+            value = genexpon_censored_loglikelihood(data,c,second_shape,third_shape,loc,scale)
         case (1)
             value = normal_censored_loglikelihood(data, loc, scale)
         case (2)

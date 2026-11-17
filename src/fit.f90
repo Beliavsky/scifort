@@ -40,6 +40,9 @@ module scifort_fit
     use scifort_censored, only : exponpow_censored_nnlf
     use scifort_censored, only : exponweib_censored_nnlf
     use scifort_censored, only : mielke_censored_nnlf
+    use scifort_censored, only : fatiguelife_censored_nnlf
+    use scifort_censored, only : johnsonsu_censored_nnlf
+    use scifort_censored, only : genexpon_censored_nnlf
     use scifort_censored, only : powerlaw_censored_nnlf
     use scifort_censored, only : arcsine_censored_nnlf
     use scifort_censored, only : lomax_censored_nnlf
@@ -552,6 +555,18 @@ module scifort_fit
         module procedure mielke_fit, mielke_fit_censored
     end interface mielke_fit
 
+    interface fatiguelife_fit
+        module procedure fatiguelife_fit, fatiguelife_fit_censored
+    end interface fatiguelife_fit
+
+    interface johnsonsu_fit
+        module procedure johnsonsu_fit, johnsonsu_fit_censored
+    end interface johnsonsu_fit
+
+    interface genexpon_fit
+        module procedure genexpon_fit, genexpon_fit_censored
+    end interface genexpon_fit
+
     interface normal_fit
         module procedure normal_fit, normal_fit_censored
     end interface normal_fit
@@ -667,6 +682,46 @@ module scifort_fit
     end interface gumbel_l_fit
 
 contains
+
+    subroutine fatiguelife_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_fatiguelife,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine fatiguelife_fit_censored
+
+    subroutine johnsonsu_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, b, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_johnsonsu,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine johnsonsu_fit_censored
+
+    subroutine genexpon_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(5) !! finite lower bounds in a, b, c, loc, scale order
+        real(dp), intent(in) :: upper(5) !! finite upper bounds; equal bounds fix a parameter
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(5) !! starting parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_genexpon,lower,upper,result,guess, &
+            [.false., .false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine genexpon_fit_censored
+
 
     subroutine exponpow_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -1744,6 +1799,13 @@ contains
                 value = exponweib_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_mielke)
                 value = mielke_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_fatiguelife)
+                value = fatiguelife_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_johnsonsu)
+                value = johnsonsu_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_genexpon)
+                value = genexpon_censored_nnlf(censored,params(1),params(2),params(3), &
+                    params(4),params(5))
             case (family_fisk)
                 value = fisk_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_burr)

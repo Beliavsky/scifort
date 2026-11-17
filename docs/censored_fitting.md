@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+fatiguelife_censored_loglikelihood(data, c [, loc, scale])
+johnsonsu_censored_loglikelihood(data, a, b [, loc, scale])
+genexpon_censored_loglikelihood(data, a, b, c [, loc, scale])
 exponpow_censored_loglikelihood(data, b [, loc, scale])
 exponweib_censored_loglikelihood(data, a, c [, loc, scale])
 mielke_censored_loglikelihood(data, k, s [, loc, scale])
@@ -146,7 +149,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -1409,3 +1412,86 @@ The formulas follow the mathematical specifications for
 [exponentiated Weibull](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponweib.html),
 and [Mielke](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mielke.html).
 See [validation and commands](../validation/lifetime_censored_2026-11-16.md).
+
+## Fatigue-life, Johnson SU, and generalized exponential details
+
+`fatiguelife` uses positive finite shape `c`, finite `loc`, and positive
+finite `scale`. With `z=(x-loc)/scale`, its normal coordinate is
+`w=(sqrt(z)-1/sqrt(z))/c`. Support is `x > loc`; density and CDF at or
+below location are zero and survival is one. The log density is the
+standard normal log density at `w` plus
+`log((sqrt(z)+1/sqrt(z))/(2*c*(x-loc)))`. Log-distance and `expm1`
+identities retain near-scale displacements and normalized distances
+outside the binary64 range. At zero location/unit scale, reciprocal
+coordinates exchange CDF and survival.
+
+`johnsonsu` uses finite `a` of either sign and positive finite `b`, with
+finite location and positive finite scale. Its support is the real line.
+The normal coordinate is `q=a+b*asinh(z)`, with log Jacobian
+`log(b)-log(scale)-log(hypot(1,z))`. Log coordinates retain very large
+or underflowing normalized displacements; guarded arithmetic prevents
+overflowing intermediate products and sums when the result is finite.
+Negating `a`, the observation, and location reflects the distribution.
+Very large opposing shape terms make `q` intrinsically ill-conditioned:
+rounding in `asinh(z)` can be greatly amplified. Binary64 accuracy near
+such cancellation is limited and is not established by ordinary cases.
+
+`genexpon` uses three positive finite shapes `(a,b,c)`. It has lower
+endpoint `loc`, with density `a/scale` there. CDF is zero and survival
+is one at and below the endpoint. With `v=c*z`, cumulative hazard is
+`H=a*z+(b/c)*(v+expm1(-v))`, and density is
+`(a+b*(1-exp(-v)))*exp(-H)/scale`. The kernels keep the two nonnegative
+hazard terms in log form, using a series for the small remainder
+`v+expm1(-v)`. This permits compensating extreme rates without forming
+an overflowing `a+b`, an underflowing ratio, or subtracting large hazards.
+As `b` tends to zero, it approaches the exponential family with scale
+`scale/a`.
+
+All optional locations/scales default to zero/one. Invalid parameters
+return NaN even for empty data. The matching `_censored_nnlf` and
+censored-data `_fit` overloads are available through `scifort_stats`.
+Bounds follow `(c,loc,scale)`, `(a,b,loc,scale)`, and `(a,b,c,loc,scale)`,
+respectively. Any parameter can be free or fixed using equal bounds;
+original array-based fit procedures remain available.
+
+For narrow fatigue-life intervals, the normal-coordinate width is
+`expm1(log(zb/za)/2)*(sqrt(za)+1/sqrt(zb))/c`. Johnson SU uses
+`asinh(zb)-asinh(za)=2*atanh((zb-za)/(hypot(1,za)+hypot(1,zb)))`.
+The original endpoint gap is retained independently of rounded endpoint
+coordinates. Both widths feed the existing narrow normal integral;
+broader intervals use the better tail difference and preserve both
+omitted tails for nearly full intervals.
+
+Generalized exponential integrates its hazard with a sum of nonnegative
+terms. For lower standardized point `z`, width `d`, and
+`f(v)=v+expm1(-v)`, the increment is
+`a*d+b*d*(1-exp(-c*z))+(b/c)*exp(-c*z)*f(c*d)`.
+This keeps adjacent interval probabilities even when both endpoint
+cumulative hazards round to the same value.
+
+```fortran
+use scifort_stats, only : dp, censored_data, make_censored_data, fit_result, &
+    fatiguelife_fit, johnsonsu_fit, genexpon_fit
+type(censored_data) :: sample
+type(fit_result) :: fitted
+sample = make_censored_data(uncensored=[0.5_dp,1.2_dp,2.5_dp], &
+    left=[0.3_dp],right=[3.5_dp],interval=reshape([1.1_dp,1.4_dp],[1,2]))
+call fatiguelife_fit(sample,[0.05_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,0.0_dp,1.3_dp],fitted)
+call johnsonsu_fit(sample,[-3.0_dp,1.2_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,1.2_dp,0.0_dp,1.3_dp],fitted)
+call genexpon_fit(sample,[0.05_dp,1.2_dp,0.8_dp,0.0_dp,1.3_dp], &
+    [3.0_dp,1.2_dp,0.8_dp,0.0_dp,1.3_dp],fitted)
+```
+
+Fits are bounded local optimizations. Jointly free shapes, location, and
+scale can be weakly identifiable and may need more than 1,000 sweeps;
+check `success` and `status`. Success does not certify a global MLE.
+The new censored kernels are independently validated; existing scalar
+distribution implementations and their extreme-parameter limits are unchanged.
+
+The formulas follow the specifications for
+[fatigue-life](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.fatiguelife.html),
+[Johnson SU](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.johnsonsu.html),
+and [generalized exponential](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genexpon.html).
+See [validation and commands](../validation/transform_hazard_censored_2026-11-16.md).
