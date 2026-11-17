@@ -22,6 +22,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: loguniform_censored_loglikelihood, loguniform_censored_nnlf
+    public :: truncpareto_censored_loglikelihood, truncpareto_censored_nnlf
+    public :: genhalflogistic_censored_loglikelihood, genhalflogistic_censored_nnlf
     public :: truncexpon_censored_loglikelihood, truncexpon_censored_nnlf
     public :: johnsonsb_censored_loglikelihood, johnsonsb_censored_nnlf
     public :: kappa3_censored_loglikelihood, kappa3_censored_nnlf
@@ -107,6 +110,410 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    pure function bounded_cutoff_product(a, b) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! positive finite cutoff multiplier
+        real(dp), intent(in) :: b !! positive finite scale
+        real(dp) :: value, half
+        value = quiet_nan(0.0_dp)
+        if (a > 1.0_dp) then
+            if (b > huge(1.0_dp)/a) return
+            if (b <= (0.5_dp*huge(1.0_dp))/a) then
+                value = a*b
+                return
+            end if
+            ! The quotient guard can round upward. Test the half product before doubling.
+            half = (0.5_dp*a)*b
+            if (half > 0.5_dp*huge(1.0_dp)) return
+            value = 2.0_dp*half
+        else
+            value = a*b
+        end if
+    end function bounded_cutoff_product
+
+    pure function bounded_power_valid(params) result(valid)
+        implicit none
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        logical :: valid
+        valid = .false.
+        if (params(3) <= 0.0_dp .or. params(4) <= params(3)) return
+        if (.not. beta_parameters_valid([1.0_dp,1.0_dp,params(2),params(4)])) return
+        if (params(2)+params(3) <= params(2)) return
+        if (params(2)+params(4) <= params(2)+params(3)) return
+        valid = .true.
+    end function bounded_power_valid
+
+    pure subroutine bounded_power_gaps(x, params, left, right)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp), intent(out) :: left !! signed gap from lower cutoff
+        real(dp), intent(out) :: right !! signed gap to upper cutoff
+        real(dp) :: unused
+        call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(4)],unused,right)
+        call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(3)],unused,left)
+        left = -left
+    end subroutine bounded_power_gaps
+
+    pure function bounded_power_range(params) result(value)
+        implicit none
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp) :: value
+        value = burr_logsoftplus(log(params(4)-params(3))-log(params(3)))
+    end function bounded_power_range
+
+    pure function bounded_power_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp) :: value, left, right, lr, lv, anchor, lk, lb, beta, v2, term, total
+        integer :: j
+        value = negative_infinity(0.0_dp)
+        call bounded_power_gaps(x,params,left,right)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        lr = bounded_power_range(params)
+        value = -log_distance(x,params(2))-lr
+        if (params(1) == 0.0_dp) return
+        lk = log(abs(params(1)))
+        if (params(1) > 0.0_dp) then
+            lv = burr_logsoftplus(bounded_log(left)-log(params(3)))
+        else
+            lv = burr_logsoftplus(bounded_log(right)-log_distance(x,params(2)))
+        end if
+        anchor = negative_hazard(lk+lv)
+        lb = lk+lr
+        if (lb <= 0.0_dp) then
+            beta = exp(lb)
+            v2 = (0.5_dp*beta)**2
+            term = 1.0_dp
+            total = 0.0_dp
+            do j = 1, 10
+                term = term*v2/real((2*j)*(2*j+1),dp)
+                total = total+term
+            end do
+            value = value+0.5_dp*beta-log1p_safe(total)+anchor
+        else
+            value = lk-log_distance(x,params(2))+anchor-log_hazard_mass(lb)
+        end if
+    end function bounded_power_lpdf
+
+    pure subroutine bounded_power_tails(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp), intent(out) :: lp !! log lower probability
+        real(dp), intent(out) :: lq !! log upper probability
+        real(dp) :: left, right, lv, lw, lr, lk, norm
+        call bounded_power_gaps(x,params,left,right)
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (left <= 0.0_dp) return
+        lp = 0.0_dp
+        lq = negative_infinity(0.0_dp)
+        if (right <= 0.0_dp) return
+        lr = bounded_power_range(params)
+        lv = burr_logsoftplus(log(left)-log(params(3)))
+        lw = burr_logsoftplus(log(right)-log_distance(x,params(2)))
+        if (params(1) == 0.0_dp) then
+            lp = lv-lr
+            lq = lw-lr
+        else
+            lk = log(abs(params(1)))
+            norm = log_hazard_mass(lk+lr)
+            lp = log_hazard_mass(lk+lv)-norm
+            lq = log_hazard_mass(lk+lw)-norm
+            if (params(1) > 0.0_dp) then
+                lq = negative_hazard(lk+lv)+lq
+            else
+                lp = negative_hazard(lk+lw)+lp
+            end if
+        end if
+        if (lp <= lq) then
+            lp = min(lp,0.0_dp)
+            lq = log1p_safe(-exp(lp))
+        else
+            lq = min(lq,0.0_dp)
+            lp = log1p_safe(-exp(lq))
+        end if
+    end subroutine bounded_power_tails
+
+    pure function bounded_power_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp) :: value, unused
+        call bounded_power_tails(x,params,value,unused)
+    end function bounded_power_lcdf
+
+    pure function bounded_power_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp) :: value, unused
+        call bounded_power_tails(x,params,unused,value)
+    end function bounded_power_lsf
+
+    pure function bounded_power_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! power, location, positive physical cutoffs
+        real(dp) :: value, left, right, omitted, span, lk, anchor
+        value = negative_infinity(0.0_dp)
+        call bounded_power_gaps(b,params,left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            value = bounded_power_lsf(a,params)
+            return
+        end if
+        call bounded_power_gaps(a,params,left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = bounded_power_lcdf(b,params)
+            return
+        end if
+        omitted = exp(bounded_power_lcdf(a,params))+exp(bounded_power_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        span = burr_logsoftplus(log_distance(b,a)-log_distance(a,params(2)))
+        if (params(1) == 0.0_dp) then
+            value = span-bounded_power_range(params)
+        else
+            lk = log(abs(params(1)))
+            if (params(1) > 0.0_dp) then
+                anchor = burr_logsoftplus(log(left)-log(params(3)))
+            else
+                call bounded_power_gaps(b,params,left,right)
+                anchor = burr_logsoftplus(log(right)-log_distance(b,params(2)))
+            end if
+            value = negative_hazard(lk+anchor)+log_hazard_mass(lk+span) &
+                -log_hazard_mass(lk+bounded_power_range(params))
+        end if
+    end function bounded_power_interval
+
+    pure subroutine genhalflogistic_coordinates(x, params, lu, lw, nh, lh)
+        implicit none
+        real(dp), intent(in) :: x !! interior observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, rounded physical width
+        real(dp), intent(out) :: lu !! log lower coordinate
+        real(dp), intent(out) :: lw !! log upper coordinate
+        real(dp), intent(out) :: nh !! negative transformed hazard
+        real(dp), intent(out) :: lh !! log transformed hazard
+        real(dp) :: left, right, u, w, bp(4)
+        bp = [1.0_dp,1.0_dp,params(2),params(3)]
+        call beta_distances(x,bp,left,right)
+        call beta_coordinates(x,bp,left,right,u,w,lu,lw)
+        if (lu < log(epsilon(1.0_dp))-2.0_dp) then
+            lh = lu-log(params(1))
+        else
+            lh = log(-lw)-log(params(1))
+        end if
+        nh = negative_hazard(lh)
+    end subroutine genhalflogistic_coordinates
+
+    pure function genhalflogistic_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, rounded physical width
+        real(dp) :: value, left, right, lu, lw, nh, lh
+        call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(3)],left,right)
+        value = negative_infinity(0.0_dp)
+        if (left < 0.0_dp .or. right < 0.0_dp) return
+        if (left == 0.0_dp) then
+            value = -scifort_log_two-log(params(1))-log(params(3))
+        else if (right == 0.0_dp) then
+            if (params(1) == 1.0_dp) value = scifort_log_two-log(params(3))
+            if (params(1) > 1.0_dp) value = positive_infinity(0.0_dp)
+        else
+            call genhalflogistic_coordinates(x,params,lu,lw,nh,lh)
+            value = scifort_log_two-log(params(1))-log(params(3))-lw+nh &
+                -2.0_dp*log1pexp(nh)
+        end if
+    end function genhalflogistic_lpdf
+
+    pure subroutine genhalflogistic_tails(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, rounded physical width
+        real(dp), intent(out) :: lp !! log lower probability
+        real(dp), intent(out) :: lq !! log upper probability
+        real(dp) :: left, right, lu, lw, nh, lh
+        call beta_distances(x,[1.0_dp,1.0_dp,params(2),params(3)],left,right)
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (left <= 0.0_dp) return
+        lp = 0.0_dp
+        lq = negative_infinity(0.0_dp)
+        if (right <= 0.0_dp) return
+        call genhalflogistic_coordinates(x,params,lu,lw,nh,lh)
+        lp = log_hazard_mass(lh)-log1pexp(nh)
+        lq = scifort_log_two+nh-log1pexp(nh)
+        if (lp <= lq) then
+            lq = log1p_safe(-exp(lp))
+        else
+            lp = log1p_safe(-exp(lq))
+        end if
+    end subroutine genhalflogistic_tails
+
+    pure function genhalflogistic_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, rounded physical width
+        real(dp) :: value, unused
+        call genhalflogistic_tails(x,params,value,unused)
+    end function genhalflogistic_lcdf
+
+    pure function genhalflogistic_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! observation
+        real(dp), intent(in) :: params(:) !! positive shape, location, rounded physical width
+        real(dp) :: value, unused
+        call genhalflogistic_tails(x,params,unused,value)
+    end function genhalflogistic_lsf
+
+    pure function genhalflogistic_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! positive shape, location, rounded physical width
+        real(dp) :: value, left, right, omitted, delta, lu, lw, nha, nhb, lh
+        value = negative_infinity(0.0_dp)
+        call beta_distances(b,[1.0_dp,1.0_dp,params(2),params(3)],left,right)
+        if (left <= 0.0_dp) return
+        if (right <= 0.0_dp) then
+            value = genhalflogistic_lsf(a,params)
+            return
+        end if
+        delta = burr_logsoftplus(log_distance(b,a)-log(right))-log(params(1))
+        call beta_distances(a,[1.0_dp,1.0_dp,params(2),params(3)],left,right)
+        if (right <= 0.0_dp) return
+        if (left <= 0.0_dp) then
+            value = genhalflogistic_lcdf(b,params)
+            return
+        end if
+        omitted = exp(genhalflogistic_lcdf(a,params))+exp(genhalflogistic_lsf(b,params))
+        if (omitted <= 0.5_dp) then
+            value = log1p_safe(-omitted)
+            return
+        end if
+        call genhalflogistic_coordinates(a,params,lu,lw,nha,lh)
+        call genhalflogistic_coordinates(b,params,lu,lw,nhb,lh)
+        value = scifort_log_two+nha+log_hazard_mass(delta) &
+            -log1pexp(nha)-log1pexp(nhb)
+    end function genhalflogistic_interval
+
+
+    pure function loguniform_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite lower shape, less than b
+        real(dp), intent(in) :: b !! finite upper shape, greater than a
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [a,b,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (min(a,b) <= 0.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        if (a >= b) return
+        if (b > 1.0_dp) then
+            if (params(4) > huge(1.0_dp)/b) return
+        end if
+        params = [0.0_dp,params(3),bounded_cutoff_product(a,params(4)), &
+            bounded_cutoff_product(b,params(4))]
+        if (.not. all(ieee_is_finite(params))) return
+        if (.not. bounded_power_valid(params)) return
+        value = censored_loglikelihood(data,params,bounded_power_lpdf,bounded_power_lcdf, &
+            bounded_power_lsf,bounded_power_interval)
+    end function loguniform_censored_loglikelihood
+
+    pure function loguniform_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive finite lower shape, less than b
+        real(dp), intent(in) :: b !! finite upper shape, greater than a
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -loguniform_censored_loglikelihood(data, a, b, loc, scale)
+    end function loguniform_censored_nnlf
+
+    pure function truncpareto_censored_loglikelihood(data, b, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! finite nonzero power, either sign
+        real(dp), intent(in) :: c !! finite upper cutoff, greater than one
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4)
+        params = [b,c,0.0_dp,1.0_dp]
+        if (present(loc)) params(3) = loc
+        if (present(scale)) params(4) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (b == 0.0_dp .or. c <= 1.0_dp) return
+        if (params(4) <= 0.0_dp) return
+        if (c > 1.0_dp) then
+            if (params(4) > huge(1.0_dp)/c) return
+        end if
+        params = [b,params(3),params(4),bounded_cutoff_product(c,params(4))]
+        if (.not. all(ieee_is_finite(params))) return
+        if (.not. bounded_power_valid(params)) return
+        value = censored_loglikelihood(data,params,bounded_power_lpdf,bounded_power_lcdf, &
+            bounded_power_lsf,bounded_power_interval)
+    end function truncpareto_censored_loglikelihood
+
+    pure function truncpareto_censored_nnlf(data, b, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! finite nonzero power, either sign
+        real(dp), intent(in) :: c !! finite upper cutoff, greater than one
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -truncpareto_censored_loglikelihood(data, b, c, loc, scale)
+    end function truncpareto_censored_nnlf
+
+    pure function genhalflogistic_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite(params))) return
+        if (c <= 0.0_dp) return
+        if (params(3) <= 0.0_dp) return
+        if (c < 1.0_dp) then
+            if (params(3) > huge(1.0_dp)*c) return
+        end if
+        params(3) = params(3)/c
+        if (.not. beta_parameters_valid([1.0_dp,1.0_dp,params(2),params(3)])) return
+        if (params(2)+params(3) <= params(2)) return
+        value = censored_loglikelihood(data,params,genhalflogistic_lpdf,genhalflogistic_lcdf, &
+            genhalflogistic_lsf,genhalflogistic_interval)
+    end function genhalflogistic_censored_loglikelihood
+
+    pure function genhalflogistic_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! positive finite shape
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -genhalflogistic_censored_loglikelihood(data, c, loc, scale)
+    end function genhalflogistic_censored_nnlf
+
 
     ! Independently integrated public density specifications; see CODE_PROVENANCE.md.
     pure subroutine truncexpon_gaps(x, params, left, right)

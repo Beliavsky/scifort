@@ -1,3 +1,53 @@
+## 2026-11-17 - Log-uniform, truncated Pareto, and generalized half-logistic censoring
+
+The new likelihood callbacks, fitting overloads, tests, and independent
+reference checker are original MIT SciFort code, independently derived from
+public mathematical specifications inspected on 2026-11-17:
+[SciPy log-uniform](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.loguniform.html),
+[truncated Pareto](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncpareto.html),
+and the [generalized half-logistic user guide](https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_genhalflogistic.html).
+No upstream implementation was copied, translated, or vendored. No new
+dependency or third-party license text is required. Existing compensated
+beta-distance, logarithmic hazard, softplus, and bounded-fitting helpers
+retain their original provenance and notices.
+
+In physical distance t, the first two laws have density proportional to
+`t**(-p-1)` on `[L,U]`, with p=0 for log-uniform and p=b (either nonzero
+sign) for truncated Pareto. Substituting v=log(t/L), D=log(U/L) gives an
+exponential density on `[0,D]`. Positive p integrates from the lower edge;
+negative p integrates backward from the upper edge. The normalizer uses
+`1-exp(-abs(p)*D)`. Interior intervals use their exact positive logarithmic
+width `log1p((x2-x1)/(x1-loc))`. Nearly full intervals complement both
+omitted tails. Rounded physical cutoffs define a normalized public law,
+documented as a numerical difference from the original scalar APIs.
+Near the largest finite product, a quotient guard can round upward; the
+new cutoff helper tests an exactly scaled half-product before doubling.
+Smaller products use direct multiplication to avoid subnormal double rounding.
+
+For beta=abs(p)*D <= 1, the normalizing factor
+`beta/(1-exp(-beta))=exp(beta/2)/(sinh(beta/2)/(beta/2))` avoids cancellation
+of large logarithms near p=0. The existing truncated-exponential derivation
+applies: ten positive power-series corrections to sinh(v)/v, v<=0.5,
+leave a remainder below `1e-29`. No fitted coefficients are introduced.
+
+Generalized half-logistic uses `w=1-u` and `H=-log(w)/c`, so
+`F=(1-exp(-H))/(1+exp(-H))` and `S=2*exp(-H)/(1+exp(-H))`.
+Differentiation gives the exponent `1/c-1` in its density, as specified in
+the user guide. (The inspected generated API page displays an inconsistent
+exponent.) For interior intervals,
+`DeltaH=log1p((x2-x1)/(loc+r-x2))/c`, and probability equals
+`2*exp(-H1)*(1-exp(-DeltaH))/((1+exp(-H1))*(1+exp(-H2)))`.
+Logarithmic coordinates retain tiny u/c without forming 1/c. Replacing
+`-log1p(-u)` by u for u<epsilon/exp(2) has relative correction below
+epsilon/(2*exp(2)). Physical width r=fl(scale/c) defines the documented
+normalized rounded-width law.
+
+The independent checker evaluates these mathematical integrals using
+mpmath at 100 or 1100 decimal digits. SciPy supplies separate constrained
+fit benchmarks; no SciPy implementation code is imported. See the
+[API guide](docs/censored_fitting.md) and
+[validation record](validation/bounded_power_censored_2026-11-17.md).
+
 ## 2026-11-17 - Truncated exponential, Johnson SB, and kappa3 censoring
 
 The new censored callbacks, fitting overloads, tests, and independent

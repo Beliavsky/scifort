@@ -1,3 +1,12 @@
+## 2026-11-17 - Three more bounded censored distributions
+
+- Add log-uniform, truncated Pareto, and generalized half-logistic mixed
+  likelihoods, NNLF, bounded fitting overloads, and statistics exports.
+- Support both Pareto shape signs, rounded physical supports, compensated
+  endpoint gaps, tiny transformed hazards, and adjacent interval endpoints.
+- Add native and independent high-precision checks, document fitting and
+  numerical limits, and update coverage to 62 families with 47 remaining.
+
 ## 2026-11-17 - Truncated exponential, Johnson SB, and kappa3 censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded fitting overloads, and
