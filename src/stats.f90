@@ -38,6 +38,9 @@ module scifort_stats
     use scifort_censored, only : foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    use scifort_censored, only : alpha_censored_loglikelihood, alpha_censored_nnlf
+    use scifort_censored, only : genextreme_censored_loglikelihood, genextreme_censored_nnlf
+    use scifort_censored, only : crystalball_censored_loglikelihood, crystalball_censored_nnlf
     use scifort_censored, only : gengamma_censored_loglikelihood, gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
@@ -793,6 +796,9 @@ module scifort_stats
     public :: foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     public :: foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     public :: genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    public :: alpha_censored_loglikelihood, alpha_censored_nnlf
+    public :: genextreme_censored_loglikelihood, genextreme_censored_nnlf
+    public :: crystalball_censored_loglikelihood, crystalball_censored_nnlf
     public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
     public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf

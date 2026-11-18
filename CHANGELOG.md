@@ -1,3 +1,11 @@
+## 2026-11-17 - Alpha, GEV, and Crystal Ball censoring
+
+- Add mixed-censoring likelihoods, NNLF, bounded fit overloads, and statistics exports.
+- Retain logarithmic normal/reciprocal tails, GEV hazard increments, Crystal Ball
+  normalization weights, adjacent intervals, and overflowed affine coordinates.
+- Add native and independent high-precision validation, provenance, and explicit
+  shape limits. Coverage is 83 continuous families with 26 remaining.
+
 ## 2026-11-17 - Generalized gamma and truncated-law censoring
 
 - Add generalized gamma, truncated normal, and truncated Weibull mixed

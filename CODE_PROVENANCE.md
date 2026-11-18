@@ -1,3 +1,40 @@
+## 2026-11-17 - Alpha, GEV, and Crystal Ball censoring
+
+The new callbacks, likelihoods, fit overloads, regression tests, and independent
+checker are original MIT SciFort implementations from mathematical density
+specifications inspected on 2026-11-17:
+[alpha](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.alpha.html),
+[generalized extreme value](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genextreme.html),
+and [Crystal Ball](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.crystalball.html).
+No upstream routine was copied, translated, or vendored. Existing normal,
+log-distance, Gauss-Legendre interval, exponential-mass, censoring, and optimizer
+helpers retain their provenance and notices. No dependency or license text is added.
+
+Alpha follows the substitution w=a-1/z, giving normal interval masses divided
+by Phi(a). Its transformed interval width is scale*(b-a)/((a-loc)*(b-loc)).
+GEV integrates its stated density to exp(-T), T=(1-c*z)**(1/c), with
+T=exp(-z) at c=0. Finite intervals factor exp(-T(b)) and
+1-exp(-(T(a)-T(b))); log support-factor ratios retain physical widths.
+Crystal Ball normalization integrates its power-law and Gaussian pieces
+separately. Its left CDF is a normalized (m-1) power of
+1+beta*(-beta-z)/m. Interval ratios retain log physical widths before
+subtracting powers. Complementary normalization weights use log1p.
+These are elementary substitutions and antiderivatives of the cited densities.
+The alpha steep-interval shortcut bounds the discarded normal-tail ratio
+through a normal log-density decrease exceeding 1e8.
+The corresponding steep positive Gaussian interval in Crystal Ball retains
+the lower SF under the same log-density variation bound.
+At Crystal Ball's transition the value and first derivative of the two
+density pieces coincide. The local Gaussian extension for very narrow
+crossing intervals omits a relative correction of order
+(1+beta**2/m)*width**2; its width criterion keeps this below 1e-12 and
+retains total physical width without subtracting rounded coordinates.
+
+Independent references evaluate these mathematical integrals and powers
+with mpmath; SciPy supplies bounded one-parameter fitting benchmarks.
+See the [API guide](docs/censored_fitting.md) and
+[validation record](validation/shape_censored_2026-11-17.md).
+
 ## 2026-11-17 - Generalized gamma and truncated-law censoring
 
 The new callbacks, public likelihoods, fit overloads, native regression,

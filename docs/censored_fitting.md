@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+alpha_censored_loglikelihood(data, a [, loc, scale])
+genextreme_censored_loglikelihood(data, c [, loc, scale])
+crystalball_censored_loglikelihood(data, beta, m [, loc, scale])
 gengamma_censored_loglikelihood(data, a, c [, loc, scale])
 truncnorm_censored_loglikelihood(data, a, b [, loc, scale])
 truncweibull_min_censored_loglikelihood(data, c, a, b [, loc, scale])
@@ -176,7 +179,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -2257,3 +2260,75 @@ observations. Log probabilities beyond binary64 range return negative
 infinity; exponentiated probabilities may underflow while logarithms remain
 finite. Fit success denotes local bounded convergence, not global optimality.
 See the [validation record](../validation/power_trunc_censored_2026-11-17.md).
+
+
+## Alpha, generalized extreme value, and Crystal Ball details
+
+The likelihoods and their `*_censored_nnlf` partners are exported by
+`scifort_censored` and `scifort_stats`. The corresponding fit generics
+accept `censored_data`; existing real-array calls remain available.
+
+| Family | Fit bounds order | Current numerical shape limits |
+| --- | --- | --- |
+| `alpha` | a, loc, scale | 1e-6<=a<=100 |
+| `genextreme` | c, loc, scale | abs(c)<=100; c=0 or abs(c)>=1e-6 |
+| `crystalball` | beta, m, loc, scale | 1e-6<=beta<=100; 1<m<=1e6 |
+
+All parameters must be finite and scale positive. Omitted loc and scale
+default to zero and one. Equal fit bounds fix any parameter; all parameters
+may vary within these limits. Valid empty likelihoods are zero, invalid
+parameters return NaN even for empty data, and empty fits are invalid.
+These finite shape ranges are compatibility limitations of the new censored
+methods, separate from the scalar distribution APIs and named-family count.
+In particular, very small nonzero GEV shapes remain unsupported; c=0 is
+evaluated by its exact Gumbel limit. Bounds spanning zero can contain this
+unsupported region; likelihoods return NaN there and the optimizer rejects
+such candidates.
+
+Alpha has support x>loc, with zero endpoint density/CDF and unit SF.
+Writing z=(x-loc)/scale, its CDF is Phi(a-1/z)/Phi(a). The SF and interval
+probabilities are normal interval integrals, retaining reciprocal interval
+widths in logarithmic physical coordinates. Small SFs therefore remain
+available even when a-1/z rounds to a. Extremely steep negative normal
+intervals use the upper CDF when the lower contribution is negligible:
+the normal log-density variation must exceed 1e8.
+
+GEV follows SciPy's shape sign convention: T=(1-c*z)**(1/c),
+F=exp(-T), with T=exp(-z) at c=0. Its support satisfies 1-c*z>=0.
+For positive c the finite upper endpoint density is zero for c<1,
+1/scale for c=1, and infinite for c>1. The negative-c lower endpoint
+density is zero. Tail masses and intervals use log(T) and physical-width
+increments before exponential differencing, retaining underflowed survival
+probabilities in logarithmic form. As in the scalar API, endpoint detection
+uses binary64 standardized support arithmetic; evaluation extremely close
+to a shape-dependent endpoint can be ill-conditioned relative to input
+rounding. This does not provide additional precision for affine endpoints.
+
+Crystal Ball joins a power-law left tail at z=-beta to a Gaussian core.
+Its log normalizer is the log sum of the two integrated pieces. The smaller
+normalization weight and its complement are evaluated separately to retain
+tiny log probabilities. Tail intervals factor a positive power-law ratio;
+Gaussian intervals reuse the existing stable normal integral. Intervals
+crossing the transition add the two positive pieces in log space. Density
+is continuous at the transition, and the support is the whole real line.
+For steep Gaussian intervals above standardized 12 with normal log-density
+variation exceeding 1e8, the upper contribution is negligible and the lower
+SF is retained directly, including near binary64's finite log-probability limit.
+For crossing intervals with standardized width times max(1,beta)<=1e-6,
+the shared density and slope permit a local Gaussian extension over the
+entire retained physical width. Its relative truncation error is bounded
+by order (1+beta**2/m)*width**2, below 1e-12 in this regime. This avoids
+changing an adjacent interval's total width by rounding its two pieces.
+
+All three retain the shared exact/left/right/interval conventions, including
+infinite one-sided interval endpoints and equal finite endpoints as exact
+observations. Mathematical log probabilities beyond binary64 range return
+negative infinity. A finite logarithm does not imply its exponentiated
+probability is representable. Very concentrated affine models and finite
+support endpoints remain subject to input rounding; fit success denotes
+local bounded convergence, not global optimality or identifiability.
+
+Definitions: [alpha](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.alpha.html),
+[GEV](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genextreme.html),
+and [Crystal Ball](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.crystalball.html).
+See the [validation record](../validation/shape_censored_2026-11-17.md).

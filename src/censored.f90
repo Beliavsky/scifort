@@ -24,6 +24,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: alpha_censored_loglikelihood, alpha_censored_nnlf
+    public :: genextreme_censored_loglikelihood, genextreme_censored_nnlf
+    public :: crystalball_censored_loglikelihood, crystalball_censored_nnlf
     public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
     public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
@@ -130,6 +133,444 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Independent transformations of the cited densities; see CODE_PROVENANCE.md.
+    pure function alpha_coordinate(x, params) result(w)
+        implicit none
+        real(dp), intent(in) :: x !! finite point above location
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: w, lr
+        lr = log(params(3))-log_distance(x,params(2))
+        w = negative_infinity(0.0_dp)
+        if (lr > log(huge(1.0_dp))) return
+        w = params(1)-exp(lr)
+    end function alpha_coordinate
+
+    pure function alpha_lpdf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, w, ld
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        w = alpha_coordinate(x,params)
+        if (abs(w) > sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+        ld = log_distance(x,params(2))
+        value = (-0.5_dp*w)*w-scifort_log_sqrt_two_pi-normal_logcdf(params(1)) &
+            +log(params(3))-2.0_dp*ld
+    end function alpha_lpdf_c
+
+    pure function alpha_lsf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, w, lr
+        value = 0.0_dp
+        if (x <= params(2)) return
+        w = alpha_coordinate(x,params)
+        lr = log(params(3))-log_distance(x,params(2))
+        value = normal_small_interval(w,lr)
+        if (ieee_is_nan(value)) then
+            if (w < -sqrt(huge(1.0_dp))*sqrt(2.0_dp)) then
+                value = normal_logcdf(params(1))
+            else
+                if (w >= 0.0_dp) then
+                    value = log_difference(normal_logsf(w),normal_logsf(params(1)))
+                else
+                    value = log_difference(normal_logcdf(params(1)),normal_logcdf(w))
+                end if
+            end if
+        end if
+        value = min(0.0_dp,value-normal_logcdf(params(1)))
+    end function alpha_lsf_c
+
+    pure function alpha_lcdf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, w, q
+        value = negative_infinity(0.0_dp)
+        if (x <= params(2)) return
+        q = alpha_lsf_c(x,params)
+        if (q < -scifort_log_two) then
+            value = ig_complement(q)
+        else
+            w = alpha_coordinate(x,params)
+            if (w < -sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+            value = min(0.0_dp,normal_logcdf(w)-normal_logcdf(params(1)))
+        end if
+    end function alpha_lcdf_c
+
+    pure function alpha_interval_c(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, w, lw, upper_w
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        if (a <= params(2)) then
+            value = alpha_lcdf_c(b,params)
+            return
+        end if
+        w = alpha_coordinate(a,params)
+        lw = log(params(3))+log_distance(b,a)-log_distance(a,params(2)) &
+            -log_distance(b,params(2))
+        upper_w = alpha_coordinate(b,params)
+        if (upper_w < -12.0_dp) then
+            ! If the normal log density changes by more than 1e8, the lower
+            ! endpoint contribution is negligible even when rounded logs coincide.
+            if (log(-upper_w)+lw > log(1.0e8_dp)) then
+                value = alpha_lcdf_c(b,params)
+                return
+            end if
+        end if
+        value = normal_small_interval(w,lw)
+        if (ieee_is_nan(value)) then
+            value = tail_interval(a,b,params,alpha_lcdf_c,alpha_lsf_c)
+        else
+            value = value-normal_logcdf(params(1))
+        end if
+    end function alpha_interval_c
+
+    pure subroutine gev_terms(x, params, lt, lu, region)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp), intent(out) :: lt !! log transformed reverse hazard in the interior
+        real(dp), intent(out) :: lu !! log positive support factor in the interior
+        integer, intent(out) :: region !! -1 below support, 0 interior, 1 above support
+        real(dp) :: z, cz, lc
+        z = location_scale_z(x,params(2:3))
+        region = 0
+        lu = 0.0_dp
+        lt = -z
+        if (params(1) == 0.0_dp) return
+        if (z == 0.0_dp) return
+        if (ieee_is_finite(z)) then
+            lc = log(abs(params(1)))+log(abs(z))
+        else
+            lc = log(abs(params(1)))+log_distance(max(x,params(2)),min(x,params(2))) &
+                -log(params(3))
+        end if
+        if (.not. ieee_is_finite(z) .or. lc > log(huge(1.0_dp))-1.0_dp) then
+            if (sign(1.0_dp,z) == sign(1.0_dp,params(1))) then
+                region = int(sign(1.0_dp,params(1)))
+                return
+            end if
+            lu = log1pexp(lc)
+        else
+            cz = params(1)*z
+            if (cz >= 1.0_dp) then
+                region = int(sign(1.0_dp,params(1)))
+                return
+            end if
+            lu = log1p_safe(-cz)
+        end if
+        lt = lu/params(1)
+    end subroutine gev_terms
+
+    pure function gev_lpdf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, lt, lu, z
+        integer :: region
+        call gev_terms(x,params,lt,lu,region)
+        value = negative_infinity(0.0_dp)
+        if (region /= 0) then
+            ! Preserve the scalar API's density convention at an exact upper endpoint.
+            if (params(1) > 0.0_dp) then
+                z = location_scale_z(x,params(2:3))
+                if (z == 1.0_dp/params(1)) then
+                    if (params(1) == 1.0_dp) value = -log(params(3))
+                    if (params(1) > 1.0_dp) value = positive_infinity(0.0_dp)
+                end if
+            end if
+            return
+        end if
+        if (lt > log(huge(1.0_dp))) return
+        value = negative_hazard(lt)+lt-lu-log(params(3))
+    end function gev_lpdf_c
+
+    pure function gev_lcdf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, lt, lu
+        integer :: region
+        call gev_terms(x,params,lt,lu,region)
+        value = negative_infinity(0.0_dp)
+        if (region < 0) return
+        value = 0.0_dp
+        if (region > 0) return
+        value = negative_hazard(lt)
+    end function gev_lcdf_c
+
+    pure function gev_lsf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, lt, lu
+        integer :: region
+        call gev_terms(x,params,lt,lu,region)
+        value = 0.0_dp
+        if (region < 0) return
+        value = negative_infinity(0.0_dp)
+        if (region > 0) return
+        value = log_exponential_mass(lt)
+    end function gev_lsf_c
+
+    pure function gev_interval_c(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! shape, loc, scale
+        real(dp) :: value, la, lb, ua, ub, lw, lr, ld, delta
+        integer :: ra, rb
+        call gev_terms(a,params,la,ua,ra)
+        call gev_terms(b,params,lb,ub,rb)
+        if (ra /= 0 .or. rb /= 0) then
+            value = tail_interval(a,b,params,gev_lcdf_c,gev_lsf_c)
+            return
+        end if
+        lw = log_distance(b,a)-log(params(3))
+        if (params(1) == 0.0_dp) then
+            ld = la+log_exponential_mass(lw)
+        else
+            ! The reverse hazard decreases: retain log(T(a)-T(b)) from physical width.
+            if (params(1) > 0.0_dp) then
+                lr = log(params(1))+lw-ub
+            else
+                lr = log(-params(1))+lw-ua
+            end if
+            ! log(delta), delta=abs(log(u(a)/u(b))/c).
+            lr = burr_logsoftplus(lr)-log(abs(params(1)))
+            if (lr < log(epsilon(1.0_dp))-2.0_dp) then
+                ld = la+lr
+            else if (lr > log(huge(1.0_dp))) then
+                ld = la
+            else
+                delta = exp(lr)
+                ld = la+log(-expm1_safe(-delta))
+            end if
+        end if
+        value = negative_hazard(lb)+log_exponential_mass(ld)
+    end function gev_interval_c
+
+    pure function cb_logratio(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! physical point at or below the tail transition
+        real(dp), intent(in) :: params(:) !! beta, loc, scale, m, log denominator, log tail weight
+        real(dp) :: value, z, ld
+        value = 0.0_dp
+        z = location_scale_z(x,params(2:3))
+        if (z == -params(1)) return
+        if (ieee_is_finite(z)) then
+            ld = log_distance(-params(1),z)
+        else
+            ld = log_distance(params(2),x)-log(params(3))
+        end if
+        value = log1pexp(log(params(1))-log(params(4))+ld)
+    end function cb_logratio
+
+    pure function cb_lpdf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! beta, loc, scale, m, log denominator, log tail weight
+        real(dp) :: value, z
+        z = location_scale_z(x,params(2:3))
+        value = negative_infinity(0.0_dp)
+        if (z > -params(1)) then
+            if (abs(z) > sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+            value = (-0.5_dp*z)*z-params(5)-log(params(3))
+        else
+            value = -params(5)-0.5_dp*params(1)**2 &
+                -params(4)*cb_logratio(x,params)-log(params(3))
+        end if
+    end function cb_lpdf_c
+
+    pure function cb_lcdf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! beta, loc, scale, m, log denominator, log tail weight
+        real(dp) :: value, z, q, core
+        z = location_scale_z(x,params(2:3))
+        if (z <= -params(1)) then
+            value = params(6)-(params(4)-1.0_dp)*cb_logratio(x,params)
+        else
+            q = cb_lsf_c(x,params)
+            if (q < -scifort_log_two) then
+                value = ig_complement(q)
+            else
+                core = normal_interval(-params(1),z,[0.0_dp,1.0_dp]) &
+                    +scifort_log_sqrt_two_pi-params(5)
+                value = min(0.0_dp,bounded_logadd(params(6),core))
+            end if
+        end if
+    end function cb_lcdf_c
+
+    pure function cb_lsf_c(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! beta, loc, scale, m, log denominator, log tail weight
+        real(dp) :: value, z, p, core
+        z = location_scale_z(x,params(2:3))
+        if (z > -params(1)) then
+            value = negative_infinity(0.0_dp)
+            if (z > sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+            value = min(0.0_dp,scifort_log_sqrt_two_pi+normal_logsf(z)-params(5))
+        else
+            p = -(params(4)-1.0_dp)*cb_logratio(x,params)
+            if (params(6)+p < -scifort_log_two) then
+                value = ig_complement(params(6)+p)
+                return
+            end if
+            core = scifort_log_sqrt_two_pi+normal_logcdf(params(1))-params(5)
+            value = min(0.0_dp,bounded_logadd(core,params(6)+ig_complement(p)))
+        end if
+    end function cb_lsf_c
+
+    pure function cb_interval_c(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! beta, loc, scale, m, log denominator, log tail weight
+        real(dp) :: value, za, zb, ld, lr, lm, left, right, lw
+        za = location_scale_z(a,params(2:3))
+        zb = location_scale_z(b,params(2:3))
+        lw = log_distance(b,a)-log(params(3))
+        if (za < -params(1) .and. zb > -params(1)) then
+            if (lw+log(max(1.0_dp,params(1))) <= log(1.0e-6_dp)) then
+                ! The joined density and slope agree. The Gaussian extension's
+                ! relative error is at most O((1+beta**2/m)*width**2), < 1e-12.
+                ! Retain the whole physical width instead of two rounded pieces.
+                value = normal_small_interval(za,lw)+scifort_log_sqrt_two_pi-params(5)
+                return
+            end if
+        end if
+        if (za >= -params(1)) then
+            if (za > 12.0_dp) then
+                if (log(za)+log_distance(b,a)-log(params(3)) > log(1.0e8_dp)) then
+                    value = cb_lsf_c(a,params)
+                    return
+                end if
+            end if
+            value = normal_small_interval(za,log_distance(b,a)-log(params(3)))
+            if (ieee_is_nan(value)) &
+                value = tail_interval(za,zb,[0.0_dp,1.0_dp],normal_lcdf,normal_lsf)
+            value = value+scifort_log_sqrt_two_pi-params(5)
+        else if (zb <= -params(1)) then
+            ! log D(b), D=m/beta-beta-z, retaining the interval independently.
+            ld = log(params(4))-log(params(1))+cb_logratio(b,params)
+            lr = log_distance(b,a)-log(params(3))-ld
+            lm = log(params(4)-1.0_dp)+burr_logsoftplus(lr)
+            value = cb_lcdf_c(b,params)+log_exponential_mass(lm)
+        else
+            lr = cb_logratio(a,params)
+            left = params(6)+log_exponential_mass(log(params(4)-1.0_dp)+log(lr))
+            right = normal_interval(-params(1),zb,[0.0_dp,1.0_dp]) &
+                +scifort_log_sqrt_two_pi-params(5)
+            value = bounded_logadd(left,right)
+        end if
+    end function cb_interval_c
+
+    pure function alpha_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive alpha shape in [1e-6,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        value = quiet_nan(0.0_dp)
+        params = [a,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (a < 1.0e-6_dp .or. a > 100.0_dp) return
+        value = censored_loglikelihood(data,params,alpha_lpdf_c,alpha_lcdf_c, &
+            alpha_lsf_c,alpha_interval_c)
+    end function alpha_censored_loglikelihood
+
+    pure function alpha_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! positive alpha shape in [1e-6,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -alpha_censored_loglikelihood(data,a,loc,scale)
+    end function alpha_censored_nnlf
+
+    pure function genextreme_censored_loglikelihood(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! GEV shape in [-100,100], zero or absolute value at least 1e-6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(3)
+        value = quiet_nan(0.0_dp)
+        params = [c,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(c) > 100.0_dp) return
+        if (c /= 0.0_dp .and. abs(c) < 1.0e-6_dp) return
+        value = censored_loglikelihood(data,params,gev_lpdf_c,gev_lcdf_c, &
+            gev_lsf_c,gev_interval_c)
+    end function genextreme_censored_loglikelihood
+
+    pure function genextreme_censored_nnlf(data, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! GEV shape in [-100,100], zero or absolute value at least 1e-6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -genextreme_censored_loglikelihood(data,c,loc,scale)
+    end function genextreme_censored_nnlf
+
+    pure function crystalball_censored_loglikelihood(data, beta, m, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: beta !! positive transition magnitude in [1e-6,100]
+        real(dp), intent(in) :: m !! power-law exponent in (1,1e6]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(6)
+        value = quiet_nan(0.0_dp)
+        params = [beta,0.0_dp,1.0_dp,m,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (beta < 1.0e-6_dp .or. beta > 100.0_dp) return
+        if (m <= 1.0_dp .or. m > 1.0e6_dp) return
+        params(6) = log(m)-log(beta)-log(m-1.0_dp)-0.5_dp*beta**2
+        params(5) = bounded_logadd(params(6), &
+            scifort_log_sqrt_two_pi+normal_logcdf(beta))
+        if (params(6) >= scifort_log_sqrt_two_pi+normal_logcdf(beta)) then
+            params(6) = -log1p_safe(exp(scifort_log_sqrt_two_pi+normal_logcdf(beta)-params(6)))
+        else
+            params(6) = params(6)-params(5)
+        end if
+        value = censored_loglikelihood(data,params,cb_lpdf_c,cb_lcdf_c, &
+            cb_lsf_c,cb_interval_c)
+    end function crystalball_censored_loglikelihood
+
+    pure function crystalball_censored_nnlf(data, beta, m, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: beta !! positive transition magnitude in [1e-6,100]
+        real(dp), intent(in) :: m !! power-law exponent in (1,1e6]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -crystalball_censored_loglikelihood(data,beta, m,loc,scale)
+    end function crystalball_censored_nnlf
+
 
     ! Independent transformed/conditional densities; see CODE_PROVENANCE.md.
     pure function gg_lpdf(x, params) result(value)
