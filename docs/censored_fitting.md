@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+gausshyper_censored_loglikelihood(data, a, b, c, z [, loc, scale])
+irwinhall_censored_loglikelihood(data, n [, loc, scale])
+vonmises_line_censored_loglikelihood(data, kappa [, loc, scale])
 argus_censored_loglikelihood(data, chi [, loc, scale])
 pearson3_censored_loglikelihood(data, skew [, loc, scale])
 kappa4_censored_loglikelihood(data, h, k [, loc, scale])
@@ -182,7 +185,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `argus_fit`, `pearson3_fit`, `kappa4_fit`, `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `gausshyper_fit`, `irwinhall_fit`, `vonmises_line_fit`, `argus_fit`, `pearson3_fit`, `kappa4_fit`, `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -2415,3 +2418,79 @@ Definitions: [ARGUS](https://docs.scipy.org/doc/scipy/reference/generated/scipy.
 [Pearson III](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearson3.html),
 and [kappa4](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kappa4.html).
 See the [validation record](../validation/gamma_kappa_censored_2026-11-17.md).
+
+
+## Gauss hypergeometric, Irwin-Hall, and line von Mises details
+
+The likelihoods and `*_censored_nnlf` functions are exported from
+`scifort_censored` and `scifort_stats`. The existing fit generics accept
+`censored_data`, retaining their original real-array overloads.
+
+| Family | Fit bounds order | Current censored shape limits | Standardized support |
+| --- | --- | --- | --- |
+| `gausshyper` | a, b, c, z, loc, scale | 0.1<=a,b<=20; abs(c)<=10; -0.5<=z<=10 | [0,1] |
+| `irwinhall` | n, loc, scale | integer 1<=n<=32 | [0,n] |
+| `vonmises_line` | kappa, loc, scale | 0<=kappa<=100 | [-pi,pi] |
+
+Here pi denotes the library's binary64 constant. These are numerical limits
+of the censored methods, not new restrictions on scalar distribution APIs.
+All parameters must be finite, scale must be at least `tiny(1.0_dp)`,
+abs(loc)/scale must not exceed 1e4, and scale*extent must not exceed
+huge/2, where extent is 1, n, or pi. Also require
+abs(loc)+scale*extent<=huge, ensuring finite affine support endpoints. These bounds avoid unrepresentable supports and severe affine
+cancellation. Omitted loc/scale default to zero/one. Invalid parameters
+return NaN even for empty data; a valid empty likelihood is zero and an
+empty fit is invalid. Equal bounds fix any parameter. Irwin-Hall fits
+enforce integrality of n, including when real bounds contain several integers.
+Fit success denotes local bounded convergence, not a global optimum.
+
+Gauss hypergeometric uses the beta-weighted tilted density
+u**(a-1)*(1-u)**(b-1)*(1+z*u)**(-c), normalized on [0,1]. Direct
+logarithmic interval integrals reuse the existing double-exponential
+endpoint transformation and preserve singular endpoint densities. At zero,
+density is infinite/finite/zero according as a is below/equal to/above one;
+the upper endpoint has the analogous classification using b.
+The finite lower endpoint log density for a=1 is -lognorm-log(scale);
+the finite upper endpoint for b=1 also includes -c*log1p(z).
+
+`scifort_gausshyper` additionally exports
+`gausshyper_logkernel_integral(lo,hi,a,b,c,z)`, a **SciFort extension**.
+This is the unnormalized log integral in standard coordinates with
+0<=lo<=hi<=1, a,b>0, finite c, and finite z>-1; equal endpoints return
+negative infinity and invalid arguments return NaN. It reuses the scalar
+API's existing quadrature and does not promise accuracy throughout the
+unrestricted shape domain. The censored contract above states the newly
+validated range. This helper is available directly from its family module.
+
+Irwin-Hall evaluates its positive cardinal B-spline recurrence in the log
+domain. The first and last polynomial pieces use direct powers in log
+form, with analytic log integrals on those outer pieces, including
+subnormal positive endpoints. Other intervals split at integer knots and
+use a 16-point Gauss-Legendre rule, exact for polynomials through degree 31 in exact arithmetic. Thus
+tiny probabilities can retain finite logarithms after ordinary probability
+underflow. For n=1 both endpoint densities are 1/scale; for n>1 they
+are zero. Its n=1 case is uniform and n=2 is triangular.
+
+Line von Mises integrates exp(kappa*(cos(u)-1)), with the existing scaled
+Bessel normalization. A composite 16-point Gauss-Legendre rule limits
+each panel to width at most 0.25. Its support is a fixed real interval:
+there is no wrapping or circular arc interpretation. Both endpoint
+densities are finite. Kappa=0 gives uniform on [-pi,pi]. The log kernel
+uses -2*kappa*sin(u/2)**2 to avoid cancellation at the center.
+
+Tails integrate the requested support segment directly and complement the
+smaller tail when appropriate. Narrow interior intervals retain
+log(b-a)-log(scale), using physical endpoints before standardization can
+collapse their width. They use GL16 when width is less than 1e-5 times
+the distance to either endpoint. Wider intervals use the family-specific
+integrator. Interval clipping and support classification use binary64
+standard coordinates. If standardization underflows or rounds onto a
+support endpoint, that endpoint behavior applies. Thresholds extremely
+close to a rounded or affine endpoint remain ill-conditioned relative to
+input rounding; extra endpoint precision is not provided. One-sided infinite intervals and equal finite
+endpoints follow the common data conventions.
+
+Definitions: [Gauss hypergeometric](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gausshyper.html),
+[Irwin-Hall](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.irwinhall.html),
+and [line von Mises](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.vonmises_line.html).
+See the [validation record](../validation/bounded_final_censored_2026-11-18.md).

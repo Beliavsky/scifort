@@ -1,3 +1,38 @@
+## 2026-11-18 - Remaining bounded-family censoring
+
+The new Gauss hypergeometric, Irwin-Hall, and line von Mises censored
+likelihoods, fit overloads, native regression test, and independent checker
+are original MIT SciFort code from public mathematical specifications
+inspected on 2026-11-18:
+[Gauss hypergeometric](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gausshyper.html),
+[Irwin-Hall](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.irwinhall.html),
+and [line von Mises](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.vonmises_line.html).
+No upstream implementation was copied, translated, or vendored and no
+third-party license text or dependency is added.
+
+The validated `gausshyper_logkernel_integral` wrapper reuses SciFort's
+existing double-exponential log-integral implementation in the same family
+module. The new Irwin-Hall recurrence is a log-domain version of SciFort's
+existing positive cardinal B-spline recurrence, with direct log powers and
+analytic log integrals on the outer pieces, including subnormal positive
+endpoints. The independent oracle instead uses inclusion-exclusion polynomials. Line von Mises reuses the existing SciFort scaled Bessel
+normalization and integrates the defining density over real support segments.
+All retained numerical helpers keep their existing provenance and notices.
+
+Gaussian nodes and weights are computed per likelihood using the existing
+SciFort `roots_legendre` implementation (no global cache). The rule and
+polynomial exactness follow [NIST DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v).
+GL16 integrates interior Irwin-Hall polynomial pieces for n<=32; line von Mises
+uses panels no wider than 0.25 for kappa<=100. Narrow interior intervals
+retain physical widths before affine division. Shape and affine limits
+are explicit compatibility limitations, not claims of unrestricted parity.
+
+References use mpmath's beta/hypergeometric and Bessel normalizers, direct
+density quadrature, and independent Irwin-Hall polynomial sums. SciPy
+provides independent bounded scale-fit benchmarks. See the
+[API guide](docs/censored_fitting.md) and
+[validation record](validation/bounded_final_censored_2026-11-18.md).
+
 ## 2026-11-17 - ARGUS, Pearson III, and kappa4 censoring
 
 The new private callbacks, public likelihoods, fit overloads, native test,

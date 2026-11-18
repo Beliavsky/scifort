@@ -44,6 +44,9 @@ module scifort_stats
     use scifort_censored, only : argus_censored_loglikelihood, argus_censored_nnlf
     use scifort_censored, only : pearson3_censored_loglikelihood, pearson3_censored_nnlf
     use scifort_censored, only : kappa4_censored_loglikelihood, kappa4_censored_nnlf
+    use scifort_censored, only : gausshyper_censored_loglikelihood, gausshyper_censored_nnlf
+    use scifort_censored, only : irwinhall_censored_loglikelihood, irwinhall_censored_nnlf
+    use scifort_censored, only : vonmises_line_censored_loglikelihood, vonmises_line_censored_nnlf
     use scifort_censored, only : gengamma_censored_loglikelihood, gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
@@ -805,6 +808,9 @@ module scifort_stats
     public :: argus_censored_loglikelihood, argus_censored_nnlf
     public :: pearson3_censored_loglikelihood, pearson3_censored_nnlf
     public :: kappa4_censored_loglikelihood, kappa4_censored_nnlf
+    public :: gausshyper_censored_loglikelihood, gausshyper_censored_nnlf
+    public :: irwinhall_censored_loglikelihood, irwinhall_censored_nnlf
+    public :: vonmises_line_censored_loglikelihood, vonmises_line_censored_nnlf
     public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
     public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf

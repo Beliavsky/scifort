@@ -1,3 +1,15 @@
+## 2026-11-18 - Remaining bounded-family censoring
+
+- Add Gauss hypergeometric, Irwin-Hall, and real-line von Mises censored
+  likelihoods, NNLFs, and bounded fit overloads, retaining real-array fits.
+- Retain narrow physical intervals, singular/finite/zero endpoint densities,
+  log-domain tiny Irwin-Hall tails, and integer-constrained n fits.
+- Document validated shape/affine limits and the family-module
+  `gausshyper_logkernel_integral` SciFort extension.
+- Add checked/optimized native regressions, independent high-precision
+  references, and provenance. Coverage is 89 continuous families with
+  20 remaining; the bounded-family name gap is closed.
+
 ## 2026-11-17 - ARGUS, Pearson III, and kappa4 censoring
 
 - Add mixed censored likelihoods, NNLF, bounded fit overloads, and statistics exports.

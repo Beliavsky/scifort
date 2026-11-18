@@ -61,6 +61,9 @@ module scifort_fit
     use scifort_censored, only : argus_censored_nnlf
     use scifort_censored, only : pearson3_censored_nnlf
     use scifort_censored, only : kappa4_censored_nnlf
+    use scifort_censored, only : gausshyper_censored_nnlf
+    use scifort_censored, only : irwinhall_censored_nnlf
+    use scifort_censored, only : vonmises_line_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -846,7 +849,59 @@ module scifort_fit
         module procedure kappa4_fit, kappa4_fit_censored
     end interface kappa4_fit
 
+    interface gausshyper_fit
+        module procedure gausshyper_fit, gausshyper_fit_censored
+    end interface gausshyper_fit
+
+    interface irwinhall_fit
+        module procedure irwinhall_fit, irwinhall_fit_censored
+    end interface irwinhall_fit
+
+    interface vonmises_line_fit
+        module procedure vonmises_line_fit, vonmises_line_fit_censored
+    end interface vonmises_line_fit
+
 contains
+
+    subroutine gausshyper_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(6) !! finite lower bounds in a, b, c, z, loc, scale order
+        real(dp), intent(in) :: upper(6) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(6) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_gausshyper,lower,upper,result,guess, &
+            [.false., .false., .false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine gausshyper_fit_censored
+
+    subroutine irwinhall_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in n, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_irwinhall,lower,upper,result,guess, &
+            [.true., .false., .false.],max_iter,tolerance,data)
+    end subroutine irwinhall_fit_censored
+
+    subroutine vonmises_line_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in kappa, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_vonmises_line,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine vonmises_line_fit_censored
+
 
     subroutine argus_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2447,6 +2502,12 @@ contains
                 value = pearson3_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_kappa4)
                 value = kappa4_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_gausshyper)
+                value = gausshyper_censored_nnlf(censored,params(1),params(2),params(3),params(4),params(5),params(6))
+            case (family_irwinhall)
+                value = irwinhall_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_vonmises_line)
+                value = vonmises_line_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

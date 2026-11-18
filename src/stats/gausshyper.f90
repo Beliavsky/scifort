@@ -19,12 +19,36 @@ module scifort_gausshyper
 
     public :: gausshyper_cdf, gausshyper_isf, gausshyper_logcdf, gausshyper_logpdf
     public :: gausshyper_logsf, gausshyper_pdf, gausshyper_ppf, gausshyper_sf
+    public :: gausshyper_logkernel_integral
     public :: gausshyper_logpdf_derivatives
 
     real(dp), parameter :: quadrature_h_target = 0.03125_dp
     real(dp), parameter :: endpoint_log_cutoff = 55.0_dp
 
 contains
+
+    ! SciFort extension: unnormalized standard-coordinate interval integral.
+    pure function gausshyper_logkernel_integral(lo, hi, a, b, c, z) result(value)
+        implicit none
+        real(dp), intent(in) :: lo !! lower standard-coordinate endpoint in [0,1]
+        real(dp), intent(in) :: hi !! upper standard-coordinate endpoint in [lo,1]
+        real(dp), intent(in) :: a !! positive first beta shape
+        real(dp), intent(in) :: b !! positive second beta shape
+        real(dp), intent(in) :: c !! finite tilt exponent
+        real(dp), intent(in) :: z !! finite tilt parameter greater than -1
+        real(dp) :: value
+        value = quiet_nan(0.0_dp)
+        if (.not. valid_shapes(a,b,c,z)) return
+        if (.not. ieee_is_finite(lo) .or. .not. ieee_is_finite(hi)) return
+        if (lo < 0.0_dp .or. hi > 1.0_dp .or. hi < lo) return
+        if (lo >= 0.5_dp) then
+            ! Reflect before quadrature to retain distances from the upper endpoint.
+            value = log_segment_integral(1.0_dp-hi,1.0_dp-lo,b,a,c,-z/(1.0_dp+z)) &
+                -c*log1p_safe(z)
+        else
+            value = log_segment_integral(lo,hi,a,b,c,z)
+        end if
+    end function gausshyper_logkernel_integral
 
     pure elemental function gausshyper_logpdf(x, a, b, c, z, loc, scale) result(y)
         real(dp), intent(in) :: x !! point at which the log density is evaluated

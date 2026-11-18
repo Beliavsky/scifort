@@ -66,18 +66,22 @@ program censored_reference_driver
     use scifort_censored, only : argus_censored_loglikelihood
     use scifort_censored, only : pearson3_censored_loglikelihood
     use scifort_censored, only : kappa4_censored_loglikelihood
+    use scifort_censored, only : gausshyper_censored_loglikelihood
+    use scifort_censored, only : irwinhall_censored_loglikelihood
+    use scifort_censored, only : vonmises_line_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
     integer :: family, nu, nl, nr, ni, ios, i
-    real(dp) :: c, second_shape, third_shape, loc, scale, value
+    real(dp) :: c, second_shape, third_shape, fourth_shape, loc, scale, value
     do
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86])) &
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87])) &
             read(*, *) second_shape
-        if (family == 53 .or. family == 80) read(*, *) third_shape
+        if (family == 53 .or. family == 80 .or. family == 87) read(*, *) third_shape
+        if (family == 87) read(*, *) fourth_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -92,6 +96,12 @@ program censored_reference_driver
             value = genextreme_censored_loglikelihood(data,c,loc,scale)
         case (83)
             value = crystalball_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (87)
+            value = gausshyper_censored_loglikelihood(data,c,second_shape,third_shape,fourth_shape,loc,scale)
+        case (88)
+            value = irwinhall_censored_loglikelihood(data,c,loc,scale)
+        case (89)
+            value = vonmises_line_censored_loglikelihood(data,c,loc,scale)
         case (84)
             value = argus_censored_loglikelihood(data,c,loc,scale)
         case (85)

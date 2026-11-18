@@ -5,6 +5,9 @@
 ! https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
 module scifort_censored
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
+    use scifort_gausshyper, only : gausshyper_logkernel_integral
+    use scifort_vonmises, only : vonmises_standard_logpdf
+    use scifort_orthogonal_roots, only : roots_legendre
     use scifort_kinds, only : dp
     use scifort_constants, only : scifort_log_sqrt_two_pi, scifort_log_two, scifort_pi
     use scifort_empirical_distribution, only : censored_data
@@ -24,6 +27,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: gausshyper_censored_loglikelihood, gausshyper_censored_nnlf
+    public :: irwinhall_censored_loglikelihood, irwinhall_censored_nnlf
+    public :: vonmises_line_censored_loglikelihood, vonmises_line_censored_nnlf
     public :: argus_censored_loglikelihood, argus_censored_nnlf
     public :: pearson3_censored_loglikelihood, pearson3_censored_nnlf
     public :: kappa4_censored_loglikelihood, kappa4_censored_nnlf
@@ -136,6 +142,362 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Bounded censoring: family, loc, scale, shapes, normalization, GL16 rule.
+    pure subroutine bd_prepare(par, valid)
+        implicit none
+        real(dp), intent(inout) :: par(40) !! packed distribution parameters and local rule
+        logical, intent(out) :: valid !! true when the validated numerical contract holds
+        real(dp), allocatable :: nodes(:), weights(:)
+        real(dp) :: extent
+        integer :: status
+        valid = .false.
+        if (.not. all(ieee_is_finite(par))) return
+        if (par(3) < tiny(1.0_dp)) return
+        ! Keep affine endpoints finite and avoid severe location cancellation.
+        if (abs(par(2))/max(1.0_dp,par(3)) > 1.0e4_dp) return
+        if (par(3) < 1.0_dp) then
+            if (abs(par(2)) > 1.0e4_dp*par(3)) return
+        end if
+        select case (int(par(1)))
+        case (1)
+            if (minval(par(4:5)) < 0.1_dp .or. maxval(par(4:5)) > 20.0_dp) return
+            if (abs(par(6)) > 10.0_dp .or. par(7) < -0.5_dp .or. par(7) > 10.0_dp) return
+            extent = 1.0_dp
+            par(8) = gausshyper_logkernel_integral(0.0_dp,1.0_dp,par(4),par(5),par(6),par(7))
+        case (2)
+            if (par(4) < 1.0_dp .or. par(4) > 32.0_dp) return
+            if (par(4) /= real(nint(par(4)),dp)) return
+            extent = par(4)
+        case (3)
+            if (par(4) < 0.0_dp .or. par(4) > 100.0_dp) return
+            extent = scifort_pi
+            par(8) = -vonmises_standard_logpdf(0.0_dp,par(4))
+        end select
+        if (par(3) > huge(1.0_dp)/(2.0_dp*extent)) return
+        if (abs(par(2)) > huge(1.0_dp)-par(3)*extent) return
+        call roots_legendre(16,nodes,weights,status=status)
+        if (status /= 0) return
+        par(9:24) = nodes
+        par(25:40) = weights
+        valid = all(ieee_is_finite(par))
+    end subroutine bd_prepare
+
+    pure subroutine bd_support(par, lo, hi)
+        implicit none
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp), intent(out) :: lo, hi !! standardized support endpoints
+        lo = 0.0_dp
+        hi = 1.0_dp
+        if (int(par(1)) == 2) hi = par(4)
+        if (int(par(1)) == 3) then
+            lo = -scifort_pi
+            hi = scifort_pi
+        end if
+    end subroutine bd_support
+
+    pure function bd_spline(x, order) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! standard coordinate
+        integer, intent(in) :: order !! cardinal B-spline order in [1,33]
+        real(dp) :: value, old(0:34), new(0:34), t, neginf
+        integer :: k, r
+        neginf = negative_infinity(0.0_dp)
+        value = neginf
+        if (x < 0.0_dp .or. x > real(order,dp)) return
+        if (order == 1) then
+            value = 0.0_dp
+            return
+        end if
+        if (x == 0.0_dp .or. x == real(order,dp)) return
+        ! The first/last piece is a single power, even when its density underflows.
+        t = min(x,real(order,dp)-x)
+        if (t <= 1.0_dp) then
+            value = real(order-1,dp)*log(t)-log_gamma(real(order,dp))
+            return
+        end if
+        old = neginf
+        do k = 0, order
+            t = x-real(k,dp)
+            if (t >= 0.0_dp .and. t < 1.0_dp) old(k) = 0.0_dp
+        end do
+        do r = 2, order
+            new = neginf
+            do k = 0, order+1-r
+                t = x-real(k,dp)
+                if (old(k) /= neginf .and. t > 0.0_dp) then
+                    new(k) = log(t)+old(k)-log(real(r-1,dp))
+                end if
+                if (old(k+1) /= neginf .and. t < real(r,dp)) then
+                    new(k) = bounded_logadd(new(k), &
+                        log(real(r,dp)-t)+old(k+1)-log(real(r-1,dp)))
+                end if
+            end do
+            old = new
+        end do
+        value = old(0)
+    end function bd_spline
+
+    pure function bd_standard_pdf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! standard coordinate inside the support
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp) :: value
+        value = 0.0_dp
+        select case (int(par(1)))
+        case (1)
+            if (x == 0.0_dp .and. par(4) /= 1.0_dp) then
+                value = sign(positive_infinity(x),1.0_dp-par(4))
+                return
+            end if
+            if (x == 1.0_dp .and. par(5) /= 1.0_dp) then
+                value = sign(positive_infinity(x),1.0_dp-par(5))
+                return
+            end if
+            if (par(4) /= 1.0_dp) value = (par(4)-1.0_dp)*log(x)
+            if (par(5) /= 1.0_dp) value = value+(par(5)-1.0_dp)*log1p_safe(-x)
+            value = value-par(6)*log1p_safe(par(7)*x)-par(8)
+        case (2)
+            value = bd_spline(x,int(par(4)))
+        case (3)
+            ! -2*sin(x/2)**2 avoids cancellation in cos(x)-1 near zero.
+            value = -2.0_dp*par(4)*sin(x/2.0_dp)**2-par(8)
+        end select
+    end function bd_standard_pdf
+
+    pure function bd_lpdf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! physical observation
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp) :: value, z, lo, hi
+        z = location_scale_z(x,par(2:3))
+        call bd_support(par,lo,hi)
+        value = negative_infinity(x)
+        if (z < lo .or. z > hi) return
+        value = bd_standard_pdf(z,par)-log(par(3))
+    end function bd_lpdf
+
+    pure function bd_gauss(lo, logwidth, par) result(value)
+        implicit none
+        real(dp), intent(in) :: lo !! lower standard coordinate
+        real(dp), intent(in) :: logwidth !! logarithm of positive standard width
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters and GL16 rule
+        real(dp) :: value, width, x
+        integer :: j
+        width = exp(logwidth)
+        value = negative_infinity(0.0_dp)
+        do j = 1, 16
+            x = lo+width*((1.0_dp+par(8+j))/2.0_dp)
+            value = bounded_logadd(value,log(par(24+j))+bd_standard_pdf(x,par))
+        end do
+        value = value+logwidth-scifort_log_two
+    end function bd_gauss
+
+    pure function bd_mass(lo, hi, par) result(value)
+        implicit none
+        real(dp), intent(in) :: lo, hi !! ordered standard endpoints clipped to support
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp) :: value, a, b, h, part, left, right, ratio
+        integer :: i, panels
+        value = negative_infinity(0.0_dp)
+        if (lo >= hi) return
+        select case (int(par(1)))
+        case (1)
+            value = gausshyper_logkernel_integral(lo,hi,par(4),par(5),par(6),par(7))-par(8)
+        case (2)
+            ! A degree-(n-1) polynomial on each unit cell: GL16 is exact for n<=32.
+            left = lo
+            right = hi
+            if (lo > par(4)/2.0_dp) then
+                left = par(4)-hi
+                right = par(4)-lo
+            end if
+            if (right <= 1.0_dp) then
+                ! Integrate the outer power analytically, including subnormal widths.
+                value = par(4)*log(right)-log_gamma(par(4)+1.0_dp)
+                if (left > 0.0_dp) then
+                    ratio = (right-left)/right
+                    if (ratio < 1.0_dp) value = value &
+                        +log(-expm1_safe(par(4)*log1p_safe(-ratio)))
+                end if
+                return
+            end if
+            a = left
+            do while (a < right)
+                b = min(right,real(floor(a)+1,dp))
+                part = bd_gauss(a,log(b-a),par)
+                value = bounded_logadd(value,part)
+                a = b
+            end do
+        case (3)
+            panels = max(1,ceiling(4.0_dp*(hi-lo)))
+            h = (hi-lo)/real(panels,dp)
+            do i = 0, panels-1
+                a = lo+real(i,dp)*h
+                value = bounded_logadd(value,bd_gauss(a,log(h),par))
+            end do
+        end select
+        value = min(0.0_dp,value)
+    end function bd_mass
+
+    pure function bd_lcdf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! physical left-censoring threshold
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp) :: value, z, lo, hi, tail
+        z = location_scale_z(x,par(2:3))
+        call bd_support(par,lo,hi)
+        value = negative_infinity(x)
+        if (z <= lo) return
+        value = 0.0_dp
+        if (z >= hi) return
+        value = bd_mass(lo,z,par)
+        if (value > -scifort_log_two) then
+            tail = bd_mass(z,hi,par)
+            value = ig_complement(tail)
+        end if
+    end function bd_lcdf
+
+    pure function bd_lsf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! physical right-censoring threshold
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp) :: value, z, lo, hi, tail
+        z = location_scale_z(x,par(2:3))
+        call bd_support(par,lo,hi)
+        value = 0.0_dp
+        if (z <= lo) return
+        value = negative_infinity(x)
+        if (z >= hi) return
+        value = bd_mass(z,hi,par)
+        if (value > -scifort_log_two) then
+            tail = bd_mass(lo,z,par)
+            value = ig_complement(tail)
+        end if
+    end function bd_lsf
+
+    pure function bd_interval(a, b, par) result(value)
+        implicit none
+        real(dp), intent(in) :: a, b !! ordered finite physical interval endpoints
+        real(dp), intent(in) :: par(:) !! prepared bounded family parameters
+        real(dp) :: value, za, zb, lo, hi, lw, margin
+        za = location_scale_z(a,par(2:3))
+        zb = location_scale_z(b,par(2:3))
+        call bd_support(par,lo,hi)
+        value = negative_infinity(a)
+        if (za >= hi .or. zb <= lo) return
+        if (za <= lo .and. zb >= hi) then
+            value = 0.0_dp
+            return
+        end if
+        if (za > lo .and. zb < hi) then
+            ! Retain physical width even when the two standardized coordinates coincide.
+            lw = log_distance(b,a)-log(par(3))
+            margin = min(za-lo,hi-zb)
+            if (lw < log(margin)-log(1.0e5_dp)) then
+                value = bd_gauss(za,lw,par)
+                return
+            end if
+        end if
+        value = bd_mass(max(lo,za),min(hi,zb),par)
+    end function bd_interval
+
+    pure function gausshyper_censored_loglikelihood(data, a, b, c, z, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! first beta shape in [0.1,20]
+        real(dp), intent(in) :: b !! second beta shape in [0.1,20]
+        real(dp), intent(in) :: c !! tilt exponent in [-10,10]
+        real(dp), intent(in) :: z !! tilt parameter in [-0.5,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive normal scale, default one
+        real(dp) :: value, params(40)
+        logical :: valid
+        params = 0.0_dp
+        params(1:3) = [1.0_dp,0.0_dp,1.0_dp]
+        params(4) = a
+        params(5) = b
+        params(6) = c
+        params(7) = z
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        call bd_prepare(params,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,bd_lpdf,bd_lcdf,bd_lsf,bd_interval)
+    end function gausshyper_censored_loglikelihood
+
+    pure function gausshyper_censored_nnlf(data, a, b, c, z, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! first beta shape in [0.1,20]
+        real(dp), intent(in) :: b !! second beta shape in [0.1,20]
+        real(dp), intent(in) :: c !! tilt exponent in [-10,10]
+        real(dp), intent(in) :: z !! tilt parameter in [-0.5,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive normal scale, default one
+        real(dp) :: value
+        value = -gausshyper_censored_loglikelihood(data,a, b, c, z,loc,scale)
+    end function gausshyper_censored_nnlf
+
+    pure function irwinhall_censored_loglikelihood(data, n, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: n !! integer number of uniforms in [1,32]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive normal scale, default one
+        real(dp) :: value, params(40)
+        logical :: valid
+        params = 0.0_dp
+        params(1:3) = [2.0_dp,0.0_dp,1.0_dp]
+        params(4) = n
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        call bd_prepare(params,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,bd_lpdf,bd_lcdf,bd_lsf,bd_interval)
+    end function irwinhall_censored_loglikelihood
+
+    pure function irwinhall_censored_nnlf(data, n, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: n !! integer number of uniforms in [1,32]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive normal scale, default one
+        real(dp) :: value
+        value = -irwinhall_censored_loglikelihood(data,n,loc,scale)
+    end function irwinhall_censored_nnlf
+
+    pure function vonmises_line_censored_loglikelihood(data, kappa, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: kappa !! concentration in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive normal scale, default one
+        real(dp) :: value, params(40)
+        logical :: valid
+        params = 0.0_dp
+        params(1:3) = [3.0_dp,0.0_dp,1.0_dp]
+        params(4) = kappa
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        call bd_prepare(params,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,bd_lpdf,bd_lcdf,bd_lsf,bd_interval)
+    end function vonmises_line_censored_loglikelihood
+
+    pure function vonmises_line_censored_nnlf(data, kappa, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: kappa !! concentration in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive normal scale, default one
+        real(dp) :: value
+        value = -vonmises_line_censored_loglikelihood(data,kappa,loc,scale)
+    end function vonmises_line_censored_nnlf
+
 
     ! Independent gamma and kappa transformations; see CODE_PROVENANCE.md.
     pure function gk_gamma_mass(ly, ld, shape) result(value)

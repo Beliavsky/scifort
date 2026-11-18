@@ -1,6 +1,6 @@
 # Censored distribution coverage gaps
 
-Inventory updated: 2026-11-17.
+Inventory updated: 2026-11-18.
 
 For complete native Fortran coverage, the eventual target is censored
 likelihoods for all named univariate continuous families, with explicit
@@ -9,11 +9,11 @@ interval conventions for angular distributions. SciPy's
 API targets univariate continuous fitting.
 
 The current SciFort fitting registry in [src/fit.f90](../src/fit.f90)
-contains 109 continuous families. Eighty-six already have family-specific censored
+contains 109 continuous families. Eighty-nine already have family-specific censored
 likelihoods in [src/censored.f90](../src/censored.f90): `normal`,
 `exponential`, `weibull`, `lognormal`, `gamma`, `beta`, `logistic`,
 `gumbel_r`, `gumbel_l`, `laplace`, `cauchy`, `halfcauchy`, `halflogistic`,
-`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, and `kappa4`. That leaves 23 candidates below.
+`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, and `vonmises_line`. That leaves 20 candidates below.
 
 Names follow SciFort's API. The count covers named distribution families in
 the current fitting registry, rather than histogram-backed or custom models.
@@ -23,6 +23,10 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 [censored likelihoods and fitting](censored_fitting.md) for their contracts.
 
 Additional numerical coverage remains within implemented families:
+Gauss hypergeometric censoring requires 0.1<=a,b<=20, abs(c)<=10, -0.5<=z<=10;
+Irwin-Hall requires integer 1<=n<=32; line von Mises requires 0<=kappa<=100;
+these three require normal scale, abs(loc)/scale<=1e4, and representable
+affine supports with scale*extent<=huge/2;
 ARGUS censoring currently requires 1e-6<=chi<=100;
 Pearson III uses the existing normal approximation for abs(skew)<1.6e-5,
 otherwise requires 0.002<=abs(skew)<=2000;
@@ -54,15 +58,14 @@ has the same numerical difficulty or can use the same fitting algorithm.
 | Work group | Count | Remaining distributions |
 | --- | ---: | --- |
 | Lifetime and tail models | 1 | `rice` |
-| Bounded and truncated distributions | 3 | `gausshyper`, `irwinhall`, `vonmises_line` |
 | Additional shape and skew families | 4 | `exponnorm`, `skewnorm`, `tukeylambda`, `dpareto_lognorm` |
 | Numerically demanding or specialist families | 13 | `ncx2`, `ncf`, `nct`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `landau`, `levy_stable`, `rel_breitwigner`, `studentized_range`, `ksone`, `kstwo`, `kstwobign` |
 | Angular distributions requiring explicit interval conventions | 2 | `vonmises`, `wrapcauchy` |
-| **Total** | **23** | |
+| **Total** | **20** | |
 
 For angular distributions, distinguish intervals in a fixed coordinate range
-from arcs crossing the angular boundary. `vonmises_line` belongs in the
-ordinary bounded group: SciPy explicitly defines it on the real line, while
+from arcs crossing the angular boundary. `vonmises_line` is already covered with
+ordinary bounded intervals: SciPy explicitly defines it on the real line, while
 `vonmises` has a circular CDF convention. See
 [SciPy's von Mises documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.vonmises.html)
 and [wrapped Cauchy documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wrapcauchy.html).
@@ -86,14 +89,15 @@ joint probability calculations; it is outside this univariate inventory.
 
 1. Add Rice with stable noncentral radial tails and extend the documented
    generalized-gamma and truncation parameter ranges.
-2. Extend the remaining bounded and truncated models with explicit support
-   and interval conventions.
+2. Extend the bounded-family numerical ranges and retain explicit support
+   and interval conventions; all three formerly remaining bounded names
+   now have censored likelihoods and fits.
 3. Continue the remaining shape and skew models through reusable stable tails.
 4. Continue through the other groups, prioritizing reusable stable kernels
    and numerical correctness over raw distribution counts.
 
 Several additions can share validated kernels, so the remaining work need
-not mean 23 independent numerical implementations. Likelihood support and
+not mean 20 independent numerical implementations. Likelihood support and
 fitting restrictions should be tracked separately as families are added.
 Native Fortran coverage takes priority; C ABI and wrapper expansion remain
 deferred. See the broader [SciPy gaps inventory](scipy_gaps.md).
