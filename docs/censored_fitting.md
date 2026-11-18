@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, Tukey lambda, one-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+tukeylambda_censored_loglikelihood(data, lam [, loc, scale])
+ksone_censored_loglikelihood(data, n [, loc, scale])
+vonmises_censored_loglikelihood(data, kappa [, loc, scale])
 geninvgauss_censored_loglikelihood(data, p, b [, loc, scale])
 norminvgauss_censored_loglikelihood(data, a, b [, loc, scale])
 genhyperbolic_censored_loglikelihood(data, p, a, b [, loc, scale])
@@ -2771,3 +2774,83 @@ is unrepresentable remains an additional numerical gap.
 
 See [Bessel-family numerical validation](../validation/bessel_censored_2026-11-18.md)
 for the independent references, commands, and measured accuracy.
+
+
+## Tukey lambda censoring
+
+`tukeylambda_censored_loglikelihood`, its `_censored_nnlf`, and the
+`tukeylambda_fit(censored_data, lower, upper, result, ...)` overload use
+`(lam,loc,scale)` parameter order. They are exported by `scifort_stats`.
+The current censored methods require `abs(lam)<=5` and either `lam=0` or
+`abs(lam)>=1e-6`. Location is finite and scale is positive finite.
+For positive lambda, scale must be normal, `abs(loc)/scale<=10`, and
+`extent=scale/lam<=huge/4`; both finite endpoints `loc-/+extent` must be
+representable and distinct from the location. Unsupported parameters return
+NaN, even for empty data. These bounds apply only to the censored methods.
+
+Negative/zero lambda has real-line support. Positive lambda has the finite
+computed affine support `[loc-scale/lam,loc+scale/lam]`. Tail evaluation near
+these endpoints retains the physical distance to the computed endpoint.
+Central inversion instead uses the quantile itself, avoiding subtraction of
+a very large support radius when positive lambda is small. Inversion solves
+for log probability, retaining extremely small probabilities and densities.
+The lambda-zero case uses the logistic law directly. Some SciPy versions
+approximate sufficiently small nonzero lambda as zero; the new methods use
+the nonzero-lambda quantile formula over the documented envelope.
+
+At finite endpoints the censored density uses its mathematical one-sided
+limit: zero for `0<lam<1`, `1/(2*scale)` for `lam=1`, and `1/scale` for
+`lam>1`. This intentionally differs from the current scalar SciFort
+`tukeylambda_logpdf`, which returns negative infinity when its computed CDF
+is an endpoint probability. Existing scalar APIs are unchanged. In
+particular, lambda 1 is uniform on the affine `[-1,1]` branch and lambda 2
+is uniform on the affine `[-0.5,0.5]` branch.
+
+## One-sided finite-sample KS censoring
+
+`ksone_censored_loglikelihood`, `_censored_nnlf`, and the censored `ksone_fit`
+overload use `(n,loc,scale)` order. The current methods require integer
+`1<=n<=100`, normal positive `scale<=huge/4`, `abs(loc)/scale<=10`, and a
+finite noncollapsed upper endpoint `loc+scale`. The fit treats `n` as an
+integer parameter; equality of bounds can fix it. Existing real-array fit
+calls remain available. Extending the sample-size range remains future work.
+
+The finite computed support is `[loc,loc+scale]`. Positive Smirnov survival
+sums provide ordinary tails; direct endpoint polynomials and log-distance
+formulas retain tiny complementary probabilities and intervals after
+probability underflow. Narrow intervals use positive density quadrature,
+split at the first density knot `loc+scale/n`. At that exact computed knot,
+exact observations use the midpoint of the one-sided densities, consistent
+with SciFort's existing knot convention. Intervals use the appropriate
+one-sided density, rather than the midpoint. Some SciPy values at knots use
+a different representative density; this does not change interval probability.
+
+For `n=1` this is uniform on the affine `[0,1]` support, including finite
+endpoint density. For `n>1`, exact observations at either support endpoint
+retain SciFort's existing zero-density convention. Values outside support
+have zero density; CDF/SF endpoint limits are zero/one in the usual order.
+
+## Fixed-branch von Mises censoring: SciFort extension
+
+The **censored method and censored fit overload are a SciFort extension**:
+`vonmises_censored_loglikelihood`, `_censored_nnlf`, and
+`vonmises_fit(censored_data, lower, upper, result, ...)` interpret all
+observations on the fixed affine branch
+`[loc-pi*scale,loc+pi*scale]`. Parameter order is `(kappa,loc,scale)`.
+They delegate to the existing `vonmises_line` censored implementation and
+inherit its numerical limits: `0<=kappa<=100`, normal positive scale,
+`abs(loc)/scale<=1e4`, and representable noncollapsed finite support with
+`pi*scale<=huge/2`. Existing real-array circular fits are unchanged.
+
+This method does not evaluate SciPy's periodic, unwrapped circular CDF as
+an ordinary probability. Angles are not reduced modulo `2*pi`; reversed
+intervals are invalid, including intervals intended to cross the branch
+boundary. Censoring of crossing arcs needs a separate representation and
+remains future work. `scale` retains SciFort's affine-scale convention;
+SciPy documents different scale handling for the circular distribution.
+
+All three new methods retain the common data contract: valid empty
+likelihoods equal zero; empty fits are invalid; equal finite interval
+endpoints are exact observations; one infinite interval endpoint uses a
+one-sided probability; two infinite endpoints and NaNs are invalid.
+See [numerical validation](../validation/quantile_ks_censored_2026-11-18.md).

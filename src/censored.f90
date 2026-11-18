@@ -5,6 +5,7 @@
 ! https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
 module scifort_censored
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
+    use scifort_ksone, only : ksone_logsf
     use scifort_bessel_k, only : log_besselk_scaled
     use scifort_rel_breitwigner, only : rel_breitwigner_cdf, rel_breitwigner_sf
     use scifort_gausshyper, only : gausshyper_logkernel_integral
@@ -29,6 +30,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: tukeylambda_censored_loglikelihood, tukeylambda_censored_nnlf
+    public :: ksone_censored_loglikelihood, ksone_censored_nnlf
+    public :: vonmises_censored_loglikelihood, vonmises_censored_nnlf
     public :: geninvgauss_censored_loglikelihood, geninvgauss_censored_nnlf
     public :: norminvgauss_censored_loglikelihood, norminvgauss_censored_nnlf
     public :: genhyperbolic_censored_loglikelihood, genhyperbolic_censored_nnlf
@@ -156,6 +160,549 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Log-probability inversion of the Tukey quantile; see CODE_PROVENANCE.md.
+    pure function tl_target(lq, lam, endpoint) result(v)
+        implicit none
+        real(dp), intent(in) :: lq !! log smaller probability, at most -log(2)
+        real(dp), intent(in) :: lam !! nonzero shape with abs(lam) in [1e-6,5]
+        logical, intent(in) :: endpoint !! positive-shape endpoint-gap representation
+        real(dp) :: v, lp, delta, small
+        lp = ig_complement(lq)
+        if (endpoint) then
+            small = lq
+            if (lq > -36.0_dp) small = log(-lp)
+            v = bounded_logadd(log_exponential_mass(log(lam)+small),lam*lq)-log(lam)
+        else
+            delta = max(0.0_dp,lp-lq)
+            if (delta == 0.0_dp) then
+                v = negative_infinity(0.0_dp)
+            else if (lam > 0.0_dp) then
+                v = lam*lp+ig_complement(-lam*delta)-log(lam)
+            else
+                v = lam*lq+ig_complement(lam*delta)-log(-lam)
+            end if
+        end if
+    end function tl_target
+
+    pure subroutine tl_logs(target, p, endpoint, lp, lq, ld)
+        implicit none
+        real(dp), intent(in) :: target !! log endpoint gap or log abs(z), selected by endpoint
+        real(dp), intent(in) :: p(:) !! shape, location, scale, finite lower/upper bounds
+        logical, intent(in) :: endpoint !! target is a positive-shape endpoint gap
+        real(dp), intent(out) :: lp, lq, ld !! log large/small probabilities and standardized density
+        real(dp) :: lo, hi, mid, q, lam
+        integer :: k
+        lam = p(1)
+        if (lam == 0.0_dp) then
+            if (target > log(huge(1.0_dp))) then
+                lq = negative_infinity(0.0_dp)
+            else
+                lq = -log1pexp(exp(target))
+            end if
+        else
+            lo = -1.0_dp
+            hi = -scifort_log_two
+            do k = 1, 40
+                q = tl_target(lo,lam,endpoint)
+                if (endpoint) then
+                    if (q <= target) exit
+                else
+                    if (q >= target) exit
+                end if
+                lo = 2.0_dp*lo
+            end do
+            do k = 1, 100
+                mid = lo+(hi-lo)/2.0_dp
+                if (mid == lo .or. mid == hi) exit
+                q = tl_target(mid,lam,endpoint)
+                if ((endpoint .and. q < target) .or. &
+                    (.not. endpoint .and. q > target)) then
+                    lo = mid
+                else
+                    hi = mid
+                end if
+            end do
+            lq = lo+(hi-lo)/2.0_dp
+        end if
+        lp = ig_complement(lq)
+        ld = -bounded_logadd((lam-1.0_dp)*lp,(lam-1.0_dp)*lq)
+    end subroutine tl_logs
+
+    pure subroutine tl_at(x, p, lp, lq, ld)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: p(:) !! shape, location, scale, finite lower/upper bounds
+        real(dp), intent(out) :: lp, lq, ld !! physical log CDF, SF and density
+        real(dp) :: target, temp
+        logical :: endpoint
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        ld = lp
+        if (p(1) > 0.0_dp) then
+            if (x < p(4) .or. x > p(5)) then
+                if (x > p(5)) then
+                    lp = 0.0_dp
+                    lq = negative_infinity(0.0_dp)
+                end if
+                return
+            end if
+            if (x == p(4) .or. x == p(5)) then
+                if (x == p(5)) then
+                    lp = 0.0_dp
+                    lq = negative_infinity(0.0_dp)
+                end if
+                if (p(1) >= 1.0_dp) ld = -log(p(3))
+                if (p(1) == 1.0_dp) ld = -scifort_log_two-log(p(3))
+                return
+            end if
+        end if
+        if (x == p(2)) then
+            lp = -scifort_log_two
+            lq = lp
+            ld = (p(1)-2.0_dp)*scifort_log_two-log(p(3))
+            return
+        end if
+        target = log_distance(max(x,p(2)),min(x,p(2)))-log(p(3))
+        endpoint = .false.
+        if (p(1) > 0.0_dp) then
+            endpoint = target > -log(p(1))-scifort_log_two
+            if (endpoint) then
+                if (x < p(2)) then
+                    target = log_distance(x,p(4))-log(p(3))
+                else
+                    target = log_distance(p(5),x)-log(p(3))
+                end if
+            end if
+        end if
+        call tl_logs(target,p,endpoint,lp,lq,ld)
+        if (x < p(2)) then
+            temp = lp
+            lp = lq
+            lq = temp
+        end if
+        ld = ld-log(p(3))
+    end subroutine tl_at
+
+    pure function tl_pdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lp, lq
+        call tl_at(x,p,lp,lq,v)
+    end function tl_pdf
+
+    pure function tl_cdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lq, ld
+        call tl_at(x,p,v,lq,ld)
+    end function tl_cdf
+
+    pure function tl_sf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lp, ld
+        call tl_at(x,p,lp,v,ld)
+    end function tl_sf
+
+    pure function tl_interval(a, b, p) result(v)
+        implicit none
+        real(dp), intent(in) :: a, b !! finite strictly ordered physical endpoints
+        real(dp), intent(in) :: p(:) !! shape, location, scale, lower/upper bounds
+        real(dp) :: v, left, right, lw, ld, lc, target, offset, t, weight, lp, lq
+        real(dp) :: nodes(3), weights(3), ratio, z
+        logical :: endpoint
+        integer :: k
+        left = a
+        right = b
+        if (p(1) > 0.0_dp) then
+            left = max(a,p(4))
+            right = min(b,p(5))
+            if (right <= left) then
+                v = negative_infinity(0.0_dp)
+                return
+            end if
+            if (left == p(4)) then
+                v = tl_cdf(right,p)
+                return
+            else if (right == p(5)) then
+                v = tl_sf(left,p)
+                return
+            end if
+        end if
+        lw = log_distance(right,left)
+        ratio = lw-log(p(3))
+        if (p(1) > 0.0_dp) then
+            ratio = max(ratio,lw-log_distance(left,p(4)),lw-log_distance(p(5),right))
+        else if (left > p(2)) then
+            ratio = lw-bounded_logadd(log(p(3)),log_distance(left,p(2)))
+        else if (right < p(2)) then
+            ratio = lw-bounded_logadd(log(p(3)),log_distance(p(2),right))
+        end if
+        if (ratio < log(1.0e-4_dp)) then
+            nodes = [0.5_dp,(1.0_dp-sqrt(3.0_dp/5.0_dp))/2.0_dp, &
+                (1.0_dp+sqrt(3.0_dp/5.0_dp))/2.0_dp]
+            weights = [4.0_dp/9.0_dp,5.0_dp/18.0_dp,5.0_dp/18.0_dp]
+            v = negative_infinity(0.0_dp)
+            do k = 1, 3
+                t = nodes(k)
+                weight = weights(k)
+                offset = lw+log(t)
+                endpoint = .false.
+                if (left >= p(2) .or. right <= p(2)) then
+                    if (left >= p(2)) then
+                        ld = negative_infinity(0.0_dp)
+                        if (left > p(2)) ld = log_distance(left,p(2))
+                        target = bounded_logadd(ld,offset)-log(p(3))
+                    else
+                        ld = log_distance(p(2),left)
+                        target = log_difference(ld,offset)-log(p(3))
+                    end if
+                    if (p(1) > 0.0_dp) then
+                        endpoint = target > -log(p(1))-scifort_log_two
+                        if (endpoint) then
+                            if (left >= p(2)) then
+                                ld = log_distance(p(5),left)
+                                target = log_difference(ld,offset)-log(p(3))
+                            else
+                                ld = log_distance(left,p(4))
+                                target = bounded_logadd(ld,offset)-log(p(3))
+                            end if
+                        end if
+                    end if
+                else
+                    z = location_scale_z(left,p(2:3))+t*exp(lw-log(p(3)))
+                    target = bounded_log(abs(z))
+                end if
+                call tl_logs(target,p,endpoint,lp,lq,lc)
+                v = bounded_logadd(v,log(weight)+lc)
+            end do
+            v = v+lw-log(p(3))
+        else
+            v = tail_interval(left,right,p,tl_cdf,tl_sf)
+            if (v > -scifort_log_two) then
+                lp = tl_cdf(left,p)
+                lq = tl_sf(right,p)
+                v = ig_complement(bounded_logadd(lp,lq))
+            end if
+        end if
+    end function tl_interval
+
+    ! Derivative of the finite positive Smirnov survival sum.
+    pure function ko_regular(z, n) result(v)
+        implicit none
+        real(dp), intent(in) :: z !! standardized interior coordinate in [1/n,1-1/n]
+        integer, intent(in) :: n !! sample size in [2,100]
+        real(dp) :: v, total, correction, term, a, b, g, logt, next, adjusted
+        integer :: j, m
+        total = 0.0_dp
+        correction = 0.0_dp
+        m = min(n-2,floor(real(n,dp)*(1.0_dp-z)))
+        do j = 0, m
+            a = z+real(j,dp)/real(n,dp)
+            b = 1.0_dp-z-real(j,dp)/real(n,dp)
+            if (b <= 0.0_dp) cycle
+            if (j == 0) then
+                logt = real(n,dp)*log(b)
+                g = -real(n,dp)/b
+            else
+                logt = log(z)+log_gamma(real(n+1,dp))-log_gamma(real(j+1,dp)) &
+                    -log_gamma(real(n-j+1,dp))+real(j-1,dp)*log(a) &
+                    +real(n-j,dp)*log(b)
+                g = 1.0_dp/z+real(j-1,dp)/a-real(n-j,dp)/b
+            end if
+            term = -exp(logt)*g
+            adjusted = term-correction
+            next = total+adjusted
+            correction = (next-total)-adjusted
+            total = next
+        end do
+        v = bounded_log(max(0.0_dp,total))
+    end function ko_regular
+
+    pure function ko_density(z, lu, p, side) result(v)
+        implicit none
+        real(dp), intent(in) :: z !! standardized coordinate in (0,1)
+        real(dp), intent(in) :: lu !! log standardized distance to the upper endpoint
+        real(dp), intent(in) :: p(:) !! n, location, scale, upper endpoint
+        integer, intent(in) :: side !! at first knot: -1 left, +1 right, 0 midpoint
+        real(dp) :: v, low, high
+        integer :: n
+        n = int(p(1))
+        if (n == 1) then
+            v = 0.0_dp
+        else if (z < 1.0_dp/p(1)) then
+            v = real(n-2,dp)*log1p_safe(z)+log1p_safe(p(1)*z)
+        else if (z == 1.0_dp/p(1)) then
+            low = real(n-2,dp)*log1p_safe(z)+log1p_safe(p(1)*z)
+            high = ko_regular(z,n)
+            v = low
+            if (side > 0) v = high
+            if (side == 0) v = bounded_logadd(low,high)-scifort_log_two
+        else if (z >= 1.0_dp-1.0_dp/p(1)) then
+            v = log(p(1))+real(n-1,dp)*lu
+        else
+            v = ko_regular(z,n)
+        end if
+    end function ko_density
+
+    pure subroutine ko_tails(x, p, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite physical censoring limit
+        real(dp), intent(in) :: p(:) !! n, location, scale, upper endpoint
+        real(dp), intent(out) :: lp, lq !! complementary log probabilities
+        real(dp) :: lz, lu, z
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (x <= p(2)) return
+        if (x >= p(4)) then
+            lp = 0.0_dp
+            lq = negative_infinity(0.0_dp)
+            return
+        end if
+        lz = log_distance(x,p(2))-log(p(3))
+        lu = log_distance(p(4),x)-log(p(3))
+        z = exp(lz)
+        if (p(1) == 1.0_dp) then
+            if (lz < lu) then
+                lp = lz
+                lq = ig_complement(lp)
+            else
+                lq = lu
+                lp = ig_complement(lq)
+            end if
+        else if (lz <= -log(p(1))) then
+            lp = lz+(p(1)-1.0_dp)*log1p_safe(z)
+            lq = ig_complement(lp)
+        else if (lu <= -log(p(1))) then
+            lq = p(1)*lu
+            lp = ig_complement(lq)
+        else
+            lq = ksone_logsf(z,p(1))
+            lp = ig_complement(lq)
+        end if
+    end subroutine ko_tails
+
+    pure function ko_pdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! n, location, scale, upper endpoint
+        real(dp) :: v, z, lu, knot
+        integer :: side
+        v = negative_infinity(0.0_dp)
+        if (x < p(2) .or. x > p(4)) return
+        if (p(1) == 1.0_dp) then
+            v = -log(p(3))
+            return
+        end if
+        if (x == p(2) .or. x == p(4)) return
+        z = location_scale_z(x,p(2:3))
+        lu = log_distance(p(4),x)-log(p(3))
+        knot = p(2)+p(3)/p(1)
+        side = -1
+        if (x > knot) side = 1
+        if (x == knot) then
+            side = 0
+            z = 1.0_dp/p(1)
+        end if
+        v = ko_density(z,lu,p,side)-log(p(3))
+    end function ko_pdf
+
+    pure function ko_cdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lq
+        call ko_tails(x,p,v,lq)
+    end function ko_cdf
+
+    pure function ko_sf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lp
+        call ko_tails(x,p,lp,v)
+    end function ko_sf
+
+    pure function ko_small(a, b, p, side) result(v)
+        implicit none
+        real(dp), intent(in) :: a, b !! finite ordered endpoints inside support
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        integer, intent(in) :: side !! selected side at the first density knot
+        real(dp) :: v, z, za, lw, lu, offset, t, term, weight, nodes(3)
+        integer :: k
+        nodes = [0.5_dp,(1.0_dp-sqrt(3.0_dp/5.0_dp))/2.0_dp, &
+            (1.0_dp+sqrt(3.0_dp/5.0_dp))/2.0_dp]
+        za = location_scale_z(a,p(2:3))
+        lw = log_distance(b,a)
+        v = negative_infinity(0.0_dp)
+        do k = 1, 3
+            t = nodes(k)
+            weight = 5.0_dp/18.0_dp
+            if (k == 1) weight = 4.0_dp/9.0_dp
+            offset = lw+log(t)
+            z = za+t*exp(lw-log(p(3)))
+            lu = log_difference(log_distance(p(4),a),offset)-log(p(3))
+            if (abs(z-1.0_dp/p(1)) < 64.0_dp*epsilon(1.0_dp)) z = 1.0_dp/p(1)
+            term = ko_density(z,lu,p,side)
+            v = bounded_logadd(v,log(weight)+term)
+        end do
+        v = v+lw-log(p(3))
+    end function ko_small
+
+    pure function ko_interval(a, b, p) result(v)
+        implicit none
+        real(dp), intent(in) :: a, b !! finite strictly ordered physical endpoints
+        real(dp), intent(in) :: p(:) !! n, location, scale, upper endpoint
+        real(dp) :: v, left, right, la, lb, ua, ub, lw, delta, knot, lp, lq
+        integer :: side
+        left = max(a,p(2))
+        right = min(b,p(4))
+        v = negative_infinity(0.0_dp)
+        if (right <= left) return
+        if (left == p(2)) then
+            v = ko_cdf(right,p)
+            return
+        else if (right == p(4)) then
+            v = ko_sf(left,p)
+            return
+        end if
+        lw = log_distance(right,left)
+        if (p(1) == 1.0_dp) then
+            v = lw-log(p(3))
+            return
+        end if
+        la = log_distance(left,p(2))
+        lb = log_distance(right,p(2))
+        ua = log_distance(p(4),left)
+        ub = log_distance(p(4),right)
+        if (lb-log(p(3)) <= -log(p(1))) then
+            delta = bounded_logadd(burr_logsoftplus(lw-la),log(p(1)-1.0_dp) &
+                +burr_logsoftplus(lw-log(p(3))-log1p_safe(exp(la-log(p(3))))))
+            v = ko_cdf(right,p)+log_exponential_mass(delta)
+        else if (ua-log(p(3)) <= -log(p(1))) then
+            delta = log(p(1))+burr_logsoftplus(lw-ub)
+            v = ko_sf(left,p)+log_exponential_mass(delta)
+        else if (lw-log(p(3)) < log(1.0e-5_dp)) then
+            knot = p(2)+p(3)/p(1)
+            if (left < knot .and. right > knot) then
+                v = bounded_logadd(ko_small(left,knot,p,-1),ko_small(knot,right,p,1))
+            else
+                side = -1
+                if (left >= knot) side = 1
+                v = ko_small(left,right,p,side)
+            end if
+        else
+            v = tail_interval(left,right,p,ko_cdf,ko_sf)
+            if (v > -scifort_log_two) then
+                lp = ko_cdf(left,p)
+                lq = ko_sf(right,p)
+                v = ig_complement(bounded_logadd(lp,lq))
+            end if
+        end if
+    end function ko_interval
+
+    pure function tukeylambda_censored_loglikelihood(data, lam, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lam !! shape in [-5,5], zero or abs(lam) >= 1e-6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5), extent
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(:3) = [lam,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params(:3)))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(lam) > 5.0_dp) return
+        if (lam /= 0.0_dp .and. abs(lam) < 1.0e-6_dp) return
+        if (lam > 0.0_dp) then
+            if (params(3) < tiny(1.0_dp)) return
+            if (params(2) /= 0.0_dp) then
+            if (log(abs(params(2)))-log(params(3)) > log(10.0_dp)) return
+        end if
+            if (log(params(3))-log(lam) > log(huge(1.0_dp)/4.0_dp)) return
+            extent = params(3)/lam
+            if (abs(params(2)) > huge(1.0_dp)-extent) return
+            params(4) = params(2)-extent
+            params(5) = params(2)+extent
+            if (.not. all(ieee_is_finite(params(4:5)))) return
+            if (params(4) >= params(2) .or. params(5) <= params(2)) return
+        end if
+        value = censored_loglikelihood(data,params,tl_pdf,tl_cdf,tl_sf,tl_interval)
+    end function tukeylambda_censored_loglikelihood
+
+    pure function tukeylambda_censored_nnlf(data, lam, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lam !! shape in [-5,5], zero or abs(lam) >= 1e-6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -tukeylambda_censored_loglikelihood(data,lam,loc,scale)
+    end function tukeylambda_censored_nnlf
+
+    pure function ksone_censored_loglikelihood(data, n, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: n !! integer sample size in [1,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(4), extent
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(:3) = [n,0.0_dp,1.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params(:3)))) return
+        if (params(3) <= 0.0_dp) return
+        if (n < 1.0_dp .or. n > 100.0_dp) return
+        if (n /= real(nint(n),dp)) return
+        if (params(3) < tiny(1.0_dp) .or. params(3) > huge(1.0_dp)/4.0_dp) return
+        if (abs(params(2))/params(3) > 10.0_dp) return
+        if (abs(params(2)) > huge(1.0_dp)-params(3)) return
+        params(4) = params(2)+params(3)
+        if (.not. ieee_is_finite(params(4))) return
+        if (params(4) <= params(2)) return
+        value = censored_loglikelihood(data,params,ko_pdf,ko_cdf,ko_sf,ko_interval)
+    end function ksone_censored_loglikelihood
+
+    pure function ksone_censored_nnlf(data, n, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: n !! integer sample size in [1,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -ksone_censored_loglikelihood(data,n,loc,scale)
+    end function ksone_censored_nnlf
+
+    pure function vonmises_censored_loglikelihood(data, kappa, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: kappa !! concentration in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        ! SciFort extension: ordinary censoring on the fixed affine [-pi,pi] branch.
+        value = vonmises_line_censored_loglikelihood(data,kappa,loc,scale)
+    end function vonmises_censored_loglikelihood
+
+    pure function vonmises_censored_nnlf(data, kappa, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: kappa !! concentration in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -vonmises_censored_loglikelihood(data,kappa,loc,scale)
+    end function vonmises_censored_nnlf
+
 
     ! Positive transformed-density quadrature from the cited mathematical PDFs.
     pure function bk_density(z, p) result(v)

@@ -81,6 +81,9 @@ program censored_reference_driver
     use scifort_censored, only : geninvgauss_censored_loglikelihood
     use scifort_censored, only : norminvgauss_censored_loglikelihood
     use scifort_censored, only : genhyperbolic_censored_loglikelihood
+    use scifort_censored, only : tukeylambda_censored_loglikelihood
+    use scifort_censored, only : ksone_censored_loglikelihood
+    use scifort_censored, only : vonmises_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -113,6 +116,12 @@ program censored_reference_driver
             value = kstwobign_censored_loglikelihood(data,loc,scale)
         case (97)
             value = wrapcauchy_censored_loglikelihood(data,c,loc,scale)
+        case (102)
+            value = tukeylambda_censored_loglikelihood(data,c,loc,scale)
+        case (103)
+            value = ksone_censored_loglikelihood(data,c,loc,scale)
+        case (104)
+            value = vonmises_censored_loglikelihood(data,c,loc,scale)
         case (99)
             value = geninvgauss_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (100)

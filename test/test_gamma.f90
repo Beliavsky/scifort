@@ -52,7 +52,20 @@ contains
 
     ! Reference values from mpmath 1.3.0 at 40 digits.
     subroutine test_elementary(failures)
+        implicit none
         integer, intent(inout) :: failures !! running count of failed checks
+        real(dp) :: subnormal
+        integer :: j
+
+        subnormal = nearest(0.0_dp,1.0_dp)
+        do j = 1, 101, 2
+            call check_true('log1p positive subnormal exact', &
+                log1p_safe(real(j,dp)*subnormal) == real(j,dp)*subnormal, failures)
+            call check_true('log1p negative subnormal exact', &
+                log1p_safe(-real(j,dp)*subnormal) == -real(j,dp)*subnormal, failures)
+        end do
+        call check_true('log1p small positive exact',log1p_safe(eps/4.0_dp) == eps/4.0_dp, failures)
+        call check_true('log1p small negative exact',log1p_safe(-eps/4.0_dp) == -eps/4.0_dp, failures)
 
         call check_close('log1p 1e-300', log1p_safe(1.0e-300_dp), 1.0e-300_dp, &
             0.0_dp, 2.0_dp * eps, failures)

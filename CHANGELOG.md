@@ -1,3 +1,17 @@
+## 2026-11-18 - Quantile, KSone, and fixed-branch censoring
+
+- Add Tukey-lambda and one-sided finite-sample KS censored likelihoods,
+  NNLFs, bounded fits, and statistics exports, preserving real-array fits.
+- Retain log quantile probabilities, physical endpoint distances, narrow
+  intervals, and one-sided interval densities at the first KSone knot.
+- Add fixed-branch von Mises censored methods as a documented SciFort
+  extension, reusing the validated vonmises_line kernel.
+- Preserve tiny nonzero inputs in the shared log1p helper, including the
+  smallest positive/negative subnormals, with direct gamma/helper regressions.
+- Document parameter limits, finite-support conventions, and provenance.
+- Named-family coverage is 104 with 5 remaining; circular crossing arcs
+  and wider numerical ranges remain separate gaps.
+
 ## 2026-11-18 - Bessel-family censoring
 
 - Add generalized inverse Gaussian, normal-inverse Gaussian, and generalized

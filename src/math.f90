@@ -79,6 +79,10 @@ contains
             y = quiet_nan(x)
         else if (x <= -1.0_dp) then
             y = negative_infinity(x)
+        else if (abs(x) <= 0.25_dp * epsilon(x)) then
+            ! The quadratic correction is below rounding resolution here. Returning
+            ! x also preserves subnormal inputs that would underflow in x/(2+x).
+            y = x
         else if (x < -0.5_dp .or. x > 1.0_dp) then
             y = log(1.0_dp + x)
         else

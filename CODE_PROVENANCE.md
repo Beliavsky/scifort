@@ -1,3 +1,47 @@
+## 2026-11-18 - Quantile, KSone and fixed-branch censored methods
+
+The new callbacks, public likelihoods/NNLFs, fit overloads, exports, native
+regressions, and independent checker are original MIT SciFort additions,
+derived independently from mathematical specifications inspected on 2026-11-18:
+
+- [SciPy Tukey-lambda mathematical specification](https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_tukeylambda.html):
+  Q(p)=(p**lam-(1-p)**lam)/lam and f=1/Q'(F). The logistic limit is
+  treated exactly at zero shape. Positive-shape support follows the
+  quantile endpoints, despite the tutorial's overly broad real-line summary.
+- [SciPy KSone mathematical specification](https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_ksone.html):
+  the positive Birnbaum-Tingey/Smirnov finite sum, associated with Birnbaum
+  and Tingey (1951), Ann. Math. Statist. 22(4), 592-596. Differentiation
+  gives the density; the endpoint regions simplify to F=z*(1+z)**(n-1)
+  and S=(1-z)**n. No SciPy implementation source was imported.
+- [SciPy von Mises definition and circular-CDF convention](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.vonmises.html):
+  the exp(kappa*cos(z))/(2*pi*I0(kappa)) density and the distinction
+  between the circular CDF and the fixed real-line branch.
+
+Tukey inversion uses bracketed bisection in log smaller probability, with
+separate log quantile and endpoint-gap representations. The density follows
+from the quantile derivative. KSone reuses the existing SciFort log-survival
+helper in the ordinary region; a compensated signed derivative of the
+mathematical finite sum supplies interior density values. Endpoint polynomial
+increments retain interval widths independently of rounded endpoint logs.
+The first density knot uses a midpoint representative for exact observations
+and one-sided values in interval quadrature. The new von Mises censored
+method explicitly delegates to the existing SciFort vonmises_line censored
+implementation and is a SciFort extension with fixed-branch semantics.
+
+The small-input correction to `src/math.f90` returns x for
+abs(x)<=epsilon/4 in log1p(x), based on the
+[NIST DLMF 4.6.1 series](https://dlmf.nist.gov/4.6.E1), inspected on
+2026-11-18. The omitted quadratic term is below binary64 rounding
+resolution in this range; bypassing x/(2+x) preserves subnormal inputs.
+`test/test_gamma.f90` adds direct positive/negative odd-subnormal regressions.
+
+No new third-party implementation or license is added; existing helper
+provenance and notices remain in place. Independent references use mpmath
+quantile inversion, exact finite sums and their derivatives, and positive
+von Mises density integrals. Separate SciPy comparisons cover ordinary
+values and selected fits. See the
+[validation record](validation/quantile_ks_censored_2026-11-18.md).
+
 ## 2026-11-18 - Bessel-family censored likelihoods
 
 The additions in `src/censored.f90`, `src/fit.f90`, `src/stats.f90`,
