@@ -1,3 +1,66 @@
+## 2026-11-18 - Kolmogorov, wrapped-Cauchy, and resonance censoring
+
+The new censored callbacks, likelihoods/NNLFs, fit overloads, native tests,
+and independent checker are original MIT SciFort additions based on public
+mathematical specifications inspected on 2026-11-18:
+
+- [SciPy Kolmogorov limiting distribution](https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_kstwobign.html):
+  the alternating upper-tail series and positive transformed lower-tail
+  theta series. Differentiating gives the log-density kernels.
+- [SciPy wrapped-Cauchy definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wrapcauchy.html):
+  the density on [0,2*pi]. A tangent half-angle substitution gives its
+  arctangent antiderivative, evaluated separately from both endpoints.
+- [SciPy relativistic Breit-Wigner definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rel_breitwigner.html):
+  the normalized positive quartic density, integrated after reciprocal
+  substitution for the far upper tail and far-tail intervals.
+
+No new upstream source is copied, translated, or vendored. The ordinary
+Breit-Wigner tails call the existing `scifort_rel_breitwigner` CDF/SF.
+That module's complex antiderivative was adapted from SciPy and retains
+its BSD notices and prior provenance; this addition does not relabel it
+as original code. Existing log-sum, complement, distance, special-function,
+and fitting helpers retain their notices and provenance. No dependency
+or third-party license text is added.
+
+Kolmogorov kernels factor the first exponential and sum 16 terms on each
+side of the switch z=0.82. The first omitted transformed-series exponent
+is at least 1088*pi*pi/(8*0.82**2), and the first omitted alternating-series
+exponent relative to its first term is at least 288*2*0.82**2. Both
+remainders are far below binary64 precision. For intervals entirely below
+z=0.1, the first CDF term has relative correction below exp(-980); entirely
+above z=4, the first SF term has relative correction below exp(-96).
+Their integrated log-increment formulas avoid subtracting rounded endpoint
+log probabilities in steep tails.
+
+For Breit-Wigner, write K=C*rho*rho and substitute v=z/t in the upper tail.
+The residual integral on [0,1] has denominator
+1-A*v*v+B*v**4, A=2*(rho/z)**2,
+B=(rho/z)**4+(rho/z**2)**2. For z>=2*max(rho,sqrt(rho)),
+A<=1/2 and B<=1/8. Expanding the reciprocal gives coefficients
+h(0)=1, h(1)=A, h(n)=A*h(n-1)-B*h(n-2).
+The roots have modulus sqrt(B)<=1/sqrt(8), so
+abs(h(n))<=(n+1)*(1/sqrt(8))**n. Integrating 65 terms, n=0..64,
+leaves a relative remainder below 1e-25 for both tails and intervals.
+Interval terms retain 1-exp(-(2*n+3)*log(upper/lower)) separately.
+At extremely small z, the lower integral uses its constant endpoint
+density; its neglected relative correction is below roundoff in the
+chosen z<1e-10*min(rho,1) range. These truncation bounds do not certify
+all floating-point rounding or inherited antiderivative errors.
+
+The narrow-interval Gaussian rule evaluates log(a-loc+t*(b-a)) from
+separate distance and width logarithms, without forming physical nodes
+that could collapse at large locations. Wrapped-Cauchy nodes retain both
+endpoint distances independently. The rule and these coordinate formulas
+are original SciFort additions.
+
+Independent references use 110-digit theta series, exact half-angle
+identities with the documented finite angular endpoint convention, and
+positive Breit-Wigner density quadrature, including reciprocal quadrature
+for upper tails. Finite ordinary interval references integrate relative
+densities rather than reusing the Fortran interval formulas. SciPy supplies
+separate ordinary-value and bounded-fit cross-checks. See the
+[validation record](validation/three_tail_censored_2026-11-18.md).
+
 ## 2026-11-18 - Noncentral censored distributions
 
 The new Rice/noncentral chi-squared/noncentral F censored callbacks, public

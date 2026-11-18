@@ -70,6 +70,9 @@ module scifort_fit
     use scifort_censored, only : ncx2_censored_nnlf
     use scifort_censored, only : rice_censored_nnlf
     use scifort_censored, only : ncf_censored_nnlf
+    use scifort_censored, only : kstwobign_censored_nnlf
+    use scifort_censored, only : wrapcauchy_censored_nnlf
+    use scifort_censored, only : rel_breitwigner_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -891,7 +894,59 @@ module scifort_fit
         module procedure ncf_fit, ncf_fit_censored
     end interface ncf_fit
 
+    interface kstwobign_fit
+        module procedure kstwobign_fit, kstwobign_fit_censored
+    end interface kstwobign_fit
+
+    interface wrapcauchy_fit
+        module procedure wrapcauchy_fit, wrapcauchy_fit_censored
+    end interface wrapcauchy_fit
+
+    interface rel_breitwigner_fit
+        module procedure rel_breitwigner_fit, rel_breitwigner_fit_censored
+    end interface rel_breitwigner_fit
+
 contains
+
+    subroutine kstwobign_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_kstwobign,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine kstwobign_fit_censored
+
+    subroutine wrapcauchy_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in c, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_wrapcauchy,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine wrapcauchy_fit_censored
+
+    subroutine rel_breitwigner_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in rho, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_rel_breitwigner,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine rel_breitwigner_fit_censored
+
 
     subroutine ncx2_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2631,6 +2686,12 @@ contains
                 value = rice_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_ncf)
                 value = ncf_censored_nnlf(censored,params(1),params(2),params(3),params(4),params(5))
+            case (family_kstwobign)
+                value = kstwobign_censored_nnlf(censored,params(1),params(2))
+            case (family_wrapcauchy)
+                value = wrapcauchy_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_rel_breitwigner)
+                value = rel_breitwigner_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

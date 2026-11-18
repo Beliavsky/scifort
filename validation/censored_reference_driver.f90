@@ -75,6 +75,9 @@ program censored_reference_driver
     use scifort_censored, only : ncx2_censored_loglikelihood
     use scifort_censored, only : rice_censored_loglikelihood
     use scifort_censored, only : ncf_censored_loglikelihood
+    use scifort_censored, only : kstwobign_censored_loglikelihood
+    use scifort_censored, only : wrapcauchy_censored_loglikelihood
+    use scifort_censored, only : rel_breitwigner_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -102,6 +105,12 @@ program censored_reference_driver
             value = genextreme_censored_loglikelihood(data,c,loc,scale)
         case (83)
             value = crystalball_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (96)
+            value = kstwobign_censored_loglikelihood(data,loc,scale)
+        case (97)
+            value = wrapcauchy_censored_loglikelihood(data,c,loc,scale)
+        case (98)
+            value = rel_breitwigner_censored_loglikelihood(data,c,loc,scale)
         case (93)
             value = ncx2_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (94)

@@ -1,3 +1,13 @@
+## 2026-11-18 - Kolmogorov, angular, and resonance censoring
+
+- Add kstwobign, wrapped-Cauchy, and relativistic Breit-Wigner censored
+  likelihoods, NNLFs, bounded fits, and statistics exports.
+- Retain underflowed tails and narrow intervals with log theta series,
+  half-angle formulas, and a reciprocal-coordinate resonance expansion.
+- Document fixed angular interval conventions, finite shape/affine limits,
+  provenance, and checked/optimized numerical validation.
+- Coverage is 98 continuous families with 11 remaining.
+
 ## 2026-11-18 - Noncentral censoring
 
 - Add Rice, noncentral chi-squared, and noncentral F censored likelihoods,

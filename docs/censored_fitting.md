@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+kstwobign_censored_loglikelihood(data [, loc, scale])
+wrapcauchy_censored_loglikelihood(data, c [, loc, scale])
+rel_breitwigner_censored_loglikelihood(data, rho [, loc, scale])
 rice_censored_loglikelihood(data, b [, loc, scale])
 ncx2_censored_loglikelihood(data, df, nc [, loc, scale])
 ncf_censored_loglikelihood(data, dfn, dfd, nc [, loc, scale])
@@ -2639,3 +2642,80 @@ separately checks tiny nonzero complementary logs with relative error.
 See the [validation record](../validation/noncentral_censored_2026-11-18.md)
 for checked/optimized native tests, independent high-precision references,
 fit benchmarks, exact commands, and remaining numerical limitations.
+
+## Kolmogorov, wrapped Cauchy, and relativistic Breit-Wigner censoring
+
+```fortran
+value = kstwobign_censored_loglikelihood(data,loc,scale)
+value = kstwobign_censored_nnlf(data,loc,scale)
+value = wrapcauchy_censored_loglikelihood(data,c,loc,scale)
+value = wrapcauchy_censored_nnlf(data,c,loc,scale)
+value = rel_breitwigner_censored_loglikelihood(data,rho,loc,scale)
+value = rel_breitwigner_censored_nnlf(data,rho,loc,scale)
+call kstwobign_fit(data,lower,upper,result,guess,max_iter,tolerance)
+call wrapcauchy_fit(data,lower,upper,result,guess,max_iter,tolerance)
+call rel_breitwigner_fit(data,lower,upper,result,guess,max_iter,tolerance)
+```
+
+Each family supports exact, left/right, and interval censoring through
+`censored_data`. The location and scale are optional, defaulting to zero
+and one. Fit bounds and guesses use [loc,scale], [c,loc,scale], or
+[rho,loc,scale]. Equal bounds fix parameters. Existing real-array fits
+remain available. Valid empty likelihoods are zero; invalid parameters
+return NaN even for empty data, and empty fits are invalid.
+No C ABI or wrapper additions are included.
+
+Kolmogorov (`kstwobign`) has no shape parameter and support x>=loc, with
+zero density at loc. Location must be finite and scale positive/finite.
+Its two theta-series representations are evaluated after factoring their
+leading exponentials, including the differentiated density series.
+This retains log tails even when ordinary probabilities underflow.
+Small-coordinate and large-coordinate interval formulas retain physical
+endpoint increments before exponentiation; adjacent observations do not
+require distinguishable standardized coordinates. Log probabilities
+beyond the finite binary64 range become negative infinity.
+
+Wrapped Cauchy uses SciPy's fixed standardized interval [0,2*pi], with
+physical upper=loc+(2*pi)*scale computed in binary64. This method requires
+0<c<=0.99, normal positive scale, abs(loc)/scale<=10,
+scale<=huge/(4*pi), and a finite noncollapsed upper endpoint.
+Observations outside this interval have zero density; endpoint densities
+are finite. CDF/SF endpoint probabilities are zero/one and one/zero.
+Finite censoring intervals are clipped to the support. An interval
+crossing the angular boundary must not be supplied with its endpoints
+reversed: that remains invalid input. A future crossing-arc method would
+be a **SciFort extension** with a distinct observation convention.
+There is no periodic reduction of exact data or censoring bounds.
+
+Wrapped-Cauchy lower and upper tails use half-angle arctangent formulas,
+with independently retained physical distances to both support endpoints.
+Near the upper endpoint, the method reflects about the computed finite
+support, rather than subtracting rounded standardized angles. This
+binary64 endpoint convention, also used for endpoint classification,
+can differ from an ideal real-arithmetic affine endpoint by rounding.
+The c and location/scale limits bound sensitivity; broader concentration
+and affine ranges remain numerical coverage gaps. Narrow interval masses
+use physical widths and three-point Gaussian quadrature.
+
+Relativistic Breit-Wigner requires 0.1<=rho<=100, finite loc, and positive
+finite scale. Its support is x>=loc, with finite density at loc. The
+ordinary tails call the existing family module's antiderivative, retaining
+its documented provenance. The far upper tail instead integrates a
+convergent reciprocal-coordinate expansion; tiny lower tails use the
+constant endpoint density. Densities use log-domain quartic denominators,
+and far-tail intervals integrate each expansion term with its retained
+log-relative physical width. This avoids cancellation in the complex
+antiderivative at extreme coordinates. For physical resonance modelling,
+fix loc=0 as recommended in SciPy's documentation; the mathematical fit
+API permits other locations within the stated finite-parameter contract.
+
+Ordinary narrow intervals use three-point Gaussian quadrature when a
+conservative density-variation criterion is small. Quadrature coordinates
+are formed from log distances and physical width increments, preserving
+narrow interval masses even when adding a node to a large location would
+round it onto an endpoint. Wider intervals use the better log-tail difference, complementing omitted tails for nearly
+whole-support probabilities. Scaled log errors and tiny complementary-log
+relative errors are validated separately. Very steep tails remain
+sensitive to rounding of physical observations; no uniform relative
+probability accuracy is claimed after exponentiation.
+See the [validation record](../validation/three_tail_censored_2026-11-18.md).
