@@ -63,6 +63,9 @@ program censored_reference_driver
     use scifort_censored, only : alpha_censored_loglikelihood
     use scifort_censored, only : genextreme_censored_loglikelihood
     use scifort_censored, only : crystalball_censored_loglikelihood
+    use scifort_censored, only : argus_censored_loglikelihood
+    use scifort_censored, only : pearson3_censored_loglikelihood
+    use scifort_censored, only : kappa4_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -72,7 +75,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83])) &
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86])) &
             read(*, *) second_shape
         if (family == 53 .or. family == 80) read(*, *) third_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
@@ -89,6 +92,12 @@ program censored_reference_driver
             value = genextreme_censored_loglikelihood(data,c,loc,scale)
         case (83)
             value = crystalball_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (84)
+            value = argus_censored_loglikelihood(data,c,loc,scale)
+        case (85)
+            value = pearson3_censored_loglikelihood(data,c,loc,scale)
+        case (86)
+            value = kappa4_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (78)
             value = gengamma_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (79)

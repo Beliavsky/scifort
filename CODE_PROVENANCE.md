@@ -1,3 +1,42 @@
+## 2026-11-17 - ARGUS, Pearson III, and kappa4 censoring
+
+The new private callbacks, public likelihoods, fit overloads, native test,
+and independent checker are original MIT SciFort implementations from
+mathematical density specifications inspected on 2026-11-17:
+[ARGUS](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.argus.html),
+[Pearson III](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearson3.html),
+and [kappa4](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kappa4.html).
+No upstream implementation was copied, translated, or vendored. Existing
+gamma/log-gamma, normal, GEV-coordinate, physical-distance, censoring, and
+optimizer helpers retain their provenance and notices. No dependency or
+third-party license text is added.
+
+ARGUS uses Y=(chi**2/2)*(1-z**2), giving a reversed Gamma(3/2) law
+conditioned below chi**2/2. Pearson III uses Y=beta*(z+beta), beta=2/skew,
+giving Gamma(beta**2), with reversed ordering for negative beta. Its small
+skew normal approximation preserves the existing scalar API convention.
+Gamma interval integration factors a reference density and physical width;
+the relative log density is (shape-1)*log1p(t*width/Y)-t*width.
+The three-point Gauss-Legendre nodes and weights reuse the established
+SciFort interval method and its DLMF 3.5(v) provenance.
+
+Kappa4 integrates the cited density to F=(1-h*T)**(1/h),
+T=(1-k*z)**(1/k), with logarithmic/exponential limits at zero shapes.
+The positive reverse cumulative hazard -log(F) and its increments retain
+physical widths before two stages of exponential differencing. For negative
+h, T/(1+abs(h)*T) is factored as
+1/(abs(h)*(1+exp(-log(abs(h)*T)))) before taking its logarithm.
+Near a finite outer endpoint, the support-factor ratio retains standardized
+endpoint distance instead of subtracting h*T from one. Shape/compression
+and input-rounding limitations are documented as compatibility limits.
+The steep gamma/normal interval shortcuts discard only an endpoint with
+log-density change exceeding 1e8 in the stated monotone-tail regimes.
+
+Independent references use mpmath gamma integrals and elementary kappa
+antiderivatives. SciPy supplies independent bounded scale-fit benchmarks.
+See the [API guide](docs/censored_fitting.md) and
+[validation record](validation/gamma_kappa_censored_2026-11-17.md).
+
 ## 2026-11-17 - Alpha, GEV, and Crystal Ball censoring
 
 The new callbacks, likelihoods, fit overloads, regression tests, and independent

@@ -58,6 +58,9 @@ module scifort_fit
     use scifort_censored, only : alpha_censored_nnlf
     use scifort_censored, only : genextreme_censored_nnlf
     use scifort_censored, only : crystalball_censored_nnlf
+    use scifort_censored, only : argus_censored_nnlf
+    use scifort_censored, only : pearson3_censored_nnlf
+    use scifort_censored, only : kappa4_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -831,7 +834,59 @@ module scifort_fit
         module procedure crystalball_fit, crystalball_fit_censored
     end interface crystalball_fit
 
+    interface argus_fit
+        module procedure argus_fit, argus_fit_censored
+    end interface argus_fit
+
+    interface pearson3_fit
+        module procedure pearson3_fit, pearson3_fit_censored
+    end interface pearson3_fit
+
+    interface kappa4_fit
+        module procedure kappa4_fit, kappa4_fit_censored
+    end interface kappa4_fit
+
 contains
+
+    subroutine argus_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in chi, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_argus,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine argus_fit_censored
+
+    subroutine pearson3_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in skew, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_pearson3,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine pearson3_fit_censored
+
+    subroutine kappa4_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in h, k, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_kappa4,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine kappa4_fit_censored
+
 
     subroutine alpha_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2386,6 +2441,12 @@ contains
                 value = genextreme_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_crystalball)
                 value = crystalball_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_argus)
+                value = argus_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_pearson3)
+                value = pearson3_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_kappa4)
+                value = kappa4_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

@@ -24,6 +24,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: argus_censored_loglikelihood, argus_censored_nnlf
+    public :: pearson3_censored_loglikelihood, pearson3_censored_nnlf
+    public :: kappa4_censored_loglikelihood, kappa4_censored_nnlf
     public :: alpha_censored_loglikelihood, alpha_censored_nnlf
     public :: genextreme_censored_loglikelihood, genextreme_censored_nnlf
     public :: crystalball_censored_loglikelihood, crystalball_censored_nnlf
@@ -133,6 +136,520 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Independent gamma and kappa transformations; see CODE_PROVENANCE.md.
+    pure function gk_gamma_mass(ly, ld, shape) result(value)
+        implicit none
+        real(dp), intent(in) :: ly !! log lower gamma coordinate, or negative infinity
+        real(dp), intent(in) :: ld !! log positive gamma-coordinate interval width
+        real(dp), intent(in) :: shape !! gamma shape in [1e-6,1e6]
+        real(dp) :: value, lq, lh, q, t(3), d(3), r(3), correction, lp, lsf
+        if (.not. ieee_is_finite(ly)) then
+            value = loggamma_lcdf(ld,[shape,0.0_dp,1.0_dp])
+            return
+        end if
+        lq = ld-ly
+        if (lq+max(0.0_dp,log(shape),ly) <= log(0.001_dp)) then
+            q = exp(lq)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            d = log1p_safe(t*q)
+            r = -d-exp(ld)*t
+            if (q > 0.0_dp) then
+                r = r+exp(log(shape)+lq)*(d/q)
+            else
+                r = r+exp(log(shape)+lq)*t
+            end if
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = loggamma_lpdf(ly,[shape,0.0_dp,1.0_dp])-ly+ld &
+                +log1p_safe(correction)
+            return
+        end if
+        if (ly > log(max(1.0_dp,shape))+log(1.0e16_dp) .and. ld > log(1.0e8_dp)) then
+            value = loggamma_lsf(ly,[shape,0.0_dp,1.0_dp])
+            return
+        end if
+        lh = bounded_logadd(ly,ld)
+        lp = loggamma_lcdf(lh,[shape,0.0_dp,1.0_dp])
+        lsf = loggamma_lsf(ly,[shape,0.0_dp,1.0_dp])
+        if (lp <= lsf) then
+            value = log_difference(lp,loggamma_lcdf(ly,[shape,0.0_dp,1.0_dp]))
+        else
+            value = log_difference(lsf,loggamma_lsf(lh,[shape,0.0_dp,1.0_dp]))
+        end if
+    end function gk_gamma_mass
+
+    pure function ag_logy(z, params) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized point strictly between zero and one
+        real(dp), intent(in) :: params(:) !! chi, loc, scale, log A, log gamma normalizer
+        real(dp) :: value
+        value = params(4)+log1p_safe(-z)+log1p_safe(z)
+    end function ag_logy
+
+    pure function ag_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! chi, loc, scale, log A, log gamma normalizer
+        real(dp) :: value, z, ly
+        value = negative_infinity(0.0_dp)
+        z = location_scale_z(x,params(2:3))
+        if (z <= 0.0_dp .or. z >= 1.0_dp) return
+        ly = ag_logy(z,params)
+        value = loggamma_lpdf(ly,[1.5_dp,0.0_dp,1.0_dp])-ly &
+            +2.0_dp*log(params(1))+log(z)-log(params(3))-params(5)
+    end function ag_lpdf
+
+    pure function ag_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! chi, loc, scale, log A, log gamma normalizer
+        real(dp) :: value, z, ly, other
+        z = location_scale_z(x,params(2:3))
+        value = negative_infinity(0.0_dp)
+        if (z <= 0.0_dp) return
+        value = 0.0_dp
+        if (z >= 1.0_dp) return
+        ly = ag_logy(z,params)
+        other = min(0.0_dp,loggamma_lcdf(ly,[1.5_dp,0.0_dp,1.0_dp])-params(5))
+        if (other < -scifort_log_two) then
+            value = ig_complement(other)
+        else
+            value = min(0.0_dp,gk_gamma_mass(ly,params(4)+2.0_dp*log(z),1.5_dp)-params(5))
+        end if
+    end function ag_lcdf
+
+    pure function ag_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! chi, loc, scale, log A, log gamma normalizer
+        real(dp) :: value, z, other
+        z = location_scale_z(x,params(2:3))
+        value = 0.0_dp
+        if (z <= 0.0_dp) return
+        value = negative_infinity(0.0_dp)
+        if (z >= 1.0_dp) return
+        value = min(0.0_dp,loggamma_lcdf(ag_logy(z,params),[1.5_dp,0.0_dp,1.0_dp])-params(5))
+        if (value > -scifort_log_two) then
+            other = gk_gamma_mass(ag_logy(z,params),params(4)+2.0_dp*log(z),1.5_dp)-params(5)
+            value = ig_complement(min(0.0_dp,other))
+        end if
+    end function ag_lsf
+
+    pure function ag_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! chi, loc, scale, log A, log gamma normalizer
+        real(dp) :: value, za, zb, ly, ld
+        za = location_scale_z(a,params(2:3))
+        zb = location_scale_z(b,params(2:3))
+        value = negative_infinity(0.0_dp)
+        if (zb <= 0.0_dp .or. za >= 1.0_dp) return
+        if (za <= 0.0_dp) then
+            value = ag_lcdf(b,params)
+        else if (zb >= 1.0_dp) then
+            value = ag_lsf(a,params)
+        else
+            ly = ag_logy(zb,params)
+            ld = params(4)+log(za+zb)+log_distance(b,a)-log(params(3))
+            value = min(0.0_dp,gk_gamma_mass(ly,ld,1.5_dp)-params(5))
+        end if
+    end function ag_interval
+
+    pure subroutine pe_coordinate(x, params, ly, region)
+        implicit none
+        real(dp), intent(in) :: x !! finite physical observation or censoring limit
+        real(dp), intent(in) :: params(:) !! skew, loc, scale, beta, gamma shape
+        real(dp), intent(out) :: ly !! log positive gamma coordinate in the interior
+        integer, intent(out) :: region !! -1 outside support, 0 at endpoint, 1 interior
+        real(dp) :: z, w
+        z = location_scale_z(x,params(2:3))
+        w = z+params(4)
+        region = -1
+        ly = negative_infinity(0.0_dp)
+        if (w == 0.0_dp) then
+            region = 0
+            return
+        end if
+        if (sign(1.0_dp,w) /= sign(1.0_dp,params(4))) return
+        region = 1
+        if (ieee_is_finite(w)) then
+            ly = log(abs(params(4)))+log(abs(w))
+        else
+            ly = log(abs(params(4))) &
+                +log_distance(max(x,params(2)),min(x,params(2)))-log(params(3))
+        end if
+    end subroutine pe_coordinate
+
+    pure function pe_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! skew, loc, scale, beta, gamma shape
+        real(dp) :: value, ly, z
+        integer :: region
+        if (params(4) == 0.0_dp) then
+            z = location_scale_z(x,params(2:3))
+            value = negative_infinity(0.0_dp)
+            if (abs(z) > sqrt(huge(1.0_dp))*sqrt(2.0_dp)) return
+            value = normal_logpdf(z)-log(params(3))
+            return
+        end if
+        call pe_coordinate(x,params,ly,region)
+        value = negative_infinity(0.0_dp)
+        if (region < 0) return
+        if (region == 0) then
+            if (params(5) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(5) == 1.0_dp) value = log(abs(params(4)))-log(params(3))
+            return
+        end if
+        value = loggamma_lpdf(ly,[params(5),0.0_dp,1.0_dp])-ly &
+            +log(abs(params(4)))-log(params(3))
+    end function pe_lpdf
+
+    pure function pe_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! skew, loc, scale, beta, gamma shape
+        real(dp) :: value, ly
+        integer :: region
+        if (params(4) == 0.0_dp) then
+            value = normal_logcdf(location_scale_z(x,params(2:3)))
+            return
+        end if
+        call pe_coordinate(x,params,ly,region)
+        value = negative_infinity(0.0_dp)
+        if (params(4) < 0.0_dp) value = 0.0_dp
+        if (region <= 0) return
+        if (params(4) > 0.0_dp) then
+            value = loggamma_lcdf(ly,[params(5),0.0_dp,1.0_dp])
+        else
+            value = loggamma_lsf(ly,[params(5),0.0_dp,1.0_dp])
+        end if
+    end function pe_lcdf
+
+    pure function pe_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! skew, loc, scale, beta, gamma shape
+        real(dp) :: value, ly
+        integer :: region
+        if (params(4) == 0.0_dp) then
+            value = normal_logsf(location_scale_z(x,params(2:3)))
+            return
+        end if
+        call pe_coordinate(x,params,ly,region)
+        value = 0.0_dp
+        if (params(4) < 0.0_dp) value = negative_infinity(0.0_dp)
+        if (region <= 0) return
+        if (params(4) > 0.0_dp) then
+            value = loggamma_lsf(ly,[params(5),0.0_dp,1.0_dp])
+        else
+            value = loggamma_lcdf(ly,[params(5),0.0_dp,1.0_dp])
+        end if
+    end function pe_lsf
+
+    pure function pe_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! skew, loc, scale, beta, gamma shape
+        real(dp) :: value, ly, other, ld, za, zb, lw
+        integer :: ra, rb
+        if (params(4) == 0.0_dp) then
+            za = location_scale_z(a,params(2:3))
+            zb = location_scale_z(b,params(2:3))
+            lw = log_distance(b,a)-log(params(3))
+            if (za > 12.0_dp) then
+                if (log(za)+lw > log(1.0e8_dp)) then
+                    value = pe_lsf(a,params)
+                    return
+                end if
+            else if (zb < -12.0_dp) then
+                if (log(-zb)+lw > log(1.0e8_dp)) then
+                    value = pe_lcdf(b,params)
+                    return
+                end if
+            end if
+            value = normal_small_interval(za,lw)
+            if (ieee_is_nan(value)) value = tail_interval(a,b,params,pe_lcdf,pe_lsf)
+            return
+        end if
+        call pe_coordinate(a,params,ly,ra)
+        call pe_coordinate(b,params,other,rb)
+        if (ra <= 0 .or. rb <= 0) then
+            value = tail_interval(a,b,params,pe_lcdf,pe_lsf)
+            return
+        end if
+        if (params(4) < 0.0_dp) ly = other
+        ld = log(abs(params(4)))+log_distance(b,a)-log(params(3))
+        value = gk_gamma_mass(ly,ld,params(5))
+    end function pe_interval
+
+    pure subroutine k4_terms(x, params, lt, lu, lv, lh, region)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring limit
+        real(dp), intent(in) :: params(:) !! h, loc, scale, k, lower bound, upper bound
+        real(dp), intent(out) :: lt !! log inner transform T
+        real(dp), intent(out) :: lu !! log inner support factor
+        real(dp), intent(out) :: lv !! log outer support factor
+        real(dp), intent(out) :: lh !! log reverse cumulative hazard
+        integer, intent(out) :: region !! -1 below support, 0 interior, 1 above support
+        real(dp) :: z, outer, lw, ld
+        z = location_scale_z(x,params(2:3))
+        region = -1
+        lt = 0.0_dp
+        lu = 0.0_dp
+        lv = 0.0_dp
+        lh = 0.0_dp
+        if (params(1) > 0.0_dp .or. params(4) < 0.0_dp) then
+            if (z <= params(5)) return
+        end if
+        region = 1
+        if (params(4) > 0.0_dp) then
+            if (z >= params(6)) return
+        end if
+        call gev_terms(x,[params(4),params(2),params(3)],lt,lu,region)
+        if (region /= 0) return
+        lh = lt
+        if (params(1) == 0.0_dp) return
+        outer = log(abs(params(1)))+lt
+        if (params(1) < 0.0_dp) then
+            lv = log1pexp(outer)
+            lh = burr_logsoftplus(outer)-log(-params(1))
+        else
+            if (outer > -0.01_dp) then
+                ! Retain distance from the finite outer endpoint when h*T rounds to one.
+                lw = log_distance(z,params(5))+params(4)*log(params(1))
+                ld = lw
+                if (params(4) < 0.0_dp) then
+                    ld = burr_logsoftplus(log(-params(4))+lw)-log(-params(4))
+                else if (params(4) > 0.0_dp) then
+                    ld = log(-ig_complement(log(params(4))+lw))-log(params(4))
+                end if
+                lv = log_exponential_mass(ld)
+            else
+                lv = ig_complement(outer)
+            end if
+            lh = log(-lv)-log(params(1))
+        end if
+    end subroutine k4_terms
+
+    pure function k4_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! h, loc, scale, k, lower bound, upper bound
+        real(dp) :: value, lt, lu, lv, lh, z, hk
+        integer :: region
+        call k4_terms(x,params,lt,lu,lv,lh,region)
+        value = negative_infinity(0.0_dp)
+        if (region /= 0) then
+            z = location_scale_z(x,params(2:3))
+            if (z == params(5)) then
+                if (params(1) > 0.0_dp) then
+                    if (params(1) == 1.0_dp) value = -log(params(3))
+                    if (params(1) > 1.0_dp) value = positive_infinity(0.0_dp)
+                else if (params(1) < 0.0_dp .and. params(4) < 0.0_dp) then
+                    hk = params(1)*params(4)
+                    if (hk == 1.0_dp) value = (1.0_dp/params(1)-1.0_dp)*log(-params(1)) &
+                        -log(params(3))
+                    if (hk > 1.0_dp) value = positive_infinity(0.0_dp)
+                end if
+            else if (z == params(6)) then
+                if (params(4) == 1.0_dp) value = -log(params(3))
+                if (params(4) > 1.0_dp) value = positive_infinity(0.0_dp)
+            end if
+            return
+        end if
+        if (lh > log(huge(1.0_dp))) return
+        if (params(1) == 0.0_dp) then
+            value = negative_hazard(lh)+lt-lu-log(params(3))
+        else if (params(1) < 0.0_dp) then
+            value = negative_hazard(lh)-log(-params(1)) &
+                -log1pexp(-log(-params(1))-lt)-lu-log(params(3))
+        else
+            ! -H-lv=(1/h-1)*lv avoids subtracting large opposite terms.
+            value = (1.0_dp/params(1)-1.0_dp)*lv+lt-lu-log(params(3))
+        end if
+    end function k4_lpdf
+
+    pure function k4_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! h, loc, scale, k, lower bound, upper bound
+        real(dp) :: value, lt, lu, lv, lh
+        integer :: region
+        call k4_terms(x,params,lt,lu,lv,lh,region)
+        value = negative_infinity(0.0_dp)
+        if (region < 0) return
+        value = 0.0_dp
+        if (region > 0) return
+        value = negative_hazard(lh)
+    end function k4_lcdf
+
+    pure function k4_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! h, loc, scale, k, lower bound, upper bound
+        real(dp) :: value, lt, lu, lv, lh
+        integer :: region
+        call k4_terms(x,params,lt,lu,lv,lh,region)
+        value = 0.0_dp
+        if (region < 0) return
+        value = negative_infinity(0.0_dp)
+        if (region > 0) return
+        value = log_exponential_mass(lh)
+    end function k4_lsf
+
+    pure function k4_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint, greater than a
+        real(dp), intent(in) :: params(:) !! h, loc, scale, k, lower bound, upper bound
+        real(dp) :: value, ta, tb, ua, ub, va, vb, ha, hb, lw, lr, ld
+        integer :: ra, rb
+        call k4_terms(a,params,ta,ua,va,ha,ra)
+        call k4_terms(b,params,tb,ub,vb,hb,rb)
+        if (ra /= 0 .or. rb /= 0) then
+            value = tail_interval(a,b,params,k4_lcdf,k4_lsf)
+            return
+        end if
+        lw = log_distance(b,a)-log(params(3))
+        if (params(4) == 0.0_dp) then
+            ld = ta+log_exponential_mass(lw)
+        else
+            if (params(4) > 0.0_dp) then
+                lr = log(params(4))+lw-ub
+            else
+                lr = log(-params(4))+lw-ua
+            end if
+            lr = burr_logsoftplus(lr)-log(abs(params(4)))
+            ld = ta+log_exponential_mass(lr)
+        end if
+        if (params(1) /= 0.0_dp) then
+            if (params(1) > 0.0_dp) then
+                lr = log(params(1))+ld-va
+            else
+                lr = log(-params(1))+ld-vb
+            end if
+            ld = burr_logsoftplus(lr)-log(abs(params(1)))
+        end if
+        value = negative_hazard(hb)+log_exponential_mass(ld)
+    end function k4_interval
+
+    pure function argus_censored_loglikelihood(data, chi, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: chi !! positive ARGUS shape in [1e-6,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        params = [chi,0.0_dp,1.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (chi < 1.0e-6_dp .or. chi > 100.0_dp) return
+        params(4) = 2.0_dp*log(chi)-scifort_log_two
+        params(5) = loggamma_lcdf(params(4),[1.5_dp,0.0_dp,1.0_dp])
+        value = censored_loglikelihood(data,params,ag_lpdf,ag_lcdf, &
+            ag_lsf,ag_interval)
+    end function argus_censored_loglikelihood
+
+    pure function argus_censored_nnlf(data, chi, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: chi !! positive ARGUS shape in [1e-6,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -argus_censored_loglikelihood(data,chi,loc,scale)
+    end function argus_censored_nnlf
+
+    pure function pearson3_censored_loglikelihood(data, skew, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: skew !! skewness; normal if abs(skew)<1.6e-5, otherwise 0.002<=abs(skew)<=2000
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        params = [skew,0.0_dp,1.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(skew) >= 1.6e-5_dp) then
+            if (abs(skew) < 0.002_dp .or. abs(skew) > 2000.0_dp) return
+            params(4) = 2.0_dp/skew
+            params(5) = params(4)**2
+        end if
+        value = censored_loglikelihood(data,params,pe_lpdf,pe_lcdf, &
+            pe_lsf,pe_interval)
+    end function pearson3_censored_loglikelihood
+
+    pure function pearson3_censored_nnlf(data, skew, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: skew !! skewness; normal if abs(skew)<1.6e-5, otherwise 0.002<=abs(skew)<=2000
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -pearson3_censored_loglikelihood(data,skew,loc,scale)
+    end function pearson3_censored_nnlf
+
+    pure function kappa4_censored_loglikelihood(data, h, k, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: h !! first kappa shape in [-10,10], zero or absolute value at least 1e-6
+        real(dp), intent(in) :: k !! second kappa shape in [-10,10], zero or absolute value at least 1e-6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(6)
+        value = quiet_nan(0.0_dp)
+        params = [h,0.0_dp,1.0_dp,k,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(h) > 10.0_dp .or. abs(k) > 10.0_dp) return
+        if (h /= 0.0_dp .and. abs(h) < 1.0e-6_dp) return
+        if (k /= 0.0_dp .and. abs(k) < 1.0e-6_dp) return
+        if (h > 0.0_dp) then
+            if (k*log(h) > log(10.0_dp)) return
+        end if
+        params(5) = 0.0_dp
+        params(6) = 0.0_dp
+        if (h > 0.0_dp) then
+            if (k == 0.0_dp) then
+                params(5) = log(h)
+            else
+                params(5) = -expm1_safe(-k*log(h))/k
+            end if
+        else if (k < 0.0_dp) then
+            params(5) = 1.0_dp/k
+        end if
+        if (k > 0.0_dp) params(6) = 1.0_dp/k
+        if (h > 0.0_dp .and. k > 0.0_dp) then
+            if (params(5) >= params(6)) return
+        end if
+        value = censored_loglikelihood(data,params,k4_lpdf,k4_lcdf, &
+            k4_lsf,k4_interval)
+    end function kappa4_censored_loglikelihood
+
+    pure function kappa4_censored_nnlf(data, h, k, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: h !! first kappa shape in [-10,10], zero or absolute value at least 1e-6
+        real(dp), intent(in) :: k !! second kappa shape in [-10,10], zero or absolute value at least 1e-6
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -kappa4_censored_loglikelihood(data,h, k,loc,scale)
+    end function kappa4_censored_nnlf
+
 
     ! Independent transformations of the cited densities; see CODE_PROVENANCE.md.
     pure function alpha_coordinate(x, params) result(w)

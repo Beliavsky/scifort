@@ -148,6 +148,8 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [ ] Extend generalized-gamma power/shape ranges and general affine narrow truncation windows.
 - [x] Add alpha, generalized extreme value, and Crystal Ball censored likelihoods and bounded fits.
 - [ ] Extend their documented shape ranges, including very small nonzero GEV shapes.
+- [x] Add ARGUS, Pearson III, and kappa4 censored likelihoods and bounded fits.
+- [ ] Extend ARGUS/Pearson/kappa shape ranges and compressed kappa endpoint coverage.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

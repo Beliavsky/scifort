@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+argus_censored_loglikelihood(data, chi [, loc, scale])
+pearson3_censored_loglikelihood(data, skew [, loc, scale])
+kappa4_censored_loglikelihood(data, h, k [, loc, scale])
 alpha_censored_loglikelihood(data, a [, loc, scale])
 genextreme_censored_loglikelihood(data, c [, loc, scale])
 crystalball_censored_loglikelihood(data, beta, m [, loc, scale])
@@ -179,7 +182,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `argus_fit`, `pearson3_fit`, `kappa4_fit`, `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -2332,3 +2335,83 @@ Definitions: [alpha](https://docs.scipy.org/doc/scipy/reference/generated/scipy.
 [GEV](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genextreme.html),
 and [Crystal Ball](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.crystalball.html).
 See the [validation record](../validation/shape_censored_2026-11-17.md).
+
+
+## ARGUS, Pearson III, and kappa4 details
+
+The likelihoods and corresponding `*_censored_nnlf` functions are exported
+by `scifort_censored` and `scifort_stats`. The existing fit generics accept
+`censored_data`, preserving their original real-array overloads.
+
+| Family | Fit bounds order | Current numerical shape limits |
+| --- | --- | --- |
+| `argus` | chi, loc, scale | 1e-6<=chi<=100 |
+| `pearson3` | skew, loc, scale | abs(skew)<1.6e-5, or 0.002<=abs(skew)<=2000 |
+| `kappa4` | h, k, loc, scale | abs(h),abs(k)<=10; each zero or magnitude>=1e-6; if h>0, k*log(h)<=log(10) |
+
+All parameters must be finite and scale positive. Omitted loc and scale
+default to zero and one. Equal bounds fix any fit parameter; all parameters
+may vary within the supported ranges. Valid empty likelihoods are zero,
+invalid parameters return NaN even for empty data, and empty fits are invalid.
+These shape restrictions are numerical compatibility gaps of the censored
+methods; they do not narrow the scalar distribution APIs. Unsupported
+candidate parameters in fitting are rejected by the optimizer. Bounds
+crossing the documented gaps do not establish convergence across them.
+
+ARGUS has standardized support 0<=z<=1, z=(x-loc)/scale, with zero
+density at both endpoints. Set A=chi**2/2 and Y=A*(1-z**2).
+Y has a Gamma(3/2) law conditioned on 0<Y<A, with reversed ordering.
+The SF is P(3/2,Y)/P(3/2,A); its CDF and finite intervals use positive
+gamma interval integrals, not subtraction of probabilities near one.
+Logarithmic increments retain A*(zb+za)*(b-a)/scale even for adjacent
+physical endpoints. Complementing the smaller tail retains small log-SF.
+
+For Pearson III, beta=2/skew and alpha=beta**2. The positive coordinate
+Y=beta*(z+beta) follows Gamma(alpha); negative skew reverses CDF/SF.
+The support endpoint is z=-beta, below the support for positive skew
+and above it for negative skew. Its density is infinite for alpha<1,
+abs(beta)/scale for alpha=1, and zero for alpha>1. The gamma coordinate
+and Jacobian are retained logarithmically, including when Y overflows.
+Both the normal approximation threshold abs(skew)<1.6e-5 and its use
+for small nonzero skew follow the existing scalar API. The gap between
+that threshold and abs(skew)=0.002 remains unsupported in the censored
+method; the nonnormal branch currently has 1e-6<=alpha<=1e6.
+
+Gamma interval masses use a three-point relative-density integral when
+the relative width and both gamma log-density terms vary by at most 0.001.
+Otherwise they use the better logarithmic tail difference. When the lower
+gamma coordinate exceeds max(1,alpha) by 1e16 and the width exceeds 1e8,
+the upper contribution is negligible and the lower gamma SF is retained.
+The Pearson normal branch similarly retains a dominant normal tail when
+the log-density variation exceeds 1e8 beyond standardized magnitude 12.
+
+Kappa4 uses U=1-k*z, T=U**(1/k), V=1-h*T and F=V**(1/h), with
+continuous formulas for h=0 and k=0. Its standardized lower endpoint is
+(1-h**(-k))/k when h>0 (log(h) for k=0), 1/k when h<=0 and k<0,
+and negative infinity otherwise. The upper endpoint is 1/k for k>0
+and positive infinity otherwise. Density at a finite upper endpoint is
+zero, 1/scale, or infinite as k is below, equal to, or above one. At the h>0
+lower endpoint the same classification uses h. For h<0,k<0, it uses
+h*k: equality gives (-h)**(1/h-1)/scale.
+
+Logarithmic reverse hazards and increments retain finite interval masses
+without subtracting rounded CDFs. For negative h, the density factors
+T/V before combining it with the hazard, avoiding overflow in cancelling
+intermediate terms. The additional h>0 restriction is equivalent to
+h**(-k)>=0.1; more compressed outer endpoints remain unsupported.
+The h=0, (h=-1,k=0), (h=1,k=0), and h=k=1 cases agree with GEV,
+logistic, exponential, and uniform, respectively.
+
+Finite support detection uses binary64 standardized coordinates, as do
+the existing scalar APIs. Evaluation extremely close to a shape-dependent
+or affine endpoint can be ill-conditioned relative to input rounding;
+these routines do not provide additional precision for endpoints or make
+unrepresentable quantiles representable. Infinite one-sided intervals and
+equal finite endpoints follow the shared data conventions. Log probabilities
+beyond binary64 range return negative infinity. Fit success denotes local
+bounded convergence, not a global optimum or parameter identifiability.
+
+Definitions: [ARGUS](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.argus.html),
+[Pearson III](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearson3.html),
+and [kappa4](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kappa4.html).
+See the [validation record](../validation/gamma_kappa_censored_2026-11-17.md).

@@ -1,3 +1,11 @@
+## 2026-11-17 - ARGUS, Pearson III, and kappa4 censoring
+
+- Add mixed censored likelihoods, NNLF, bounded fit overloads, and statistics exports.
+- Retain gamma-coordinate intervals, both Pearson skew directions, kappa
+  reverse hazards, small complementary logs, and extreme finite log densities.
+- Add native/high-precision validation, provenance, and explicit shape limits.
+  Coverage is 86 continuous families with 23 remaining.
+
 ## 2026-11-17 - Alpha, GEV, and Crystal Ball censoring
 
 - Add mixed-censoring likelihoods, NNLF, bounded fit overloads, and statistics exports.
