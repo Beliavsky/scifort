@@ -1,3 +1,13 @@
+## 2026-11-17 - Generalized gamma and truncated-law censoring
+
+- Add generalized gamma, truncated normal, and truncated Weibull mixed
+  censored likelihoods, NNLF, fit overloads, and statistics exports.
+- Retain both generalized-gamma power signs, small complementary tails,
+  shifted Weibull hazards, and adjacent/tiny-normalizer interval masses.
+- Document finite parameter ranges and affine narrow-window restrictions;
+  add native/high-precision validation and provenance. Coverage is 80
+  continuous families with 29 remaining.
+
 ## 2026-11-17 - Inverse-Gaussian family censoring
 
 - Add inverse Gaussian, Wald, and reciprocal inverse Gaussian mixed censored

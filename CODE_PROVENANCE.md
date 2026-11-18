@@ -1,3 +1,42 @@
+## 2026-11-17 - Generalized gamma and truncated-law censoring
+
+The new callbacks, public likelihoods, fit overloads, native regression,
+and independent checker are original MIT SciFort implementation from
+mathematical specifications inspected on 2026-11-17:
+[generalized gamma](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gengamma.html),
+[truncated normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncnorm.html),
+and [truncated Weibull](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.truncweibull_min.html).
+No upstream implementation was copied, translated, or vendored. Existing
+gamma/log-gamma, normal-interval, Weibull-increment, censoring, and bounded
+optimizer code retains its provenance and notices. No dependency or
+third-party license text is added.
+
+For generalized gamma, Y=z**c follows Gamma(a). Its log density is the
+log-gamma-coordinate density plus log(abs(c))-log(x-loc); negative c
+exchanges tails. Relative interval densities retain signed c in
+`a*c*log1p(t*q)-log1p(t*q)-Y*expm1(c*log1p(t*q))`, where q is physical
+width/support distance. Three-point Gauss-Legendre integration reuses
+the existing nodes and weights with a log-density variation bound.
+The large-Y endpoint expansion uses the leading signed physical density
+slope, with curvature terms bounded by inverse Y and inverse abs(c)*Y.
+Existing tiny-shape E1 and gamma-tail helpers remain unchanged.
+
+Truncated laws condition their parent distribution on a<=z<=b.
+Normal interval masses reuse the existing stable logarithmic normal
+integrals. For Weibull, exp(-H(a)) is factored out of both density and
+normalizer; log power increments retain H(u)-H(l). For a very small
+normalizer, ratios factor H(u)/H(b) and 1-(l/u)**c before canceling the
+common log hazard. These are direct changes of variables and elementary
+exponential identities, not imported distribution implementations.
+Conservative affine-window and parameter restrictions are documented
+as numerical compatibility limits rather than silently approximated.
+
+Independent references use mpmath normal/gamma integrals, direct rescaled
+density quadrature, and exact a=1 generalized-gamma exponential intervals.
+SciPy is used for independent one-parameter bounded-fit benchmarks.
+See the [API guide](docs/censored_fitting.md) and
+[validation record](validation/power_trunc_censored_2026-11-17.md).
+
 ## 2026-11-17 - Inverse-Gaussian family censoring
 
 The new private inverse-Gaussian callbacks, public likelihoods, fit overloads,

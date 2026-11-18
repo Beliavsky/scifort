@@ -55,6 +55,9 @@ module scifort_fit
     use scifort_censored, only : foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_nnlf
+    use scifort_censored, only : gengamma_censored_nnlf
+    use scifort_censored, only : truncnorm_censored_nnlf
+    use scifort_censored, only : truncweibull_min_censored_nnlf
     use scifort_censored, only : invgauss_censored_nnlf
     use scifort_censored, only : wald_censored_nnlf
     use scifort_censored, only : recipinvgauss_censored_nnlf
@@ -801,7 +804,59 @@ module scifort_fit
         module procedure recipinvgauss_fit, recipinvgauss_fit_censored
     end interface recipinvgauss_fit
 
+    interface gengamma_fit
+        module procedure gengamma_fit, gengamma_fit_censored
+    end interface gengamma_fit
+
+    interface truncnorm_fit
+        module procedure truncnorm_fit, truncnorm_fit_censored
+    end interface truncnorm_fit
+
+    interface truncweibull_min_fit
+        module procedure truncweibull_min_fit, truncweibull_min_fit_censored
+    end interface truncweibull_min_fit
+
 contains
+
+    subroutine gengamma_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, c, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_gengamma,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine gengamma_fit_censored
+
+    subroutine truncnorm_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, b, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_truncnorm,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine truncnorm_fit_censored
+
+    subroutine truncweibull_min_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(5) !! finite lower bounds in c, a, b, loc, scale order
+        real(dp), intent(in) :: upper(5) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(5) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_truncweibull_min,lower,upper,result,guess, &
+            [.false., .false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine truncweibull_min_fit_censored
+
 
     subroutine invgauss_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2270,6 +2325,12 @@ contains
                 value = foldcauchy_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_genpareto)
                 value = genpareto_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_gengamma)
+                value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_truncnorm)
+                value = truncnorm_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_truncweibull_min)
+                value = truncweibull_min_censored_nnlf(censored,params(1),params(2),params(3),params(4),params(5))
             case (family_invgauss)
                 value = invgauss_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_wald)

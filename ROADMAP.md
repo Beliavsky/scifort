@@ -144,6 +144,8 @@ probability distributions. Prioritize native Fortran APIs; defer C ABI work.
 - [x] Add Student t, F, and Jones-Faddy skew-t censored likelihoods and bounded fits.
 - [ ] Extend censored t/F/Jones-Faddy beta-shape ranges beyond the documented limits.
 - [x] Add inverse Gaussian, Wald, and reciprocal inverse Gaussian censored likelihoods and bounded fits.
+- [x] Add generalized gamma (both power signs), truncated normal, and truncated Weibull censored likelihoods and bounded fits.
+- [ ] Extend generalized-gamma power/shape ranges and general affine narrow truncation windows.
 - [ ] Extend censored fitting to additional continuous families.
 - [ ] Design observation-weight semantics as a separate SciFort extension.
 

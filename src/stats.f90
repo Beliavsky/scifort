@@ -38,6 +38,9 @@ module scifort_stats
     use scifort_censored, only : foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     use scifort_censored, only : foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     use scifort_censored, only : genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    use scifort_censored, only : gengamma_censored_loglikelihood, gengamma_censored_nnlf
+    use scifort_censored, only : truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
+    use scifort_censored, only : truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
     use scifort_censored, only : invgauss_censored_loglikelihood, invgauss_censored_nnlf
     use scifort_censored, only : wald_censored_loglikelihood, wald_censored_nnlf
     use scifort_censored, only : recipinvgauss_censored_loglikelihood, recipinvgauss_censored_nnlf
@@ -790,6 +793,9 @@ module scifort_stats
     public :: foldnorm_censored_loglikelihood, foldnorm_censored_nnlf
     public :: foldcauchy_censored_loglikelihood, foldcauchy_censored_nnlf
     public :: genpareto_censored_loglikelihood, genpareto_censored_nnlf
+    public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
+    public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
+    public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
     public :: invgauss_censored_loglikelihood, invgauss_censored_nnlf
     public :: wald_censored_loglikelihood, wald_censored_nnlf
     public :: recipinvgauss_censored_loglikelihood, recipinvgauss_censored_nnlf

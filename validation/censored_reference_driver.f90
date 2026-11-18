@@ -57,6 +57,9 @@ program censored_reference_driver
     use scifort_censored, only : invgauss_censored_loglikelihood
     use scifort_censored, only : wald_censored_loglikelihood
     use scifort_censored, only : recipinvgauss_censored_loglikelihood
+    use scifort_censored, only : gengamma_censored_loglikelihood
+    use scifort_censored, only : truncnorm_censored_loglikelihood
+    use scifort_censored, only : truncweibull_min_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -66,8 +69,8 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74])) read(*, *) second_shape
-        if (family == 53) read(*, *) third_shape
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80])) read(*, *) second_shape
+        if (family == 53 .or. family == 80) read(*, *) third_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
         if (nl > 0) read(*, *) data%left
@@ -76,6 +79,12 @@ program censored_reference_driver
             read(*, *) data%interval(i,:)
         end do
         select case (family)
+        case (78)
+            value = gengamma_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (79)
+            value = truncnorm_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (80)
+            value = truncweibull_min_censored_loglikelihood(data,c,second_shape,third_shape,loc,scale)
         case (75)
             value = invgauss_censored_loglikelihood(data,c,loc,scale)
         case (76)

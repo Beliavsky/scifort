@@ -24,6 +24,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
+    public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
+    public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
     public :: invgauss_censored_loglikelihood, invgauss_censored_nnlf
     public :: wald_censored_loglikelihood, wald_censored_nnlf
     public :: recipinvgauss_censored_loglikelihood, recipinvgauss_censored_nnlf
@@ -127,6 +130,440 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Independent transformed/conditional densities; see CODE_PROVENANCE.md.
+    pure function gg_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, zero log rate, signed power
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(2)) return
+        if (x == params(2)) then
+            if (params(5) < 0.0_dp) return
+            if (params(1) < 1.0_dp/params(5)) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp/params(5)) value = log(params(5)) &
+                -log_gamma(params(1))-log(params(3))
+            return
+        end if
+        value = loggamma_lpdf(gamma_power_logy(x,params),[params(1),0.0_dp,1.0_dp]) &
+            +log(abs(params(5)))-log_distance(x,params(2))
+    end function gg_lpdf
+
+    pure subroutine gg_tails(x, params, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, zero log rate, signed power
+        real(dp), intent(out) :: lp !! log lower probability
+        real(dp), intent(out) :: lq !! log upper probability
+        real(dp) :: swap
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (x <= params(2)) return
+        lq = gamma_power_lsf(x,params)
+        if (params(1) <= epsilon(1.0_dp)/4096.0_dp) then
+            lp = ig_complement(lq)
+        else
+            lp = loggamma_lcdf(gamma_power_logy(x,params),[params(1),0.0_dp,1.0_dp])
+            if (lq < -scifort_log_two) lp = ig_complement(lq)
+        end if
+        if (params(5) < 0.0_dp) then
+            swap = lp
+            lp = lq
+            lq = swap
+        end if
+    end subroutine gg_tails
+
+    pure function gg_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, zero log rate, signed power
+        real(dp) :: value, unused
+        call gg_tails(x,params,value,unused)
+    end function gg_lcdf
+
+    pure function gg_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, zero log rate, signed power
+        real(dp) :: value, unused
+        call gg_tails(x,params,unused,value)
+    end function gg_lsf
+
+    pure function gg_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! gamma shape, loc, scale, zero log rate, signed power
+        real(dp) :: value, width, logq, ly, lyb, lc, q, t(3), d(3), first(3), second(3), r(3)
+        real(dp) :: correction, endpoint, rate, omitted
+        value = negative_infinity(0.0_dp)
+        if (b <= params(2)) return
+        if (a <= params(2)) then
+            value = gg_lcdf(b,params)
+            return
+        end if
+        width = log_distance(b,a)
+        logq = width-log_distance(a,params(2))
+        ly = gamma_power_logy(a,params)
+        lyb = gamma_power_logy(b,params)
+        lc = log(abs(params(5)))
+        if (logq+max(0.0_dp,lc+log(params(1)),lc+max(ly,lyb)) < log(0.001_dp)) then
+            q = exp(logq)
+            t = [0.5_dp,0.5_dp-sqrt(3.0_dp/5.0_dp)/2.0_dp, &
+                0.5_dp+sqrt(3.0_dp/5.0_dp)/2.0_dp]
+            d = log1p_safe(t*q)
+            first = t
+            second = params(5)*t
+            if (q > 0.0_dp) then
+                first = d/q
+                second = expm1_safe(params(5)*d)/q
+            end if
+            r = sign(1.0_dp,params(5))*exp(log(params(1))+lc+logq)*first-d &
+                -exp(ly+logq)*second
+            correction = (4.0_dp/9.0_dp)*expm1_safe(r(1)) &
+                +(5.0_dp/18.0_dp)*(expm1_safe(r(2))+expm1_safe(r(3)))
+            value = gg_lpdf(a,params)+width+log1p_safe(correction)
+        else
+            ! Endpoint expansion when Y dominates both other density-slope terms.
+            endpoint = a
+            if (params(5) < 0.0_dp) endpoint = b
+            ly = gamma_power_logy(endpoint,params)
+            rate = lc+ly-log_distance(endpoint,params(2))
+            if (logq < log(1.0e-6_dp) .and. ly > log(params(1))+log(1.0e16_dp) &
+                    .and. lc+ly > log(1.0e16_dp) .and. rate+width > log(1.0e8_dp)) then
+                value = gg_lpdf(endpoint,params)-rate+log_exponential_mass(rate+width)
+            else
+                value = tail_interval(a,b,params,gg_lcdf,gg_lsf)
+                if (value > -scifort_log_two) then
+                    omitted = bounded_logadd(gg_lcdf(a,params),gg_lsf(b,params))
+                    value = log1p_safe(-exp(omitted))
+                end if
+            end if
+        end if
+    end function gg_interval
+
+    pure subroutine trunc_setup(params, normal, valid)
+        implicit none
+        real(dp), intent(inout) :: params(:) !! power, a, b, loc, scale, physical bounds, normalizer
+        logical, intent(in) :: normal !! true for normal; false for Weibull
+        logical, intent(out) :: valid !! true when parameters and derived support are valid
+        real(dp) :: product, width
+        integer :: i
+        valid = .false.
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= params(2) .or. params(5) <= 0.0_dp) return
+        if (normal) then
+            if (maxval(abs(params(2:3))) > 100.0_dp) return
+        else
+            if (params(2) < 0.0_dp .or. params(1) < 1.0e-6_dp &
+                    .or. params(1) > 1.0e6_dp) return
+        end if
+        if (abs(params(4)) > huge(1.0_dp)/4.0_dp) return
+        do i = 2, 3
+            if (abs(params(i)) > 1.0_dp) then
+                if (params(5) > (huge(1.0_dp)/4.0_dp)/abs(params(i))) return
+            end if
+            product = params(5)*params(i)
+            if (params(i) /= 0.0_dp .and. product == 0.0_dp) return
+            if (product /= 0.0_dp .and. abs(product) < tiny(1.0_dp)) return
+            if (abs(product) > huge(1.0_dp)/4.0_dp) return
+            params(i+4) = params(4)+product
+        end do
+        if (params(7) <= params(6)) return
+        if (params(6) /= 0.0_dp .and. abs(params(6)) < tiny(1.0_dp)) return
+        if (params(7) /= 0.0_dp .and. abs(params(7)) < tiny(1.0_dp)) return
+        width = params(3)-params(2)
+        if (params(4) /= 0.0_dp) then
+            if (log(abs(params(4)))-log(params(5))-log(width) > log(1.0e4_dp)) return
+        end if
+        if (width < 1.0e-4_dp*max(1.0_dp,abs(params(2)),abs(params(3)))) then
+            ! Preserve narrow standardized windows under an exact binary scaling.
+            if (params(4) /= 0.0_dp .or. fraction(params(5)) /= 0.5_dp) return
+            if (params(6) /= 0.0_dp .and. abs(params(6)) < tiny(1.0_dp)) return
+            if (abs(params(7)) < tiny(1.0_dp)) return
+        end if
+        if (normal) then
+            params(8) = normal_interval(params(2),params(3),[0.0_dp,1.0_dp])
+            if (.not. ieee_is_finite(params(8))) return
+        else if (params(2) == 0.0_dp) then
+            params(8) = params(1)*log(params(3))
+        else
+            params(8) = weibull_log_increment(params(2),params(3),[params(1),0.0_dp,1.0_dp])
+        end if
+        valid = .true.
+    end subroutine trunc_setup
+
+    pure function tn_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! unused power, a, b, loc, scale, physical bounds, log Z
+        real(dp) :: value
+        value = negative_infinity(0.0_dp)
+        if (x < params(6) .or. x > params(7)) return
+        value = normal_logpdf(x,params(4),params(5))-params(8)
+    end function tn_lpdf
+
+    pure function tn_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint greater than a
+        real(dp), intent(in) :: params(:) !! unused power, a, b, loc, scale, physical bounds, log Z
+        real(dp) :: value, lower, upper
+        value = negative_infinity(0.0_dp)
+        lower = max(a,params(6))
+        upper = min(b,params(7))
+        if (upper <= lower) return
+        if (lower == params(6) .and. upper == params(7)) then
+            value = 0.0_dp
+        else
+            value = min(0.0_dp,normal_interval(lower,upper,params(4:5))-params(8))
+        end if
+    end function tn_interval
+
+    pure function tn_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! unused power, a, b, loc, scale, physical bounds, log Z
+        real(dp) :: value, other
+        value = negative_infinity(0.0_dp)
+        if (x <= params(6)) return
+        value = 0.0_dp
+        if (x >= params(7)) return
+        value = tn_interval(params(6),x,params)
+        if (value > -scifort_log_two) then
+            other = tn_interval(x,params(7),params)
+            value = ig_complement(other)
+        end if
+    end function tn_lcdf
+
+    pure function tn_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! unused power, a, b, loc, scale, physical bounds, log Z
+        real(dp) :: value, other
+        value = 0.0_dp
+        if (x <= params(6)) return
+        value = negative_infinity(0.0_dp)
+        if (x >= params(7)) return
+        value = tn_interval(x,params(7),params)
+        if (value > -scifort_log_two) then
+            other = tn_interval(params(6),x,params)
+            value = ig_complement(other)
+        end if
+    end function tn_lsf
+
+    pure function tw_increment(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! lower endpoint at or above parent loc
+        real(dp), intent(in) :: b !! upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! power, a, b, loc, scale, physical bounds, log hazard span
+        real(dp) :: value
+        if (a == params(4)) then
+            value = weibull_log_hazard(b,[params(1),params(4),params(5)])
+        else
+            value = weibull_log_increment(a,b,[params(1),params(4),params(5)])
+        end if
+    end function tw_increment
+
+    pure function tw_log_fraction(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! lower endpoint at or above parent location
+        real(dp), intent(in) :: b !! upper endpoint greater than a
+        real(dp), intent(in) :: params(:) !! power, a, b, loc, scale, physical bounds, log hazard span
+        real(dp) :: value
+        value = 0.0_dp
+        if (a == params(4)) return
+        value = log_exponential_mass(log(params(1))+burr_logsoftplus( &
+            log_distance(b,a)-log_distance(a,params(4))))
+    end function tw_log_fraction
+
+    pure function tw_lpdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: params(:) !! power, a, b, loc, scale, physical bounds, log hazard span
+        real(dp) :: value, lz, shift, correction
+        value = negative_infinity(0.0_dp)
+        if (x < params(6) .or. x > params(7)) return
+        if (x == params(4)) then
+            if (params(1) < 1.0_dp) value = positive_infinity(0.0_dp)
+            if (params(1) == 1.0_dp) value = -log(params(5))-log_exponential_mass(params(8))
+            return
+        end if
+        lz = lognormal_logz(x,[params(1),params(4),params(5)])
+        shift = 0.0_dp
+        if (x > params(6)) shift = negative_hazard(tw_increment(params(6),x,params))
+        if (params(8) < log(0.001_dp)) then
+            lz = weibull_log_hazard(x,[params(1),params(4),params(7)-params(4)])
+            correction = 0.0_dp
+            if (params(8) > log(epsilon(1.0_dp))) &
+                correction = log_exponential_mass(params(8))-params(8)
+            value = log(params(1))-log_distance(x,params(4))+lz &
+                -tw_log_fraction(params(6),params(7),params)+shift-correction
+            return
+        end if
+        value = log(params(1))+(params(1)-1.0_dp)*lz-log(params(5)) &
+            +shift-log_exponential_mass(params(8))
+    end function tw_lpdf
+
+    pure function tw_interval(a, b, params) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint greater than a
+        real(dp), intent(in) :: params(:) !! power, a, b, loc, scale, physical bounds, log hazard span
+        real(dp) :: value, lower, upper, shift, increment, correction, normalization
+        value = negative_infinity(0.0_dp)
+        lower = max(a,params(6))
+        upper = min(b,params(7))
+        if (upper <= lower) return
+        if (lower == params(6) .and. upper == params(7)) then
+            value = 0.0_dp
+            return
+        end if
+        shift = 0.0_dp
+        if (lower > params(6)) shift = negative_hazard(tw_increment(params(6),lower,params))
+        if (params(8) < log(0.001_dp)) then
+            increment = tw_increment(lower,upper,params)
+            correction = 0.0_dp
+            normalization = 0.0_dp
+            if (increment > log(epsilon(1.0_dp))) &
+                correction = log_exponential_mass(increment)-increment
+            if (params(8) > log(epsilon(1.0_dp))) &
+                normalization = log_exponential_mass(params(8))-params(8)
+            value = shift+weibull_log_hazard(upper,[params(1),params(4),params(7)-params(4)]) &
+                +tw_log_fraction(lower,upper,params)-tw_log_fraction(params(6),params(7),params) &
+                +correction-normalization
+            value = min(0.0_dp,value)
+            return
+        end if
+        value = min(0.0_dp,shift+log_exponential_mass(tw_increment(lower,upper,params)) &
+            -log_exponential_mass(params(8)))
+    end function tw_interval
+
+    pure function tw_lcdf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: params(:) !! power, a, b, loc, scale, physical bounds, log hazard span
+        real(dp) :: value, other
+        value = negative_infinity(0.0_dp)
+        if (x <= params(6)) return
+        value = 0.0_dp
+        if (x >= params(7)) return
+        value = tw_interval(params(6),x,params)
+        if (value > -scifort_log_two) then
+            other = tw_interval(x,params(7),params)
+            value = ig_complement(other)
+        end if
+    end function tw_lcdf
+
+    pure function tw_lsf(x, params) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: params(:) !! power, a, b, loc, scale, physical bounds, log hazard span
+        real(dp) :: value, other
+        value = 0.0_dp
+        if (x <= params(6)) return
+        value = negative_infinity(0.0_dp)
+        if (x >= params(7)) return
+        value = tw_interval(x,params(7),params)
+        if (value > -scifort_log_two) then
+            other = tw_interval(params(6),x,params)
+            value = ig_complement(other)
+        end if
+    end function tw_lsf
+
+    pure function gengamma_censored_loglikelihood(data, a, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: c !! family shape or standardized bound; see API limits
+        real(dp), intent(in), optional :: loc !! finite parent location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite parent scale, default one
+        real(dp) :: value, params(5)
+        value = quiet_nan(0.0_dp)
+        params = [a,0.0_dp,1.0_dp,0.0_dp,c]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (a < tiny(1.0_dp) .or. a > 1.0e6_dp) return
+        if (abs(c) < 1.0e-6_dp .or. abs(c) > 1.0e6_dp .or. params(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,params,gg_lpdf,gg_lcdf, &
+            gg_lsf,gg_interval)
+    end function gengamma_censored_loglikelihood
+
+    pure function gengamma_censored_nnlf(data, a, c, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: c !! family shape or standardized bound; see API limits
+        real(dp), intent(in), optional :: loc !! finite parent location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite parent scale, default one
+        real(dp) :: value
+        value = -gengamma_censored_loglikelihood(data,a, c,loc,scale)
+    end function gengamma_censored_nnlf
+
+    pure function truncnorm_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: b !! family shape or standardized bound; see API limits
+        real(dp), intent(in), optional :: loc !! finite parent location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite parent scale, default one
+        real(dp) :: value, params(8)
+        logical :: valid
+        value = quiet_nan(0.0_dp)
+        params = [1.0_dp,a,b,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(4) = loc
+        if (present(scale)) params(5) = scale
+        call trunc_setup(params,.true.,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,tn_lpdf,tn_lcdf, &
+            tn_lsf,tn_interval)
+    end function truncnorm_censored_loglikelihood
+
+    pure function truncnorm_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: b !! family shape or standardized bound; see API limits
+        real(dp), intent(in), optional :: loc !! finite parent location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite parent scale, default one
+        real(dp) :: value
+        value = -truncnorm_censored_loglikelihood(data,a, b,loc,scale)
+    end function truncnorm_censored_nnlf
+
+    pure function truncweibull_min_censored_loglikelihood(data, c, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: a !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: b !! family shape or standardized bound; see API limits
+        real(dp), intent(in), optional :: loc !! finite parent location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite parent scale, default one
+        real(dp) :: value, params(8)
+        logical :: valid
+        value = quiet_nan(0.0_dp)
+        params = [c,a,b,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(4) = loc
+        if (present(scale)) params(5) = scale
+        call trunc_setup(params,.false.,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,tw_lpdf,tw_lcdf, &
+            tw_lsf,tw_interval)
+    end function truncweibull_min_censored_loglikelihood
+
+    pure function truncweibull_min_censored_nnlf(data, c, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: c !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: a !! family shape or standardized bound; see API limits
+        real(dp), intent(in) :: b !! family shape or standardized bound; see API limits
+        real(dp), intent(in), optional :: loc !! finite parent location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite parent scale, default one
+        real(dp) :: value
+        value = -truncweibull_min_censored_loglikelihood(data,c, a, b,loc,scale)
+    end function truncweibull_min_censored_nnlf
+
 
     ! Independent density and normal-tail identities; see CODE_PROVENANCE.md.
     pure subroutine ig_coordinates(x, params, lz, la, lb, sign_a, logphi)
