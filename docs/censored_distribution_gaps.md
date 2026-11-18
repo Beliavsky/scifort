@@ -9,11 +9,11 @@ interval conventions for angular distributions. SciPy's
 API targets univariate continuous fitting.
 
 The current SciFort fitting registry in [src/fit.f90](../src/fit.f90)
-contains 109 continuous families. One hundred four already have family-specific censored
+contains 109 continuous families. One hundred six already have family-specific censored
 likelihoods in [src/censored.f90](../src/censored.f90): `normal`,
 `exponential`, `weibull`, `lognormal`, `gamma`, `beta`, `logistic`,
 `gumbel_r`, `gumbel_l`, `laplace`, `cauchy`, `halfcauchy`, `halflogistic`,
-`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, `vonmises_line`, `exponnorm`, `skewnorm`, `dpareto_lognorm`, `rice`, `ncx2`, `ncf`, `kstwobign`, `wrapcauchy`, `rel_breitwigner`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `tukeylambda`, `ksone`, and `vonmises` (fixed-branch SciFort extension). That leaves 5 candidates below.
+`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, `vonmises_line`, `exponnorm`, `skewnorm`, `dpareto_lognorm`, `rice`, `ncx2`, `ncf`, `kstwobign`, `wrapcauchy`, `rel_breitwigner`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `nct`, `landau`, `tukeylambda`, `ksone`, and `vonmises` (fixed-branch SciFort extension). That leaves 3 candidates below.
 
 Names follow SciFort's API. The count covers named distribution families in
 the current fitting registry, rather than histogram-backed or custom models.
@@ -23,6 +23,12 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 [censored likelihoods and fitting](censored_fitting.md) for their contracts.
 
 Additional numerical coverage remains within implemented families:
+noncentral-t censoring requires 0.5<=df<=100 and abs(nc)<=10;
+infinite df and wider shape ranges remain unsupported by that method.
+Landau censoring uses an independent saddle-contour left tail to avoid
+loss of relative accuracy in the existing scalar left-tail switch.
+These likelihoods target scaled log accuracy, rather than relative accuracy
+of probabilities whose logarithms have very large magnitude.
 Tukey lambda currently requires abs(lam)<=5 and either lam=0 or
 abs(lam)>=1e-6, with documented positive-shape affine support limits;
 KSone requires integer 1<=n<=100 and documented affine support limits;
@@ -81,8 +87,8 @@ has the same numerical difficulty or can use the same fitting algorithm.
 
 | Work group | Count | Remaining distributions |
 | --- | ---: | --- |
-| Numerically demanding or specialist families | 5 | `nct`, `landau`, `levy_stable`, `studentized_range`, `kstwo` |
-| **Total** | **5** | |
+| Numerically demanding or specialist families | 3 | `levy_stable`, `studentized_range`, `kstwo` |
+| **Total** | **3** | |
 
 For angular distributions, distinguish intervals in a fixed coordinate range
 from arcs crossing the angular boundary. `vonmises_line` is already covered with

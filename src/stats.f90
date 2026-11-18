@@ -62,6 +62,8 @@ module scifort_stats
     use scifort_censored, only : tukeylambda_censored_loglikelihood, tukeylambda_censored_nnlf
     use scifort_censored, only : ksone_censored_loglikelihood, ksone_censored_nnlf
     use scifort_censored, only : vonmises_censored_loglikelihood, vonmises_censored_nnlf
+    use scifort_censored, only : nct_censored_loglikelihood, nct_censored_nnlf
+    use scifort_censored, only : landau_censored_loglikelihood, landau_censored_nnlf
     use scifort_censored, only : gengamma_censored_loglikelihood, gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
@@ -841,6 +843,8 @@ module scifort_stats
     public :: tukeylambda_censored_loglikelihood, tukeylambda_censored_nnlf
     public :: ksone_censored_loglikelihood, ksone_censored_nnlf
     public :: vonmises_censored_loglikelihood, vonmises_censored_nnlf
+    public :: nct_censored_loglikelihood, nct_censored_nnlf
+    public :: landau_censored_loglikelihood, landau_censored_nnlf
     public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
     public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf

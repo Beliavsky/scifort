@@ -5,6 +5,7 @@
 ! https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
 module scifort_censored
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
+    use scifort_landau, only : landau_logpdf, landau_logcdf, landau_logsf
     use scifort_ksone, only : ksone_logsf
     use scifort_bessel_k, only : log_besselk_scaled
     use scifort_rel_breitwigner, only : rel_breitwigner_cdf, rel_breitwigner_sf
@@ -30,6 +31,8 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: nct_censored_loglikelihood, nct_censored_nnlf
+    public :: landau_censored_loglikelihood, landau_censored_nnlf
     public :: tukeylambda_censored_loglikelihood, tukeylambda_censored_nnlf
     public :: ksone_censored_loglikelihood, ksone_censored_nnlf
     public :: vonmises_censored_loglikelihood, vonmises_censored_nnlf
@@ -160,6 +163,313 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Positive normal/chi mixture in log(sqrt(V/df)); see CODE_PROVENANCE.md.
+    pure function nt_integral(lz, mode, p) result(value)
+        implicit none
+        real(dp), intent(in) :: lz !! log positive standardized magnitude after reflection
+        integer, intent(in) :: mode !! zero density, one upper tail, two lower tail
+        real(dp), intent(in) :: p(:) !! family, location, scale, df, nc, normalizer and rule
+        real(dp) :: value, lo, hi, h, v, term, arg, lr, df, nc, normal
+        integer :: n, i, j
+        df = p(4)
+        nc = p(5)
+        lo = min(0.0_dp,-lz)-(100.0_dp+nc*nc)/df
+        hi = 0.5_dp*log((df+200.0_dp+nc*nc)/df)
+        if (mode /= 2) hi = min(hi,log(abs(nc)+40.0_dp)-lz)
+        n = max(1,ceiling((hi-lo)/0.25_dp))
+        h = (hi-lo)/real(n,dp)
+        value = negative_infinity(0.0_dp)
+        do j = 1, n
+            do i = 1, 16
+                v = lo+(real(j-1,dp)+0.5_dp*(1.0_dp+p(6+i)))*h
+                lr = lz+v
+                if (lr > log(abs(nc)+40.0_dp)) then
+                    if (mode /= 2) cycle
+                    normal = 0.0_dp
+                else
+                    arg = exp(lr)-nc
+                    select case (mode)
+                    case (0)
+                        normal = -0.5_dp*arg*arg-scifort_log_sqrt_two_pi
+                    case (1)
+                        normal = normal_logsf(arg)
+                    case default
+                        normal = normal_logcdf(arg)
+                    end select
+                end if
+                term = df*v-0.5_dp*df*exp(2.0_dp*v)+normal+log(p(22+i))
+                if (mode == 0) term = term+v
+                value = bounded_logadd(value,term)
+            end do
+        end do
+        value = value+p(6)+log(0.5_dp*h)
+        if (mode /= 0) value = min(0.0_dp,value)
+    end function nt_integral
+
+    pure subroutine sp_coordinate(x, p, z, lz)
+        implicit none
+        real(dp), intent(in) :: x !! finite physical observation
+        real(dp), intent(in) :: p(:) !! packed specialist distribution parameters
+        real(dp), intent(out) :: z !! standardized value, possibly infinite
+        real(dp), intent(out) :: lz !! log absolute standardized value
+        lz = negative_infinity(0.0_dp)
+        if (x > p(2)) lz = log_distance(x,p(2))-log(p(3))
+        if (x < p(2)) lz = log_distance(p(2),x)-log(p(3))
+        z = location_scale_z(x,p(2:3))
+    end subroutine sp_coordinate
+
+    pure subroutine sp_logs(x, p, ld, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite physical observation
+        real(dp), intent(in) :: p(:) !! family, location, scale, shapes and quadrature rule
+        real(dp), intent(out) :: ld !! log density in physical units
+        real(dp), intent(out) :: lp !! log CDF
+        real(dp), intent(out) :: lq !! log SF
+        real(dp) :: z, lz, pp(38), small, large
+        call sp_coordinate(x,p,z,lz)
+        if (p(1) == 1.0_dp) then
+            pp = p
+            if (x < p(2)) pp(5) = -p(5)
+            small = nt_integral(lz,1,pp)
+            if (small <= -scifort_log_two) then
+                large = ig_complement(small)
+            else
+                large = nt_integral(lz,2,pp)
+                small = ig_complement(large)
+            end if
+            if (x < p(2)) then
+                lp = small
+                lq = large
+            else
+                lp = large
+                lq = small
+            end if
+            ld = nt_integral(lz,0,pp)-log(p(3))
+        else
+            if (z <= -1.0_dp) then
+                call ld_left(z,p,ld,lp)
+                ld = ld-log(p(3))
+                lq = ig_complement(lp)
+            else if (lz >= log(1.0e100_dp) .and. x > p(2)) then
+                lq = log(2.0_dp/scifort_pi)-lz
+                lp = ig_complement(lq)
+                ld = lq-lz-log(p(3))
+            else
+                ld = landau_logpdf(z)-log(p(3))
+                lp = landau_logcdf(z)
+                lq = landau_logsf(z)
+                if (lp <= -scifort_log_two) then
+                    lq = ig_complement(lp)
+                else
+                    lp = ig_complement(lq)
+                end if
+            end if
+        end if
+    end subroutine sp_logs
+
+    ! Bromwich inversion on the real saddle of E[exp(-s X)]=exp((2/pi)*s*log(s)).
+    pure subroutine ld_left(z, p, ld, lp)
+        implicit none
+        real(dp), intent(in) :: z !! standardized observation at most -1
+        real(dp), intent(in) :: p(:) !! packed Gauss-Legendre nodes and weights
+        real(dp), intent(out) :: ld !! standard log density
+        real(dp), intent(out) :: lp !! standard log CDF
+        real(dp) :: ls, sigma, root, hi, h, v, u, u2, phase, decay, wd, sd, sp
+        integer :: n, i, j
+        ld = negative_infinity(0.0_dp)
+        lp = ld
+        if (z < -500.0_dp) return
+        ls = -0.5_dp*scifort_pi*z-log(0.5_dp*scifort_pi)-1.0_dp
+        if (ls >= log(huge(1.0_dp))) return
+        sigma = exp(ls)
+        if (ls > log(1.0e12_dp)) then
+            ! The first omitted relative correction is O(1/sigma).
+            ld = -sigma+0.5_dp*ls+log(0.5_dp*scifort_pi)-scifort_log_sqrt_two_pi
+            lp = -sigma-0.5_dp*ls-scifort_log_sqrt_two_pi
+            return
+        end if
+        root = sqrt(sigma)
+        hi = max(16.0_dp,80.0_dp/root)
+        n = ceiling(hi/0.5_dp)
+        h = hi/real(n,dp)
+        sd = 0.0_dp
+        sp = 0.0_dp
+        do j = 1, n
+            do i = 1, 16
+                v = (real(j-1,dp)+0.5_dp*(1.0_dp+p(6+i)))*h
+                u = v/root
+                u2 = u*u
+                decay = sigma*(0.5_dp*log1p_safe(u2)-u*atan(u))
+                if (u < 0.01_dp) then
+                    phase = sigma*u*u2*(1.0_dp/6.0_dp-u2*(1.0_dp/20.0_dp &
+                        -u2*(1.0_dp/42.0_dp-u2/72.0_dp)))
+                else
+                    phase = sigma*(atan(u)+0.5_dp*u*log1p_safe(u2)-u)
+                end if
+                wd = p(22+i)*exp(decay)
+                sd = sd+wd*cos(phase)
+                sp = sp+wd*(cos(phase)+u*sin(phase))/(1.0_dp+u2)
+            end do
+        end do
+        ld = -sigma+0.5_dp*ls-scifort_log_two+log(0.5_dp*h*sd)
+        lp = -sigma-0.5_dp*ls-log(scifort_pi)+log(0.5_dp*h*sp)
+    end subroutine ld_left
+
+    pure function sp_pdf(x, p) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! packed specialist distribution parameters
+        real(dp) :: value, lp, lq, z, lz, pp(38)
+        if (p(1) == 1.0_dp) then
+            call sp_coordinate(x,p,z,lz)
+            pp = p
+            if (x < p(2)) pp(5) = -p(5)
+            value = nt_integral(lz,0,pp)-log(p(3))
+        else
+            call sp_logs(x,p,value,lp,lq)
+        end if
+    end function sp_pdf
+
+    pure function sp_cdf(x, p) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: p(:) !! packed specialist distribution parameters
+        real(dp) :: value, ld, lq
+        call sp_logs(x,p,ld,value,lq)
+    end function sp_cdf
+
+    pure function sp_sf(x, p) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: p(:) !! packed specialist distribution parameters
+        real(dp) :: value, ld, lp
+        call sp_logs(x,p,ld,lp,value)
+    end function sp_sf
+
+    pure function sp_interval(a, b, p) result(value)
+        implicit none
+        real(dp), intent(in) :: a !! finite lower interval endpoint
+        real(dp), intent(in) :: b !! finite upper interval endpoint, greater than a
+        real(dp), intent(in) :: p(:) !! packed specialist distribution parameters
+        real(dp) :: value, la, lb, qa, qb, da, db, lw, z, lz, width, t, pp(38), ld
+        integer :: i
+        call sp_logs(a,p,da,la,qa)
+        call sp_logs(b,p,db,lb,qb)
+        if (lb <= -scifort_log_two) then
+            if (la < lb-0.01_dp .or. .not. ieee_is_finite(lb)) then
+                value = log_difference(lb,la)
+                if (.not. ieee_is_finite(lb)) value = lb
+                return
+            end if
+        else if (qa <= -scifort_log_two) then
+            if (qb < qa-0.01_dp) then
+                value = log_difference(qa,qb)
+                return
+            end if
+        else if (la < lb-0.01_dp) then
+            value = log_difference(lb,la)
+            return
+        end if
+        ! Positive density integration keeps adjacent physical endpoints distinct.
+        lw = log_distance(b,a)-log(p(3))
+        call sp_coordinate(a,p,z,lz)
+        if (lz >= log(1.0e100_dp)) then
+            ! Beyond this magnitude power-law corrections are negligible. Use
+            ! physical distance ratios even when quadrature nodes would overflow.
+            t = 1.0_dp
+            if (p(1) == 1.0_dp) t = p(4)
+            if (a > p(2)) then
+                ld = log_distance(b,a)-log_distance(a,p(2))
+                value = qa+log_exponential_mass(log(t)+burr_logsoftplus(ld))
+            else if (b < p(2) .and. p(1) == 1.0_dp) then
+                ld = log_distance(b,a)-log_distance(p(2),b)
+                value = lb+log_exponential_mass(log(t)+burr_logsoftplus(ld))
+            else
+                value = negative_infinity(0.0_dp)
+            end if
+            return
+        end if
+        if (lw < log(tiny(1.0_dp))) then
+            value = da+log_distance(b,a)
+            return
+        end if
+        width = exp(lw)
+        pp = p
+        pp(2:3) = [0.0_dp,1.0_dp]
+        value = negative_infinity(0.0_dp)
+        do i = 1, 16
+            t = z+0.5_dp*(1.0_dp+p(6+i))*width
+            ld = sp_pdf(t,pp)
+            value = bounded_logadd(value,ld+log(p(22+i)))
+        end do
+        value = min(0.0_dp,value+lw-scifort_log_two)
+    end function sp_interval
+
+    pure function nct_censored_loglikelihood(data, df, nc, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in [0.5,100]
+        real(dp), intent(in) :: nc !! noncentrality in [-10,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(38)
+        real(dp), allocatable :: nodes(:), weights(:)
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(1:6) = [1.0_dp,0.0_dp,1.0_dp,df,nc,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        if (df < 0.5_dp .or. df > 100.0_dp .or. abs(nc) > 10.0_dp) return
+        params(6) = scifort_log_two+0.5_dp*df*log(0.5_dp*df)-log_gamma(0.5_dp*df)
+        call roots_legendre(16,nodes,weights)
+        params(7:22) = nodes
+        params(23:38) = weights
+        value = censored_loglikelihood(data,params,sp_pdf,sp_cdf,sp_sf,sp_interval)
+    end function nct_censored_loglikelihood
+
+    pure function nct_censored_nnlf(data, df, nc, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in [0.5,100]
+        real(dp), intent(in) :: nc !! noncentrality in [-10,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -nct_censored_loglikelihood(data,df,nc,loc,scale)
+    end function nct_censored_nnlf
+
+    pure function landau_censored_loglikelihood(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(38)
+        real(dp), allocatable :: nodes(:), weights(:)
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(1:6) = [2.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params))) return
+        if (params(3) <= 0.0_dp) return
+        call roots_legendre(16,nodes,weights)
+        params(7:22) = nodes
+        params(23:38) = weights
+        value = censored_loglikelihood(data,params,sp_pdf,sp_cdf,sp_sf,sp_interval)
+    end function landau_censored_loglikelihood
+
+    pure function landau_censored_nnlf(data, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -landau_censored_loglikelihood(data,loc,scale)
+    end function landau_censored_nnlf
+
 
     ! Log-probability inversion of the Tukey quantile; see CODE_PROVENANCE.md.
     pure function tl_target(lq, lam, endpoint) result(v)

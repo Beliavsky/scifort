@@ -79,6 +79,8 @@ module scifort_fit
     use scifort_censored, only : tukeylambda_censored_nnlf
     use scifort_censored, only : ksone_censored_nnlf
     use scifort_censored, only : vonmises_censored_nnlf
+    use scifort_censored, only : nct_censored_nnlf
+    use scifort_censored, only : landau_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -936,7 +938,42 @@ module scifort_fit
         module procedure vonmises_fit, vonmises_fit_censored
     end interface vonmises_fit
 
+    interface nct_fit
+        module procedure nct_fit, nct_fit_censored
+    end interface nct_fit
+
+    interface landau_fit
+        module procedure landau_fit, landau_fit_censored
+    end interface landau_fit
+
 contains
+
+    subroutine nct_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in df, nc, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_nct,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine nct_fit_censored
+
+    subroutine landau_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(2) !! finite lower bounds in loc, scale order
+        real(dp), intent(in) :: upper(2) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(2) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_landau,lower,upper,result,guess, &
+            [.false., .false.],max_iter,tolerance,data)
+    end subroutine landau_fit_censored
+
 
     subroutine tukeylambda_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2814,6 +2851,10 @@ contains
                 value = ksone_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_vonmises)
                 value = vonmises_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_nct)
+                value = nct_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_landau)
+                value = landau_censored_nnlf(censored,params(1),params(2))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

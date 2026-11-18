@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, Tukey lambda, one-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, noncentral Student t, Landau, Tukey lambda, one-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,8 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+nct_censored_loglikelihood(data, df, nc [, loc, scale])
+landau_censored_loglikelihood(data [, loc, scale])
 tukeylambda_censored_loglikelihood(data, lam [, loc, scale])
 ksone_censored_loglikelihood(data, n [, loc, scale])
 vonmises_censored_loglikelihood(data, kappa [, loc, scale])
@@ -2854,3 +2856,65 @@ likelihoods equal zero; empty fits are invalid; equal finite interval
 endpoints are exact observations; one infinite interval endpoint uses a
 one-sided probability; two infinite endpoints and NaNs are invalid.
 See [numerical validation](../validation/quantile_ks_censored_2026-11-18.md).
+
+## Noncentral Student t and Landau censoring
+
+`nct_censored_loglikelihood`, `nct_censored_nnlf`, and the censored
+`nct_fit` overload use `[df,nc,loc,scale]` bounds order. The censored method
+currently accepts **0.5<=df<=100** and **abs(nc)<=10**, with finite location
+and positive finite scale. Infinite df and shapes outside these limits
+return NaN, including for empty likelihood data; fit bounds must remain
+within the supported domain. These restrictions are specific to the
+censored method, and do not change the existing scalar distribution API.
+
+The noncentral-t likelihood integrates the positive normal/chi mixture on
+`log(sqrt(V/df))`, using a composite 16-point Gauss-Legendre rule with
+maximum panel width 0.25. The lower integration bound is shifted with
+`log(abs(z))`; a lower cutoff of `(100+nc**2)/df` and an upper normal-numerator
+cutoff of abs(nc)+40 keep discarded contributions below the tested log
+error target in this shape domain. Complementary tails are evaluated from
+the smaller tail. This avoids cancellation and a fixed gamma-probability
+floor in remote tails. Log absolute standardized distances retain finite
+power-law log densities and tails even when direct division overflows.
+
+`landau_censored_loglikelihood`, `landau_censored_nnlf`, and censored
+`landau_fit` use `[loc,scale]` bounds order, with finite location and
+positive finite scale. The parameterization is the same as SciFort's
+existing scalar Landau API and SciPy's location-scale interface; there is
+no extra scale-dependent location shift.
+
+For standardized `z<=-1`, the likelihood independently inverts the Landau
+Laplace transform on a vertical contour through its real saddle. Scaling
+out the saddle exponent avoids both tiny-probability underflow and the
+existing scalar left-tail asymptotic switch error near -2.7. At saddle
+magnitude greater than 1e12, it uses the leading saddle terms; the omitted
+relative expansion corrections are O(1/saddle). Central and right tails
+reuse the existing Landau kernels. At positive standardized magnitudes
+at least 1e100, the leading `2/(pi*z)` survival law and `2/(pi*z**2)` density
+are evaluated through log absolute distances. A log probability below
+binary64's finite range returns negative infinity; its complementary log
+probability is zero after underflow.
+
+For both families, intervals use well-separated log-tail differences or a
+positive 16-point density integral for nearby endpoints. The latter uses
+standardized offsets and the physical interval's log width, so adjacent
+and subnormal widths survive physical-location rounding. At standardized
+magnitudes at least 1e100, same-side intervals instead use the leading
+power-law tail with physical distance ratios: exponent df for noncentral t,
+and exponent 1 for Landau's right tail. This retains finite log masses and
+relative interval widths even when one or both standardized endpoints
+overflow. Corrections to those limiting laws are negligible at that cutoff
+within the supported shape domain. All four observation types may be mixed
+in one dataset. Valid empty likelihoods
+are zero; empty fits and invalid data are rejected by the existing shared
+contract. Existing real-array fit overloads remain available.
+
+The tested target is `3e-11*max(1,abs(reference_log_value))`, with separate
+relative checks for tiny complementary logs. For very large negative log
+values, this does not promise small relative error in the underlying
+probability or last-bit monotonicity. The new censored noncentral-t
+integration and Landau contour are deliberately independent of the
+existing scalar quadratures, so their last bits and difficult tails may
+differ. See [validation](../validation/specialist_censored_2026-11-18.md)
+for independent references, commands, and results. No C ABI or wrapper
+entry points are added in this batch.

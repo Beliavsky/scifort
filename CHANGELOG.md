@@ -1,5 +1,18 @@
 ## 2026-11-18 - Quantile, KSone, and fixed-branch censoring
 
+## 2026-11-18 - censored noncentral Student t and Landau
+
+- Add native censored likelihoods, NNLFs and bounded-fit overloads for
+  noncentral Student t and Landau, preserving existing real-array fit calls.
+- Use positive log-coordinate normal/chi integration for noncentral t,
+  independent Landau saddle-contour left tails, and positive narrow-interval
+  density integration. Preserve finite power-law log tails after standardized
+  division overflow. Document noncentral-t shape limits and log error targets.
+- Named-family coverage increases to 106 of 109; `levy_stable`,
+  `studentized_range`, and `kstwo` remain, alongside documented numerical
+  range and angular-arc gaps. C ABI work remains deferred.
+
+
 - Add Tukey-lambda and one-sided finite-sample KS censored likelihoods,
   NNLFs, bounded fits, and statistics exports, preserving real-array fits.
 - Retain log quantile probabilities, physical endpoint distances, narrow
