@@ -1,3 +1,13 @@
+## 2026-11-18 - Normal-mixture censoring
+
+- Add EMG, skew-normal, and double Pareto-lognormal censored likelihoods,
+  NNLFs, fit overloads, and statistics exports, preserving real-array fits.
+- Retain Gaussian/exponential log tails, adjacent physical intervals, and
+  positive double Pareto-lognormal mixture probabilities in log space.
+- Document validated shape and coordinate limits, parameter confounding,
+  original mathematical provenance, and checked/optimized validation.
+- Coverage is 92 continuous families with 17 remaining.
+
 ## 2026-11-18 - Remaining bounded-family censoring
 
 - Add Gauss hypergeometric, Irwin-Hall, and real-line von Mises censored

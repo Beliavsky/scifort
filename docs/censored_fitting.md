@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+exponnorm_censored_loglikelihood(data, k [, loc, scale])
+skewnorm_censored_loglikelihood(data, a [, loc, scale])
+dpareto_lognorm_censored_loglikelihood(data, u, s, a, b [, loc, scale])
 gausshyper_censored_loglikelihood(data, a, b, c, z [, loc, scale])
 irwinhall_censored_loglikelihood(data, n [, loc, scale])
 vonmises_line_censored_loglikelihood(data, kappa [, loc, scale])
@@ -185,7 +188,7 @@ responsibility for the generic procedure.
 
 ## Bounded fits
 
-The existing `gausshyper_fit`, `irwinhall_fit`, `vonmises_line_fit`, `argus_fit`, `pearson3_fit`, `kappa4_fit`, `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
+The existing `exponnorm_fit`, `skewnorm_fit`, `dpareto_lognorm_fit`, `gausshyper_fit`, `irwinhall_fit`, `vonmises_line_fit`, `argus_fit`, `pearson3_fit`, `kappa4_fit`, `alpha_fit`, `genextreme_fit`, `crystalball_fit`, `gengamma_fit`, `truncnorm_fit`, `truncweibull_min_fit`, `invgauss_fit`, `wald_fit`, `recipinvgauss_fit`, `t_fit`, `f_fit`, `jf_skew_t_fit`, `chi2_fit`, `chi_fit`, `nakagami_fit`, `gennorm_fit`, `halfgennorm_fit`, `rdist_fit`, `foldnorm_fit`, `foldcauchy_fit`, `genpareto_fit`, `loguniform_fit`, `truncpareto_fit`, `genhalflogistic_fit`, `truncexpon_fit`, `johnsonsb_fit`, `kappa3_fit`, `cosine_fit`, `anglit_fit`, `semicircular_fit`, `fatiguelife_fit`, `johnsonsu_fit`, `genexpon_fit`, `exponpow_fit`, `exponweib_fit`, `mielke_fit`, `powernorm_fit`, `powerlognorm_fit`, `skewcauchy_fit`, `invgamma_fit`, `betaprime_fit`, `maxwell_fit`, `dgamma_fit`, `dweibull_fit`, `loggamma_fit`, `bradford_fit`, `triang_fit`, `trapezoid_fit`, `moyal_fit`, `levy_fit`, `levy_l_fit`, `normal_fit`, `exponential_fit`, `weibull_fit`, `weibull_max_fit`,
 `genlogistic_fit`, `gompertz_fit`, `invweibull_fit`, `rayleigh_fit`, `uniform_fit`, `powerlaw_fit`, `arcsine_fit`, `fisk_fit`, `burr_fit`, `burr12_fit`, `lomax_fit`, `pareto_fit`, `loglaplace_fit`, `lognormal_fit`, `gibrat_fit`, `gamma_fit`, `erlang_fit`,
 `beta_fit`, `cauchy_fit`, `laplace_fit`, `laplace_asymmetric_fit`, `logistic_fit`, `halfcauchy_fit`,
 `halflogistic_fit`, `halfnorm_fit`, `hypsecant_fit`, `gumbel_r_fit`, and `gumbel_l_fit` generics accept
@@ -2494,3 +2497,80 @@ Definitions: [Gauss hypergeometric](https://docs.scipy.org/doc/scipy/reference/g
 [Irwin-Hall](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.irwinhall.html),
 and [line von Mises](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.vonmises_line.html).
 See the [validation record](../validation/bounded_final_censored_2026-11-18.md).
+
+
+## Normal-exponential, skew-normal, and double Pareto-lognormal details
+
+The likelihoods and corresponding `*_censored_nnlf` functions are exported
+by `scifort_censored` and `scifort_stats`. Existing fit generics accept
+`censored_data` and retain their real-array overloads.
+
+| Family | Fit bounds order | Current censored shape limits | Standard support |
+| --- | --- | --- | --- |
+| `exponnorm` | k, loc, scale | 0.01<=k<=100 | real line |
+| `skewnorm` | a, loc, scale | abs(a)<=10 | real line |
+| `dpareto_lognorm` | u, s, a, b, loc, scale | abs(u)<=100; 0.01<=s<=10; 0.01<=a,b<=100 | positive half-line |
+
+All parameters must be finite and scale positive, with omitted loc/scale
+defaulting to zero/one. These numerical limits apply to the new censored
+methods, not the existing scalar APIs. Invalid parameters return NaN even
+for empty data; a valid empty likelihood is zero and an empty fit invalid.
+Equal bounds fix any parameter. Fit success denotes bounded local
+convergence, not a global optimum. Double Pareto-lognormal u and outer
+scale are confounded through u+log(scale); fixing one is advisable when
+interpreting parameters. All-free candidates remain supported.
+
+For the exponentially modified normal, r=1/k and
+H(z,r)=exp(r*r/2-r*z)*Phi(z-r), z=(x-loc)/scale. The standard PDF is
+r*H, CDF is Phi(z)-H, and SF is Phi(-z)+H. In the Gaussian tail,
+H=phi(z)*R(r-z), where R is the normal Mills ratio. When z<=-12,
+the CDF uses phi(z)*(R(-z)-R(r-z)), retaining r independently in the
+existing factored Mills-ratio difference. This avoids cancellation of
+large Gaussian exponents and nearly equal Mills ratios. The exponential
+right tail is evaluated directly, with guarded products for log overflow.
+CDF/SF values near one complement the smaller logarithmic tail, retaining
+representable tiny log probabilities rather than rounding them to zero.
+
+Skew-normal uses 2*phi(z)*Phi(a*z). Its a=0 case is normal and
+F(0)=1/2-atan(a)/pi. For z<=0 and a>=0, direct relative-density
+integration uses t=z-v/rate with rate=1+a+(1+a*a)*abs(z). A composite
+GL16 rule uses 24 panels on 0<=v<=48. The omitted integral relative to
+the endpoint density is bounded by exp(-47); the normalized omitted
+fraction is below 4*exp(-47). Negative shapes use
+F(z,a)=2*Phi(z)-F(z,-a), and upper tails use reflection. Normal Mills
+ratios retain relative density changes when separate Gaussian log densities
+would round equal. Logarithms remain finite after ordinary tail underflow.
+
+For double Pareto-lognormal, let y=(x-loc)/scale and
+z=(log(y)-u)/s. Its log coordinate is a positive mixture of an EMG with
+rate a*s and weight b/(a+b), and a reflected EMG with rate b*s and
+weight a/(a+b). CDF, SF, density, and interval masses use these positive
+mixtures rather than signed probability sums. When the requested tail
+exceeds one half, its log uses the complementary smaller mixture. This
+retains tiny negative log-CDF/log-SF values. The physical distance
+log(x-loc) is retained before scaling, including when x-loc or y would
+overflow or y would underflow. As in the existing scalar API, exact
+observations at x=loc have zero density; CDF/SF there are zero/one.
+
+Narrow EMG/skew-normal intervals use three-point Gauss-Legendre integration
+of log densities with the physical width retained before standardization.
+The small-window criterion bounds width times a conservative density-slope
+scale by 0.001. Other intervals use the better logarithmic tail difference.
+EMG intervals beginning above r+40 use the exponential hazard increment
+directly; omitted Gaussian corrections are below ordinary binary64 precision.
+Double Pareto-lognormal intervals retain log(log(1+(b-a)/(a-loc)))-log(s)
+before separately integrating the two normal-exponential components.
+
+These functions do not provide additional precision for input coordinates.
+For EMG/skew-normal, a standard coordinate that overflows is treated as
+infinite; a finite log tail can be lost if scaling overflows before a small
+exponential rate is applied. Gaussian logs outside binary64 range return
+negative infinity. Very steep intervals can be ill-conditioned relative
+to input rounding; scaled log-error tests are not uniform relative
+probability guarantees. Wider shape ranges remain numerical coverage gaps.
+Equal finite and infinite one-sided intervals follow the shared conventions.
+
+Definitions: [EMG](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponnorm.html),
+[skew-normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.skewnorm.html),
+and [double Pareto-lognormal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dpareto_lognorm.html).
+See the [validation record](../validation/normal_mix_censored_2026-11-18.md).

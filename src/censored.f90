@@ -27,6 +27,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: exponnorm_censored_loglikelihood, exponnorm_censored_nnlf
+    public :: skewnorm_censored_loglikelihood, skewnorm_censored_nnlf
+    public :: dpareto_lognorm_censored_loglikelihood, dpareto_lognorm_censored_nnlf
     public :: gausshyper_censored_loglikelihood, gausshyper_censored_nnlf
     public :: irwinhall_censored_loglikelihood, irwinhall_censored_nnlf
     public :: vonmises_line_censored_loglikelihood, vonmises_line_censored_nnlf
@@ -142,6 +145,463 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Parameters: family, loc, scale, up to four shapes, GL16 nodes and weights.
+    pure subroutine nm_prepare(par, valid)
+        implicit none
+        real(dp), intent(inout) :: par(39) !! packed family parameters and local quadrature rule
+        logical, intent(out) :: valid !! true for supported finite parameters
+        real(dp), allocatable :: nodes(:), weights(:)
+        integer :: status
+        valid = .false.
+        if (.not. all(ieee_is_finite(par))) return
+        if (par(3) <= 0.0_dp) return
+        select case (int(par(1)))
+        case (1)
+            if (par(4) < 0.01_dp .or. par(4) > 100.0_dp) return
+        case (2)
+            if (abs(par(4)) > 10.0_dp) return
+            call roots_legendre(16,nodes,weights,status=status)
+            if (status /= 0) return
+            par(8:23) = nodes
+            par(24:39) = weights
+        case (3)
+            if (abs(par(4)) > 100.0_dp) return
+            if (par(5) < 0.01_dp .or. par(5) > 10.0_dp) return
+            if (minval(par(6:7)) < 0.01_dp .or. maxval(par(6:7)) > 100.0_dp) return
+        end select
+        valid = .true.
+    end subroutine nm_prepare
+
+    pure function nm_normal_pdf(z) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! real standard coordinate, possibly infinite
+        real(dp) :: value
+        value = negative_infinity(z)
+        if (abs(z) > sqrt(2.0_dp)*sqrt(huge(1.0_dp))) return
+        value = normal_logpdf(z)
+    end function nm_normal_pdf
+
+    pure function nm_emg_h(z, rate) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized real normal coordinate
+        real(dp), intent(in) :: rate !! exponential rate in [1e-4,1000]
+        real(dp) :: value, q
+        value = negative_infinity(z)
+        if (.not. ieee_is_finite(z)) return
+        if (z <= rate) then
+            q = rate-z
+            if (q == 0.0_dp) then
+                value = nm_normal_pdf(z)+0.5_dp*log(scifort_pi/2.0_dp)
+            else
+                value = nm_normal_pdf(z)+ig_logmills(log(q))
+            end if
+        else
+            if (rate > 1.0_dp) then
+                if (z > huge(1.0_dp)/rate) return
+            end if
+            value = rate*(rate/2.0_dp-z)+normal_logcdf(z-rate)
+        end if
+    end function nm_emg_h
+
+    pure function nm_emg_pdf(z, rate) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized real normal coordinate
+        real(dp), intent(in) :: rate !! positive exponential rate
+        real(dp) :: value
+        value = log(rate)+nm_emg_h(z,rate)
+    end function nm_emg_pdf
+
+    pure function nm_emg_cdf(z, rate) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized real normal coordinate
+        real(dp), intent(in) :: rate !! positive exponential rate
+        real(dp) :: value, upper
+        if (.not. ieee_is_finite(z)) then
+            value = 0.0_dp
+            if (z < 0.0_dp) value = negative_infinity(z)
+            return
+        end if
+        if (z <= -12.0_dp) then
+            value = nm_normal_pdf(z)+ig_mills_difference(log(-z),log(rate-z),log(rate))
+        else if (z > 0.0_dp) then
+            upper = min(0.0_dp,bounded_logadd(normal_logsf(z),nm_emg_h(z,rate)))
+            if (upper < -scifort_log_two) then
+                value = ig_complement(upper)
+            else
+                value = log_difference(normal_logcdf(z),nm_emg_h(z,rate))
+            end if
+        else
+            value = log_difference(normal_logcdf(z),nm_emg_h(z,rate))
+        end if
+    end function nm_emg_cdf
+
+    pure function nm_emg_sf(z, rate) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized real normal coordinate
+        real(dp), intent(in) :: rate !! positive exponential rate
+        real(dp) :: value
+        if (z <= 0.0_dp) then
+            value = ig_complement(nm_emg_cdf(z,rate))
+        else
+            value = min(0.0_dp,bounded_logadd(normal_logsf(z),nm_emg_h(z,rate)))
+            if (value > -scifort_log_two) value = ig_complement(nm_emg_cdf(z,rate))
+        end if
+    end function nm_emg_sf
+
+    pure function nm_emg_mass(za, zb, lw, rate) result(value)
+        implicit none
+        real(dp), intent(in) :: za, zb !! ordered standard coordinates, possibly rounded equal
+        real(dp), intent(in) :: lw !! log of positive standard interval width
+        real(dp), intent(in) :: rate !! positive exponential rate
+        real(dp) :: value, lbound, width, lp, lq, node, total
+        integer :: j
+        if (za > rate+40.0_dp) then
+            value = nm_emg_h(za,rate)+log_exponential_mass(log(rate)+lw)
+            return
+        end if
+        if (ieee_is_finite(za) .and. ieee_is_finite(zb)) then
+            lbound = log(max(1.0_dp,abs(za),abs(zb)))+log(2.0_dp+rate)
+            if (lw+lbound < log(0.001_dp)) then
+                width = exp(lw)
+                total = negative_infinity(0.0_dp)
+                do j = -1, 1
+                    node = (1.0_dp+real(j,dp)*sqrt(3.0_dp/5.0_dp))/2.0_dp
+                    lp = log(5.0_dp/18.0_dp)
+                    if (j == 0) lp = log(4.0_dp/9.0_dp)
+                    total = bounded_logadd(total,lp+nm_emg_pdf(za+node*width,rate))
+                end do
+                value = lw+total
+                return
+            end if
+        end if
+        lp = nm_emg_cdf(zb,rate)
+        lq = nm_emg_sf(za,rate)
+        if (lp <= lq) then
+            value = log_difference(lp,nm_emg_cdf(za,rate))
+        else
+            value = log_difference(lq,nm_emg_sf(zb,rate))
+        end if
+    end function nm_emg_mass
+
+    pure function nm_skew_pdf(z, shape) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! real standardized observation
+        real(dp), intent(in) :: shape !! skewness in [-10,10]
+        real(dp) :: value, lp, lq, az
+        value = negative_infinity(z)
+        if (.not. ieee_is_finite(z)) return
+        lp = nm_normal_pdf(z)
+        if (.not. ieee_is_finite(lp)) return
+        if (abs(shape) > 1.0_dp) then
+            if (abs(z) > huge(1.0_dp)/abs(shape)) return
+        end if
+        az = shape*z
+        lq = normal_logcdf(az)
+        if (.not. ieee_is_finite(lq)) return
+        if (lp < -huge(1.0_dp)-lq) return
+        value = scifort_log_two+lp+lq
+    end function nm_skew_pdf
+
+    pure function nm_skew_positive(z, shape, par) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! nonpositive standardized threshold
+        real(dp), intent(in) :: shape !! nonnegative skewness in [0,10]
+        real(dp), intent(in) :: par(:) !! local GL16 rule in elements 8:39
+        real(dp) :: value, base, y, ay, rate, v, w, relative, total, logmills
+        integer :: i, j
+        base = nm_skew_pdf(z,shape)
+        value = base
+        if (.not. ieee_is_finite(base)) return
+        y = -z
+        ay = shape*y
+        rate = 1.0_dp+shape+(1.0_dp+shape*shape)*y
+        logmills = 0.0_dp
+        if (ay >= 12.0_dp) logmills = ig_logmills(log(ay))
+        total = negative_infinity(0.0_dp)
+        do i = 0, 23
+            do j = 1, 16
+                v = real(2*i+1,dp)+par(7+j)
+                w = v/rate
+                if (ay >= 12.0_dp) then
+                    relative = -(1.0_dp+shape*shape)*y*w &
+                        -0.5_dp*(1.0_dp+shape*shape)*w*w &
+                        +ig_logmills(log(ay+shape*w))-logmills
+                else
+                    relative = -y*w-0.5_dp*w*w &
+                        +normal_logcdf(-ay-shape*w)-normal_logcdf(-ay)
+                end if
+                total = bounded_logadd(total,log(par(23+j))+relative)
+            end do
+        end do
+        value = min(0.0_dp,base-log(rate)+total)
+    end function nm_skew_positive
+
+    pure function nm_skew_lower(z, shape, par) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! nonpositive standard coordinate
+        real(dp), intent(in) :: shape !! skewness in [-10,10]
+        real(dp), intent(in) :: par(:) !! prepared family parameters
+        real(dp) :: value
+        if (shape == 0.0_dp) then
+            value = normal_logcdf(z)
+        else if (shape > 0.0_dp) then
+            value = nm_skew_positive(z,shape,par)
+        else
+            value = log_difference(scifort_log_two+normal_logcdf(z), &
+                nm_skew_positive(z,-shape,par))
+        end if
+    end function nm_skew_lower
+
+    pure function nm_skew_tail(z, shape, par) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! real standard coordinate
+        real(dp), intent(in) :: shape !! skewness in [-10,10]
+        real(dp), intent(in) :: par(:) !! prepared family parameters
+        real(dp) :: value
+        if (z <= 0.0_dp) then
+            value = nm_skew_lower(z,shape,par)
+        else
+            value = ig_complement(nm_skew_lower(-z,-shape,par))
+        end if
+    end function nm_skew_tail
+
+    pure function nm_dpl_tail(z, par, upper) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! standardized lognormal coordinate
+        real(dp), intent(in) :: par(:) !! u, s, a, b in elements 4:7
+        logical, intent(in) :: upper !! true for log survival probability
+        real(dp) :: value, plus, minus, wa, wb
+        wa = log(par(7))-log(par(6)+par(7))
+        wb = log(par(6))-log(par(6)+par(7))
+        if (upper) then
+            plus = nm_emg_sf(z,par(6)*par(5))
+            minus = nm_emg_cdf(-z,par(7)*par(5))
+        else
+            plus = nm_emg_cdf(z,par(6)*par(5))
+            minus = nm_emg_sf(-z,par(7)*par(5))
+        end if
+        value = min(0.0_dp,bounded_logadd(wa+plus,wb+minus))
+        if (value > -scifort_log_two) then
+            if (upper) then
+                plus = nm_emg_cdf(z,par(6)*par(5))
+                minus = nm_emg_sf(-z,par(7)*par(5))
+            else
+                plus = nm_emg_sf(z,par(6)*par(5))
+                minus = nm_emg_cdf(-z,par(7)*par(5))
+            end if
+            value = ig_complement(min(0.0_dp,bounded_logadd(wa+plus,wb+minus)))
+        end if
+    end function nm_dpl_tail
+
+    pure function nm_lpdf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: par(:) !! prepared family parameters
+        real(dp) :: value, z, ld, plus, minus, norm
+        if (int(par(1)) == 3) then
+            value = negative_infinity(x)
+            if (x <= par(2)) return
+            ld = log_distance(x,par(2))
+            z = (ld-log(par(3))-par(4))/par(5)
+            norm = log(par(6)+par(7))
+            plus = log(par(7))-norm+nm_emg_pdf(z,par(6)*par(5))
+            minus = log(par(6))-norm+nm_emg_pdf(-z,par(7)*par(5))
+            value = bounded_logadd(plus,minus)-log(par(5))-ld
+        else
+            z = location_scale_z(x,par(2:3))
+            if (int(par(1)) == 1) then
+                value = nm_emg_pdf(z,1.0_dp/par(4))-log(par(3))
+            else
+                value = nm_skew_pdf(z,par(4))-log(par(3))
+            end if
+        end if
+    end function nm_lpdf
+
+    pure function nm_lcdf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite left-censoring threshold
+        real(dp), intent(in) :: par(:) !! prepared family parameters
+        real(dp) :: value, z
+        if (int(par(1)) == 3) then
+            value = negative_infinity(x)
+            if (x <= par(2)) return
+            z = (log_distance(x,par(2))-log(par(3))-par(4))/par(5)
+            value = nm_dpl_tail(z,par,.false.)
+        else
+            z = location_scale_z(x,par(2:3))
+            if (int(par(1)) == 1) then
+                value = nm_emg_cdf(z,1.0_dp/par(4))
+            else
+                value = nm_skew_tail(z,par(4),par)
+            end if
+        end if
+    end function nm_lcdf
+
+    pure function nm_lsf(x, par) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite right-censoring threshold
+        real(dp), intent(in) :: par(:) !! prepared family parameters
+        real(dp) :: value, z
+        if (int(par(1)) == 3) then
+            value = 0.0_dp
+            if (x <= par(2)) return
+            z = (log_distance(x,par(2))-log(par(3))-par(4))/par(5)
+            value = nm_dpl_tail(z,par,.true.)
+        else
+            z = location_scale_z(x,par(2:3))
+            if (int(par(1)) == 1) then
+                value = nm_emg_sf(z,1.0_dp/par(4))
+            else
+                value = nm_skew_tail(-z,-par(4),par)
+            end if
+        end if
+    end function nm_lsf
+
+    pure function nm_interval(a, b, par) result(value)
+        implicit none
+        real(dp), intent(in) :: a, b !! ordered finite physical interval endpoints
+        real(dp), intent(in) :: par(:) !! prepared family parameters
+        real(dp) :: value, za, zb, lw, plus, minus, norm, ld, width, total, node, weight
+        integer :: j
+        if (int(par(1)) == 3) then
+            value = negative_infinity(a)
+            if (b <= par(2)) return
+            if (a <= par(2)) then
+                value = nm_lcdf(b,par)
+                return
+            end if
+            ld = log_distance(a,par(2))
+            za = (ld-log(par(3))-par(4))/par(5)
+            zb = (log_distance(b,par(2))-log(par(3))-par(4))/par(5)
+            lw = burr_logsoftplus(log_distance(b,a)-ld)-log(par(5))
+            norm = log(par(6)+par(7))
+            plus = log(par(7))-norm+nm_emg_mass(za,zb,lw,par(6)*par(5))
+            minus = log(par(6))-norm+nm_emg_mass(-zb,-za,lw,par(7)*par(5))
+            value = bounded_logadd(plus,minus)
+            return
+        end if
+        za = location_scale_z(a,par(2:3))
+        zb = location_scale_z(b,par(2:3))
+        lw = log_distance(b,a)-log(par(3))
+        if (int(par(1)) == 1) then
+            value = nm_emg_mass(za,zb,lw,1.0_dp/par(4))
+            return
+        end if
+        if (ieee_is_finite(za) .and. ieee_is_finite(zb)) then
+            ld = log(max(1.0_dp,abs(za),abs(zb)))+log(2.0_dp+abs(par(4))+par(4)**2)
+            if (lw+ld < log(0.001_dp)) then
+                width = exp(lw)
+                total = negative_infinity(0.0_dp)
+                do j = -1, 1
+                    node = (1.0_dp+real(j,dp)*sqrt(3.0_dp/5.0_dp))/2.0_dp
+                    weight = log(5.0_dp/18.0_dp)
+                    if (j == 0) weight = log(4.0_dp/9.0_dp)
+                    total = bounded_logadd(total,weight+nm_skew_pdf(za+node*width,par(4)))
+                end do
+                value = lw+total
+                return
+            end if
+        end if
+        value = tail_interval(a,b,par,nm_lcdf,nm_lsf)
+    end function nm_interval
+
+    pure function exponnorm_censored_loglikelihood(data, k, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: k !! normal-exponential scale ratio in [0.01,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(39)
+        logical :: valid
+        params = 0.0_dp
+        params(1:3) = [1.0_dp,0.0_dp,1.0_dp]
+        params(4) = k
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        call nm_prepare(params,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,nm_lpdf,nm_lcdf,nm_lsf,nm_interval)
+    end function exponnorm_censored_loglikelihood
+
+    pure function exponnorm_censored_nnlf(data, k, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: k !! normal-exponential scale ratio in [0.01,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -exponnorm_censored_loglikelihood(data,k,loc,scale)
+    end function exponnorm_censored_nnlf
+
+    pure function skewnorm_censored_loglikelihood(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! skewness in [-10,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(39)
+        logical :: valid
+        params = 0.0_dp
+        params(1:3) = [2.0_dp,0.0_dp,1.0_dp]
+        params(4) = a
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        call nm_prepare(params,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,nm_lpdf,nm_lcdf,nm_lsf,nm_interval)
+    end function skewnorm_censored_loglikelihood
+
+    pure function skewnorm_censored_nnlf(data, a, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! skewness in [-10,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -skewnorm_censored_loglikelihood(data,a,loc,scale)
+    end function skewnorm_censored_nnlf
+
+    pure function dpareto_lognorm_censored_loglikelihood(data, u, s, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: u !! lognormal location shape in [-100,100]
+        real(dp), intent(in) :: s !! lognormal scale shape in [0.01,10]
+        real(dp), intent(in) :: a !! upper-Pareto shape in [0.01,100]
+        real(dp), intent(in) :: b !! lower-Pareto shape in [0.01,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(39)
+        logical :: valid
+        params = 0.0_dp
+        params(1:3) = [3.0_dp,0.0_dp,1.0_dp]
+        params(4) = u
+        params(5) = s
+        params(6) = a
+        params(7) = b
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        value = quiet_nan(0.0_dp)
+        call nm_prepare(params,valid)
+        if (.not. valid) return
+        value = censored_loglikelihood(data,params,nm_lpdf,nm_lcdf,nm_lsf,nm_interval)
+    end function dpareto_lognorm_censored_loglikelihood
+
+    pure function dpareto_lognorm_censored_nnlf(data, u, s, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: u !! lognormal location shape in [-100,100]
+        real(dp), intent(in) :: s !! lognormal scale shape in [0.01,10]
+        real(dp), intent(in) :: a !! upper-Pareto shape in [0.01,100]
+        real(dp), intent(in) :: b !! lower-Pareto shape in [0.01,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -dpareto_lognorm_censored_loglikelihood(data,u, s, a, b,loc,scale)
+    end function dpareto_lognorm_censored_nnlf
+
 
     ! Bounded censoring: family, loc, scale, shapes, normalization, GL16 rule.
     pure subroutine bd_prepare(par, valid)

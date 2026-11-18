@@ -1,3 +1,47 @@
+## 2026-11-18 - Normal-mixture censoring
+
+The new EMG, skew-normal, and double Pareto-lognormal censored callbacks,
+likelihoods, fit overloads, native test, and independent checker are original
+MIT SciFort implementations from mathematical specifications inspected
+on 2026-11-18:
+[EMG](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.exponnorm.html),
+[skew-normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.skewnorm.html),
+and [double Pareto-lognormal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dpareto_lognorm.html).
+No upstream implementation was copied, translated, or vendored. Existing
+normal, Mills-ratio, interval, quadrature, and optimizer code retains its
+provenance and notices; no dependency or license text is added.
+
+For EMG, completing the square in the normal-exponential convolution
+gives H=exp(r*r/2-r*z)*Phi(z-r)=phi(z)*R(r-z). In the lower tail,
+F=phi(z)*(R(-z)-R(r-z)); the existing inverse-Gaussian Mills-ratio
+difference retains the positive increment r. Its asymptotic coefficients
+retain their [DLMF 7.12(i)](https://dlmf.nist.gov/7.12#i) provenance.
+Double Pareto-lognormal follows by exponentiating a normal plus asymmetric
+Laplace variable: its positive/reflected EMG mixture weights are b/(a+b)
+and a/(a+b). Integrating the cited density gives signed CDF identities
+that independently check this positive mixture implementation. Log probabilities near zero use
+the complementary smaller tail; relative-error regressions check values
+near 1e-300 rather than only scaled absolute log errors.
+
+Skew-normal integrates its defining density after endpoint-density factoring
+and the substitution t=z-v/rate, rate=1+a+(1+a*a)*abs(z), for z<=0,a>=0.
+The existing SciFort roots generator supplies GL16 nodes/weights locally.
+For A=1+a*a, c=1+a, y=-z, the relative integrand is bounded by
+exp(-A*(y*v/rate+v*v/(2*rate*rate))). For v>=2 the negative exponent
+has magnitude at least v-c*c/(2*A)>=v-1. The omitted integral beyond
+48 is at most exp(-47). On 0<=v<=1, the log-density slope and curvature
+bounds give a retained integral exceeding 1/4, so the relative truncation
+bound is 4*exp(-47). Fixed GL16 panel accuracy is independently validated
+over the documented shape range. Gaussian rules and exact three-point
+weights follow [DLMF 3.5(v)](https://dlmf.nist.gov/3.5#v).
+
+The checker uses multiprecision erfc formulas, full semi-infinite
+skew-density quadrature, and signed double Pareto-lognormal identities.
+SciPy supplies independent bounded scale-fit benchmarks. Numerical and
+coordinate-overflow limitations are explicit in the
+[API guide](docs/censored_fitting.md) and
+[validation record](validation/normal_mix_censored_2026-11-18.md).
+
 ## 2026-11-18 - Remaining bounded-family censoring
 
 The new Gauss hypergeometric, Irwin-Hall, and line von Mises censored
