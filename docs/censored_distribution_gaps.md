@@ -9,11 +9,11 @@ interval conventions for angular distributions. SciPy's
 API targets univariate continuous fitting.
 
 The current SciFort fitting registry in [src/fit.f90](../src/fit.f90)
-contains 109 continuous families. Ninety-two already have family-specific censored
+contains 109 continuous families. Ninety-five already have family-specific censored
 likelihoods in [src/censored.f90](../src/censored.f90): `normal`,
 `exponential`, `weibull`, `lognormal`, `gamma`, `beta`, `logistic`,
 `gumbel_r`, `gumbel_l`, `laplace`, `cauchy`, `halfcauchy`, `halflogistic`,
-`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, `vonmises_line`, `exponnorm`, `skewnorm`, and `dpareto_lognorm`. That leaves 17 candidates below.
+`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, `vonmises_line`, `exponnorm`, `skewnorm`, `dpareto_lognorm`, `rice`, `ncx2`, and `ncf`. That leaves 14 candidates below.
 
 Names follow SciFort's API. The count covers named distribution families in
 the current fitting registry, rather than histogram-backed or custom models.
@@ -23,6 +23,12 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 [censored likelihoods and fitting](censored_fitting.md) for their contracts.
 
 Additional numerical coverage remains within implemented families:
+Rice censoring currently requires 0<=b<=10; noncentral chi-squared/F require
+each degree-of-freedom parameter in [0.1,2000] and 0<=nc<=100.
+Mixtures return NaN if their remainder
+bound is not met within 10,001 terms; this particularly limits very remote
+noncentral radial tails. Noncentral F requires normal representable
+scale*dfd/dfn. Extending these limits remains;
 EMG censoring requires 0.01<=k<=100; skew-normal requires abs(a)<=10;
 double Pareto-lognormal requires abs(u)<=100, 0.01<=s<=10, and 0.01<=a,b<=100;
 overflowed EMG/skew-normal standard coordinates retain infinite-coordinate behavior;
@@ -60,11 +66,10 @@ has the same numerical difficulty or can use the same fitting algorithm.
 
 | Work group | Count | Remaining distributions |
 | --- | ---: | --- |
-| Lifetime and tail models | 1 | `rice` |
 | Additional shape and skew families | 1 | `tukeylambda` |
-| Numerically demanding or specialist families | 13 | `ncx2`, `ncf`, `nct`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `landau`, `levy_stable`, `rel_breitwigner`, `studentized_range`, `ksone`, `kstwo`, `kstwobign` |
+| Numerically demanding or specialist families | 11 | `nct`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `landau`, `levy_stable`, `rel_breitwigner`, `studentized_range`, `ksone`, `kstwo`, `kstwobign` |
 | Angular distributions requiring explicit interval conventions | 2 | `vonmises`, `wrapcauchy` |
-| **Total** | **17** | |
+| **Total** | **14** | |
 
 For angular distributions, distinguish intervals in a fixed coordinate range
 from arcs crossing the angular boundary. `vonmises_line` is already covered with
@@ -90,8 +95,8 @@ joint probability calculations; it is outside this univariate inventory.
 
 ## Suggested implementation order
 
-1. Add Rice with stable noncentral radial tails and extend the documented
-   generalized-gamma and truncation parameter ranges.
+1. Extend noncentral radial mixture convergence ranges and the documented
+   generalized-gamma and truncation parameter ranges; Rice now has censoring support.
 2. Extend the bounded-family numerical ranges and retain explicit support
    and interval conventions; all three formerly remaining bounded names
    now have censored likelihoods and fits.

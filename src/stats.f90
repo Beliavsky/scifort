@@ -50,6 +50,9 @@ module scifort_stats
     use scifort_censored, only : exponnorm_censored_loglikelihood, exponnorm_censored_nnlf
     use scifort_censored, only : skewnorm_censored_loglikelihood, skewnorm_censored_nnlf
     use scifort_censored, only : dpareto_lognorm_censored_loglikelihood, dpareto_lognorm_censored_nnlf
+    use scifort_censored, only : ncx2_censored_loglikelihood, ncx2_censored_nnlf
+    use scifort_censored, only : rice_censored_loglikelihood, rice_censored_nnlf
+    use scifort_censored, only : ncf_censored_loglikelihood, ncf_censored_nnlf
     use scifort_censored, only : gengamma_censored_loglikelihood, gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf
@@ -817,6 +820,9 @@ module scifort_stats
     public :: exponnorm_censored_loglikelihood, exponnorm_censored_nnlf
     public :: skewnorm_censored_loglikelihood, skewnorm_censored_nnlf
     public :: dpareto_lognorm_censored_loglikelihood, dpareto_lognorm_censored_nnlf
+    public :: ncx2_censored_loglikelihood, ncx2_censored_nnlf
+    public :: rice_censored_loglikelihood, rice_censored_nnlf
+    public :: ncf_censored_loglikelihood, ncf_censored_nnlf
     public :: gengamma_censored_loglikelihood, gengamma_censored_nnlf
     public :: truncnorm_censored_loglikelihood, truncnorm_censored_nnlf
     public :: truncweibull_min_censored_loglikelihood, truncweibull_min_censored_nnlf

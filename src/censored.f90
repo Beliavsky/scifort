@@ -27,6 +27,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: ncx2_censored_loglikelihood, ncx2_censored_nnlf
+    public :: rice_censored_loglikelihood, rice_censored_nnlf
+    public :: ncf_censored_loglikelihood, ncf_censored_nnlf
     public :: exponnorm_censored_loglikelihood, exponnorm_censored_nnlf
     public :: skewnorm_censored_loglikelihood, skewnorm_censored_nnlf
     public :: dpareto_lognorm_censored_loglikelihood, dpareto_lognorm_censored_nnlf
@@ -145,6 +148,318 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Positive Poisson mixtures derived from the specifications cited in provenance.
+    pure function pm_component(x, y, p, j, mode) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! observation or lower endpoint
+        real(dp), intent(in) :: y !! upper endpoint for interval mode
+        real(dp), intent(in) :: p(:) !! family, location, scale, gamma/beta shapes, Poisson mean, ratio
+        integer, intent(in) :: j !! nonnegative Poisson index
+        integer, intent(in) :: mode !! zero density, one CDF, two SF, three interval
+        real(dp) :: v, a, ly, ld, jac, bp(4), lo, lt, lh, threshold
+        a = p(4)+real(j,dp)
+        if (p(1) == 3.0_dp) then
+            bp = [a,p(5),p(2),p(3)*p(7)]
+            lt = log_distance(x,p(2))-log(bp(4))
+            lh = lt
+            if (mode == 3) lh = log_distance(y,p(2))-log(bp(4))
+            threshold = log(epsilon(1.0_dp)/16.0_dp)-log(a+p(5))
+            if (lh < threshold) then
+                ! Integrate the endpoint power before converting subnormal coordinates.
+                v = beta_small_tail(a,p(5),lt)
+                select case (mode)
+                case (0)
+                    v = v+log(a)-log_distance(x,p(2))
+                case (2)
+                    v = ig_complement(v)
+                case (3)
+                    ld = burr_logsoftplus(log_distance(y,x)-log_distance(x,p(2)))
+                    v = beta_small_tail(a,p(5),lh)+log_exponential_mass(log(a)+ld)
+                end select
+                return
+            else if (lt > -threshold) then
+                v = beta_small_tail(p(5),a,-lt)
+                select case (mode)
+                case (0)
+                    v = v+log(p(5))-log_distance(x,p(2))
+                case (1)
+                    v = ig_complement(v)
+                case (3)
+                    ld = burr_logsoftplus(log_distance(y,x)-log_distance(x,p(2)))
+                    v = v+log_exponential_mass(log(p(5))+ld)
+                end select
+                return
+            end if
+            select case (mode)
+            case (0)
+                v = betaprime_lpdf(x,bp)
+            case (1)
+                v = betaprime_lcdf(x,bp)
+            case (2)
+                v = betaprime_lsf(x,bp)
+            case (3)
+                v = betaprime_interval(x,y,bp)
+            end select
+            return
+        end if
+        ly = negative_infinity(0.0_dp)
+        jac = 0.0_dp
+        if (x > p(2)) then
+            ld = log_distance(x,p(2))-log(p(3))
+            if (p(1) == 1.0_dp) then
+                ly = ld-scifort_log_two
+                jac = -log(p(3))-scifort_log_two
+            else
+                ly = 2.0_dp*ld-scifort_log_two
+                jac = ld-log(p(3))
+            end if
+        end if
+        select case (mode)
+        case (0)
+            v = loggamma_lpdf(ly,[a,0.0_dp,1.0_dp])-ly+jac
+        case (1)
+            v = loggamma_lcdf(ly,[a,0.0_dp,1.0_dp])
+        case (2)
+            v = loggamma_lsf(ly,[a,0.0_dp,1.0_dp])
+        case (3)
+            lo = max(x,p(2))
+            ld = log_distance(y,lo)-log(p(3))-scifort_log_two
+            if (p(1) == 2.0_dp) ld = ld+bounded_logadd( &
+                log_distance(y,p(2)),log_distance(lo,p(2)))-log(p(3))
+            v = gk_gamma_mass(ly,ld,a)
+        end select
+    end function pm_component
+
+    pure function pm_sum(x, y, p, mode) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! observation or lower endpoint
+        real(dp), intent(in) :: y !! upper endpoint for interval mode
+        real(dp), intent(in) :: p(:) !! family, location, scale, shapes, Poisson mean, ratio
+        integer, intent(in) :: mode !! zero density, one CDF, two SF, three interval
+        real(dp) :: v, lw, term, lr, a, endpoint, ly, residual
+        integer :: j
+        v = negative_infinity(0.0_dp)
+        lw = -p(6)
+        do j = 0, 10000
+            term = lw+pm_component(x,y,p,j,mode)
+            if (ieee_is_nan(term)) then
+                v = term
+                return
+            end if
+            v = bounded_logadd(v,term)
+            if (p(6) == 0.0_dp) return
+            a = p(4)+real(j,dp)
+            lr = log(p(6))-log(real(j+1,dp))
+            if (p(1) == 3.0_dp) then
+                ! The beta density ratio bounds every partial integral as well.
+                lr = lr+log1p_safe(p(5)/a)
+            else if (mode /= 1) then
+                endpoint = x
+                if (mode == 3) endpoint = y
+                ly = log_distance(endpoint,p(2))-log(p(3))-scifort_log_two
+                if (p(1) == 2.0_dp) ly = 2.0_dp*(ly+scifort_log_two)-scifort_log_two
+                if (mode == 2) then
+                    ! For a>=1, Q(a+1,t)/Q(a,t) <= 1+t/a.
+                    if (a < 1.0_dp) then
+                        lw = lw+log(p(6))-log(real(j+1,dp))
+                        cycle
+                    end if
+                    lr = lr+log1pexp(ly-log(a))
+                else
+                    lr = lr+ly-log(a)
+                end if
+            end if
+            if (lr < 0.0_dp) then
+                residual = term+lr-ig_complement(lr)
+                if (residual <= v+log(2.0e-16_dp)) return
+                if (.not. ieee_is_finite(v) .and. term == v) return
+            end if
+            lw = lw+log(p(6))-log(real(j+1,dp))
+        end do
+        ! Do not report a truncated series as a valid tail probability.
+        v = quiet_nan(0.0_dp)
+    end function pm_sum
+
+    pure function pm_lpdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! prepared mixture parameters
+        real(dp) :: v
+        v = negative_infinity(0.0_dp)
+        if (x < p(2)) return
+        if (x == p(2)) then
+            if (p(1) == 2.0_dp) return
+            if (p(4) < 1.0_dp) v = positive_infinity(0.0_dp)
+            if (p(4) == 1.0_dp) then
+                v = -p(6)-log(p(3))-scifort_log_two
+                if (p(1) == 3.0_dp) v = -p(6)+log(p(5))-log(p(3))-log(p(7))
+            end if
+            return
+        end if
+        v = pm_sum(x,x,p,0)
+    end function pm_lpdf
+
+    pure function pm_tail(x, p, upper) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: p(:) !! prepared mixture parameters
+        logical, intent(in) :: upper !! select survival probability
+        real(dp) :: v, opposite
+        integer :: mode
+        v = negative_infinity(0.0_dp)
+        if (upper) v = 0.0_dp
+        if (x <= p(2)) return
+        mode = 1
+        if (upper) mode = 2
+        v = pm_sum(x,x,p,mode)
+        if (ieee_is_nan(v)) return
+        if (v > -scifort_log_two) then
+            opposite = pm_sum(x,x,p,3-mode)
+            v = opposite
+            if (ieee_is_nan(v)) return
+            v = ig_complement(opposite)
+        end if
+    end function pm_tail
+
+    pure function pm_lcdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: p(:) !! prepared mixture parameters
+        real(dp) :: v
+        v = pm_tail(x,p,.false.)
+    end function pm_lcdf
+
+    pure function pm_lsf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: p(:) !! prepared mixture parameters
+        real(dp) :: v
+        v = pm_tail(x,p,.true.)
+    end function pm_lsf
+
+    pure function pm_interval(x, y, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower interval endpoint
+        real(dp), intent(in) :: y !! finite upper endpoint greater than x
+        real(dp), intent(in) :: p(:) !! prepared mixture parameters
+        real(dp) :: v, lp, lq
+        v = negative_infinity(0.0_dp)
+        if (y <= p(2)) return
+        if (x <= p(2)) then
+            v = pm_lcdf(y,p)
+        else
+            v = pm_sum(x,y,p,3)
+            if (ieee_is_nan(v)) return
+            if (v > -scifort_log_two) then
+                lp = pm_lcdf(x,p)
+                lq = pm_lsf(y,p)
+                if (ieee_is_nan(lp) .or. ieee_is_nan(lq)) then
+                    v = quiet_nan(0.0_dp)
+                    return
+                end if
+                v = ig_complement(bounded_logadd(lp,lq))
+            end if
+        end if
+    end function pm_interval
+
+    pure function ncx2_censored_loglikelihood(data, df, nc, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in [0.1,2000]
+        real(dp), intent(in) :: nc !! noncentrality in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, p(7)
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite([df, nc]))) return
+        if (df < 0.1_dp .or. df > 2000.0_dp) return
+        if (nc < 0.0_dp .or. nc > 100.0_dp) return
+        p = [1.0_dp,0.0_dp,1.0_dp,df/2.0_dp,0.0_dp,nc/2.0_dp,1.0_dp]
+        if (present(loc)) p(2) = loc
+        if (present(scale)) p(3) = scale
+        if (.not. all(ieee_is_finite(p))) return
+        if (p(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,p,pm_lpdf,pm_lcdf,pm_lsf,pm_interval)
+    end function ncx2_censored_loglikelihood
+
+    pure function ncx2_censored_nnlf(data, df, nc, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: df !! degrees of freedom in [0.1,2000]
+        real(dp), intent(in) :: nc !! noncentrality in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -ncx2_censored_loglikelihood(data,df, nc,loc,scale)
+    end function ncx2_censored_nnlf
+
+    pure function rice_censored_loglikelihood(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! Rice shape in [0,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, p(7)
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite([b]))) return
+        if (b < 0.0_dp .or. b > 10.0_dp) return
+        p = [2.0_dp,0.0_dp,1.0_dp,1.0_dp,0.0_dp,b*b/2.0_dp,1.0_dp]
+        if (present(loc)) p(2) = loc
+        if (present(scale)) p(3) = scale
+        if (.not. all(ieee_is_finite(p))) return
+        if (p(3) <= 0.0_dp) return
+        value = censored_loglikelihood(data,p,pm_lpdf,pm_lcdf,pm_lsf,pm_interval)
+    end function rice_censored_loglikelihood
+
+    pure function rice_censored_nnlf(data, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: b !! Rice shape in [0,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -rice_censored_loglikelihood(data,b,loc,scale)
+    end function rice_censored_nnlf
+
+    pure function ncf_censored_loglikelihood(data, dfn, dfd, nc, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: dfn !! degrees of freedom in [0.1,2000]
+        real(dp), intent(in) :: dfd !! degrees of freedom in [0.1,2000]
+        real(dp), intent(in) :: nc !! noncentrality in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, p(7)
+        value = quiet_nan(0.0_dp)
+        if (.not. all(ieee_is_finite([dfn, dfd, nc]))) return
+        if (dfn < 0.1_dp .or. dfn > 2000.0_dp) return
+        if (dfd < 0.1_dp .or. dfd > 2000.0_dp) return
+        if (nc < 0.0_dp .or. nc > 100.0_dp) return
+        p = [3.0_dp,0.0_dp,1.0_dp,dfn/2.0_dp,dfd/2.0_dp,nc/2.0_dp,dfd/dfn]
+        if (present(loc)) p(2) = loc
+        if (present(scale)) p(3) = scale
+        if (.not. all(ieee_is_finite(p))) return
+        if (p(3) <= 0.0_dp) return
+        if (p(7) > 1.0_dp) then
+            if (p(3) > huge(1.0_dp)/p(7)) return
+        end if
+        if (p(3) < tiny(1.0_dp)/p(7)) return
+        value = censored_loglikelihood(data,p,pm_lpdf,pm_lcdf,pm_lsf,pm_interval)
+    end function ncf_censored_loglikelihood
+
+    pure function ncf_censored_nnlf(data, dfn, dfd, nc, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: dfn !! degrees of freedom in [0.1,2000]
+        real(dp), intent(in) :: dfd !! degrees of freedom in [0.1,2000]
+        real(dp), intent(in) :: nc !! noncentrality in [0,100]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -ncf_censored_loglikelihood(data,dfn, dfd, nc,loc,scale)
+    end function ncf_censored_nnlf
+
 
     ! Parameters: family, loc, scale, up to four shapes, GL16 nodes and weights.
     pure subroutine nm_prepare(par, valid)

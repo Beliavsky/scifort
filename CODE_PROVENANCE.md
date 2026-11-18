@@ -1,3 +1,52 @@
+## 2026-11-18 - Noncentral censored distributions
+
+The new Rice/noncentral chi-squared/noncentral F censored callbacks, public
+likelihoods/NNLFs, fit overloads, native tests, and validation script are
+original MIT SciFort implementations from mathematical specifications
+inspected on 2026-11-18:
+
+- [MathWorks noncentral chi-squared definition](https://www.mathworks.com/help/stats/noncentral-chi-square-distribution.html):
+  the Poisson(nc/2) mixture of chi-squared(df+2*j) laws.
+- [SciPy Rice definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rice.html):
+  the norm of two independent shifted Gaussian coordinates, giving
+  z*z ~ ncx2(2,b*b).
+- [SciPy noncentral F definition](https://docs.scipy.org/doc/scipy/tutorial/stats/continuous_ncf.html):
+  the ratio of independent noncentral and central chi-squared variables,
+  normalized by dfn and dfd. Conditioning on the same Poisson index gives
+  beta-prime(dfn/2+j,dfd/2) with physical scale scale*dfd/dfn.
+
+No upstream implementation was copied, translated, or vendored. Existing
+log-gamma, incomplete-gamma/beta, log-sum/complement, interval, and optimizer
+helpers retain their existing provenance and notices. No dependency or
+third-party license text is added. Public specifications establish the
+laws; independent algebra gives the mixture and transformation formulas.
+
+Original truncation bounds follow ratios of successive integrands. With
+Poisson mean L and gamma shape a+j, gamma density and interval component
+ratios are bounded by L*t/((j+1)*(a+j)), using the upper interval coordinate
+for t. Gamma lower-tail ratios are bounded by L/(j+1). For a+j>=1,
+Q(a+j+1,t)/Q(a+j,t)<=1+t/(a+j), from the gamma recurrence and
+Q(a,t)>=exp(-t)*t**(a-1)/Gamma(a). Beta-prime integrand ratios are bounded
+by L/(j+1)*(1+b/(a+j)), because its beta coordinate is at most one.
+Each bound decreases with j. Once r<1, the uncomputed remainder is at
+most current_term*r/(1-r); the implementation requires this to be at most
+2e-16 times the accumulated sum and otherwise returns NaN at its iteration
+limit. This is a truncation guarantee, not a rounding-error proof.
+
+For beta-prime endpoint coordinates, the implementation integrates the
+leading power analytically when (a+b)*t or (a+b)/t is at most epsilon/16.
+The omitted factor is (1+t)**(-(a+b)) or its reciprocal-coordinate
+counterpart, whose pointwise relative correction is bounded by that
+threshold. Physical endpoint logs and log-relative widths avoid rounding
+subnormal beta coordinates or subtracting identical CDF values.
+
+Independent mpmath checks use Bessel/hypergeometric density formulas,
+110-digit gamma/beta mixtures for both tails, and relative-density
+finite interval quadrature. SciPy is a separate ordinary-value and fit
+cross-check. All new source is independently written, not an adaptation
+of the reference libraries. See the
+[validation record](validation/noncentral_censored_2026-11-18.md).
+
 ## 2026-11-18 - Normal-mixture censoring
 
 The new EMG, skew-normal, and double Pareto-lognormal censored callbacks,

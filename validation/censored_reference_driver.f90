@@ -72,6 +72,9 @@ program censored_reference_driver
     use scifort_censored, only : exponnorm_censored_loglikelihood
     use scifort_censored, only : skewnorm_censored_loglikelihood
     use scifort_censored, only : dpareto_lognorm_censored_loglikelihood
+    use scifort_censored, only : ncx2_censored_loglikelihood
+    use scifort_censored, only : rice_censored_loglikelihood
+    use scifort_censored, only : ncf_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -81,9 +84,9 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87,92])) &
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87,92,93,95])) &
             read(*, *) second_shape
-        if (family == 53 .or. family == 80 .or. family == 87 .or. family == 92) read(*, *) third_shape
+        if (family == 53 .or. family == 80 .or. family == 87 .or. family == 92 .or. family == 95) read(*, *) third_shape
         if (family == 87 .or. family == 92) read(*, *) fourth_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
@@ -99,6 +102,12 @@ program censored_reference_driver
             value = genextreme_censored_loglikelihood(data,c,loc,scale)
         case (83)
             value = crystalball_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (93)
+            value = ncx2_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (94)
+            value = rice_censored_loglikelihood(data,c,loc,scale)
+        case (95)
+            value = ncf_censored_loglikelihood(data,c,second_shape,third_shape,loc,scale)
         case (90)
             value = exponnorm_censored_loglikelihood(data,c,loc,scale)
         case (91)

@@ -67,6 +67,9 @@ module scifort_fit
     use scifort_censored, only : exponnorm_censored_nnlf
     use scifort_censored, only : skewnorm_censored_nnlf
     use scifort_censored, only : dpareto_lognorm_censored_nnlf
+    use scifort_censored, only : ncx2_censored_nnlf
+    use scifort_censored, only : rice_censored_nnlf
+    use scifort_censored, only : ncf_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -876,7 +879,59 @@ module scifort_fit
         module procedure dpareto_lognorm_fit, dpareto_lognorm_fit_censored
     end interface dpareto_lognorm_fit
 
+    interface ncx2_fit
+        module procedure ncx2_fit, ncx2_fit_censored
+    end interface ncx2_fit
+
+    interface rice_fit
+        module procedure rice_fit, rice_fit_censored
+    end interface rice_fit
+
+    interface ncf_fit
+        module procedure ncf_fit, ncf_fit_censored
+    end interface ncf_fit
+
 contains
+
+    subroutine ncx2_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in df, nc, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_ncx2,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine ncx2_fit_censored
+
+    subroutine rice_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in b, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_rice,lower,upper,result,guess, &
+            [.false., .false., .false.],max_iter,tolerance,data)
+    end subroutine rice_fit_censored
+
+    subroutine ncf_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(5) !! finite lower bounds in dfn, dfd, nc, loc, scale order
+        real(dp), intent(in) :: upper(5) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(5) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_ncf,lower,upper,result,guess, &
+            [.false., .false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine ncf_fit_censored
+
 
     subroutine exponnorm_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2570,6 +2625,12 @@ contains
             case (family_dpareto_lognorm)
                 value = dpareto_lognorm_censored_nnlf(censored,params(1),params(2), &
                     params(3),params(4),params(5),params(6))
+            case (family_ncx2)
+                value = ncx2_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_rice)
+                value = rice_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_ncf)
+                value = ncf_censored_nnlf(censored,params(1),params(2),params(3),params(4),params(5))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

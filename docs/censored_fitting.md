@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+rice_censored_loglikelihood(data, b [, loc, scale])
+ncx2_censored_loglikelihood(data, df, nc [, loc, scale])
+ncf_censored_loglikelihood(data, dfn, dfd, nc [, loc, scale])
 exponnorm_censored_loglikelihood(data, k [, loc, scale])
 skewnorm_censored_loglikelihood(data, a [, loc, scale])
 dpareto_lognorm_censored_loglikelihood(data, u, s, a, b [, loc, scale])
@@ -2574,3 +2577,65 @@ Definitions: [EMG](https://docs.scipy.org/doc/scipy/reference/generated/scipy.st
 [skew-normal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.skewnorm.html),
 and [double Pareto-lognormal](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.dpareto_lognorm.html).
 See the [validation record](../validation/normal_mix_censored_2026-11-18.md).
+
+## Rice and noncentral chi-squared/F censoring
+
+```fortran
+value = rice_censored_loglikelihood(data,b,loc,scale)
+value = rice_censored_nnlf(data,b,loc,scale)
+value = ncx2_censored_loglikelihood(data,df,nc,loc,scale)
+value = ncx2_censored_nnlf(data,df,nc,loc,scale)
+value = ncf_censored_loglikelihood(data,dfn,dfd,nc,loc,scale)
+value = ncf_censored_nnlf(data,dfn,dfd,nc,loc,scale)
+call rice_fit(data,lower,upper,result,guess,max_iter,tolerance)
+call ncx2_fit(data,lower,upper,result,guess,max_iter,tolerance)
+call ncf_fit(data,lower,upper,result,guess,max_iter,tolerance)
+```
+
+All likelihoods use the existing exact/left/right/interval observation
+conventions, with support x>=loc. Optional loc defaults to zero and scale
+to one; both must be finite, with scale positive. Parameter order for
+fit bounds and guesses is [b,loc,scale], [df,nc,loc,scale], or
+[dfn,dfd,nc,loc,scale]. Equal bounds fix parameters. Existing real-array
+fit overloads remain available; no C ABI additions are included.
+
+Validated parameter contracts are 0<=b<=10 for Rice,
+0.1<=df<=2000 and 0<=nc<=100 for noncentral chi-squared, and
+0.1<=dfn,dfd<=2000 and 0<=nc<=100 for noncentral F.
+Noncentral F additionally requires scale*dfd/dfn to be normal and finite.
+Invalid parameters return NaN even with empty data; valid empty likelihoods
+return zero. Empty fits are invalid. Noncentrality zero is evaluated by
+the corresponding central gamma/beta-prime law, without a Poisson sum.
+
+Positive mixtures retain log densities, both log tails, and interval
+masses without subtracting rounded ordinary probabilities. Rice maps
+z=(x-loc)/scale to a noncentral chi-squared variable z*z with df=2 and
+nc=b*b; its density includes the transformation Jacobian. Transformations
+use logarithms of physical distances and widths, retaining positive
+subnormal inputs and adjacent intervals even when direct scaling or
+squaring would underflow or overflow. A tail larger than one half is
+formed by complementing the directly evaluated smaller mixture tail.
+Large interval probabilities similarly complement the two omitted tails.
+
+The Poisson sum stops when a decreasing bound on successive component
+ratios bounds the remaining mass by 2e-16 times the accumulated mass.
+At most 10,001 components (indices 0 through 10000) are evaluated. Failure
+to meet this bound returns NaN rather than a partial sum. Very remote
+noncentral chi-squared/Rice upper tails and densities can reach this
+limit, even when their log probability is representable; callers and fit
+bounds must account for such numerical failures. Centrality zero does
+not have this series restriction. The remainder bound controls truncation,
+not all binary64 rounding or pre-existing special-function error.
+
+At x=loc, Rice density is zero. Noncentral chi-squared density is infinite
+for df<2, exp(-nc/2)/(2*scale) for df=2, and zero for df>2.
+Noncentral F has the analogous cases according to dfn, with density
+exp(-nc/2)/scale for dfn=2. Left and right probabilities at the lower
+endpoint are zero and one. Log results outside binary64's range become
+negative infinity. No claim of uniform relative probability accuracy is
+made for extreme logs: the validation measures scaled log errors and
+separately checks tiny nonzero complementary logs with relative error.
+
+See the [validation record](../validation/noncentral_censored_2026-11-18.md)
+for checked/optimized native tests, independent high-precision references,
+fit benchmarks, exact commands, and remaining numerical limitations.

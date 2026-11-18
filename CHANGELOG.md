@@ -1,3 +1,12 @@
+## 2026-11-18 - Noncentral censoring
+
+- Add Rice, noncentral chi-squared, and noncentral F censored likelihoods,
+  NNLFs, bounded-fit overloads, and statistics exports.
+- Use log-domain positive Poisson mixtures with bounded remainders, direct
+  complementary tails, and retained physical interval widths.
+- Document shape/convergence limits, mathematical provenance, and validation.
+- Coverage is 95 continuous families with 14 remaining.
+
 ## 2026-11-18 - Normal-mixture censoring
 
 - Add EMG, skew-normal, and double Pareto-lognormal censored likelihoods,
