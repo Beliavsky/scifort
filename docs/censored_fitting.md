@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,9 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+geninvgauss_censored_loglikelihood(data, p, b [, loc, scale])
+norminvgauss_censored_loglikelihood(data, a, b [, loc, scale])
+genhyperbolic_censored_loglikelihood(data, p, a, b [, loc, scale])
 kstwobign_censored_loglikelihood(data [, loc, scale])
 wrapcauchy_censored_loglikelihood(data, c [, loc, scale])
 rel_breitwigner_censored_loglikelihood(data, rho [, loc, scale])
@@ -2719,3 +2722,52 @@ relative errors are validated separately. Very steep tails remain
 sensitive to rounding of physical observations; no uniform relative
 probability accuracy is claimed after exponentiation.
 See the [validation record](../validation/three_tail_censored_2026-11-18.md).
+
+
+## Generalized inverse Gaussian and hyperbolic censoring
+
+`geninvgauss`, `norminvgauss`, and `genhyperbolic` support mixed exact,
+left/right/interval censored likelihoods, matching `_censored_nnlf` functions,
+and bounded `_fit(censored_data, lower, upper, result, ...)` overloads.
+All are exported by `scifort_stats`; existing real-array fit calls remain.
+Parameter/bound order is respectively `(p,b,loc,scale)`, `(a,b,loc,scale)`,
+and `(p,a,b,loc,scale)`. Equality of lower/upper bounds fixes a parameter.
+
+The current censored methods require `-5<=p<=5`, `0.5<=a<=10`, and
+`abs(b)<=0.8*a` for generalized hyperbolic; normal-inverse Gaussian uses
+that same tail/skew range and the identity `p=-0.5`. Generalized inverse
+Gaussian requires `-5<=p<=5` and `0.5<=b<=10`. Location is finite and scale
+is positive finite. Values outside these shape ranges return NaN, including
+for empty data. Extending these ranges and the generalized-hyperbolic
+`abs(b)=a, p<0` boundary remains future work. These restrictions apply to
+the censored methods, not the existing scalar distribution APIs.
+
+The GIG standardized support is `(0,infinity)`; observations at/below the
+location have zero density/CDF and unit survival. Hyperbolic families have
+real-line support. Valid empty likelihoods equal zero; empty fits are invalid.
+Equal finite interval endpoints denote exact observations. Infinite interval
+endpoints use the corresponding one-sided tail; two infinite endpoints and
+reversed intervals are invalid, consistent with the common data contract.
+
+Positive log-density quadrature uses `y=log(z)` for GIG and `y=asinh(z)`
+for the hyperbolic families. The smaller probability determines its
+complement through stable log identities. Narrow intervals integrate the
+density while retaining physical widths separately from location/scale.
+The normal-inverse Gaussian implementation shares the generalized-hyperbolic
+kernel at `p=-0.5` rather than computing two different approximations.
+
+For `z>1e8` and `0<z<1e-8`, GIG uses leading endpoint Laplace tails;
+for `abs(z)>1e8`, hyperbolic tails use the leading exponential endpoint
+formula. These preserve finite logarithms after probability underflow.
+Their error is assessed relative to the large magnitude of the log tail;
+they do not promise correctly rounded probabilities throughout those remote
+ranges. When the true negative log probability exceeds representable
+binary64 magnitude, the result is negative infinity. Tiny complementary
+log probabilities can round to zero when the probability is below the
+smallest representable positive number. For the hyperbolic families, a
+standardized coordinate that itself overflows uses the corresponding
+infinite-coordinate limit. Retaining finite log tails when `(x-loc)/scale`
+is unrepresentable remains an additional numerical gap.
+
+See [Bessel-family numerical validation](../validation/bessel_censored_2026-11-18.md)
+for the independent references, commands, and measured accuracy.

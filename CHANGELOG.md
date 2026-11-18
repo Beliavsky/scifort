@@ -1,3 +1,12 @@
+## 2026-11-18 - Bessel-family censoring
+
+- Add generalized inverse Gaussian, normal-inverse Gaussian, and generalized
+  hyperbolic censored likelihoods, NNLFs, bounded fits, and statistics exports.
+- Use positive transformed-density quadrature, stable complementary logs,
+  endpoint tail approximations, and retained narrow-interval widths.
+- Document shape limits, mathematical provenance, and numerical validation.
+- Coverage is 101 continuous families with 8 remaining.
+
 ## 2026-11-18 - Kolmogorov, angular, and resonance censoring
 
 - Add kstwobign, wrapped-Cauchy, and relativistic Breit-Wigner censored

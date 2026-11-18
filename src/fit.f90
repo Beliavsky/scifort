@@ -73,6 +73,9 @@ module scifort_fit
     use scifort_censored, only : kstwobign_censored_nnlf
     use scifort_censored, only : wrapcauchy_censored_nnlf
     use scifort_censored, only : rel_breitwigner_censored_nnlf
+    use scifort_censored, only : geninvgauss_censored_nnlf
+    use scifort_censored, only : norminvgauss_censored_nnlf
+    use scifort_censored, only : genhyperbolic_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -906,7 +909,59 @@ module scifort_fit
         module procedure rel_breitwigner_fit, rel_breitwigner_fit_censored
     end interface rel_breitwigner_fit
 
+    interface geninvgauss_fit
+        module procedure geninvgauss_fit, geninvgauss_fit_censored
+    end interface geninvgauss_fit
+
+    interface norminvgauss_fit
+        module procedure norminvgauss_fit, norminvgauss_fit_censored
+    end interface norminvgauss_fit
+
+    interface genhyperbolic_fit
+        module procedure genhyperbolic_fit, genhyperbolic_fit_censored
+    end interface genhyperbolic_fit
+
 contains
+
+    subroutine geninvgauss_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in p, b, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_geninvgauss,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine geninvgauss_fit_censored
+
+    subroutine norminvgauss_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(4) !! finite lower bounds in a, b, loc, scale order
+        real(dp), intent(in) :: upper(4) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(4) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_norminvgauss,lower,upper,result,guess, &
+            [.false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine norminvgauss_fit_censored
+
+    subroutine genhyperbolic_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(5) !! finite lower bounds in p, a, b, loc, scale order
+        real(dp), intent(in) :: upper(5) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(5) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_genhyperbolic,lower,upper,result,guess, &
+            [.false., .false., .false., .false., .false.],max_iter,tolerance,data)
+    end subroutine genhyperbolic_fit_censored
+
 
     subroutine kstwobign_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2692,6 +2747,12 @@ contains
                 value = wrapcauchy_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_rel_breitwigner)
                 value = rel_breitwigner_censored_nnlf(censored,params(1),params(2),params(3))
+            case (family_geninvgauss)
+                value = geninvgauss_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_norminvgauss)
+                value = norminvgauss_censored_nnlf(censored,params(1),params(2),params(3),params(4))
+            case (family_genhyperbolic)
+                value = genhyperbolic_censored_nnlf(censored,params(1),params(2),params(3),params(4),params(5))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

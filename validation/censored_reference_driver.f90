@@ -78,6 +78,9 @@ program censored_reference_driver
     use scifort_censored, only : kstwobign_censored_loglikelihood
     use scifort_censored, only : wrapcauchy_censored_loglikelihood
     use scifort_censored, only : rel_breitwigner_censored_loglikelihood
+    use scifort_censored, only : geninvgauss_censored_loglikelihood
+    use scifort_censored, only : norminvgauss_censored_loglikelihood
+    use scifort_censored, only : genhyperbolic_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -87,9 +90,10 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87,92,93,95])) &
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87,92,93,95,99,100,101])) &
             read(*, *) second_shape
-        if (family == 53 .or. family == 80 .or. family == 87 .or. family == 92 .or. family == 95) read(*, *) third_shape
+        if (family == 53 .or. family == 80 .or. family == 87 .or. family == 92 .or. family == 95 .or. family == 101) &
+            read(*, *) third_shape
         if (family == 87 .or. family == 92) read(*, *) fourth_shape
         allocate(data%uncensored(nu), data%left(nl), data%right(nr), data%interval(ni,2))
         if (nu > 0) read(*, *) data%uncensored
@@ -109,6 +113,12 @@ program censored_reference_driver
             value = kstwobign_censored_loglikelihood(data,loc,scale)
         case (97)
             value = wrapcauchy_censored_loglikelihood(data,c,loc,scale)
+        case (99)
+            value = geninvgauss_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (100)
+            value = norminvgauss_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (101)
+            value = genhyperbolic_censored_loglikelihood(data,c,second_shape,third_shape,loc,scale)
         case (98)
             value = rel_breitwigner_censored_loglikelihood(data,c,loc,scale)
         case (93)

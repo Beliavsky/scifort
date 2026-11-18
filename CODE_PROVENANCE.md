@@ -1,3 +1,41 @@
+## 2026-11-18 - Bessel-family censored likelihoods
+
+The additions in `src/censored.f90`, `src/fit.f90`, `src/stats.f90`,
+`test/test_censored_bessel.f90`, and `validation/check_censored_bessel.py`
+are original MIT SciFort code independently derived from mathematical
+specifications inspected on 2026-11-18:
+
+- [SciPy generalized inverse Gaussian density](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.geninvgauss.html).
+- [SciPy normal-inverse Gaussian density](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norminvgauss.html).
+- [SciPy generalized hyperbolic density](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.genhyperbolic.html).
+- [NIST DLMF 10.32.9](https://dlmf.nist.gov/10.32.E9), the defining modified
+  Bessel K integral underlying the existing SciFort scaled-Bessel helper.
+
+No new third-party implementation is copied, translated, or vendored.
+The additions reuse the existing SciFort Bessel K, stable-log arithmetic,
+location/scale, quadrature-root, and bounded-fit helpers. Existing license
+notices and provenance for those helpers remain in place.
+
+For GIG, changing variables to y=log(z) gives log density
+p*y-b*cosh(y)-log(2*K_p(b)). For GH, z=sinh(y) gives the PDF multiplied
+by cosh(y). Positive Gauss-Legendre sums integrate these transformed
+densities, with an endpoint-relative cutoff 50 log units below the endpoint
+and segments no wider than 0.125. At least 16 segments resolve steep tails.
+When integrating toward the central density, the same cutoff search passes
+through the central region before reaching the outward density drop.
+Complements use log1p/expm1 identities. The 50-unit cutoff is a numerical
+truncation choice validated over the documented shape envelope; it is not
+a rigorous error certificate for all binary64 inputs.
+
+The leading endpoint Laplace formulas are SF(z)~f(z)/(b/2) and
+CDF(z)~f(z)*z*z/(b/2) for GIG, and the appropriate tail~f(z)/(a-/+b)
+for GH/NIG. They are used beyond the documented coordinate thresholds.
+NIG is precisely GH at p=-1/2. Independent high-precision references
+use mpmath Bessel functions, adaptive tanh-sinh quadrature, narrow-interval
+Simpson quadrature, and the independent normal variance-mean mixture; SciPy
+provides separate ordinary density checks. See the
+[validation record](validation/bessel_censored_2026-11-18.md).
+
 ## 2026-11-18 - Kolmogorov, wrapped-Cauchy, and resonance censoring
 
 The new censored callbacks, likelihoods/NNLFs, fit overloads, native tests,

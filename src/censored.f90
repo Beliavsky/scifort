@@ -5,6 +5,7 @@
 ! https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.fit.html
 module scifort_censored
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
+    use scifort_bessel_k, only : log_besselk_scaled
     use scifort_rel_breitwigner, only : rel_breitwigner_cdf, rel_breitwigner_sf
     use scifort_gausshyper, only : gausshyper_logkernel_integral
     use scifort_vonmises, only : vonmises_standard_logpdf
@@ -28,6 +29,9 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: geninvgauss_censored_loglikelihood, geninvgauss_censored_nnlf
+    public :: norminvgauss_censored_loglikelihood, norminvgauss_censored_nnlf
+    public :: genhyperbolic_censored_loglikelihood, genhyperbolic_censored_nnlf
     public :: kstwobign_censored_loglikelihood, kstwobign_censored_nnlf
     public :: wrapcauchy_censored_loglikelihood, wrapcauchy_censored_nnlf
     public :: rel_breitwigner_censored_loglikelihood, rel_breitwigner_censored_nnlf
@@ -152,6 +156,392 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Positive transformed-density quadrature from the cited mathematical PDFs.
+    pure function bk_density(z, p) result(v)
+        implicit none
+        real(dp), intent(in) :: z !! log standardized x for GIG, standardized x otherwise
+        real(dp), intent(in) :: p(:) !! kernel, loc, scale, shapes, normalizer, GL rule
+        real(dp) :: v, cost, r, lr, arg, lk, gap, factor
+        v = negative_infinity(0.0_dp)
+        if (.not. ieee_is_finite(z)) return
+        if (p(1) == 1.0_dp) then
+            arg = log(p(5)/2.0_dp)+abs(z)
+            if (arg > log(huge(1.0_dp))) return
+            factor = exp(abs(z)/2.0_dp)
+            cost = (p(5)/2.0_dp)*factor
+            if (cost > 1.0_dp) then
+                if (factor > huge(1.0_dp)/cost) return
+            end if
+            cost = cost*factor+exp(log(p(5)/2.0_dp)-abs(z))
+            v = p(7)+(p(4)-1.0_dp)*z-cost
+        else
+            r = hypot(1.0_dp,z)
+            lr = log(r)
+            arg = log(p(5))+lr
+            if (arg > log(1.0e100_dp)) then
+                lk = 0.5_dp*(log(scifort_pi/2.0_dp)-arg)
+            else
+                lk = log_besselk_scaled(p(4)-0.5_dp,exp(arg))
+            end if
+            gap = p(5)-p(6)
+            if (z < 0.0_dp) gap = p(5)+p(6)
+            if (gap > 1.0_dp) then
+                if (abs(z) > huge(1.0_dp)/gap) return
+            end if
+            cost = gap*abs(z)+(p(5)/r)/(1.0_dp+abs(z)/r)
+            v = p(7)+lk+(p(4)-0.5_dp)*lr-cost
+        end if
+    end function bk_density
+
+    pure function bk_coordinate(x, p) result(z)
+        implicit none
+        real(dp), intent(in) :: x !! physical coordinate inside the support
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: z
+        if (p(1) == 1.0_dp) then
+            z = log_distance(x,p(2))-log(p(3))
+        else
+            z = location_scale_z(x,p(2:3))
+        end if
+    end function bk_coordinate
+
+    pure function bk_pdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v
+        v = negative_infinity(0.0_dp)
+        if (p(1) == 1.0_dp .and. x <= p(2)) return
+        v = bk_density(bk_coordinate(x,p),p)-log(p(3))
+    end function bk_pdf
+
+    pure function bk_transformed(y, p) result(v)
+        implicit none
+        real(dp), intent(in) :: y !! log or asinh standardized coordinate
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v
+        if (p(1) == 1.0_dp) then
+            v = bk_density(y,p)+y
+        else
+            v = bk_density(sinh(y),p)+log(cosh(y))
+        end if
+    end function bk_transformed
+
+    pure function bk_integral(y, direction, p) result(v)
+        implicit none
+        real(dp), intent(in) :: y !! finite transformed tail endpoint
+        real(dp), intent(in) :: direction !! -1 for lower, +1 for upper tail
+        real(dp), intent(in) :: p(:) !! kernel parameters including the GL rule
+        real(dp) :: v, far, near, mid, base, width, node, half, term
+        integer :: k, j, segments
+        base = bk_transformed(y,p)
+        far = direction*max(12.0_dp,abs(y)+1.0_dp)
+        ! Resolve the endpoint-relative tail even when its width is very small.
+        block
+            near = y
+            do k = 1, 48
+                mid = near+(far-near)/2.0_dp
+                if (bk_transformed(mid,p) < base-50.0_dp) then
+                    far = mid
+                else
+                    near = mid
+                end if
+            end do
+        end block
+        width = abs(far-y)
+        segments = max(16,ceiling(width/0.125_dp))
+        half = width/(2.0_dp*real(segments,dp))
+        v = negative_infinity(0.0_dp)
+        do j = 1, segments
+            mid = y+direction*(real(2*j-1,dp)*half)
+            do k = 1, 16
+                node = mid+half*p(7+k)
+                term = log(half*p(23+k))+bk_transformed(node,p)
+                v = bounded_logadd(v,term)
+            end do
+        end do
+        v = min(0.0_dp,v)
+    end function bk_integral
+
+    pure subroutine bk_tails(x, p, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp), intent(out) :: lp, lq !! logarithms of complementary probabilities
+        real(dp) :: z, y, ld, gap
+        lp = negative_infinity(0.0_dp)
+        lq = 0.0_dp
+        if (p(1) == 1.0_dp .and. x <= p(2)) return
+        z = bk_coordinate(x,p)
+        if (p(1) == 1.0_dp) then
+            y = z
+            if (abs(y) > log(1.0e8_dp)) then
+                ld = bk_density(y,p)
+                if (y < 0.0_dp) then
+                    lp = ld+2.0_dp*y-log(p(5)/2.0_dp)
+                    lq = ig_complement(lp)
+                else
+                    lq = ld-log(p(5)/2.0_dp)
+                    lp = ig_complement(lq)
+                end if
+                return
+            end if
+        else
+            if (abs(z) > 1.0e8_dp) then
+                ld = bk_density(z,p)
+                gap = p(5)-p(6)
+                if (z < 0.0_dp) gap = p(5)+p(6)
+                if (z < 0.0_dp) then
+                    lp = ld-log(gap)
+                    lq = ig_complement(lp)
+                else
+                    lq = ld-log(gap)
+                    lp = ig_complement(lq)
+                end if
+                return
+            end if
+            y = asinh(z)
+        end if
+        if (y < -6.0_dp) then
+            lp = bk_integral(y,-1.0_dp,p)
+            lq = ig_complement(lp)
+        else if (y > 6.0_dp) then
+            lq = bk_integral(y,1.0_dp,p)
+            lp = ig_complement(lq)
+        else
+            lp = bk_integral(y,-1.0_dp,p)
+            lq = bk_integral(y,1.0_dp,p)
+            if (lp < lq) then
+                lq = ig_complement(lp)
+            else
+                lp = ig_complement(lq)
+            end if
+        end if
+    end subroutine bk_tails
+
+    pure function bk_cdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lq
+        call bk_tails(x,p,v,lq)
+    end function bk_cdf
+
+    pure function bk_sf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, lp
+        call bk_tails(x,p,lp,v)
+    end function bk_sf
+
+    pure function bk_interval(a, b, p) result(v)
+        implicit none
+        real(dp), intent(in) :: a, b !! finite strictly ordered physical endpoints
+        real(dp), intent(in) :: p(:) !! kernel parameters
+        real(dp) :: v, z, zb, lw, slope, t, offset, term, weight, lp, lq
+        integer :: k
+        v = negative_infinity(0.0_dp)
+        if (p(1) == 1.0_dp) then
+            if (b <= p(2)) return
+            if (a <= p(2)) then
+                v = bk_cdf(b,p)
+                return
+            end if
+        end if
+        z = bk_coordinate(a,p)
+        lw = log_distance(b,a)-log(p(3))
+        zb = bk_coordinate(b,p)
+        ! Retain the physical increment when endpoint tail logs round together.
+        if (p(1) == 1.0_dp) then
+            if (z > log(1.0e8_dp)) then
+                call bk_tails(a,p,lp,lq)
+                v = lq+log_exponential_mass(lw+log(p(5)/2.0_dp))
+                return
+            else if (zb < -log(1.0e8_dp)) then
+                call bk_tails(b,p,lp,lq)
+                v = lp+log_exponential_mass(log(p(5)/2.0_dp)+lw-z-zb)
+                return
+            end if
+        else
+            if (z > 1.0e8_dp) then
+                call bk_tails(a,p,lp,lq)
+                v = lq+log_exponential_mass(lw+log(p(5)-p(6)))
+                return
+            else if (zb < -1.0e8_dp) then
+                call bk_tails(b,p,lp,lq)
+                v = lp+log_exponential_mass(lw+log(p(5)+p(6)))
+                return
+            end if
+        end if
+        slope = log(100.0_dp)
+        if (p(1) == 1.0_dp) slope = log(100.0_dp)+max(0.0_dp,-2.0_dp*z)
+        if (lw+slope < log(0.01_dp)) then
+            v = negative_infinity(0.0_dp)
+            do k = 1, 3
+                t = 0.5_dp
+                weight = 4.0_dp/9.0_dp
+                if (k /= 1) then
+                    t = (1.0_dp+real(2*k-5,dp)*sqrt(3.0_dp/5.0_dp))/2.0_dp
+                    weight = 5.0_dp/18.0_dp
+                end if
+                if (p(1) == 1.0_dp) then
+                    offset = bounded_logadd(z,lw+log(t))
+                else
+                    offset = z+t*exp(lw)
+                end if
+                term = bk_density(offset,p)+log(weight)
+                v = bounded_logadd(v,term)
+            end do
+            v = v+lw
+        else
+            v = tail_interval(a,b,p,bk_cdf,bk_sf)
+            if (v > -scifort_log_two) then
+                lp = bk_cdf(a,p)
+                lq = bk_sf(b,p)
+                v = ig_complement(bounded_logadd(lp,lq))
+            end if
+        end if
+    end function bk_interval
+
+    pure function geninvgauss_censored_loglikelihood(data, p, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: p !! order shape in [-5,5]
+        real(dp), intent(in) :: b !! positive shape in [0.5,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(39), delta
+        real(dp), allocatable :: nodes(:), weights(:)
+        integer :: status
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(:6) = [1.0_dp,0.0_dp,1.0_dp,p,b,0.0_dp]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params(:6)))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(params(4)) > 5.0_dp) return
+        if (params(5) < 0.5_dp .or. params(5) > 10.0_dp) return
+        if (abs(params(6)) > 0.8_dp*params(5)) return
+        if (params(1) == 1.0_dp) then
+            params(7) = -scifort_log_two-log_besselk_scaled(params(4),params(5))+params(5)
+        else
+            delta = sqrt((params(5)-params(6))*(params(5)+params(6)))
+            params(7) = params(4)*log(delta)-scifort_log_sqrt_two_pi &
+                -(params(4)-0.5_dp)*log(params(5))-log_besselk_scaled(params(4),delta)+delta
+        end if
+        call roots_legendre(16,nodes,weights,status=status)
+        if (status /= 0) return
+        params(8:23) = nodes
+        params(24:39) = weights
+        value = censored_loglikelihood(data,params,bk_pdf,bk_cdf,bk_sf,bk_interval)
+    end function geninvgauss_censored_loglikelihood
+
+    pure function geninvgauss_censored_nnlf(data, p, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: p !! order shape in [-5,5]
+        real(dp), intent(in) :: b !! positive shape in [0.5,10]
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -geninvgauss_censored_loglikelihood(data,p, b,loc,scale)
+    end function geninvgauss_censored_nnlf
+
+    pure function norminvgauss_censored_loglikelihood(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! tail shape in [0.5,10]
+        real(dp), intent(in) :: b !! skew shape with abs(b) <= 0.8*a
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(39), delta
+        real(dp), allocatable :: nodes(:), weights(:)
+        integer :: status
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(:6) = [2.0_dp,0.0_dp,1.0_dp,-0.5_dp,a,b]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params(:6)))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(params(4)) > 5.0_dp) return
+        if (params(5) < 0.5_dp .or. params(5) > 10.0_dp) return
+        if (abs(params(6)) > 0.8_dp*params(5)) return
+        if (params(1) == 1.0_dp) then
+            params(7) = -scifort_log_two-log_besselk_scaled(params(4),params(5))+params(5)
+        else
+            delta = sqrt((params(5)-params(6))*(params(5)+params(6)))
+            params(7) = params(4)*log(delta)-scifort_log_sqrt_two_pi &
+                -(params(4)-0.5_dp)*log(params(5))-log_besselk_scaled(params(4),delta)+delta
+        end if
+        call roots_legendre(16,nodes,weights,status=status)
+        if (status /= 0) return
+        params(8:23) = nodes
+        params(24:39) = weights
+        value = censored_loglikelihood(data,params,bk_pdf,bk_cdf,bk_sf,bk_interval)
+    end function norminvgauss_censored_loglikelihood
+
+    pure function norminvgauss_censored_nnlf(data, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: a !! tail shape in [0.5,10]
+        real(dp), intent(in) :: b !! skew shape with abs(b) <= 0.8*a
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -norminvgauss_censored_loglikelihood(data,a, b,loc,scale)
+    end function norminvgauss_censored_nnlf
+
+    pure function genhyperbolic_censored_loglikelihood(data, p, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: p !! order shape in [-5,5]
+        real(dp), intent(in) :: a !! tail shape in [0.5,10]
+        real(dp), intent(in) :: b !! skew shape with abs(b) <= 0.8*a
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value, params(39), delta
+        real(dp), allocatable :: nodes(:), weights(:)
+        integer :: status
+        value = quiet_nan(0.0_dp)
+        params = 0.0_dp
+        params(:6) = [2.0_dp,0.0_dp,1.0_dp,p,a,b]
+        if (present(loc)) params(2) = loc
+        if (present(scale)) params(3) = scale
+        if (.not. all(ieee_is_finite(params(:6)))) return
+        if (params(3) <= 0.0_dp) return
+        if (abs(params(4)) > 5.0_dp) return
+        if (params(5) < 0.5_dp .or. params(5) > 10.0_dp) return
+        if (abs(params(6)) > 0.8_dp*params(5)) return
+        if (params(1) == 1.0_dp) then
+            params(7) = -scifort_log_two-log_besselk_scaled(params(4),params(5))+params(5)
+        else
+            delta = sqrt((params(5)-params(6))*(params(5)+params(6)))
+            params(7) = params(4)*log(delta)-scifort_log_sqrt_two_pi &
+                -(params(4)-0.5_dp)*log(params(5))-log_besselk_scaled(params(4),delta)+delta
+        end if
+        call roots_legendre(16,nodes,weights,status=status)
+        if (status /= 0) return
+        params(8:23) = nodes
+        params(24:39) = weights
+        value = censored_loglikelihood(data,params,bk_pdf,bk_cdf,bk_sf,bk_interval)
+    end function genhyperbolic_censored_loglikelihood
+
+    pure function genhyperbolic_censored_nnlf(data, p, a, b, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: p !! order shape in [-5,5]
+        real(dp), intent(in) :: a !! tail shape in [0.5,10]
+        real(dp), intent(in) :: b !! skew shape with abs(b) <= 0.8*a
+        real(dp), intent(in), optional :: loc !! finite location, default zero
+        real(dp), intent(in), optional :: scale !! positive finite scale, default one
+        real(dp) :: value
+        value = -genhyperbolic_censored_loglikelihood(data,p, a, b,loc,scale)
+    end function genhyperbolic_censored_nnlf
+
 
     ! Log-domain kernels from the mathematical specifications in CODE_PROVENANCE.md.
     pure subroutine kt_logs(lz, lp, lq, ld)
