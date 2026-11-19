@@ -207,12 +207,82 @@ contains
         if (mode == 0) value = value-log(p(3))
     end function ls_logs
 
+    ! Rotate the characteristic-function contour into the lower half-plane.
+    ! Subtract its zero-scale term analytically before quadrature; see provenance.
+    pure function ls_tail(lz, beta, p, density) result(value)
+        implicit none
+        real(dp), intent(in) :: lz !! logarithm of positive standardized distance, >=log(6)
+        real(dp), intent(in) :: beta !! reflected S1 skewness in [-0.5,0.5]
+        real(dp), intent(in) :: p(:) !! alpha, affine parameters and GL16 rule
+        logical, intent(in) :: density !! density rather than upper-tail probability
+        real(dp) :: value, theta, q, v, y, total, term
+        complex(dp) :: rotation, coefficient, base, w, ratio, power, integrand
+        integer :: j, i, n
+        theta = scifort_pi/(8.0_dp*p(1))
+        rotation = cmplx(cos(theta),-sin(theta),dp)
+        coefficient = cmplx(1.0_dp,-beta*tan(0.5_dp*scifort_pi*p(1)),dp) &
+            *cmplx(cos(p(1)*theta),-sin(p(1)*theta),dp)
+        q = exp(-p(1)*lz)
+        total = 0.0_dp
+        ! y=v**4, 0<=v<=4. The damping is at least exp(-sin(pi/14)*y).
+        do j = 1, 160
+            do i = 1, 16
+                v = (real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i)))*0.025_dp
+                y = v**4
+                base = -coefficient*y**p(1)
+                w = base*q
+                if (abs(w) < 0.5_dp) then
+                    ! Entire function (exp(w)-1)/w, including q=0 after underflow.
+                    ratio = cmplx(1.0_dp,0.0_dp,dp)
+                    power = ratio
+                    do n = 1, 20
+                        power = power*w/real(n+1,dp)
+                        ratio = ratio+power
+                    end do
+                else
+                    ratio = (exp(w)-1.0_dp)/w
+                end if
+                integrand = base*ratio*exp(cmplx(0.0_dp,-y,dp)*rotation)
+                if (density) then
+                    term = real(rotation*integrand,dp)*4.0_dp*v**3
+                else
+                    term = aimag(integrand)*4.0_dp/v
+                end if
+                total = total+p(20+i)*term
+            end do
+        end do
+        total = total*0.0125_dp/scifort_pi
+        value = quiet_nan(0.0_dp)
+        if (total <= 0.0_dp) return
+        value = log(total)-p(1)*lz
+        if (density) value = value-lz-log(p(3))
+    end function ls_tail
+
+    pure function ls_value(x, p, mode) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite observation or censoring endpoint
+        real(dp), intent(in) :: p(:) !! alpha, affine parameters, beta and GL16 rule
+        integer, intent(in) :: mode !! zero density, one CDF, two SF
+        real(dp) :: value, z, lz, beta
+        z = location_scale_z(x,p(2:3))
+        if (abs(z) <= 6.0_dp) then
+            value = ls_logs(z,p,mode)
+            return
+        end if
+        lz = log_distance(max(x,p(2)),min(x,p(2)))-log(p(3))
+        beta = p(4)
+        if (x < p(2)) beta = -beta
+        value = ls_tail(lz,beta,p,mode == 0)
+        if ((mode == 1 .and. x > p(2)) .or. (mode == 2 .and. x < p(2))) &
+            value = ig_complement(value)
+    end function ls_value
+
     pure function ls_pdf(x, p) result(value)
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
         real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
         real(dp) :: value
-        value = ls_logs(location_scale_z(x,p(2:3)),p,0)
+        value = ls_value(x,p,0)
     end function ls_pdf
 
     pure function ls_cdf(x, p) result(value)
@@ -220,7 +290,7 @@ contains
         real(dp), intent(in) :: x !! upper censoring endpoint
         real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
         real(dp) :: value
-        value = ls_logs(location_scale_z(x,p(2:3)),p,1)
+        value = ls_value(x,p,1)
     end function ls_cdf
 
     pure function ls_sf(x, p) result(value)
@@ -228,7 +298,7 @@ contains
         real(dp), intent(in) :: x !! lower censoring endpoint
         real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
         real(dp) :: value
-        value = ls_logs(location_scale_z(x,p(2:3)),p,2)
+        value = ls_value(x,p,2)
     end function ls_sf
 
     pure function integrated_censored_interval(a, b, p, pdf, cdf, sf, bounded) result(value)
@@ -236,7 +306,7 @@ contains
         real(dp), intent(in) :: a, b !! ordered finite interval endpoints
         real(dp), intent(in) :: p(:) !! shapes, affine parameters and GL16 rule
         procedure(censored_log_function) :: pdf, cdf, sf !! log density and tails
-        logical, intent(in) :: bounded !! stable central-coordinate limit applies
+        logical, intent(in) :: bounded !! two-sided stable support rather than positive range
         real(dp) :: value, left, la, lb, qa, qb, width, u, x, term, za, zb
         integer :: j, i, panels
         value = quiet_nan(0.0_dp)
@@ -267,8 +337,10 @@ contains
         width = log_distance(b,left)
         panels = 1
         if (bounded) then
-            za = location_scale_z(left,p(2:3))
-            zb = location_scale_z(b,p(2:3))
+            ! Tail intervals reaching this fallback are relatively narrow.
+            ! Only the central segment needs absolute-width subdivision.
+            za = max(-6.0_dp,min(6.0_dp,location_scale_z(left,p(2:3))))
+            zb = max(-6.0_dp,min(6.0_dp,location_scale_z(b,p(2:3))))
             panels = max(1,ceiling((zb-za)/0.25_dp))
         end if
         value = negative_infinity(0.0_dp)

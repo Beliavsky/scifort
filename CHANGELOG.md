@@ -1,3 +1,12 @@
+## 2026-11-19 - Levy-stable censored tails
+
+- Extend general stable censored likelihoods and fits beyond abs(z)<=6 for the
+  existing 1.25<=alpha<=1.75, abs(beta)<=0.5 shape range.
+- Compute remote log densities and small tails by an independently derived
+  damped contour integral, retaining logs beyond probability and standardized
+  coordinate overflow/underflow. Preserve physical adjacent-interval widths.
+- Add independent Fourier/asymptotic references and tail fitting checks.
+
 ## 2026-11-18 - studentized-range censoring through df=100
 
 - Extend finite-df studentized-range censored likelihoods, NNLFs, and bounded

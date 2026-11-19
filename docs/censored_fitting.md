@@ -2985,20 +2985,24 @@ The stable method follows the default S1 parameterization. It supports:
   standard deviation sqrt(2)*scale;
 - alpha=1, beta=0: the existing Cauchy censored method;
 - alpha=0.5, beta=1 or -1: the existing Levy or reflected-Levy censored method;
-- 1.25<=alpha<=1.75 and abs(beta)<=0.5, with every finite exact observation
-  and censoring endpoint satisfying abs((x-loc)/scale)<=6.
+- 1.25<=alpha<=1.75 and abs(beta)<=0.5, including remote tails and finite
+  observations whose standardized distance overflows binary64.
 
 The first three cases inherit the delegated family's tail and interval
 contracts. The fourth case independently inverts the characteristic function
 in the central region. The substitution t=v**4 smooths the origin, and a
 composite GL16 rule integrates through t**alpha=48. Density, CDF, and reflected
-CDF for the SF are evaluated separately. This central-coordinate restriction
-avoids cancellation-prone remote tails; unhandled coordinates return NaN
-rather than a spurious zero probability. Narrow intervals integrate the density
-with physical widths, retaining logs for adjacent binary64 endpoints.
+CDF for the SF are evaluated separately through abs(z)<=6. Beyond that join,
+a rotated characteristic-function contour computes the small tail directly.
+Analytic subtraction and factoring of the leading power retain density and
+tail logarithms when ordinary probabilities underflow. Reflection supplies
+the left tail; stable logarithmic complementation supplies the large tail.
+Narrow intervals integrate the density with physical widths, retaining logs
+for adjacent binary64 endpoints. See the
+[tail validation and derivation](../validation/stable_censored_tails_2026-11-19.md).
 
-General skew alpha=1, other stability/skewness ranges, and remote central-kernel
-tails remain gaps. In particular, no alpha=1 skew location-scale correction is
+General skew alpha=1 and other stability/skewness ranges remain gaps. In
+particular, no alpha=1 skew location-scale correction is
 approximated: that branch is unsupported unless beta=0. The new independent
 kernel does not inherit the existing scalar routine's near-one/near-mode input
 rounding. Small differences from that scalar routine can therefore be expected.

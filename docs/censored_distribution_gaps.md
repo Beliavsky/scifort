@@ -1,6 +1,6 @@
 # Censored distribution coverage gaps
 
-Inventory updated: 2026-11-18.
+Inventory updated: 2026-11-19.
 
 For complete native Fortran coverage, the eventual target is censored
 likelihoods for all named univariate continuous families, with explicit
@@ -23,12 +23,13 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 [censored likelihoods and fitting](censored_fitting.md) for their contracts.
 
 Additional numerical coverage remains within implemented families:
-Levy-stable censoring supports normal/Cauchy/Levy special cases and a central
-S1 region 1.25<=alpha<=1.75, abs(beta)<=0.5, abs((x-loc)/scale)<=6.
+Levy-stable censoring supports normal/Cauchy/Levy special cases and S1 shapes
+1.25<=alpha<=1.75, abs(beta)<=0.5, including remote tails and overflowed
+standardized coordinates. Wider stable shape ranges remain.
 Studentized-range censoring requires 2<=k<=10 and 1<=df<=100 or df>=100000;
 the infinite-df approximation is limited to standardized coordinates<=40.
 Both require normal scale<=huge/100 and abs(loc)/scale<=10000.
-Extending these ranges and central stable tails remains; see the API guide.
+Extending these shape ranges remains; see the API guide.
 KStwo censoring requires integer 1<=n<=32, normal scale<=huge/2,
 abs(loc)/scale<=100, and finite noncollapsed affine support. Larger sample
 sizes remain unsupported by that censored method.
@@ -128,8 +129,8 @@ joint probability calculations; it is outside this univariate inventory.
 
 ## Suggested follow-up order
 
-1. Extend the stable central kernel to more shapes and remote tails, and
-   studentized-range censoring to the remaining df/k ranges.
+1. Extend the stable kernel to more shapes and studentized-range censoring
+   to larger k. Finite studentized-range df through 100 is the current target.
 2. Extend noncentral radial mixture convergence ranges and the documented
    generalized-gamma and truncation parameter ranges; Rice now has censoring support.
 3. Extend the bounded-family numerical ranges and retain explicit support

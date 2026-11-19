@@ -149,7 +149,7 @@ program test_censored_final
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.1_dp,.5_dp)),'stable alpha domain')
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.5_dp,.8_dp)),'stable beta domain')
     one = make_censored_data(uncensored=[7.0_dp])
-    call check(ieee_is_nan(levy_stable_censored_loglikelihood(one,1.5_dp,.5_dp)),'stable coordinate limit')
+    call check(ieee_is_finite(levy_stable_censored_loglikelihood(one,1.5_dp,.5_dp)),'stable tail density')
     one = make_censored_data(left=[nan])
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(one,1.5_dp,.5_dp)),'stable invalid data')
     call check(ieee_is_nan(studentized_range_censored_loglikelihood(one,3.0_dp,10.0_dp)),'range invalid data')
@@ -226,6 +226,62 @@ program test_censored_final
     call check(fit%success,'df100 fixed fit')
     call close(fit%nllf,studentized_range_censored_nnlf(data,2.0_dp,100.0_dp), &
         3e-10_dp,'df100 fixed objective')
+    ! Tail reflection, complements, switch continuity and physical narrow widths.
+    do i = 1, 3
+        alpha = 1.0_dp+0.25_dp*real(i,dp)
+        do j = -1, 1
+            beta = 0.5_dp*real(j,dp)
+            previous = 0.0_dp
+            do h = 1, 6
+                x = 6.0_dp*10.0_dp**real(h-1,dp)
+                one = make_censored_data(right=[x])
+                actual = levy_stable_censored_loglikelihood(one,alpha,beta)
+                call check(ieee_is_finite(actual),'stable remote finite SF')
+                call check(actual < previous,'stable remote monotonic SF')
+                previous = actual
+                expected = levy_stable_censored_loglikelihood( &
+                    make_censored_data(left=[-x]),alpha,-beta)
+                call close(actual,expected,3e-12_dp,'stable remote reflection')
+                expected = levy_stable_censored_loglikelihood( &
+                    make_censored_data(left=[x]),alpha,beta)
+                call close(exp(actual)+exp(expected),1.0_dp,3e-13_dp,'stable remote complement')
+                y = nearest(x,1.0_dp)
+                one = make_censored_data(interval=reshape([x,y],[1,2]))
+                expected = levy_stable_censored_loglikelihood( &
+                    make_censored_data(uncensored=[x]),alpha,beta)+log(y-x)
+                call close(levy_stable_censored_loglikelihood(one,alpha,beta), &
+                    expected,3e-10_dp,'stable remote adjacent')
+            end do
+            x = 6.0_dp
+            y = nearest(x,1.0_dp)
+            actual = levy_stable_censored_loglikelihood(make_censored_data(right=[x]),alpha,beta)
+            expected = levy_stable_censored_loglikelihood(make_censored_data(right=[y]),alpha,beta)
+            call close(actual,expected,3e-11_dp,'stable tail switch')
+        end do
+    end do
+    x = 1.0e300_dp
+    y = nearest(x,1.0_dp)
+    scale = 1.0e-200_dp
+    one = make_censored_data(uncensored=[x])
+    actual = levy_stable_censored_loglikelihood(one,1.5_dp,.5_dp,scale=scale)
+    call check(ieee_is_finite(actual),'stable overflowed standardized density')
+    one = make_censored_data(interval=reshape([x,y],[1,2]))
+    call close(levy_stable_censored_loglikelihood(one,1.5_dp,.5_dp,scale=scale), &
+        actual+log(y-x),3e-10_dp,'stable overflowed adjacent')
+    data = make_censored_data(uncensored=[.5_dp,1.0_dp,2.0_dp,8.0_dp], &
+        left=[-10.0_dp],right=[20.0_dp],interval=reshape([30.0_dp,32.0_dp],[1,2]))
+    lower = [1.5_dp,.5_dp,0.0_dp,1.0_dp]
+    upper = lower
+    call levy_stable_fit(data,lower,upper,fit)
+    call check(fit%success,'stable tail fixed fit')
+    call close(fit%nllf,levy_stable_censored_nnlf(data,1.5_dp,.5_dp), &
+        3e-10_dp,'stable tail fixed objective')
+    lower(4) = .5_dp
+    upper(4) = 20.0_dp
+    call levy_stable_fit(data,lower,upper,fit)
+    call check(fit%success,'stable tail free fit')
+    call close(fit%params(4),9.92118608975177_dp,3e-6_dp,'stable tail fitted scale')
+    call close(fit%nllf,23.868504660682664_dp,3e-10_dp,'stable tail fitted objective')
     write(*,'(a,i0,a,i0)') 'Final censored checks: ',checks,', failures: ',failures
     if (failures /= 0) stop 1
 contains

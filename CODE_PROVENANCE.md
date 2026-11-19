@@ -12323,3 +12323,25 @@ record remain applicable. `test/test_censored_final.f90` and
 positive adaptive-integral, and SciPy numerical cross-checks. No third-party
 implementation, dependency, coefficient table, or license text is introduced.
 See [validation](validation/studentized_range_df100_2026-11-18.md).
+
+
+### Levy-stable censored tails (2026-11-19)
+
+The new private `ls_tail` and `ls_value` routines in `src/censored.f90` are
+independent MIT SciFort implementations derived from the S1 characteristic
+function in [SciPy's mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_stable.html).
+Rotating the Fourier contour, subtracting the zero-scale term analytically,
+and factoring the leading power gives damped integrals for density and the
+small tail. The derivation, contour bounds, quadrature choices and limitations
+are recorded in the [validation record](validation/stable_censored_tails_2026-11-19.md).
+No upstream numerical implementation or coefficient table was imported.
+Existing BSD-licensed scalar stable code and its notices are unchanged.
+
+The MIT reference script `validation/check_censored_stable_tails.py` uses
+high-precision real Fourier integration near the join and independent finite
+asymptotic sums remotely. The latter use equations (3) and (5) in
+[V. V. Saenko (2023), The calculation of the distribution function of a strictly stable law at large X](https://arxiv.org/abs/2303.12488),
+converted from its C parameterization to S1. These mathematical formulas are
+used for validation only. SciPy supplies an additional fitting cross-check;
+SciPy and mpmath remain optional validation tools, not runtime dependencies.
+No third-party implementation code or license text was added.
