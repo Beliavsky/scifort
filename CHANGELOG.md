@@ -1,3 +1,10 @@
+## 2026-11-18 - studentized-range censoring through df=100
+
+- Extend finite-df studentized-range censored likelihoods, NNLFs, and bounded
+  fits from df<=30 to df<=100. Keep the existing df>=100000 asymptotic switch.
+- Add folded-t, positive adaptive-integral, endpoint/tail, adjacent-interval,
+  and native fitting checks for the expanded domain.
+
 ## 2026-11-18 - censored stable and studentized-range distributions
 
 - Add native Levy-stable and studentized-range censored likelihoods, NNLFs,

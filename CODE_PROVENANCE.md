@@ -12310,3 +12310,16 @@ SciPy integrate. Ordinary SciPy values and independently evaluated fit objective
 supply additional cross-checks; they are not implementation code. No runtime
 dependency or third-party license text was added. See the
 [validation record](validation/final_censored_2026-11-18.md).
+
+
+### Studentized-range censored df extension (2026-11-18)
+
+The finite-df guard in `src/censored.f90` now permits df through 100. This is
+an original SciFort domain extension of the existing independently derived
+normal-range/chi-scale mixture, not an upstream code import. The mathematical
+specification and attribution in the preceding censored studentized-range
+record remain applicable. `test/test_censored_final.f90` and
+`validation/check_censored_final.py` extend the existing independent folded-t,
+positive adaptive-integral, and SciPy numerical cross-checks. No third-party
+implementation, dependency, coefficient table, or license text is introduced.
+See [validation](validation/studentized_range_df100_2026-11-18.md).

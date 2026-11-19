@@ -523,7 +523,7 @@ contains
         implicit none
         type(censored_data), intent(in) :: data !! exact and censored observations
         real(dp), intent(in) :: k !! number of means in [2,10]
-        real(dp), intent(in) :: df !! [1,30] or >=100000 (infinite-df approximation)
+        real(dp), intent(in) :: df !! degrees of freedom: [1,100] or >=100000 (asymptotic)
         real(dp), intent(in), optional :: loc !! lower support location, default zero
         real(dp), intent(in), optional :: scale !! normal positive scale, default one
         real(dp) :: value, p(36)
@@ -531,10 +531,10 @@ contains
         value = quiet_nan(0.0_dp)
         if (ieee_is_nan(df)) return
         if (df < 1.0_dp) return
-        if (df > 30.0_dp .and. df < 1.0e5_dp) return
+        if (df > 100.0_dp .and. df < 1.0e5_dp) return
         p = 0.0_dp
         p(1:4) = [k,0.0_dp,1.0_dp,0.0_dp]
-        if (df <= 30.0_dp) p(4) = df
+        if (df <= 100.0_dp) p(4) = df
         if (present(loc)) p(2) = loc
         if (present(scale)) p(3) = scale
         if (.not. all(ieee_is_finite(p))) return
@@ -551,7 +551,7 @@ contains
         implicit none
         type(censored_data), intent(in) :: data !! exact and censored observations
         real(dp), intent(in) :: k !! number of means in [2,10]
-        real(dp), intent(in) :: df !! [1,30] or >=100000 (infinite-df approximation)
+        real(dp), intent(in) :: df !! degrees of freedom: [1,100] or >=100000 (asymptotic)
         real(dp), intent(in), optional :: loc !! lower support location, default zero
         real(dp), intent(in), optional :: scale !! normal positive scale, default one
         real(dp) :: value

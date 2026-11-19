@@ -14,7 +14,7 @@ program test_censored_final
     type(censored_data) :: data, one, empty
     type(fit_result) :: fit, old
     real(dp) :: nan, inf, alpha, beta, x, y, expected, actual, df, k, previous
-    real(dp) :: lower(4), upper(4), shapes(4), points(4), loc, scale, z
+    real(dp) :: lower(4), upper(4), shapes(8), points(4), loc, scale, z
     integer :: i, j, h, checks, failures
     checks = 0
     failures = 0
@@ -56,9 +56,9 @@ program test_censored_final
         call close(levy_stable_censored_loglikelihood(one,alpha,beta),expected,3e-10_dp,'stable adjacent')
         call close(levy_stable_censored_loglikelihood(empty,alpha,beta),0.0_dp,0.0_dp,'stable empty')
     end do
-    shapes = [1.0_dp,2.0_dp,10.0_dp,30.0_dp]
+    shapes = [1.0_dp,2.0_dp,10.0_dp,30.0_dp,31.0_dp,50.0_dp,75.0_dp,100.0_dp]
     points = [.01_dp,1.0_dp,10.0_dp,1e100_dp]
-    do j = 1, 4
+    do j = 1, size(shapes)
         df = shapes(j)
         do i = 1, 4
             x = points(i)
@@ -92,6 +92,32 @@ program test_censored_final
         one = make_censored_data(left=[x])
         call close(studentized_range_censored_loglikelihood(one,k,df),expected,3e-10_dp,'range lower power')
     end do
+    ! The expanded finite-df branch retains tails and narrow intervals.
+    do j = 5, size(shapes)
+        df = shapes(j)
+        k = 5.0_dp
+        previous = -inf
+        do i = 1, 5
+            x = real(i,dp)
+            one = make_censored_data(left=[x])
+            actual = studentized_range_censored_loglikelihood(one,k,df)
+            call check(actual >= previous .and. actual <= 0.0_dp,'larger-df CDF monotonic')
+            previous = actual
+            one = make_censored_data(right=[x])
+            expected = studentized_range_censored_loglikelihood(one,k,df)
+            call close(exp(actual)+exp(expected),1.0_dp,3e-13_dp,'larger-df complementary tails')
+        end do
+        x = 2.0_dp
+        one = make_censored_data(uncensored=[x])
+        expected = studentized_range_censored_loglikelihood(one,k,df)
+        y = nearest(x,1.0_dp)
+        one = make_censored_data(interval=reshape([x,y],[1,2]))
+        call close(studentized_range_censored_loglikelihood(one,k,df),expected+log(y-x), &
+            3e-10_dp,'larger-df adjacent interval')
+        one = make_censored_data(uncensored=[1e100_dp])
+        call check(ieee_is_finite(studentized_range_censored_loglikelihood(one,k,df)), &
+            'larger-df remote density')
+    end do
     do h = -1, 1, 2
         scale = 10.0_dp**(200*h)
         loc = .3_dp*scale
@@ -118,7 +144,7 @@ program test_censored_final
     call check(ieee_is_nan(studentized_range_censored_loglikelihood(empty,3.0_dp,nan)),'range NaN df')
     call check(ieee_is_nan(studentized_range_censored_loglikelihood(empty,nan,10.0_dp)),'range NaN k')
     call check(ieee_is_nan(studentized_range_censored_loglikelihood(empty,1.5_dp,10.0_dp)),'range k domain')
-    call check(ieee_is_nan(studentized_range_censored_loglikelihood(empty,3.0_dp,50.0_dp)),'range df domain')
+    call check(ieee_is_nan(studentized_range_censored_loglikelihood(empty,3.0_dp,101.0_dp)),'range df domain')
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,nan,.5_dp)),'stable NaN alpha')
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.1_dp,.5_dp)),'stable alpha domain')
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.5_dp,.8_dp)),'stable beta domain')
@@ -188,6 +214,18 @@ program test_censored_final
     call check(fit%success,'range free scale fit')
     call close(fit%params(4),1.2559117716600137_dp,3e-6_dp,'range scale reference')
     call close(fit%nllf,9.2567771817722466_dp,3e-10_dp,'range free objective reference')
+    lower = [2.0_dp,100.0_dp,0.0_dp,.5_dp]
+    upper = [2.0_dp,100.0_dp,0.0_dp,2.0_dp]
+    call studentized_range_fit(data,lower,upper,fit)
+    call check(fit%success,'df100 free scale fit')
+    call close(fit%params(4),1.3538868383774807_dp,3e-6_dp,'df100 scale reference')
+    call close(fit%nllf,9.3210196335503106_dp,3e-10_dp,'df100 free objective reference')
+    lower(4) = 1.0_dp
+    upper(4) = 1.0_dp
+    call studentized_range_fit(data,lower,upper,fit)
+    call check(fit%success,'df100 fixed fit')
+    call close(fit%nllf,studentized_range_censored_nnlf(data,2.0_dp,100.0_dp), &
+        3e-10_dp,'df100 fixed objective')
     write(*,'(a,i0,a,i0)') 'Final censored checks: ',checks,', failures: ',failures
     if (failures /= 0) stop 1
 contains

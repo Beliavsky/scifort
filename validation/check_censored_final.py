@@ -71,18 +71,18 @@ def main():
                 left=stable(-.2,a,b)[1];right=stable(.8,a,b)[1]
                 add(108,a,b,-.2,3,right+mp.log(-mp.expm1(left-right)),end=.8,label='MP ordinary interval')
                 print('Stable MP fixtures ready',a,b,flush=True)
-            for df in (1.,2.,10.,30.,math.inf):
+            for df in (1.,2.,10.,30.,31.,50.,75.,100.,math.inf):
                 for q in (1e-100,.01,1.,5.,30.,1e100):
                     if math.isinf(df) and q>40:continue
                     refs=two_means(q,df)
                     for part in range(3):add(109,2.,df,q,part,refs[part],label='MP folded t',tol=3e-10)
                 q=1.;end=math.nextafter(q,math.inf)
                 add(109,2.,df,q,3,two_means(q,df)[0]+mp.log(mp.mpf(end)-q),end=end,label='MP folded adjacent')
-            for k,df in ((3.,2.),(5.,10.),(10.,30.),(2.5,5.),(3.,math.inf),(10.,math.inf)):
+            for k,df in ((3.,2.),(5.,10.),(10.,30.),(2.5,5.),(2.5,31.),(5.,50.),(10.,100.),(3.,math.inf),(10.,math.inf)):
                 for q in (.1,1.,4.,10.):
                     for part,name in enumerate(('logpdf','logcdf','logsf')):
                         ref=float(getattr(stats.studentized_range,name)(q,k,df))
-                        if q==.1 and part<2:
+                        if (q==.1 and part<2) or (q==10. and part==0 and 30<df<=100):
                             ref=adaptive_range(q,k,df,part==0)
                             add(109,k,df,q,part,ref,label='adaptive range',tol=3e-10)
                         elif math.isfinite(ref) and (part!=2 or ref>-18) and not (-1e-8<ref<0):

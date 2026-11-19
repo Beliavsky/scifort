@@ -25,7 +25,7 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 Additional numerical coverage remains within implemented families:
 Levy-stable censoring supports normal/Cauchy/Levy special cases and a central
 S1 region 1.25<=alpha<=1.75, abs(beta)<=0.5, abs((x-loc)/scale)<=6.
-Studentized-range censoring requires 2<=k<=10 and 1<=df<=30 or df>=100000;
+Studentized-range censoring requires 2<=k<=10 and 1<=df<=100 or df>=100000;
 the infinite-df approximation is limited to standardized coordinates<=40.
 Both require normal scale<=huge/100 and abs(loc)/scale<=10000.
 Extending these ranges and central stable tails remains; see the API guide.

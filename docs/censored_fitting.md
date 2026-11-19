@@ -3006,10 +3006,12 @@ The tested target is 3e-10*max(1,abs(reference_log_value)).
 
 ### Studentized-range numerical domain
 
-The studentized-range method supports real 2<=k<=10 and either 1<=df<=30 or
+The studentized-range method supports real 2<=k<=10 and either 1<=df<=100 or
 df>=100000. Values at and above 100000, including positive infinity, use the
 infinite-df normal-range approximation, matching the existing asymptotic switch.
-The gap 30<df<100000 and 1<k<2 remain unsupported. Fit bounds must be finite;
+The gap 100<df<100000 and 1<k<2 remain unsupported. Finite df=100
+still uses the chi-scale mixture; it does not switch to the normal-range limit.
+Fit bounds must be finite;
 fix df=100000 to fit the infinite-df approximation.
 
 For finite df, positive log-domain normal-range/chi-scale mixture integrals
@@ -3033,3 +3035,6 @@ negative logs, or last-bit monotonicity across numerical switches.
 
 See the [validation record](../validation/final_censored_2026-11-18.md) for
 independent Fourier, folded-t, endpoint-power, adaptive integral, and fit checks.
+
+Validation of the extension through df=100 is recorded in the
+[finite-df validation record](../validation/studentized_range_df100_2026-11-18.md).
