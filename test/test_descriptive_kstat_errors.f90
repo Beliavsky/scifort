@@ -46,21 +46,29 @@ contains
         real(dp) :: scalar
 
         qnan = ieee_value(0.0_dp, ieee_quiet_nan)
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('kstat_order_zero')
             scalar = kstat([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], n=0)
+            print *, 'unexpected return: ', scalar
         case ('kstat_order_five')
             scalar = kstat([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], n=5)
+            print *, 'unexpected return: ', scalar
         case ('kstatvar_order_zero')
             scalar = kstatvar([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], n=0)
+            print *, 'unexpected return: ', scalar
         case ('kstatvar_order_three')
             scalar = kstatvar([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], n=3)
+            print *, 'unexpected return: ', scalar
         case ('kstat_nan_raise')
             scalar = kstat([1.0_dp, qnan, 3.0_dp, 4.0_dp], &
                 n=2, nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('kstatvar_nan_raise')
             scalar = kstatvar([1.0_dp, qnan, 3.0_dp, 4.0_dp], &
                 n=1, nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

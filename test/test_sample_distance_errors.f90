@@ -43,27 +43,36 @@ contains
         real(dp), allocatable :: empty(:)
         real(dp) :: value
 
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('empty_distribution')
             allocate(empty(0))
             value = wasserstein_distance(empty, [1.0_dp])
+            print *, 'unexpected return: ', value
         case ('weight_size')
             value = energy_distance([1.0_dp, 2.0_dp], [3.0_dp], [1.0_dp], [1.0_dp])
+            print *, 'unexpected return: ', value
         case ('negative_weight')
             value = wasserstein_distance([1.0_dp, 2.0_dp], [3.0_dp], &
                 [1.0_dp, -1.0_dp], [1.0_dp])
+            print *, 'unexpected return: ', value
         case ('zero_weight_sum')
             value = wasserstein_distance([1.0_dp, 2.0_dp], [3.0_dp], &
                 [0.0_dp, 0.0_dp], [1.0_dp])
+            print *, 'unexpected return: ', value
         case ('infinite_weight')
             value = wasserstein_distance([1.0_dp, 2.0_dp], [3.0_dp], &
                 [1.0_dp, ieee_value(0.0_dp, ieee_positive_inf)], [1.0_dp])
+            print *, 'unexpected return: ', value
         case ('nan_weight')
             value = wasserstein_distance([1.0_dp, 2.0_dp], [3.0_dp], &
                 [1.0_dp, ieee_value(0.0_dp, ieee_quiet_nan)], [1.0_dp])
+            print *, 'unexpected return: ', value
         case ('overflow_weight_sum')
             value = wasserstein_distance([1.0_dp, 2.0_dp], [3.0_dp], &
                 [huge(0.0_dp), huge(0.0_dp)], [1.0_dp])
+            print *, 'unexpected return: ', value
         case default
             error stop 4
         end select

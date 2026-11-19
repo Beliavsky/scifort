@@ -6319,7 +6319,10 @@ They implement the documented integrals `F_+(x)=integral_x^inf exp(i*t**2) dt` a
 `K_+(x)=exp(-i*(x**2+pi/4))*F_+(x)/sqrt(pi)` and the conjugate negative form.
 For nonnegative arguments the scaled result is evaluated through the existing `wofz` kernel,
 then an error-free split square reconstructs the oscillatory phase without first rounding
-`x**2` to a single binary64 value. For negative real arguments SciFort follows the integral
+`x**2` to a single binary64 value. Both square components reconstruct cosine using
+the sine half-angle identity, avoiding optimizer-generated combined sine/cosine
+calls with inaccurate large-argument reduction in some Windows runtimes.
+For negative real arguments SciFort follows the integral
 definition and symmetry exactly; this intentionally differs from SciPy 1.17.0's first `F`
 component, while its `K` component agrees. Nonfinite inputs, and finite magnitudes whose
 square exceeds binary64 range, return complex NaNs.

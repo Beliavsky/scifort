@@ -43,15 +43,21 @@ contains
         real(dp), allocatable :: values(:)
         real(dp) :: scalar
 
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('trim_mean_large')
             scalar = trim_mean([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], 0.8_dp)
+            print *, 'unexpected return: ', scalar
         case ('trimboth_half')
             values = trimboth([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], 0.5_dp)
+            print *, 'unexpected return: ', values
         case ('trim1_bad_tail')
             values = trim1([1.0_dp, 2.0_dp, 3.0_dp], 0.1_dp, tail='middle')
+            print *, 'unexpected return: ', values
         case ('negative_fraction')
             scalar = trim_mean([1.0_dp, 2.0_dp, 3.0_dp], -0.1_dp)
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

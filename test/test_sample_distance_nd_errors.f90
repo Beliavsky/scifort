@@ -49,17 +49,23 @@ contains
         b(1, :) = [0.0_dp, 1.0_dp, 2.0_dp]
         b(2, :) = [3.0_dp, 4.0_dp, 5.0_dp]
 
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('empty_distribution')
             allocate(empty(0, 2))
             value = wasserstein_distance_nd(empty, a)
+            print *, 'unexpected return: ', value
         case ('dimension_mismatch')
             value = wasserstein_distance_nd(a, b)
+            print *, 'unexpected return: ', value
         case ('nan_value')
             a(2, 1) = ieee_value(0.0_dp, ieee_quiet_nan)
             value = wasserstein_distance_nd(a, a)
+            print *, 'unexpected return: ', value
         case ('negative_weight')
             value = wasserstein_distance_nd(a, a, [1.0_dp, -1.0_dp], [1.0_dp, 1.0_dp])
+            print *, 'unexpected return: ', value
         case default
             error stop 4
         end select

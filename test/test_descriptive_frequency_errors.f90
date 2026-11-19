@@ -51,28 +51,40 @@ contains
         real(dp) :: scalar
 
         qnan = ieee_value(0.0_dp, ieee_quiet_nan)
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('percentile_nan_raise')
             scalar = percentileofscore([1.0_dp, qnan], 2.0_dp, nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('percentile_bad_kind')
             scalar = percentileofscore([1.0_dp, 2.0_dp], 2.0_dp, kind='bad')
+            print *, 'unexpected return: ', scalar
         case ('percentile_bad_policy')
             scalar = percentileofscore([1.0_dp, 2.0_dp], 2.0_dp, nan_policy='bad')
+            print *, 'unexpected return: ', scalar
         case ('score_bad_percentile')
             scalar = scoreatpercentile([1.0_dp, 2.0_dp], -1.0_dp)
+            print *, 'unexpected return: ', scalar
         case ('score_bad_method')
             scalar = scoreatpercentile([1.0_dp, 2.0_dp], 50.0_dp, interpolation_method='bad')
+            print *, 'unexpected return: ', scalar
         case ('score_bad_limit')
             scalar = scoreatpercentile([1.0_dp, 2.0_dp], 50.0_dp, limit=[2.0_dp, 1.0_dp])
+            print *, 'unexpected return: ', scalar
         case ('cumfreq_bad_bins')
             cf = cumfreq([1.0_dp, 2.0_dp], numbins=0)
+            print *, 'unexpected return: ', cf%lowerlimit
         case ('cumfreq_auto_nan')
             cf = cumfreq([1.0_dp, qnan], numbins=4)
+            print *, 'unexpected return: ', cf%lowerlimit
         case ('relfreq_auto_inf')
             rf = relfreq([1.0_dp, ieee_value(0.0_dp, ieee_positive_inf)], numbins=4)
+            print *, 'unexpected return: ', rf%lowerlimit
         case ('cumfreq_weight_shape')
             cf = cumfreq(reshape([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp], [2, 2]), &
                 weights=[1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp])
+            print *, 'unexpected return: ', cf%lowerlimit
         case default
             error stop 4
         end select

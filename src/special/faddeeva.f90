@@ -180,9 +180,13 @@ contains
         error_term = ((high * high - product) + 2.0_dp * high * low) + low * low
 
         sin_product = sin(product)
-        cos_product = cos(product)
+        ! Use distinct sine arguments: some Windows runtimes implement the
+        ! combined sincos call with inaccurate reduction for large arguments.
+        ! This half-angle identity retains small absolute phase error without
+        ! allowing the compiler to combine sin(product) and cos(product).
+        cos_product = 1.0_dp - 2.0_dp * sin(0.5_dp * product)**2
         sin_error = sin(error_term)
-        cos_error = cos(error_term)
+        cos_error = 1.0_dp - 2.0_dp * sin(0.5_dp * error_term)**2
         sin_square = sin_product * cos_error + cos_product * sin_error
         cos_square = cos_product * cos_error - sin_product * sin_error
     end subroutine square_phase

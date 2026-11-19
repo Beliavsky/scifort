@@ -46,17 +46,24 @@ contains
         real(dp) :: scalar
 
         qnan = ieee_value(0.0_dp, ieee_quiet_nan)
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('circmean_nan_raise')
             scalar = circmean([0.0_dp, qnan], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('circvar_nan_raise')
             scalar = circvar([0.0_dp, qnan], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('circstd_nan_raise')
             scalar = circstd([0.0_dp, qnan], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('circmean_zero_period')
             scalar = circmean([0.0_dp, 1.0_dp], high=1.0_dp, low=1.0_dp)
+            print *, 'unexpected return: ', scalar
         case ('circstd_zero_period')
             scalar = circstd([0.0_dp, 1.0_dp], high=2.0_dp, low=2.0_dp)
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

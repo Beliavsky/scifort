@@ -77,87 +77,120 @@ contains
         real(dp) :: rank4(1, 1, 1, 1)
         real(dp) :: scalar
 
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('gmean')
             scalar = gmean([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('gmean_weight')
             scalar = gmean([1.0_dp, 2.0_dp, 4.0_dp], &
                 weights=[1.0_dp, nan_value, 1.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('gmean_weight_rank15')
             x15 = 2.0_dp
             weights15 = 1.0_dp
             weights15(2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) = nan_value
             scalar = sum(gmean(x15, axis=1, weights=weights15, nan_policy='raise'))
+            print *, 'unexpected return: ', scalar
         case ('hmean')
             scalar = hmean([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('pmean')
             scalar = pmean([1.0_dp, nan_value, 4.0_dp], 2.0_dp, nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('sem')
             scalar = sem([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('variation')
             scalar = variation([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('iqr')
             scalar = iqr([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('iqr_named')
             scalar = iqr([1.0_dp, nan_value, 4.0_dp], scale='normal', &
                 nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('mad')
             scalar = median_abs_deviation([1.0_dp, nan_value, 4.0_dp], &
                 nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('mad_named')
             scalar = median_abs_deviation([1.0_dp, nan_value, 4.0_dp], &
                 scale='normal', nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('moment')
             scalar = moment([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('skew')
             scalar = skew([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('kurtosis')
             scalar = kurtosis([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('sem_rank5')
             x5(:, 1, 1, 1, 1) = [1.0_dp, nan_value]
             rank4 = sem(x5, nan_policy='raise')
+            print *, 'unexpected return: ', rank4
         case ('sem_rank15')
             x15 = 2.0_dp
             x15(2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) = nan_value
             scalar = sum(sem(x15, axis=1, nan_policy='raise'))
+            print *, 'unexpected return: ', scalar
         case ('zscore')
             matrix = reshape([1.0_dp, nan_value, 3.0_dp, 4.0_dp], shape(matrix))
             matrix2 = zscore(matrix, axis=1, nan_policy='raise')
+            print *, 'unexpected return: ', matrix2
         case ('zscore_rank15')
             x15 = 2.0_dp
             x15(2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) = nan_value
             scalar = sum(zscore(x15, axis=1, nan_policy='raise'))
+            print *, 'unexpected return: ', scalar
         case ('gzscore')
             vector3 = gzscore([1.0_dp, -2.0_dp, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', vector3
         case ('gstd')
             scalar = gstd([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('zmap_compare')
             vector2 = zmap([0.0_dp, 1.0_dp], [0.0_dp, nan_value, 2.0_dp], &
                 nan_policy='raise')
+            print *, 'unexpected return: ', vector2
         case ('zscore_all')
             matrix = reshape([1.0_dp, nan_value, 3.0_dp, 4.0_dp], shape(matrix))
             matrix2 = zscore_all(matrix, nan_policy='raise')
+            print *, 'unexpected return: ', matrix2
         case ('zmap_all')
             vector2 = zmap_all([0.0_dp, 1.0_dp], [0.0_dp, nan_value, 2.0_dp], &
                 nan_policy='raise')
+            print *, 'unexpected return: ', vector2
         case ('gstd_tuple')
             matrix = reshape([1.0_dp, nan_value, 3.0_dp, 4.0_dp], shape(matrix))
             matrix1 = gstd_keepdims(matrix, [1, 2], nan_policy='raise')
+            print *, 'unexpected return: ', matrix1
         case ('tmean')
             scalar = tmean([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('tvar')
             scalar = tvar([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('tstd')
             scalar = tstd([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('tsem')
             scalar = tsem([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('tmin')
             scalar = tmin([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('tmax')
             scalar = tmax([1.0_dp, nan_value, 4.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('trim_mean')
             scalar = trim_mean([1.0_dp, nan_value, 4.0_dp], 0.1_dp, &
                 nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

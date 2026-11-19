@@ -49,17 +49,24 @@ contains
         qnan = ieee_value(0.0_dp, ieee_quiet_nan)
         allocate(values(1))
         values = 0.0_dp
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('scalar_order_zero')
             scalar = lmoment([1.0_dp, 2.0_dp, 3.0_dp], 0)
+            print *, 'unexpected return: ', scalar
         case ('vector_order_zero')
             values = lmoment([1.0_dp, 2.0_dp, 3.0_dp], [1, 0, 2])
+            print *, 'unexpected return: ', values
         case ('empty_order_vector')
             values = lmoment([1.0_dp, 2.0_dp, 3.0_dp], [integer ::])
+            print *, 'unexpected return: ', values
         case ('default_nan_raise')
             values = lmoment([1.0_dp, qnan, 3.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', values
         case ('scalar_nan_raise')
             scalar = lmoment([1.0_dp, qnan, 3.0_dp], 2, nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

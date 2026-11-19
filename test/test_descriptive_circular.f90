@@ -51,11 +51,16 @@ program test_descriptive_circular
     call check_scalar('circstd normalized custom range', &
         circstd(degrees, high=180.0_dp, low=-180.0_dp, normalize=.true.), &
         0.14268709461694087_dp)
+    ! Quarter-period separation has a well-conditioned nonzero resultant.
+    ! Antipodal samples have mathematically infinite standard deviation; a
+    ! finite reference there measures trigonometric rounding, not accuracy.
     call check_scalar('circmean negative period', &
-        circmean([1.0_dp, 2.0_dp], high=0.0_dp, low=2.0_dp), 1.5_dp)
+        circmean([1.0_dp, 1.5_dp], high=0.0_dp, low=2.0_dp), 1.25_dp)
     call check_scalar('circstd negative period', &
-        circstd([1.0_dp, 2.0_dp], high=0.0_dp, low=2.0_dp), &
-        -2.7504573645368673_dp)
+        circstd([1.0_dp, 1.5_dp], high=0.0_dp, low=2.0_dp), &
+        -0.26501036351939687_dp)
+    call check_scalar('circvar antipodal', &
+        circvar([1.0_dp, 2.0_dp], high=0.0_dp, low=2.0_dp), 1.0_dp)
 
     matrix = reshape([0.0_dp, scifort_pi / 4.0_dp, scifort_pi / 2.0_dp, &
         scifort_pi, scifort_pi, 7.0_dp * scifort_pi / 4.0_dp], shape(matrix))

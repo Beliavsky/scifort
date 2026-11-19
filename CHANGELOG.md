@@ -1,3 +1,12 @@
+## 2026-11-19 - optimized-build numerical and error-path regressions
+
+- Preserve modified-Fresnel phase accuracy in optimized Windows builds by
+  avoiding inaccurate runtime combined sine/cosine argument reduction.
+- Replace an ill-conditioned antipodal circular-standard-deviation reference
+  with a quarter-period sample, retaining an antipodal variance check.
+- Consume unexpected function results in ten error-path test programs so
+  optimized builds execute the calls and verify their error termination.
+
 ## 2026-11-19 - broader stable censored skewness
 
 - Extend general S1 stable censored likelihoods, NNLFs and bounded fits from

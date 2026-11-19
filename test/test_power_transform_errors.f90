@@ -48,17 +48,24 @@ contains
         real(dp), allocatable :: values(:)
 
         qnan = ieee_value(0.0_dp, ieee_quiet_nan)
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('boxcox_nan_raise')
             scalar = boxcox_llf(0.5_dp, [1.0_dp, qnan, 3.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('yeojohnson_nan_raise')
             scalar = yeojohnson_llf(0.5_dp, [-1.0_dp, qnan, 3.0_dp], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('boxcox_bad_method')
             scalar = boxcox_normmax([1.0_dp, 2.0_dp, 3.0_dp], method='unsupported')
+            print *, 'unexpected return: ', scalar
         case ('boxcox_nonpositive_fit')
             call boxcox_fit([0.0_dp, 1.0_dp, 2.0_dp], values, lmbda)
+            print *, 'unexpected return: ', values, lmbda
         case ('yeojohnson_nonfinite_normmax')
             scalar = yeojohnson_normmax([1.0_dp, qnan, 2.0_dp])
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

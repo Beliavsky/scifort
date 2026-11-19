@@ -50,29 +50,40 @@ contains
         qnan = ieee_value(0.0_dp, ieee_quiet_nan)
         matrix = reshape([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp, 6.0_dp], shape(matrix))
         bad_q = 1.0_dp
+        ! Consume unexpected results so optimized builds execute pure calls.
+        ! A normal return still makes the parent fail its exit-code check.
         select case (name)
         case ('entropy_nan_raise')
             scalar = entropy([1.0_dp, qnan], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('entropy_q_nan_raise')
             scalar = entropy([1.0_dp, 2.0_dp], qk=[1.0_dp, qnan], nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('entropy_bad_policy')
             scalar = entropy([1.0_dp, 2.0_dp], nan_policy='bad')
+            print *, 'unexpected return: ', scalar
         case ('entropy_bad_base')
             scalar = entropy([1.0_dp, 2.0_dp], base=0.0_dp)
+            print *, 'unexpected return: ', scalar
         case ('entropy_bad_broadcast')
             values = entropy(matrix, qk=bad_q, axis=2)
+            print *, 'unexpected return: ', values
         case ('diff_nan_raise')
             scalar = differential_entropy([1.0_dp, qnan, 2.0_dp, 3.0_dp, 4.0_dp], &
                 nan_policy='raise')
+            print *, 'unexpected return: ', scalar
         case ('diff_bad_policy')
             scalar = differential_entropy([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp], &
                 nan_policy='bad')
+            print *, 'unexpected return: ', scalar
         case ('diff_bad_base')
             scalar = differential_entropy([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp], &
                 base=-2.0_dp)
+            print *, 'unexpected return: ', scalar
         case ('diff_bad_method')
             scalar = differential_entropy([1.0_dp, 2.0_dp, 3.0_dp, 4.0_dp, 5.0_dp], &
                 method='bad')
+            print *, 'unexpected return: ', scalar
         case default
             error stop 4
         end select

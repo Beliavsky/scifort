@@ -14,6 +14,14 @@ program test_special_modified_fresnel
     complex(dp) :: kp
     real(dp) :: nan_value
     real(dp) :: pinf
+    integer :: j
+    real(dp), parameter :: phase_x(4) = [ &
+        67108864.125_dp, 1000000000000.125_dp, 1.0e100_dp, 1.0e150_dp]
+    complex(dp), parameter :: phase_f(4) = [ &
+        cmplx(-6.9426851477737074e-9_dp, 2.7037518309462222e-9_dp, kind=dp), &
+        cmplx(4.9895192773009642e-13_dp, -3.2356974740512062e-14_dp, kind=dp), &
+        cmplx(1.9435037176083569e-101_dp, -4.6068203025126230e-101_dp, kind=dp), &
+        cmplx(-4.1421036712757843e-151_dp, 2.8005315881817277e-151_dp, kind=dp)]
 
     nan_value = ieee_value(1.0_dp, ieee_quiet_nan)
     pinf = ieee_value(1.0_dp, ieee_positive_inf)
@@ -51,6 +59,17 @@ program test_special_modified_fresnel
         cmplx(6.9613199638473871e-10_dp, -4.9513028708219212e-9_dp, kind=dp), 2.0e-23_dp)
     call check_complex('modfresnelp K large phase', kp, &
         cmplx(1.9947113970203850e-9_dp, 1.9947113970203848e-9_dp, kind=dp), 2.0e-23_dp)
+
+    ! Independent 400-decimal-digit erfc references at exact binary64 inputs.
+    ! Scale before comparison so very small tails cannot pass by underflow.
+    do j = 1, size(phase_x)
+        call modfresnelp(phase_x(j), fp, kp)
+        call check_complex('modfresnelp phase sweep', fp * phase_x(j), &
+            phase_f(j) * phase_x(j), 3.0e-15_dp)
+        call modfresnelm(phase_x(j), fm, km)
+        call check_complex('modfresnelm phase sweep', fm * phase_x(j), &
+            conjg(phase_f(j)) * phase_x(j), 3.0e-15_dp)
+    end do
 
     call modfresnelm(3.0_dp, fm, km)
     call check_complex('modfresnelm F 3', fm, &

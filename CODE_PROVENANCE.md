@@ -10425,6 +10425,14 @@ Add a row or section containing:
   were used only for nonnegative regression comparisons. No SciPy/specfun/Zhang-Jin
   implementation source was copied or translated. The negative-lower-limit `F` branch
   follows the mathematical integral definition even where SciPy 1.17.0 differs.
+  The 2026-11-19 phase correction retains the existing split-square algorithm
+  and uses the elementary identity `cos(t)=1-2*sin(t/2)**2` for both square
+  components. This prevents GCC from substituting a combined `sincos` runtime
+  call whose large-argument reduction was inaccurate in the tested Windows
+  toolchain. No third-party implementation was imported. New reference values
+  use independent 400-decimal-digit mpmath `erfc` evaluation of the rotated
+  defining integral; see `validation/check_modified_fresnel_phase.py` and
+  `validation/optimized_regressions_2026-11-19.md`.
 
 - `src/special/airy.f90` (complex `airy` overload): original SciFort implementation
   derived independently from NIST DLMF 9.2 connection formulas, 9.4 Maclaurin
