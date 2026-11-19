@@ -24,7 +24,7 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 
 Additional numerical coverage remains within implemented families:
 Levy-stable censoring supports normal/Cauchy/Levy special cases and S1 shapes
-1.25<=alpha<=1.75, abs(beta)<=0.5, including remote tails and overflowed
+1.25<=alpha<=1.75, abs(beta)<=0.75, including remote tails and overflowed
 standardized coordinates. Wider stable shape ranges remain.
 Studentized-range censoring requires 2<=k<=100 and 1<=df<=100 or df>=100000;
 the infinite-df approximation is limited to standardized coordinates<=40.

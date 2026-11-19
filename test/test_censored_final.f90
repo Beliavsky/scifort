@@ -33,7 +33,7 @@ program test_censored_final
         levy_l_censored_loglikelihood(data),0.0_dp,'stable reflected Levy identity')
     do j = 1, 3
         alpha = 1.0_dp+.25_dp*real(j,dp)
-        beta = .5_dp
+        beta = .75_dp
         previous = -inf
         do i = -3, 3
             x = real(i,dp)
@@ -226,11 +226,18 @@ program test_censored_final
     call check(fit%success,'df100 fixed fit')
     call close(fit%nllf,studentized_range_censored_nnlf(data,2.0_dp,100.0_dp), &
         3e-10_dp,'df100 fixed objective')
+    do j = -1, 1, 2
+        beta = real(j,dp)*nearest(0.75_dp,1.0_dp)
+        call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.5_dp,beta)), &
+            'stable next outside skew boundary')
+        call check(ieee_is_nan(levy_stable_censored_loglikelihood(data,1.5_dp,beta)), &
+            'stable nonempty outside skew boundary')
+    end do
     ! Tail reflection, complements, switch continuity and physical narrow widths.
     do i = 1, 3
         alpha = 1.0_dp+0.25_dp*real(i,dp)
-        do j = -1, 1
-            beta = 0.5_dp*real(j,dp)
+        do j = -3, 3
+            beta = 0.25_dp*real(j,dp)
             previous = 0.0_dp
             do h = 1, 6
                 x = 6.0_dp*10.0_dp**real(h-1,dp)
@@ -282,6 +289,38 @@ program test_censored_final
     call check(fit%success,'stable tail free fit')
     call close(fit%params(4),9.92118608975177_dp,3e-6_dp,'stable tail fitted scale')
     call close(fit%nllf,23.868504660682664_dp,3e-10_dp,'stable tail fitted objective')
+    ! New skew boundaries: affine tails and independent mixed-censor fits.
+    do j = -1, 1, 2
+        beta = 0.75_dp*real(j,dp)
+        x = real(j,dp)*1.0e300_dp
+        y = nearest(x,1.0_dp)
+        scale = 1.0e-200_dp
+        actual = levy_stable_censored_loglikelihood( &
+            make_censored_data(uncensored=[x]),1.25_dp,beta,scale=scale)
+        call check(ieee_is_finite(actual),'skew boundary overflow density')
+        one = make_censored_data(interval=reshape([x,y],[1,2]))
+        call close(levy_stable_censored_loglikelihood(one,1.25_dp,beta,scale=scale), &
+            actual+log(y-x),3e-10_dp,'skew boundary overflow adjacent')
+        if (j == 1) then
+            data = make_censored_data(uncensored=[.5_dp,1.0_dp,2.0_dp,8.0_dp], &
+                left=[-10.0_dp],right=[20.0_dp],interval=reshape([30.0_dp,32.0_dp],[1,2]))
+        else
+            data = make_censored_data(uncensored=[-.5_dp,-1.0_dp,-2.0_dp,-8.0_dp], &
+                left=[-20.0_dp],right=[10.0_dp],interval=reshape([-32.0_dp,-30.0_dp],[1,2]))
+        end if
+        lower = [1.5_dp,beta,0.0_dp,1.0_dp]
+        upper = lower
+        call levy_stable_fit(data,lower,upper,fit)
+        call check(fit%success,'skew boundary fixed fit')
+        call close(fit%nllf,levy_stable_censored_nnlf(data,1.5_dp,beta), &
+            3e-10_dp,'skew boundary fixed objective')
+        lower(4) = .5_dp
+        upper(4) = 20.0_dp
+        call levy_stable_fit(data,lower,upper,fit)
+        call check(fit%success,'skew boundary free fit')
+        call close(fit%params(4),9.026265604293837_dp,3e-6_dp,'skew boundary fitted scale')
+        call close(fit%nllf,24.262217457254415_dp,3e-10_dp,'skew boundary fitted objective')
+    end do
     write(*,'(a,i0,a,i0)') 'Final censored checks: ',checks,', failures: ',failures
     if (failures /= 0) stop 1
 contains

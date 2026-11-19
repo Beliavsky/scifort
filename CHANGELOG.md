@@ -1,3 +1,10 @@
+## 2026-11-19 - broader stable censored skewness
+
+- Extend general S1 stable censored likelihoods, NNLFs and bounded fits from
+  abs(beta)<=0.5 to abs(beta)<=0.75, retaining 1.25<=alpha<=1.75.
+- Validate the new skew boundaries, central/tail joins, remote and affine
+  tails, narrow intervals, and reflected mixed censored scale fits.
+
 ## 2026-11-19 - studentized-range censoring through k=100
 
 - Extend native studentized-range censored likelihoods, NNLFs and bounded fits

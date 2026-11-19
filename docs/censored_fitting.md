@@ -2985,7 +2985,7 @@ The stable method follows the default S1 parameterization. It supports:
   standard deviation sqrt(2)*scale;
 - alpha=1, beta=0: the existing Cauchy censored method;
 - alpha=0.5, beta=1 or -1: the existing Levy or reflected-Levy censored method;
-- 1.25<=alpha<=1.75 and abs(beta)<=0.5, including remote tails and finite
+- 1.25<=alpha<=1.75 and abs(beta)<=0.75, including remote tails and finite
   observations whose standardized distance overflows binary64.
 
 The first three cases inherit the delegated family's tail and interval
@@ -3000,6 +3000,8 @@ the left tail; stable logarithmic complementation supplies the large tail.
 Narrow intervals integrate the density with physical widths, retaining logs
 for adjacent binary64 endpoints. See the
 [tail validation and derivation](../validation/stable_censored_tails_2026-11-19.md).
+The extended skewness range is covered by
+[additional boundary and tail checks](../validation/stable_censored_skew_2026-11-19.md).
 
 General skew alpha=1 and other stability/skewness ranges remain gaps. In
 particular, no alpha=1 skew location-scale correction is

@@ -212,7 +212,7 @@ contains
     pure function ls_tail(lz, beta, p, density) result(value)
         implicit none
         real(dp), intent(in) :: lz !! logarithm of positive standardized distance, >=log(6)
-        real(dp), intent(in) :: beta !! reflected S1 skewness in [-0.5,0.5]
+        real(dp), intent(in) :: beta !! reflected S1 skewness in [-0.75,0.75]
         real(dp), intent(in) :: p(:) !! alpha, affine parameters and GL16 rule
         logical, intent(in) :: density !! density rather than upper-tail probability
         real(dp) :: value, theta, q, v, y, total, term
@@ -394,7 +394,7 @@ contains
         else if (alpha == 0.5_dp .and. beta == -1.0_dp) then
             value = levy_l_censored_loglikelihood(data,p(2),p(3))
         else
-            if (alpha < 1.25_dp .or. alpha > 1.75_dp .or. abs(beta) > 0.5_dp) return
+            if (alpha < 1.25_dp .or. alpha > 1.75_dp .or. abs(beta) > 0.75_dp) return
             call roots_legendre(16,nodes,weights)
             p(5:20) = nodes
             p(21:36) = weights

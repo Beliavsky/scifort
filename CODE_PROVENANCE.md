@@ -12367,3 +12367,20 @@ mixed censored scale-fit check. No upstream implementation, coefficient table,
 new runtime dependency or third-party license text was imported. Existing
 scalar studentized-range code and public APIs are unchanged. See the
 [validation record](validation/studentized_range_k100_2026-11-19.md).
+
+
+### Levy-stable censored skewness extension (2026-11-19)
+
+The revised abs(beta)<=0.75 guard in `src/censored.f90` extends the original
+MIT SciFort Fourier/contour implementation documented above. Its defining
+source remains [SciPy's S1 characteristic function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_stable.html).
+The contour rotation, integration rules and coefficients are unchanged;
+the extended rectangle retains a positive rotated real exponent coefficient.
+No upstream implementation was imported or adapted.
+
+`validation/check_censored_stable_skew.py` reuses the independent real Fourier
+and finite asymptotic reference formulas in `check_censored_stable_tails.py`,
+including equations (3) and (5) of [Saenko (2023)](https://arxiv.org/abs/2303.12488).
+SciPy supplies a separate fit cross-check. These remain optional validation
+tools. No runtime dependency, coefficient table or license text was added.
+See the [extended-domain validation record](validation/stable_censored_skew_2026-11-19.md).
