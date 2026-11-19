@@ -12247,3 +12247,29 @@ mathematical checks with mpmath and uses public SciPy APIs for ordinary
 cross-checks and bounded-fit references only. The input-driven driver is
 outside the unattended FPM suite. See the
 [validation record](validation/specialist_censored_2026-11-18.md).
+
+
+### Censored finite-sample two-sided KS likelihood (2026-11-18)
+
+The new `kw_*` private kernels and kstwo likelihood/NNLF wrappers in
+`src/censored.f90`, censored fit overload in `src/fit.f90`, and statistics
+exports are independent SciFort implementations under MIT. They are derived
+from the uniform empirical-process definition of the two-sided statistic in
+[SciPy's kstwo mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.kstwo.html).
+For sorted uniforms, `Dn<=d` is the ordered rectangle
+`i/n-d <= U_(i) <= (i-1)/n+d`. Independent count-volume convolution integrates
+that region. First-failure boundary volumes partition its complement, while
+forward/backward face volumes give the derivative as a positive sum. Endpoint
+power formulas follow directly by integrating the first and last rectangles.
+No upstream implementation code, coefficient table, or finite-difference
+routine was imported or translated for these new kernels. The existing
+BSD-licensed scalar `src/stats/kstwo.f90` and its notices are unchanged.
+
+`test/test_censored_kstwo.f90` contains SciFort-owned identities, endpoint,
+interval, invalid-input, and fitting checks. `validation/check_censored_kstwo.py`
+uses independent mpmath nested polynomial antiderivatives over the ordered
+rectangle and a high-precision derivative for reference values; it also checks
+a scale fit with SciPy. SciPy and mpmath remain optional validation tools,
+not runtime dependencies. The scripts and tests are MIT; no third-party
+implementation or new license text was added. See the
+[validation record](validation/kstwo_censored_2026-11-18.md).

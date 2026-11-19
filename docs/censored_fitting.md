@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, noncentral Student t, Landau, Tukey lambda, one-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, noncentral Student t, Landau, Tukey lambda, one-sided and two-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,7 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+kstwo_censored_loglikelihood(data, n [, loc, scale])
 nct_censored_loglikelihood(data, df, nc [, loc, scale])
 landau_censored_loglikelihood(data [, loc, scale])
 tukeylambda_censored_loglikelihood(data, lam [, loc, scale])
@@ -2918,3 +2919,42 @@ existing scalar quadratures, so their last bits and difficult tails may
 differ. See [validation](../validation/specialist_censored_2026-11-18.md)
 for independent references, commands, and results. No C ABI or wrapper
 entry points are added in this batch.
+
+
+## Finite-sample two-sided Kolmogorov-Smirnov censoring
+
+`kstwo_censored_loglikelihood(data,n,loc,scale)` and
+`kstwo_censored_nnlf(data,n,loc,scale)` accept mixed exact, left-, right-, and
+interval-censored observations. The `kstwo_fit` censored-data overload uses
+parameter order `[n,loc,scale]`, with `n` constrained to integers. Existing
+real-array fit calls remain available. These procedures are exported from
+`scifort_censored` / `scifort_fit` and `scifort_stats`.
+
+The current censored method requires integer `1<=n<=32`, a normal positive
+scale no larger than `huge/2`, `abs(loc)/scale<=100`, and a finite noncollapsed
+affine support. Unsupported parameters return NaN, including for empty data;
+a valid empty likelihood is zero and an empty fit is invalid. Wider sample
+sizes remain a numerical coverage gap even though the family is now covered.
+
+The computed support is `[loc+scale/(2*n),loc+scale]`. Exact observations at
+both endpoints have zero density. At the computed first knot `loc+scale/n`,
+point observations use the left density, consistent with the existing scalar
+small-statistic branch. For n>1 the right density is smaller by `1-1/n`.
+Intervals crossing that knot integrate both sides; they do not use the point
+value as a constant approximation.
+
+An independent positive ordered-uniform rectangle-volume recurrence evaluates
+the CDF and sums disjoint first-failure volumes for the SF. A positive boundary
+flux evaluates the analytic density, avoiding finite differences. Endpoint
+polynomials are evaluated in logs using distances from the computed physical
+endpoints. Narrow intervals use endpoint power differences or positive GL16
+quadrature split at every polynomial knot; each density piece has degree at
+most 31. This retains interval logs even for adjacent binary64 endpoints.
+
+Rounding an affine endpoint or knot can shift its mathematical position by a
+few ulps. The computed endpoint conventions above deliberately take precedence;
+last-bit monotonicity is not promised across those switches. The tested target
+is `3e-11*max(1,abs(reference_log_value))`; it is a log-value target rather than
+a guarantee of relative accuracy after exponentiation of an extreme log.
+See the [validation record](../validation/kstwo_censored_2026-11-18.md).
+C ABI and wrapper additions remain deferred.

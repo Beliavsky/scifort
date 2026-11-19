@@ -1,3 +1,13 @@
+## 2026-11-18 - censored finite-sample two-sided Kolmogorov-Smirnov
+
+- Add kstwo censored likelihoods, NNLFs, and integer-aware bounded fits for
+  sample sizes 1 through 32, with documented affine support limits.
+- Evaluate positive order-statistic volumes, disjoint survival volumes, and
+  analytic density flux; retain narrow interval logs across density knots.
+- Named-family coverage reaches 107 of 109. Levy-stable and studentized-range
+  censoring, wider numerical ranges, and crossing angular arcs remain.
+  C ABI work remains deferred.
+
 ## 2026-11-18 - Quantile, KSone, and fixed-branch censoring
 
 ## 2026-11-18 - censored noncentral Student t and Landau

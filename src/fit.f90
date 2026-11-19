@@ -81,6 +81,7 @@ module scifort_fit
     use scifort_censored, only : vonmises_censored_nnlf
     use scifort_censored, only : nct_censored_nnlf
     use scifort_censored, only : landau_censored_nnlf
+    use scifort_censored, only : kstwo_censored_nnlf
     use scifort_censored, only : gengamma_censored_nnlf
     use scifort_censored, only : truncnorm_censored_nnlf
     use scifort_censored, only : truncweibull_min_censored_nnlf
@@ -946,7 +947,25 @@ module scifort_fit
         module procedure landau_fit, landau_fit_censored
     end interface landau_fit
 
+    interface kstwo_fit
+        module procedure kstwo_fit, kstwo_fit_censored
+    end interface kstwo_fit
+
 contains
+
+    subroutine kstwo_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: lower(3) !! finite lower bounds in n, loc, scale order
+        real(dp), intent(in) :: upper(3) !! finite upper bounds; equality fixes parameters
+        type(fit_result), intent(out) :: result !! bounded fit and optimizer diagnostics
+        real(dp), intent(in), optional :: guess(3) !! initial parameters in bounds order
+        integer, intent(in), optional :: max_iter !! maximum optimizer sweeps, default 1000
+        real(dp), intent(in), optional :: tolerance !! positive relative parameter tolerance
+        call bounded_fit([real(dp) ::],family_kstwo,lower,upper,result,guess, &
+            [.true., .false., .false.],max_iter,tolerance,data)
+    end subroutine kstwo_fit_censored
+
 
     subroutine nct_fit_censored(data, lower, upper, result, guess, max_iter, tolerance)
         implicit none
@@ -2855,6 +2874,8 @@ contains
                 value = nct_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_landau)
                 value = landau_censored_nnlf(censored,params(1),params(2))
+            case (family_kstwo)
+                value = kstwo_censored_nnlf(censored,params(1),params(2),params(3))
             case (family_gengamma)
                 value = gengamma_censored_nnlf(censored,params(1),params(2),params(3),params(4))
             case (family_truncnorm)

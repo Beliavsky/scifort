@@ -85,6 +85,7 @@ program censored_reference_driver
     use scifort_censored, only : ksone_censored_loglikelihood
     use scifort_censored, only : vonmises_censored_loglikelihood
     use scifort_censored, only : nct_censored_loglikelihood, landau_censored_loglikelihood
+    use scifort_censored, only : kstwo_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -117,6 +118,8 @@ program censored_reference_driver
             value = kstwobign_censored_loglikelihood(data,loc,scale)
         case (97)
             value = wrapcauchy_censored_loglikelihood(data,c,loc,scale)
+        case (107)
+            value = kstwo_censored_loglikelihood(data,c,loc,scale)
         case (105)
             value = nct_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (106)

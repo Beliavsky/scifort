@@ -31,6 +31,7 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: kstwo_censored_loglikelihood, kstwo_censored_nnlf
     public :: nct_censored_loglikelihood, nct_censored_nnlf
     public :: landau_censored_loglikelihood, landau_censored_nnlf
     public :: tukeylambda_censored_loglikelihood, tukeylambda_censored_nnlf
@@ -163,6 +164,319 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Uniform-order-statistic rectangle volumes and positive boundary fluxes.
+    pure subroutine kw_volume(n, d, cdf, sf, pdf)
+        implicit none
+        integer, intent(in) :: n !! sample size in [2,32]
+        real(dp), intent(in) :: d !! standardized statistic strictly above 1/n
+        real(dp), intent(out) :: cdf, sf, pdf !! lower tail, upper tail and density
+        real(dp) :: nodes(0:65), lower(32), upper(32), f(0:32,0:65), g(0:32,0:65)
+        real(dp) :: v(0:32), w(0:32), powers(0:32), fac, y, delta, hold, rest
+        integer :: m, i, j, k, r, countlo, counthi, at
+        nodes(0:1) = [0.0_dp,1.0_dp]
+        m = 1
+        do i = 1, n
+            lower(i) = real(i,dp)/real(n,dp)-d
+            upper(i) = real(i-1,dp)/real(n,dp)+d
+            if (lower(i) > 0.0_dp .and. lower(i) < 1.0_dp) then
+                m = m+1
+                nodes(m) = lower(i)
+            end if
+            if (upper(i) > 0.0_dp .and. upper(i) < 1.0_dp) then
+                m = m+1
+                nodes(m) = upper(i)
+            end if
+        end do
+        do i = 1, m
+            hold = nodes(i)
+            j = i-1
+            do while (j >= 0)
+                if (nodes(j) <= hold) exit
+                nodes(j+1) = nodes(j)
+                j = j-1
+            end do
+            nodes(j+1) = hold
+        end do
+        at = 0
+        do i = 1, m
+            if (nodes(i) == nodes(at)) cycle
+            at = at+1
+            nodes(at) = nodes(i)
+        end do
+        m = at
+        fac = exp(log_gamma(real(n+1,dp)))
+        f = 0.0_dp
+        g = 0.0_dp
+        v = 0.0_dp
+        v(0) = 1.0_dp
+        sf = 0.0_dp
+        do j = 1, m
+            y = nodes(j)
+            delta = y-nodes(j-1)
+            powers(0) = 1.0_dp
+            do k = 1, n
+                powers(k) = powers(k-1)*delta/real(k,dp)
+            end do
+            w = 0.0_dp
+            do r = 0, n
+                do k = 0, r
+                    w(r) = w(r)+v(r-k)*powers(k)
+                end do
+            end do
+            f(:,j) = w
+            countlo = 0
+            counthi = n
+            do i = 1, n
+                if (upper(i) == y) countlo = max(countlo,i)
+                if (lower(i) == y) counthi = min(counthi,i-1)
+            end do
+            do r = 0, n
+                if (r >= countlo .and. r <= counthi) cycle
+                rest = 1.0_dp
+                do k = 1, n-r
+                    rest = rest*(1.0_dp-y)/real(k,dp)
+                end do
+                sf = sf+fac*w(r)*rest
+                w(r) = 0.0_dp
+            end do
+            v = w
+        end do
+        cdf = fac*v(n)
+        v = 0.0_dp
+        v(0) = 1.0_dp
+        do j = m-1, 0, -1
+            y = nodes(j)
+            delta = nodes(j+1)-y
+            powers(0) = 1.0_dp
+            do k = 1, n
+                powers(k) = powers(k-1)*delta/real(k,dp)
+            end do
+            w = 0.0_dp
+            do r = 0, n
+                do k = 0, r
+                    w(r) = w(r)+v(r-k)*powers(k)
+                end do
+            end do
+            g(:,j) = w
+            countlo = 0
+            counthi = n
+            do i = 1, n
+                if (lower(i) == y) countlo = max(countlo,n-i+1)
+                if (upper(i) == y) counthi = min(counthi,n-i)
+            end do
+            do r = 0, n
+                if (r < countlo .or. r > counthi) w(r) = 0.0_dp
+            end do
+            v = w
+        end do
+        pdf = 0.0_dp
+        do i = 1, n
+            do j = 1, m-1
+                y = nodes(j)
+                if (lower(i) == y) pdf = pdf+fac*f(i-1,j)*g(n-i,j)
+                if (upper(i) == y) pdf = pdf+fac*f(i-1,j)*g(n-i,j)
+            end do
+        end do
+    end subroutine kw_volume
+
+    pure function kw_density(z, p) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! interior standard coordinate; right density at 1/n
+        real(dp), intent(in) :: p(:) !! n, location, scale, lower, upper, knot and rule
+        real(dp) :: value, cdf, sf, pdf, d
+        integer :: n
+        n = int(p(1))
+        if (n == 1) then
+            value = scifort_log_two
+        else if (z >= 1.0_dp-1.0_dp/p(1)) then
+            value = log(2.0_dp*p(1))+(p(1)-1.0_dp)*log1p_safe(-z)
+        else
+            d = max(z,nearest(1.0_dp/p(1),1.0_dp))
+            call kw_volume(n,d,cdf,sf,pdf)
+            value = log(pdf)
+        end if
+    end function kw_density
+
+    pure subroutine kw_logs(x, p, ld, lp, lq)
+        implicit none
+        real(dp), intent(in) :: x !! finite physical observation
+        real(dp), intent(in) :: p(:) !! n, location, scale, lower, upper, knot and rule
+        real(dp), intent(out) :: ld, lp, lq !! log density, CDF and SF
+        real(dp) :: z, lw, lu, cdf, sf, pdf, nf
+        ld = negative_infinity(0.0_dp)
+        lp = ld
+        lq = 0.0_dp
+        if (x <= p(4)) return
+        lp = 0.0_dp
+        lq = negative_infinity(0.0_dp)
+        if (x >= p(5)) return
+        lu = log_distance(p(5),x)-log(p(3))
+        nf = log_gamma(p(1)+1.0_dp)
+        if (p(1) == 1.0_dp) then
+            lp = scifort_log_two+log_distance(x,p(4))-log(p(3))
+            lq = scifort_log_two+lu
+            ld = scifort_log_two-log(p(3))
+        else if (x < p(6)) then
+            lw = scifort_log_two+log_distance(x,p(4))-log(p(3))
+            lp = nf+p(1)*lw
+            lq = ig_complement(lp)
+            ld = log(2.0_dp*p(1))+nf+(p(1)-1.0_dp)*lw-log(p(3))
+        else if (x == p(6)) then
+            lp = nf-p(1)*log(p(1))
+            lq = ig_complement(lp)
+            ld = log(2.0_dp*p(1))+nf-(p(1)-1.0_dp)*log(p(1))-log(p(3))
+        else if (lu <= -log(p(1))) then
+            lq = scifort_log_two+p(1)*lu
+            lp = ig_complement(lq)
+            ld = log(2.0_dp*p(1))+(p(1)-1.0_dp)*lu-log(p(3))
+        else
+            z = max(location_scale_z(x,p(2:3)),nearest(1.0_dp/p(1),1.0_dp))
+            call kw_volume(int(p(1)),z,cdf,sf,pdf)
+            lp = log(cdf)
+            lq = log(sf)
+            ld = log(pdf)-log(p(3))
+        end if
+        if (lp <= lq) then
+            lq = ig_complement(lp)
+        else
+            lp = ig_complement(lq)
+        end if
+    end subroutine kw_logs
+
+    pure function kw_pdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! packed parameters
+        real(dp) :: v, lp, lq
+        call kw_logs(x,p,v,lp,lq)
+    end function kw_pdf
+
+    pure function kw_cdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite upper censoring limit
+        real(dp), intent(in) :: p(:) !! packed parameters
+        real(dp) :: v, ld, lq
+        call kw_logs(x,p,ld,v,lq)
+    end function kw_cdf
+
+    pure function kw_sf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! finite lower censoring limit
+        real(dp), intent(in) :: p(:) !! packed parameters
+        real(dp) :: v, ld, lp
+        call kw_logs(x,p,ld,lp,v)
+    end function kw_sf
+
+    pure function kw_interval(a, b, p) result(v)
+        implicit none
+        real(dp), intent(in) :: a, b !! finite ordered physical endpoints
+        real(dp), intent(in) :: p(:) !! packed parameters
+        real(dp) :: v, left, right, la, lb, qa, qb, unused, lw, d, next, cut, z, base, term
+        integer :: i, k
+        left = max(a,p(4))
+        right = min(b,p(5))
+        v = negative_infinity(0.0_dp)
+        if (right <= left) return
+        if (left == p(4)) then
+            v = kw_cdf(right,p)
+            return
+        else if (right == p(5)) then
+            v = kw_sf(left,p)
+            return
+        end if
+        lw = log_distance(right,left)
+        if (p(1) == 1.0_dp) then
+            v = scifort_log_two+lw-log(p(3))
+            return
+        else if (right <= p(6)) then
+            d = log(p(1))+burr_logsoftplus(lw-log_distance(left,p(4)))
+            v = kw_cdf(right,p)+log_exponential_mass(d)
+            return
+        else if (log_distance(p(5),left)-log(p(3)) <= -log(p(1))) then
+            d = log(p(1))+burr_logsoftplus(lw-log_distance(p(5),right))
+            v = kw_sf(left,p)+log_exponential_mass(d)
+            return
+        end if
+        call kw_logs(left,p,unused,la,qa)
+        call kw_logs(right,p,unused,lb,qb)
+        if (lb < -scifort_log_two) then
+            if (la < lb-0.01_dp) then
+                v = log_difference(lb,la)
+                return
+            end if
+        else if (qb < qa-0.01_dp) then
+            v = log_difference(qa,qb)
+            return
+        end if
+        ! Each density piece has degree at most n-1<=31; GL16 integrates it.
+        do k = 2, 2*int(p(1))
+            cut = p(2)+p(3)*(real(k,dp)/(2.0_dp*p(1)))
+            if (k == 2) cut = p(6)
+            if (k == 2*int(p(1))) cut = p(5)
+            next = min(right,cut)
+            if (next <= left) cycle
+            if (next <= p(6)) then
+                d = log(p(1))+burr_logsoftplus(log_distance(next,left)-log_distance(left,p(4)))
+                term = kw_cdf(next,p)+log_exponential_mass(d)
+            else
+                lw = log_distance(next,left)-log(p(3))
+                base = location_scale_z(left,p(2:3))
+                if (left == p(6)) base = 1.0_dp/p(1)
+                term = negative_infinity(0.0_dp)
+                do i = 1, 16
+                    z = base+0.5_dp*(1.0_dp+p(6+i))*exp(lw)
+                    d = kw_density(z,p)+log(p(22+i))
+                    term = bounded_logadd(term,d)
+                end do
+                term = term+lw-scifort_log_two
+            end if
+            v = bounded_logadd(v,term)
+            left = next
+            if (left == right) exit
+        end do
+        v = min(0.0_dp,v)
+    end function kw_interval
+
+    pure function kstwo_censored_loglikelihood(data, n, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: n !! integer sample size in [1,32]
+        real(dp), intent(in), optional :: loc !! finite location with abs(loc)/scale<=100
+        real(dp), intent(in), optional :: scale !! normal positive scale, default one
+        real(dp) :: value, p(38)
+        real(dp), allocatable :: nodes(:), weights(:)
+        value = quiet_nan(0.0_dp)
+        p = 0.0_dp
+        p(1:3) = [n,0.0_dp,1.0_dp]
+        if (present(loc)) p(2) = loc
+        if (present(scale)) p(3) = scale
+        if (.not. all(ieee_is_finite(p))) return
+        if (n < 1.0_dp .or. n > 32.0_dp) return
+        if (n /= real(nint(n),dp)) return
+        if (p(3) < tiny(1.0_dp) .or. p(3) > huge(1.0_dp)/2.0_dp) return
+        if (abs(p(2))/100.0_dp > p(3)) return
+        if (p(2) > huge(1.0_dp)-p(3)) return
+        p(4) = p(2)+p(3)/(2.0_dp*n)
+        p(5) = p(2)+p(3)
+        p(6) = p(2)+p(3)/n
+        if (p(4) >= p(6) .or. p(6) > p(5)) return
+        call roots_legendre(16,nodes,weights)
+        p(7:22) = nodes
+        p(23:38) = weights
+        value = censored_loglikelihood(data,p,kw_pdf,kw_cdf,kw_sf,kw_interval)
+    end function kstwo_censored_loglikelihood
+
+    pure function kstwo_censored_nnlf(data, n, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: n !! integer sample size in [1,32]
+        real(dp), intent(in), optional :: loc !! finite location with abs(loc)/scale<=100
+        real(dp), intent(in), optional :: scale !! normal positive scale, default one
+        real(dp) :: value
+        value = -kstwo_censored_loglikelihood(data,n,loc,scale)
+    end function kstwo_censored_nnlf
+
 
     ! Positive normal/chi mixture in log(sqrt(V/df)); see CODE_PROVENANCE.md.
     pure function nt_integral(lz, mode, p) result(value)
