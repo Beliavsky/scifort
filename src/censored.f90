@@ -31,6 +31,8 @@ module scifort_censored
     private
 
     public :: censored_data
+    public :: levy_stable_censored_loglikelihood, levy_stable_censored_nnlf
+    public :: studentized_range_censored_loglikelihood, studentized_range_censored_nnlf
     public :: kstwo_censored_loglikelihood, kstwo_censored_nnlf
     public :: nct_censored_loglikelihood, nct_censored_nnlf
     public :: landau_censored_loglikelihood, landau_censored_nnlf
@@ -164,6 +166,398 @@ module scifort_censored
     public :: gumbel_l_censored_loglikelihood, gumbel_l_censored_nnlf
 
 contains
+
+    ! Independent defining integrals; see CODE_PROVENANCE.md.
+    pure function ls_logs(z, p, mode) result(value)
+        implicit none
+        real(dp), intent(in) :: z !! central standardized coordinate, abs(z)<=6
+        real(dp), intent(in) :: p(:) !! alpha, loc, scale, beta and GL16 rule
+        integer, intent(in) :: mode !! zero density, one CDF, two SF
+        real(dp) :: value, upper, h, v, t, u, phase, term, total, point
+        integer :: j, i, panels
+        value = quiet_nan(0.0_dp)
+        if (.not. ieee_is_finite(z)) return
+        if (abs(z) > 6.0_dp) return
+        point = z
+        if (mode == 2) point = -z
+        upper = 48.0_dp**(1.0_dp/(4.0_dp*p(1)))
+        panels = ceiling(upper/0.025_dp)
+        h = upper/real(panels,dp)
+        total = 0.0_dp
+        do j = 1, panels
+            do i = 1, 16
+                v = (real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i)))*h
+                t = v**4
+                u = v**(4.0_dp*p(1))
+                phase = p(4)*tan(0.5_dp*scifort_pi*p(1))*u
+                if (mode == 2) phase = -phase
+                phase = point*t-phase
+                if (mode == 0) then
+                    term = 4.0_dp*v**3*exp(-u)*cos(phase)
+                else
+                    term = 4.0_dp*exp(-u)*sin(phase)/v
+                end if
+                total = total+p(20+i)*term
+            end do
+        end do
+        total = total*0.5_dp*h/scifort_pi
+        if (mode /= 0) total = 0.5_dp+total
+        if (total <= 0.0_dp) return
+        value = log(total)
+        if (mode == 0) value = value-log(p(3))
+    end function ls_logs
+
+    pure function ls_pdf(x, p) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! finite exact observation
+        real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
+        real(dp) :: value
+        value = ls_logs(location_scale_z(x,p(2:3)),p,0)
+    end function ls_pdf
+
+    pure function ls_cdf(x, p) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! upper censoring endpoint
+        real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
+        real(dp) :: value
+        value = ls_logs(location_scale_z(x,p(2:3)),p,1)
+    end function ls_cdf
+
+    pure function ls_sf(x, p) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! lower censoring endpoint
+        real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
+        real(dp) :: value
+        value = ls_logs(location_scale_z(x,p(2:3)),p,2)
+    end function ls_sf
+
+    pure function integrated_censored_interval(a, b, p, pdf, cdf, sf, bounded) result(value)
+        implicit none
+        real(dp), intent(in) :: a, b !! ordered finite interval endpoints
+        real(dp), intent(in) :: p(:) !! shapes, affine parameters and GL16 rule
+        procedure(censored_log_function) :: pdf, cdf, sf !! log density and tails
+        logical, intent(in) :: bounded !! stable central-coordinate limit applies
+        real(dp) :: value, left, la, lb, qa, qb, width, u, x, term, za, zb
+        integer :: j, i, panels
+        value = quiet_nan(0.0_dp)
+        left = a
+        if (.not. bounded) left = max(a,p(2))
+        if (b <= left) then
+            value = negative_infinity(0.0_dp)
+            return
+        end if
+        if (.not. bounded .and. left == p(2)) then
+            value = cdf(b,p)
+            return
+        end if
+        la = cdf(left,p)
+        lb = cdf(b,p)
+        qa = sf(left,p)
+        qb = sf(b,p)
+        if (any(ieee_is_nan([la,lb,qa,qb]))) return
+        if (lb < -scifort_log_two) then
+            if (la < lb-0.01_dp) then
+                value = log_difference(lb,la)
+                return
+            end if
+        else if (qb < qa-0.01_dp) then
+            value = log_difference(qa,qb)
+            return
+        end if
+        width = log_distance(b,left)
+        panels = 1
+        if (bounded) then
+            za = location_scale_z(left,p(2:3))
+            zb = location_scale_z(b,p(2:3))
+            panels = max(1,ceiling((zb-za)/0.25_dp))
+        end if
+        value = negative_infinity(0.0_dp)
+        do j = 1, panels
+            do i = 1, 16
+                u = (real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i)))/real(panels,dp)
+                x = (1.0_dp-u)*left+u*b
+                term = pdf(x,p)+log(p(20+i))
+                if (ieee_is_nan(term)) then
+                    value = term
+                    return
+                end if
+                value = bounded_logadd(value,term)
+            end do
+        end do
+        value = min(0.0_dp,value+width-scifort_log_two-log(real(panels,dp)))
+    end function integrated_censored_interval
+
+    pure function ls_interval(a, b, p) result(value)
+        implicit none
+        real(dp), intent(in) :: a, b !! ordered finite interval endpoints
+        real(dp), intent(in) :: p(:) !! stable shape, affine parameters and rule
+        real(dp) :: value
+        value = integrated_censored_interval(a,b,p,ls_pdf,ls_cdf,ls_sf,.true.)
+    end function ls_interval
+
+    pure function levy_stable_censored_loglikelihood(data, alpha, beta, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: alpha !! stability shape; see documented supported subsets
+        real(dp), intent(in) :: beta !! S1 skewness in [-1,1], subject to subset limits
+        real(dp), intent(in), optional :: loc !! finite S1 location, default zero
+        real(dp), intent(in), optional :: scale !! normal positive scale, default one
+        real(dp) :: value, p(36)
+        real(dp), allocatable :: nodes(:), weights(:)
+        value = quiet_nan(0.0_dp)
+        p = 0.0_dp
+        p(1:4) = [alpha,0.0_dp,1.0_dp,beta]
+        if (present(loc)) p(2) = loc
+        if (present(scale)) p(3) = scale
+        if (.not. all(ieee_is_finite(p))) return
+        if (p(3) < tiny(1.0_dp) .or. p(3) > huge(1.0_dp)/100.0_dp) return
+        if (abs(p(2))/1.0e4_dp > p(3)) return
+        if (abs(beta) > 1.0_dp) return
+        if (alpha == 2.0_dp) then
+            value = normal_censored_loglikelihood(data,p(2),sqrt(2.0_dp)*p(3))
+        else if (alpha == 1.0_dp .and. beta == 0.0_dp) then
+            value = cauchy_censored_loglikelihood(data,p(2),p(3))
+        else if (alpha == 0.5_dp .and. beta == 1.0_dp) then
+            value = levy_censored_loglikelihood(data,p(2),p(3))
+        else if (alpha == 0.5_dp .and. beta == -1.0_dp) then
+            value = levy_l_censored_loglikelihood(data,p(2),p(3))
+        else
+            if (alpha < 1.25_dp .or. alpha > 1.75_dp .or. abs(beta) > 0.5_dp) return
+            call roots_legendre(16,nodes,weights)
+            p(5:20) = nodes
+            p(21:36) = weights
+            value = censored_loglikelihood(data,p,ls_pdf,ls_cdf,ls_sf,ls_interval)
+        end if
+    end function levy_stable_censored_loglikelihood
+
+    pure function levy_stable_censored_nnlf(data, alpha, beta, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: alpha !! stability shape in supported subsets
+        real(dp), intent(in) :: beta !! S1 skewness in supported subsets
+        real(dp), intent(in), optional :: loc !! finite S1 location, default zero
+        real(dp), intent(in), optional :: scale !! normal positive scale, default one
+        real(dp) :: value
+        value = -levy_stable_censored_loglikelihood(data,alpha,beta,loc,scale)
+    end function levy_stable_censored_nnlf
+
+    pure function sr_range(lr, k, mode, p) result(value)
+        implicit none
+        real(dp), intent(in) :: lr !! log positive normal range
+        real(dp), intent(in) :: k !! number of means in [2,10]
+        integer, intent(in) :: mode !! zero PDF, one CDF, two SF
+        real(dp), intent(in) :: p(:) !! shapes, affine parameters and GL16 rule
+        real(dp) :: value, r, center, z, ld, lq, ratio, hazard, term
+        integer :: j, i
+        r = exp(lr)
+        if (k == 2.0_dp) then
+            z = r/sqrt(2.0_dp)
+            select case (mode)
+            case (0)
+                value = scifort_log_two/2+normal_logpdf(z)
+            case (1)
+                value = normal_small_interval(0.0_dp,lr-scifort_log_two/2)
+                if (ieee_is_nan(value)) value = normal_interval(0.0_dp,z,[0.0_dp,1.0_dp])
+                value = value+scifort_log_two
+            case (2)
+                value = scifort_log_two+normal_logsf(z)
+            end select
+            return
+        end if
+        if (mode == 1 .and. r > 40.0_dp) then
+            value = 0.0_dp
+            return
+        end if
+        center = 0.0_dp
+        if (mode /= 1) center = -0.5_dp*r
+        value = negative_infinity(0.0_dp)
+        do j = 1, 24
+            do i = 1, 16
+                z = center-12.0_dp+real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i))
+                if (mode /= 2) then
+                    ld = normal_small_interval(z,lr)
+                    if (ieee_is_nan(ld)) ld = normal_interval(z,z+r,[0.0_dp,1.0_dp])
+                end if
+                select case (mode)
+                case (0)
+                    term = log(k*(k-1.0_dp))+normal_logpdf(z)+normal_logpdf(z+r)+(k-2.0_dp)*ld
+                case (1)
+                    term = log(k)+normal_logpdf(z)+(k-1.0_dp)*ld
+                case (2)
+                    lq = normal_logsf(z)
+                    ratio = min(0.0_dp,normal_logsf(z+r)-lq)
+                    if (ratio < -36.0_dp) then
+                        hazard = log(k-1.0_dp)+ratio
+                    else if (ratio == 0.0_dp) then
+                        hazard = positive_infinity(0.0_dp)
+                    else
+                        hazard = log(k-1.0_dp)+log(-log(-expm1_safe(ratio)))
+                    end if
+                    term = log(k)+normal_logpdf(z)+(k-1.0_dp)*lq+log_exponential_mass(hazard)
+                end select
+                value = bounded_logadd(value,term+log(p(20+i)))
+            end do
+        end do
+        value = value-scifort_log_two
+    end function sr_range
+
+    pure function sr_integral(lq, p, mode) result(value)
+        implicit none
+        real(dp), intent(in) :: lq !! log positive standardized variate
+        real(dp), intent(in) :: p(:) !! k, location, scale, encoded df and GL16 rule
+        integer, intent(in) :: mode !! zero PDF, one CDF, two SF
+        real(dp) :: value, lo, hi, h, v, y, lr, term, df, constant
+        integer :: j, i, panels
+        if (p(4) == 0.0_dp) then
+            if (lq > log(40.0_dp)) then
+                ! Reject coordinates beyond the controlled infinite-df range.
+                value = quiet_nan(0.0_dp)
+                return
+            end if
+            value = sr_range(lq,p(1),mode,p)
+            return
+        end if
+        df = p(4)
+        constant = scifort_log_two+0.5_dp*df*log(0.5_dp*df)-log_gamma(0.5_dp*df)
+        lo = -100.0_dp/df
+        hi = 0.5_dp*log((df+200.0_dp)/df)
+        if (mode /= 1) then
+            lo = min(lq,0.0_dp)+lo
+            hi = min(lq+hi,log(40.0_dp))
+        end if
+        panels = max(1,ceiling((hi-lo)/0.25_dp))
+        h = (hi-lo)/real(panels,dp)
+        value = negative_infinity(0.0_dp)
+        do j = 1, panels
+            do i = 1, 16
+                v = lo+(real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i)))*h
+                y = v
+                lr = lq+v
+                if (mode /= 1) then
+                    y = v-lq
+                    lr = v
+                end if
+                if (y > 0.5_dp*log((df+200.0_dp)/df)) cycle
+                if (lr > log(40.0_dp)) then
+                    term = 0.0_dp
+                else
+                    term = sr_range(lr,p(1),mode,p)
+                end if
+                term = term+constant+df*y-0.5_dp*df*exp(2.0_dp*y)
+                if (mode == 0) term = term+y
+                value = bounded_logadd(value,term+log(p(20+i)))
+            end do
+        end do
+        value = value+log(0.5_dp*h)
+    end function sr_integral
+
+    pure function sr_value(x, p, mode) result(value)
+        implicit none
+        real(dp), intent(in) :: x !! exact observation or censoring endpoint
+        real(dp), intent(in) :: p(:) !! k, location, scale, encoded df and GL16 rule
+        integer, intent(in) :: mode !! zero PDF, one CDF, two SF
+        real(dp) :: value, z, first
+        integer :: tail
+        value = negative_infinity(0.0_dp)
+        if (x <= p(2)) then
+            if (mode == 2) value = 0.0_dp
+            if (x == p(2) .and. mode == 0 .and. p(1) == 2.0_dp) then
+                value = -0.5_dp*log(scifort_pi)-log(p(3))
+                if (p(4) /= 0.0_dp) value = value+0.5_dp*log(2.0_dp/p(4))+ &
+                    log_gamma(0.5_dp*(p(4)+1.0_dp))-log_gamma(0.5_dp*p(4))
+            end if
+            return
+        end if
+        z = log_distance(x,p(2))-log(p(3))
+        if (mode == 0) then
+            value = sr_integral(z,p,0)-log(p(3))
+            return
+        end if
+        tail = 1
+        if (z > scifort_log_two) tail = 2
+        first = sr_integral(z,p,tail)
+        value = first
+        if (ieee_is_nan(value)) return
+        if (first > -scifort_log_two) then
+            tail = 3-tail
+            value = sr_integral(z,p,tail)
+            if (ieee_is_nan(value)) return
+        end if
+        value = min(0.0_dp,value)
+        if (mode /= tail) value = ig_complement(value)
+    end function sr_value
+
+    pure function sr_pdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! exact finite observation
+        real(dp), intent(in) :: p(:) !! packed studentized-range parameters
+        real(dp) :: v
+        v = sr_value(x,p,0)
+    end function sr_pdf
+
+    pure function sr_cdf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! upper censoring endpoint
+        real(dp), intent(in) :: p(:) !! packed studentized-range parameters
+        real(dp) :: v
+        v = sr_value(x,p,1)
+    end function sr_cdf
+
+    pure function sr_sf(x, p) result(v)
+        implicit none
+        real(dp), intent(in) :: x !! lower censoring endpoint
+        real(dp), intent(in) :: p(:) !! packed studentized-range parameters
+        real(dp) :: v
+        v = sr_value(x,p,2)
+    end function sr_sf
+
+    pure function sr_interval(a, b, p) result(v)
+        implicit none
+        real(dp), intent(in) :: a, b !! ordered finite interval endpoints
+        real(dp), intent(in) :: p(:) !! packed studentized-range parameters
+        real(dp) :: v
+        v = integrated_censored_interval(a,b,p,sr_pdf,sr_cdf,sr_sf,.false.)
+    end function sr_interval
+
+    pure function studentized_range_censored_loglikelihood(data, k, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: k !! number of means in [2,10]
+        real(dp), intent(in) :: df !! [1,30] or >=100000 (infinite-df approximation)
+        real(dp), intent(in), optional :: loc !! lower support location, default zero
+        real(dp), intent(in), optional :: scale !! normal positive scale, default one
+        real(dp) :: value, p(36)
+        real(dp), allocatable :: nodes(:), weights(:)
+        value = quiet_nan(0.0_dp)
+        if (ieee_is_nan(df)) return
+        if (df < 1.0_dp) return
+        if (df > 30.0_dp .and. df < 1.0e5_dp) return
+        p = 0.0_dp
+        p(1:4) = [k,0.0_dp,1.0_dp,0.0_dp]
+        if (df <= 30.0_dp) p(4) = df
+        if (present(loc)) p(2) = loc
+        if (present(scale)) p(3) = scale
+        if (.not. all(ieee_is_finite(p))) return
+        if (k < 2.0_dp .or. k > 10.0_dp) return
+        if (p(3) < tiny(1.0_dp) .or. p(3) > huge(1.0_dp)/100.0_dp) return
+        if (abs(p(2))/1.0e4_dp > p(3)) return
+        call roots_legendre(16,nodes,weights)
+        p(5:20) = nodes
+        p(21:36) = weights
+        value = censored_loglikelihood(data,p,sr_pdf,sr_cdf,sr_sf,sr_interval)
+    end function studentized_range_censored_loglikelihood
+
+    pure function studentized_range_censored_nnlf(data, k, df, loc, scale) result(value)
+        implicit none
+        type(censored_data), intent(in) :: data !! exact and censored observations
+        real(dp), intent(in) :: k !! number of means in [2,10]
+        real(dp), intent(in) :: df !! [1,30] or >=100000 (infinite-df approximation)
+        real(dp), intent(in), optional :: loc !! lower support location, default zero
+        real(dp), intent(in), optional :: scale !! normal positive scale, default one
+        real(dp) :: value
+        value = -studentized_range_censored_loglikelihood(data,k,df,loc,scale)
+    end function studentized_range_censored_nnlf
+
 
     ! Uniform-order-statistic rectangle volumes and positive boundary fluxes.
     pure subroutine kw_volume(n, d, cdf, sf, pdf)

@@ -12273,3 +12273,40 @@ a scale fit with SciPy. SciPy and mpmath remain optional validation tools,
 not runtime dependencies. The scripts and tests are MIT; no third-party
 implementation or new license text was added. See the
 [validation record](validation/kstwo_censored_2026-11-18.md).
+
+
+### Censored stable and studentized-range likelihoods (2026-11-18)
+
+The new `ls_*` and `sr_*` kernels, their interval integration helper and public
+wrappers in `src/censored.f90`, fit overloads in `src/fit.f90`, and stats exports
+are independent SciFort implementations under MIT. No upstream implementation
+was imported or translated. Existing BSD-licensed `src/stats/levy_stable.f90`
+and its copyright/license notices are unchanged.
+
+The general stable central kernel independently inverts the characteristic
+function in [SciPy's stable mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_stable.html).
+The t=v**4 transformation smooths the origin, and reflection gives a separate
+SF integral. Normal, Cauchy, and Levy special cases reuse the corresponding
+already-attributed SciFort censored methods. Unsupported alpha=1 skew scaling
+is explicitly excluded; the S1 affine convention is preserved on supported
+shapes. The finite central-coordinate restriction is part of the public contract.
+
+The studentized-range kernel independently implements the defining
+normal-range/chi-scale mixture in [SciPy's mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.studentized_range.html),
+which cites Batista et al. (2017), DOI:10.1590/1413-70542017414047716.
+For a minimum normal z, write D=Phi(z+r)-Phi(z). The CDF integral is
+k*integral(phi(z)*D**(k-1)); the SF instead integrates the positive difference
+k*phi(z)*(sf(z)**(k-1)-D**(k-1)). Analytic differentiation gives the density.
+Independent log-scale integration against sqrt(chi-square(df)/df) gives the
+finite-df distribution. These derivations, rather than an upstream numerical
+routine, specify the new implementation. GL16 nodes/weights reuse the existing
+SciFort orthogonal-roots routine.
+
+`test/test_censored_final.f90` and `validation/check_censored_final.py` are
+SciFort-owned MIT tests and optional reference tooling. References independently
+integrate the stable characteristic function with mpmath, use incomplete-beta
+folded-t identities, and use adaptive positive normal-range integrals with
+SciPy integrate. Ordinary SciPy values and independently evaluated fit objectives
+supply additional cross-checks; they are not implementation code. No runtime
+dependency or third-party license text was added. See the
+[validation record](validation/final_censored_2026-11-18.md).

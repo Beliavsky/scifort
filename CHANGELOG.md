@@ -1,3 +1,16 @@
+## 2026-11-18 - censored stable and studentized-range distributions
+
+- Add native Levy-stable and studentized-range censored likelihoods, NNLFs,
+  statistics exports, and bounded-fit overloads, preserving real-array fits.
+- Use independent central Fourier inversion for supported stable shapes and
+  delegate normal/Cauchy/Levy special cases to established censored methods.
+- Add positive log-domain normal-range/chi-scale integrals, direct survival
+  probabilities, endpoint handling, and narrow intervals for studentized range.
+- All 109 named continuous fitting families now have censored methods, with
+  explicit numerical restrictions. Wider stable/studentized-range domains,
+  other documented range limits, angular arcs, and method compatibility remain.
+  C ABI work remains deferred.
+
 ## 2026-11-18 - censored finite-sample two-sided Kolmogorov-Smirnov
 
 - Add kstwo censored likelihoods, NNLFs, and integer-aware bounded fits for

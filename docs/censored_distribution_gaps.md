@@ -9,11 +9,11 @@ interval conventions for angular distributions. SciPy's
 API targets univariate continuous fitting.
 
 The current SciFort fitting registry in [src/fit.f90](../src/fit.f90)
-contains 109 continuous families. One hundred seven already have family-specific censored
+contains 109 continuous families. All 109 have family-specific censored
 likelihoods in [src/censored.f90](../src/censored.f90): `normal`,
 `exponential`, `weibull`, `lognormal`, `gamma`, `beta`, `logistic`,
 `gumbel_r`, `gumbel_l`, `laplace`, `cauchy`, `halfcauchy`, `halflogistic`,
-`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, `vonmises_line`, `exponnorm`, `skewnorm`, `dpareto_lognorm`, `rice`, `ncx2`, `ncf`, `kstwobign`, `wrapcauchy`, `rel_breitwigner`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `nct`, `landau`, `kstwo`, `tukeylambda`, `ksone`, and `vonmises` (fixed-branch SciFort extension). That leaves 2 candidates below.
+`rayleigh`, `weibull_max`, `erlang`, `gibrat`, `halfnorm`, `hypsecant`, `laplace_asymmetric`, `loglaplace`, `pareto`, `lomax`, `fisk`, `burr`, `burr12`, `uniform`, `powerlaw`, `arcsine`, `genlogistic`, `gompertz`, `invweibull`, `moyal`, `levy`, `levy_l`, `bradford`, `triang`, `trapezoid`, `dgamma`, `dweibull`, `loggamma`, `invgamma`, `betaprime`, `maxwell`, `powernorm`, `powerlognorm`, `skewcauchy`, `exponpow`, `exponweib`, `mielke`, `fatiguelife`, `johnsonsu`, `genexpon`, `cosine`, `anglit`, `semicircular`, `truncexpon`, `johnsonsb`, `kappa3`, `loguniform`, `truncpareto`, `genhalflogistic`, `foldnorm`, `foldcauchy`, `genpareto`, `gennorm`, `halfgennorm`, `rdist`, `chi2`, `chi`, `nakagami`, `t`, `f`, `jf_skew_t`, `invgauss`, `wald`, `recipinvgauss`, `gengamma`, `truncnorm`, `truncweibull_min`, `alpha`, `genextreme`, `crystalball`, `argus`, `pearson3`, `kappa4`, `gausshyper`, `irwinhall`, `vonmises_line`, `exponnorm`, `skewnorm`, `dpareto_lognorm`, `rice`, `ncx2`, `ncf`, `kstwobign`, `wrapcauchy`, `rel_breitwigner`, `geninvgauss`, `norminvgauss`, `genhyperbolic`, `nct`, `landau`, `kstwo`, `levy_stable`, `studentized_range`, `tukeylambda`, `ksone`, and `vonmises` (fixed-branch SciFort extension). No named continuous families remain without a censored method. The numerical restrictions below still leave substantial work.
 
 Names follow SciFort's API. The count covers named distribution families in
 the current fitting registry, rather than histogram-backed or custom models.
@@ -23,6 +23,12 @@ scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 [censored likelihoods and fitting](censored_fitting.md) for their contracts.
 
 Additional numerical coverage remains within implemented families:
+Levy-stable censoring supports normal/Cauchy/Levy special cases and a central
+S1 region 1.25<=alpha<=1.75, abs(beta)<=0.5, abs((x-loc)/scale)<=6.
+Studentized-range censoring requires 2<=k<=10 and 1<=df<=30 or df>=100000;
+the infinite-df approximation is limited to standardized coordinates<=40.
+Both require normal scale<=huge/100 and abs(loc)/scale<=10000.
+Extending these ranges and central stable tails remains; see the API guide.
 KStwo censoring requires integer 1<=n<=32, normal scale<=huge/2,
 abs(loc)/scale<=100, and finite noncollapsed affine support. Larger sample
 sizes remain unsupported by that censored method.
@@ -90,8 +96,8 @@ has the same numerical difficulty or can use the same fitting algorithm.
 
 | Work group | Count | Remaining distributions |
 | --- | ---: | --- |
-| Numerically demanding or specialist families | 2 | `levy_stable`, `studentized_range` |
-| **Total** | **2** | |
+| None | 0 | |
+| **Total** | **0** | |
 
 For angular distributions, distinguish intervals in a fixed coordinate range
 from arcs crossing the angular boundary. `vonmises_line` is already covered with
@@ -120,17 +126,19 @@ The current registry contains these 21 discrete fitting families:
 Multivariate censoring would need a separate observation representation and
 joint probability calculations; it is outside this univariate inventory.
 
-## Suggested implementation order
+## Suggested follow-up order
 
-1. Extend noncentral radial mixture convergence ranges and the documented
+1. Extend the stable central kernel to more shapes and remote tails, and
+   studentized-range censoring to the remaining df/k ranges.
+2. Extend noncentral radial mixture convergence ranges and the documented
    generalized-gamma and truncation parameter ranges; Rice now has censoring support.
-2. Extend the bounded-family numerical ranges and retain explicit support
+3. Extend the bounded-family numerical ranges and retain explicit support
    and interval conventions; all three formerly remaining bounded names
    now have censored likelihoods and fits.
-3. Extend Tukey-lambda and KSone numerical ranges; their censored methods
+4. Extend Tukey-lambda and KSone numerical ranges; their censored methods
    now include log-probability inversion and finite-sample endpoint formulas.
-4. Continue through the other groups, prioritizing reusable stable kernels
-   and numerical correctness over raw distribution counts.
+5. Address weighted observations and remaining fitting-option compatibility,
+   prioritizing numerical correctness over distribution-name counts.
 
 Several additions can share validated kernels, so the remaining work need
 not mean separate implementations for every method. Likelihood support and

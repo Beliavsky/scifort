@@ -86,6 +86,8 @@ program censored_reference_driver
     use scifort_censored, only : vonmises_censored_loglikelihood
     use scifort_censored, only : nct_censored_loglikelihood, landau_censored_loglikelihood
     use scifort_censored, only : kstwo_censored_loglikelihood
+    use scifort_censored, only : levy_stable_censored_loglikelihood
+    use scifort_censored, only : studentized_range_censored_loglikelihood
     use scifort_kinds, only : dp
     implicit none
     type(censored_data) :: data
@@ -95,7 +97,7 @@ program censored_reference_driver
         read(*, *, iostat=ios) family, c, loc, scale, nu, nl, nr, ni
         if (ios < 0) exit
         if (ios /= 0) error stop 'invalid comparison input'
-        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87,92,93,95,99,100,101,105])) &
+        if (any(family == [6,25,26,38,43,46,49,50,52,53,58,60,61,73,74,78,79,80,83,86,87,92,93,95,99,100,101,105,108,109])) &
             read(*, *) second_shape
         if (family == 53 .or. family == 80 .or. family == 87 .or. family == 92 .or. family == 95 .or. family == 101) &
             read(*, *) third_shape
@@ -118,6 +120,10 @@ program censored_reference_driver
             value = kstwobign_censored_loglikelihood(data,loc,scale)
         case (97)
             value = wrapcauchy_censored_loglikelihood(data,c,loc,scale)
+        case (108)
+            value = levy_stable_censored_loglikelihood(data,c,second_shape,loc,scale)
+        case (109)
+            value = studentized_range_censored_loglikelihood(data,c,second_shape,loc,scale)
         case (107)
             value = kstwo_censored_loglikelihood(data,c,loc,scale)
         case (105)

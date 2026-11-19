@@ -3,7 +3,7 @@
 SciFort supports exact, left-censored, right-censored, and interval-censored
 likelihoods and bounded maximum-likelihood fits for normal, exponential,
 minimum/maximum Weibull, Rayleigh, lognormal, log-Laplace, Gibrat, gamma, Erlang, beta, Cauchy, symmetric/asymmetric Laplace,
-Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, noncentral Student t, Landau, Tukey lambda, one-sided and two-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
+Pareto, Lomax, Fisk, Burr III/XII, uniform, power-function, arcsine, Bradford, triangular, trapezoidal, double-gamma, double-Weibull, log-gamma, inverse-gamma, beta-prime, Maxwell, power-normal, power-lognormal, skew-Cauchy, exponential-power, exponentiated Weibull, Mielke, fatigue-life, Johnson SU, generalized exponential, cosine, anglit, semicircular, truncated exponential, Johnson SB, kappa3, log-uniform, truncated Pareto, generalized half-logistic, folded normal, folded Cauchy, generalized Pareto, generalized normal, half generalized normal, R distribution, chi-squared, chi, Nakagami, Student t, F, Jones-Faddy skew-t, inverse Gaussian, Wald, reciprocal inverse Gaussian, generalized gamma, truncated normal, truncated Weibull, alpha, generalized extreme value, Crystal Ball, ARGUS, Pearson III, kappa4, Gauss hypergeometric, Irwin-Hall, real-line von Mises, exponentially modified normal, skew-normal, double Pareto-lognormal, Rice, noncentral chi-squared, noncentral F, wrapped Cauchy, asymptotic Kolmogorov, relativistic Breit-Wigner, generalized inverse Gaussian, normal-inverse Gaussian, generalized hyperbolic, noncentral Student t, Landau, Levy-stable, studentized range, Tukey lambda, one-sided and two-sided finite-sample Kolmogorov-Smirnov, fixed-branch von Mises (a SciFort extension), generalized logistic, Gompertz, inverse Weibull, Moyal, Levy and reflected Levy, logistic, half-Cauchy, half-logistic, half-normal, hyperbolic-secant, and both Gumbel distributions.
 Lognormal, Gibrat, gamma, and Erlang censored fits currently require fixed location.
 Beta censored fits require fixed location and scale. The definitions follow SciPy's
 [`CensoredData`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.CensoredData.html)
@@ -49,6 +49,8 @@ interval-censored empirical-distribution estimator.
 The procedures are available from `scifort_censored` and `scifort_stats`:
 
 ```text
+levy_stable_censored_loglikelihood(data, alpha, beta [, loc, scale])
+studentized_range_censored_loglikelihood(data, k, df [, loc, scale])
 kstwo_censored_loglikelihood(data, n [, loc, scale])
 nct_censored_loglikelihood(data, df, nc [, loc, scale])
 landau_censored_loglikelihood(data [, loc, scale])
@@ -2958,3 +2960,76 @@ is `3e-11*max(1,abs(reference_log_value))`; it is a log-value target rather than
 a guarantee of relative accuracy after exponentiation of an extreme log.
 See the [validation record](../validation/kstwo_censored_2026-11-18.md).
 C ABI and wrapper additions remain deferred.
+
+
+## Levy-stable and studentized-range censoring
+
+The two remaining named continuous families now expose censored log likelihoods,
+NNLFs, and `censored_data` bounded-fit overloads. They accept all four observation
+kinds and are exported from `scifort_censored` / `scifort_fit` and `scifort_stats`.
+Fit parameter orders are `[alpha,beta,loc,scale]` and `[k,df,loc,scale]`.
+Existing real-array fit overloads remain available. Valid empty likelihoods
+are zero; empty fits and invalid data are rejected by the shared contract.
+C ABI and wrapper work remains deferred.
+
+Both new methods require normal positive scale<=huge/100 and
+abs(loc)/scale<=10000. Unsupported parameters or observation coordinates return
+NaN; a fit must stay within the supported domain. The named-family count is
+now 109/109, but this is not complete numerical or SciPy compatibility.
+
+### Levy-stable numerical domain
+
+The stable method follows the default S1 parameterization. It supports:
+
+- alpha=2, any beta in [-1,1]: the existing normal censored method with
+  standard deviation sqrt(2)*scale;
+- alpha=1, beta=0: the existing Cauchy censored method;
+- alpha=0.5, beta=1 or -1: the existing Levy or reflected-Levy censored method;
+- 1.25<=alpha<=1.75 and abs(beta)<=0.5, with every finite exact observation
+  and censoring endpoint satisfying abs((x-loc)/scale)<=6.
+
+The first three cases inherit the delegated family's tail and interval
+contracts. The fourth case independently inverts the characteristic function
+in the central region. The substitution t=v**4 smooths the origin, and a
+composite GL16 rule integrates through t**alpha=48. Density, CDF, and reflected
+CDF for the SF are evaluated separately. This central-coordinate restriction
+avoids cancellation-prone remote tails; unhandled coordinates return NaN
+rather than a spurious zero probability. Narrow intervals integrate the density
+with physical widths, retaining logs for adjacent binary64 endpoints.
+
+General skew alpha=1, other stability/skewness ranges, and remote central-kernel
+tails remain gaps. In particular, no alpha=1 skew location-scale correction is
+approximated: that branch is unsupported unless beta=0. The new independent
+kernel does not inherit the existing scalar routine's near-one/near-mode input
+rounding. Small differences from that scalar routine can therefore be expected.
+The tested target is 3e-10*max(1,abs(reference_log_value)).
+
+### Studentized-range numerical domain
+
+The studentized-range method supports real 2<=k<=10 and either 1<=df<=30 or
+df>=100000. Values at and above 100000, including positive infinity, use the
+infinite-df normal-range approximation, matching the existing asymptotic switch.
+The gap 30<df<100000 and 1<k<2 remain unsupported. Fit bounds must be finite;
+fix df=100000 to fit the infinite-df approximation.
+
+For finite df, positive log-domain normal-range/chi-scale mixture integrals
+retain small CDFs, survival probabilities, and densities. The SF integrates
+first-failure probabilities of the normal range directly. A range-coordinate
+change retains finite power-law log tails even when the standardized physical
+coordinate would overflow. For the infinite-df approximation, positive
+coordinates are limited to (x-loc)/scale<=40; larger coordinates return NaN.
+No such coordinate cap applies to the supported finite-df branch.
+
+Support is x>=loc. At loc the CDF is zero and SF is one. Density is positive
+for k=2 and zero for k>2; below loc it is zero. The k=2 law is exactly
+sqrt(2)*abs(Student_t(df)), or sqrt(2)*abs(Normal(0,1)) in the infinite-df
+limit. Narrow positive intervals use density integration; intervals beginning
+at loc use the direct CDF to preserve the lower-end power behavior.
+The tested log target is 3e-10*max(1,abs(reference_log_value)) for independent
+references. Ordinary SciPy comparisons allow 3e-8 because its absolute-tolerance
+integration can lose relative accuracy in small probabilities. This target does
+not promise relative probability accuracy after exponentiating extremely large
+negative logs, or last-bit monotonicity across numerical switches.
+
+See the [validation record](../validation/final_censored_2026-11-18.md) for
+independent Fourier, folded-t, endpoint-power, adaptive integral, and fit checks.
