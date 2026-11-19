@@ -12345,3 +12345,25 @@ converted from its C parameterization to S1. These mathematical formulas are
 used for validation only. SciPy supplies an additional fitting cross-check;
 SciPy and mpmath remain optional validation tools, not runtime dependencies.
 No third-party implementation code or license text was added.
+
+
+### Studentized-range censored k extension (2026-11-19)
+
+The revised sr_range/sr_integral kernels and k<=100 guard in
+`src/censored.f90` are original MIT SciFort extensions of the independently
+derived normal-range/chi-scale mixture documented above. The defining
+mathematical source remains [SciPy's studentized-range specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.studentized_range.html).
+Finer panels resolve the larger-k normal-range peak. Weighting the scale
+mixture by S**(k-1) identifies a chi-squared tail with df+k-1 degrees of
+freedom and determines the enlarged upper bound. The revised SF hazard
+uses the exact log1p identity for small normal-tail ratios.
+
+`test/test_censored_studentized_range_large_k.f90` and
+`validation/check_censored_studentized_range_large_k.py` are original MIT
+tests and optional validation tooling. The latter independently evaluates
+positive adaptive normal-range/scale integrals, high-precision erf integrals,
+analytic lower-power constants and large-q moments. SciPy supplies a separate
+mixed censored scale-fit check. No upstream implementation, coefficient table,
+new runtime dependency or third-party license text was imported. Existing
+scalar studentized-range code and public APIs are unchanged. See the
+[validation record](validation/studentized_range_k100_2026-11-19.md).

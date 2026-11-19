@@ -416,11 +416,11 @@ contains
     pure function sr_range(lr, k, mode, p) result(value)
         implicit none
         real(dp), intent(in) :: lr !! log positive normal range
-        real(dp), intent(in) :: k !! number of means in [2,10]
+        real(dp), intent(in) :: k !! number of means in [2,100]
         integer, intent(in) :: mode !! zero PDF, one CDF, two SF
         real(dp), intent(in) :: p(:) !! shapes, affine parameters and GL16 rule
-        real(dp) :: value, r, center, z, ld, lq, ratio, hazard, term
-        integer :: j, i
+        real(dp) :: value, r, center, z, ld, lq, ratio, hazard, term, h
+        integer :: j, i, panels
         r = exp(lr)
         if (k == 2.0_dp) then
             z = r/sqrt(2.0_dp)
@@ -443,9 +443,13 @@ contains
         center = 0.0_dp
         if (mode /= 1) center = -0.5_dp*r
         value = negative_infinity(0.0_dp)
-        do j = 1, 24
+        ! Larger k concentrates the lower-tail kernel to width about 1/sqrt(k).
+        panels = 24
+        if (k > 10.0_dp) panels = 48
+        h = 24.0_dp/real(panels,dp)
+        do j = 1, panels
             do i = 1, 16
-                z = center-12.0_dp+real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i))
+                z = center-12.0_dp+(real(j-1,dp)+0.5_dp*(1.0_dp+p(4+i)))*h
                 if (mode /= 2) then
                     ld = normal_small_interval(z,lr)
                     if (ieee_is_nan(ld)) ld = normal_interval(z,z+r,[0.0_dp,1.0_dp])
@@ -462,6 +466,8 @@ contains
                         hazard = log(k-1.0_dp)+ratio
                     else if (ratio == 0.0_dp) then
                         hazard = positive_infinity(0.0_dp)
+                    else if (ratio < -scifort_log_two) then
+                        hazard = log(k-1.0_dp)+log(-log1p_safe(-exp(ratio)))
                     else
                         hazard = log(k-1.0_dp)+log(-log(-expm1_safe(ratio)))
                     end if
@@ -470,7 +476,7 @@ contains
                 value = bounded_logadd(value,term+log(p(20+i)))
             end do
         end do
-        value = value-scifort_log_two
+        value = value+log(0.5_dp*h)
     end function sr_range
 
     pure function sr_integral(lq, p, mode) result(value)
@@ -478,7 +484,7 @@ contains
         real(dp), intent(in) :: lq !! log positive standardized variate
         real(dp), intent(in) :: p(:) !! k, location, scale, encoded df and GL16 rule
         integer, intent(in) :: mode !! zero PDF, one CDF, two SF
-        real(dp) :: value, lo, hi, h, v, y, lr, term, df, constant
+        real(dp) :: value, lo, hi, h, v, y, lr, term, df, constant, upper_scale
         integer :: j, i, panels
         if (p(4) == 0.0_dp) then
             if (lq > log(40.0_dp)) then
@@ -492,7 +498,10 @@ contains
         df = p(4)
         constant = scifort_log_two+0.5_dp*df*log(0.5_dp*df)-log_gamma(0.5_dp*df)
         lo = -100.0_dp/df
-        hi = 0.5_dp*log((df+200.0_dp)/df)
+        ! The small-q integrand contains the (k-1)th chi-scale moment.
+        ! Bound that tilted gamma tail as well as the unweighted scale density.
+        upper_scale = 0.5_dp*log((df+p(1)-1.0_dp+200.0_dp)/df)
+        hi = upper_scale
         if (mode /= 1) then
             lo = min(lq,0.0_dp)+lo
             hi = min(lq+hi,log(40.0_dp))
@@ -509,7 +518,7 @@ contains
                     y = v-lq
                     lr = v
                 end if
-                if (y > 0.5_dp*log((df+200.0_dp)/df)) cycle
+                if (y > upper_scale) cycle
                 if (lr > log(40.0_dp)) then
                     term = 0.0_dp
                 else
@@ -594,7 +603,7 @@ contains
     pure function studentized_range_censored_loglikelihood(data, k, df, loc, scale) result(value)
         implicit none
         type(censored_data), intent(in) :: data !! exact and censored observations
-        real(dp), intent(in) :: k !! number of means in [2,10]
+        real(dp), intent(in) :: k !! number of means in [2,100]
         real(dp), intent(in) :: df !! degrees of freedom: [1,100] or >=100000 (asymptotic)
         real(dp), intent(in), optional :: loc !! lower support location, default zero
         real(dp), intent(in), optional :: scale !! normal positive scale, default one
@@ -610,7 +619,7 @@ contains
         if (present(loc)) p(2) = loc
         if (present(scale)) p(3) = scale
         if (.not. all(ieee_is_finite(p))) return
-        if (k < 2.0_dp .or. k > 10.0_dp) return
+        if (k < 2.0_dp .or. k > 100.0_dp) return
         if (p(3) < tiny(1.0_dp) .or. p(3) > huge(1.0_dp)/100.0_dp) return
         if (abs(p(2))/1.0e4_dp > p(3)) return
         call roots_legendre(16,nodes,weights)
@@ -622,7 +631,7 @@ contains
     pure function studentized_range_censored_nnlf(data, k, df, loc, scale) result(value)
         implicit none
         type(censored_data), intent(in) :: data !! exact and censored observations
-        real(dp), intent(in) :: k !! number of means in [2,10]
+        real(dp), intent(in) :: k !! number of means in [2,100]
         real(dp), intent(in) :: df !! degrees of freedom: [1,100] or >=100000 (asymptotic)
         real(dp), intent(in), optional :: loc !! lower support location, default zero
         real(dp), intent(in), optional :: scale !! normal positive scale, default one

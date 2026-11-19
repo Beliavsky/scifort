@@ -1,3 +1,13 @@
+## 2026-11-19 - studentized-range censoring through k=100
+
+- Extend native studentized-range censored likelihoods, NNLFs and bounded fits
+  from k<=10 to k<=100, including real noninteger k. Retain finite df<=100
+  and the existing df>=100000 infinite-df approximation.
+- Refine the inner quadrature for larger k, include the tilted chi-scale
+  moment in its upper integration bound, and stabilize small-ratio SF hazards.
+- Add lower-power, remote-moment, adaptive-reference, affine/adjacent-interval
+  and mixed censored-fit checks for the extended domain.
+
 ## 2026-11-19 - Levy-stable censored tails
 
 - Extend general stable censored likelihoods and fits beyond abs(z)<=6 for the

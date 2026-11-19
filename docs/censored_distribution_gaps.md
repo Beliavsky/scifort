@@ -26,7 +26,7 @@ Additional numerical coverage remains within implemented families:
 Levy-stable censoring supports normal/Cauchy/Levy special cases and S1 shapes
 1.25<=alpha<=1.75, abs(beta)<=0.5, including remote tails and overflowed
 standardized coordinates. Wider stable shape ranges remain.
-Studentized-range censoring requires 2<=k<=10 and 1<=df<=100 or df>=100000;
+Studentized-range censoring requires 2<=k<=100 and 1<=df<=100 or df>=100000;
 the infinite-df approximation is limited to standardized coordinates<=40.
 Both require normal scale<=huge/100 and abs(loc)/scale<=10000.
 Extending these shape ranges remains; see the API guide.
@@ -129,8 +129,8 @@ joint probability calculations; it is outside this univariate inventory.
 
 ## Suggested follow-up order
 
-1. Extend the stable kernel to more shapes and studentized-range censoring
-   to larger k. Finite studentized-range df through 100 is the current target.
+1. Extend the stable kernel to more shapes. Studentized-range k and finite
+   df through 100 are the current targets; broader domains remain documented gaps.
 2. Extend noncentral radial mixture convergence ranges and the documented
    generalized-gamma and truncation parameter ranges; Rice now has censoring support.
 3. Extend the bounded-family numerical ranges and retain explicit support

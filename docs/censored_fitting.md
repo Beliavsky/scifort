@@ -3010,7 +3010,7 @@ The tested target is 3e-10*max(1,abs(reference_log_value)).
 
 ### Studentized-range numerical domain
 
-The studentized-range method supports real 2<=k<=10 and either 1<=df<=100 or
+The studentized-range method supports real 2<=k<=100 and either 1<=df<=100 or
 df>=100000. Values at and above 100000, including positive infinity, use the
 infinite-df normal-range approximation, matching the existing asymptotic switch.
 The gap 100<df<100000 and 1<k<2 remain unsupported. Finite df=100
@@ -3025,6 +3025,10 @@ change retains finite power-law log tails even when the standardized physical
 coordinate would overflow. For the infinite-df approximation, positive
 coordinates are limited to (x-loc)/scale<=40; larger coordinates return NaN.
 No such coordinate cap applies to the supported finite-df branch.
+For k>10 the inner normal-range integration uses half-width panels to resolve
+its narrower peak. The chi-scale upper limit includes the (k-1)th moment
+that controls the lower-end power law. Survival integration uses log1p when
+the normal-tail ratio is small, avoiding cancellation in the hazard increment.
 
 Support is x>=loc. At loc the CDF is zero and SF is one. Density is positive
 for k=2 and zero for k>2; below loc it is zero. The k=2 law is exactly
@@ -3042,3 +3046,6 @@ independent Fourier, folded-t, endpoint-power, adaptive integral, and fit checks
 
 Validation of the extension through df=100 is recorded in the
 [finite-df validation record](../validation/studentized_range_df100_2026-11-18.md).
+
+Validation of the extension through k=100, including noninteger k, is recorded
+in the [larger-k validation record](../validation/studentized_range_k100_2026-11-19.md).

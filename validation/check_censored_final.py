@@ -118,10 +118,12 @@ def main():
         objects=[str(out/(Path(path).stem+'.o')) for path in sources]
         archive=str(ROOT/'build/gfortran_3C159EB802C22FB9/scifort/libscifort.a')
         for source,exe in [('validation/censored_reference_driver.f90','driver.exe'),
-                           ('test/test_censored_final.f90','test.exe')]:
+                           ('test/test_censored_final.f90','test.exe'),
+                           ('test/test_censored_studentized_range_large_k.f90','large_k.exe')]:
             cmd=['gfortran',*flags,str(ROOT/source),*objects,archive,'-o',str(out/exe)]
             print(subprocess.list2cmdline(cmd),flush=True);subprocess.run(cmd,cwd=ROOT,check=True)
         subprocess.run([str(out/'test.exe')],check=True)
+        subprocess.run([str(out/'large_k.exe')],check=True)
         result=subprocess.run([str(out/'driver.exe')],input='\n'.join(inputs)+'\n0\n',text=True,capture_output=True)
         if result.returncode:raise RuntimeError(result.stderr)
         actual=list(map(float,result.stdout.split()));assert len(actual)==len(cases),(len(actual),len(cases))
