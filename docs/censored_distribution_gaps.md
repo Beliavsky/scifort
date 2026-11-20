@@ -22,73 +22,137 @@ censored fits require fixed location, beta fits require fixed location and
 scale, and gamma/Erlang/beta fits exclude exact support endpoints. See
 [censored likelihoods and fitting](censored_fitting.md) for their contracts.
 
-Additional numerical coverage remains within implemented families:
-Levy-stable censoring supports normal/Cauchy/Levy special cases and S1 shapes
-1.25<=alpha<=1.75, abs(beta)<=0.9, including remote tails and overflowed
-standardized coordinates. Wider stable shape ranges remain.
-Studentized-range censoring requires 2<=k<=100 and 1<=df<=100 or df>=100000;
-the infinite-df approximation is limited to standardized coordinates<=40.
-Both require normal scale<=huge/100 and abs(loc)/scale<=10000.
-Extending these shape ranges remains; see the API guide.
-KStwo censoring requires integer 1<=n<=32, normal scale<=huge/2,
-abs(loc)/scale<=100, and finite noncollapsed affine support. Larger sample
-sizes remain unsupported by that censored method.
-noncentral-t censoring requires 0.5<=df<=100 and abs(nc)<=10;
-infinite df and wider shape ranges remain unsupported by that method.
-Landau censoring uses an independent saddle-contour left tail to avoid
-loss of relative accuracy in the existing scalar left-tail switch.
-These likelihoods target scaled log accuracy, rather than relative accuracy
-of probabilities whose logarithms have very large magnitude.
-Tukey lambda currently requires abs(lam)<=5 and either lam=0 or
-abs(lam)>=1e-6, with documented positive-shape affine support limits;
-KSone requires integer 1<=n<=100 and documented affine support limits;
-von Mises censoring is a SciFort extension on a fixed affine [-pi,pi]
-branch, with the same numerical limits as vonmises_line. Crossing arcs
-remain unsupported and are separate from named-family coverage.
-GIG censoring currently requires abs(p)<=5 and 0.5<=b<=10;
-normal-inverse Gaussian/generalized hyperbolic require 0.5<=a<=10,
-abs(b)<=0.8*a, and (for GH) abs(p)<=5. The GH boundary abs(b)=a
-and wider shape ranges remain unsupported by these censored methods.
-Hyperbolic overflowed standardized coordinates currently use infinite limits;
-retaining representable log tails in those cases remains.
-wrapped-Cauchy censoring currently requires 0<c<=0.99, normal scale,
-abs(loc)/scale<=10, and a finite noncollapsed affine [0,2*pi] support;
-relativistic Breit-Wigner censoring requires 0.1<=rho<=100;
-Rice censoring currently requires 0<=b<=10; noncentral chi-squared/F require
-each degree-of-freedom parameter in [0.1,2000] and 0<=nc<=100.
-Mixtures return NaN if their remainder
-bound is not met within 10,001 terms; this particularly limits very remote
-noncentral radial tails. Noncentral F requires normal representable
-scale*dfd/dfn. Extending these limits remains;
-EMG censoring requires 0.01<=k<=100; skew-normal requires abs(a)<=10;
-double Pareto-lognormal requires abs(u)<=100, 0.01<=s<=10, and 0.01<=a,b<=100;
-overflowed EMG/skew-normal standard coordinates retain infinite-coordinate behavior;
-Gauss hypergeometric censoring requires 0.1<=a,b<=20, abs(c)<=10, -0.5<=z<=10;
-Irwin-Hall requires integer 1<=n<=32; line von Mises requires 0<=kappa<=100;
-these three require normal scale, abs(loc)/scale<=1e4, and representable
-affine supports with scale*extent<=huge/2;
-ARGUS censoring currently requires 1e-6<=chi<=100;
-Pearson III uses the existing normal approximation for abs(skew)<1.6e-5,
-otherwise requires 0.002<=abs(skew)<=2000;
-kappa4 requires abs(h),abs(k)<=10, with each zero or at least 1e-6 in
-magnitude, and k*log(h)<=log(10) when h>0;
-alpha censoring currently requires 1e-6<=a<=100;
-Crystal Ball requires 1e-6<=beta<=100 and 1<m<=1e6;
-GEV requires abs(c)<=100 and either c=0 or abs(c)>=1e-6;
-generalized gamma requires tiny<=a<=1e6 and 1e-6<=abs(c)<=1e6;
-truncated normal has finite standardized bounds within [-100,100];
-truncated Weibull requires 1e-6<=c<=1e6 and finite ordered truncation bounds;
-truncation requires normal nonzero scaled/physical endpoints and
-abs(loc)/(scale*(b-a))<=1e4; very narrow windows additionally require
-zero loc and a power-of-two scale;
-Student t/F/Jones-Faddy censoring requires normal positive beta parameters
-with sum at most 1e6; Student t also accepts positive-infinite df;
-chi/chi-squared censoring requires a positive representable half-shape;
-chi/chi-squared currently require df<=2e6 and Nakagami nu<=1e6;
-generalized-normal censoring requires a representable reciprocal power;
-R censoring currently requires shape at most 1e6, a representable positive
-half-shape, and a finite noncollapsed affine support. These restrictions
-are separate from the remaining-family count below. See the API guide.
+Additional numerical coverage remains within implemented families. These
+restrictions are separate from the remaining-family count below. See the
+[API guide](censored_fitting.md) for the full contracts.
+
+- **Levy-stable:** Supports normal/Cauchy/Levy special cases and S1 shapes
+  1.25<=alpha<=1.75, abs(beta)<=0.9, including remote tails and overflowed
+  standardized coordinates. Requires normal scale<=huge/100 and
+  abs(loc)/scale<=10000. Wider stable shape ranges remain.
+
+- **Studentized range:** Requires 2<=k<=100 and 1<=df<=100 or df>=100000;
+  the infinite-df approximation is limited to standardized coordinates<=40.
+  Requires normal scale<=huge/100 and abs(loc)/scale<=10000. Extending these
+  shape ranges remains.
+
+- **KStwo:** Requires integer 1<=n<=32, normal scale<=huge/2,
+  abs(loc)/scale<=100, and finite noncollapsed affine support. Larger sample
+  sizes remain unsupported by the censored method.
+
+- **Noncentral t:** Requires 0.5<=df<=100 and abs(nc)<=10. Infinite df and
+  wider shape ranges remain unsupported by the censored method.
+
+- **Landau:** Uses an independent saddle-contour left tail to avoid loss of
+  relative accuracy in the existing scalar left-tail switch. These likelihoods
+  target scaled log accuracy, rather than relative accuracy of probabilities
+  whose logarithms have very large magnitude.
+
+- **Tukey lambda:** Requires abs(lam)<=5 and either lam=0 or abs(lam)>=1e-6,
+  with documented positive-shape affine support limits.
+
+- **KSone:** Requires integer 1<=n<=100 and documented affine support limits.
+
+- **Von Mises:** Censoring is a SciFort extension on a fixed affine [-pi,pi]
+  branch, with the same numerical limits as vonmises_line. Crossing arcs remain
+  unsupported and are separate from named-family coverage.
+
+- **Generalized inverse Gaussian (GIG):** Requires abs(p)<=5 and 0.5<=b<=10.
+  Wider shape ranges remain. Overflowed standardized coordinates currently use
+  infinite limits; retaining representable log tails in those cases remains.
+
+- **Normal-inverse Gaussian:** Requires 0.5<=a<=10 and abs(b)<=0.8*a.
+  Wider shape ranges remain. Overflowed standardized coordinates currently use
+  infinite limits; retaining representable log tails in those cases remains.
+
+- **Generalized hyperbolic (GH):** Requires 0.5<=a<=10, abs(b)<=0.8*a,
+  and abs(p)<=5. The boundary abs(b)=a and wider shape ranges remain unsupported.
+  Overflowed standardized coordinates currently use infinite limits; retaining
+  representable log tails in those cases remains.
+
+- **Wrapped Cauchy:** Requires 0<c<=0.99, normal scale, abs(loc)/scale<=10,
+  and a finite noncollapsed affine [0,2*pi] support.
+
+- **Relativistic Breit-Wigner:** Requires 0.1<=rho<=100.
+
+- **Rice:** Requires 0<=b<=10. The mixture returns NaN if its remainder bound
+  is not met within 10,001 terms, particularly limiting very remote tails.
+  Extending these limits remains.
+
+- **Noncentral chi-squared:** Requires df in [0.1,2000] and 0<=nc<=100.
+  The mixture returns NaN if its remainder bound is not met within 10,001
+  terms, particularly limiting very remote tails. Extending these limits remains.
+
+- **Noncentral F:** Requires each degree-of-freedom parameter in [0.1,2000],
+  0<=nc<=100, and normal representable scale*dfd/dfn. The mixture returns NaN
+  if its remainder bound is not met within 10,001 terms, particularly limiting
+  very remote tails. Extending these limits remains.
+
+- **Exponentially modified normal (EMG):** Requires 0.01<=k<=100. Overflowed
+  standardized coordinates retain infinite-coordinate behavior.
+
+- **Skew-normal:** Requires abs(a)<=10. Overflowed standardized coordinates
+  retain infinite-coordinate behavior.
+
+- **Double Pareto-lognormal:** Requires abs(u)<=100, 0.01<=s<=10,
+  and 0.01<=a,b<=100.
+
+- **Gauss hypergeometric:** Requires 0.1<=a,b<=20, abs(c)<=10, -0.5<=z<=10,
+  normal scale, abs(loc)/scale<=1e4, and representable affine support with
+  scale*extent<=huge/2.
+
+- **Irwin-Hall:** Requires integer 1<=n<=32, normal scale,
+  abs(loc)/scale<=1e4, and representable affine support with
+  scale*extent<=huge/2.
+
+- **Line von Mises:** Requires 0<=kappa<=100, normal scale,
+  abs(loc)/scale<=1e4, and representable affine support with
+  scale*extent<=huge/2.
+
+- **ARGUS:** Requires 1e-6<=chi<=100.
+
+- **Pearson III:** Uses the existing normal approximation for abs(skew)<1.6e-5;
+  otherwise requires 0.002<=abs(skew)<=2000.
+
+- **Kappa4:** Requires abs(h),abs(k)<=10, with each zero or at least 1e-6 in
+  magnitude, and k*log(h)<=log(10) when h>0.
+
+- **Alpha:** Requires 1e-6<=a<=100.
+
+- **Crystal Ball:** Requires 1e-6<=beta<=100 and 1<m<=1e6.
+
+- **Generalized extreme value (GEV):** Requires abs(c)<=100 and either c=0
+  or abs(c)>=1e-6.
+
+- **Generalized gamma:** Requires tiny<=a<=1e6 and 1e-6<=abs(c)<=1e6.
+
+- **Truncated normal:** Requires finite standardized bounds within [-100,100],
+  normal nonzero scaled/physical endpoints, and abs(loc)/(scale*(b-a))<=1e4.
+  Very narrow windows additionally require zero loc and a power-of-two scale.
+
+- **Truncated Weibull:** Requires 1e-6<=c<=1e6, finite ordered truncation
+  bounds, normal nonzero scaled/physical endpoints, and
+  abs(loc)/(scale*(b-a))<=1e4. Very narrow windows additionally require zero loc
+  and a power-of-two scale.
+
+- **Student t:** Requires normal positive beta parameters with sum at most 1e6;
+  also accepts positive-infinite df.
+
+- **F:** Requires normal positive beta parameters with sum at most 1e6.
+
+- **Jones-Faddy skew-t:** Requires normal positive beta parameters with sum
+  at most 1e6.
+
+- **Chi:** Requires df<=2e6 and a positive representable half-shape.
+
+- **Chi-squared:** Requires df<=2e6 and a positive representable half-shape.
+
+- **Nakagami:** Requires nu<=1e6.
+
+- **Generalized normal:** Requires a representable reciprocal power.
+
+- **R:** Requires shape at most 1e6, a representable positive half-shape,
+  and a finite noncollapsed affine support.
 
 ## Remaining continuous families
 
