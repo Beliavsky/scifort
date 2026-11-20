@@ -12392,3 +12392,17 @@ including equations (3) and (5) of [Saenko (2023)](https://arxiv.org/abs/2303.12
 SciPy supplies a separate fit cross-check. These remain optional validation
 tools. No runtime dependency, coefficient table or license text was added.
 See the [extended-domain validation record](validation/stable_censored_skew_2026-11-19.md).
+
+### Levy-stable censored skewness through 0.9 (2026-11-19)
+
+The abs(beta)<=0.9 guard extends the same original MIT SciFort S1
+Fourier/contour implementation. Its mathematical source remains
+[SciPy's S1 characteristic function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_stable.html).
+The rotation, quadrature, cutoff and exprel polynomial remain unchanged.
+The rotated real exponent coefficient stays positive over the larger shape
+rectangle; the revised bound and validation are recorded in
+[the 0.9 validation record](validation/stable_censored_skew09_2026-11-19.md).
+No upstream implementation, coefficient table, license text or runtime
+dependency was added. The extended validation script retains the previous
+0.75 cases and adds independent Fourier/asymptotic references for the new
+domain, together with SciPy fit cross-checks verified by Fourier integration.

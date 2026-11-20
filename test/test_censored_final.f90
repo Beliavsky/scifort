@@ -16,6 +16,12 @@ program test_censored_final
     real(dp) :: nan, inf, alpha, beta, x, y, expected, actual, df, k, previous
     real(dp) :: lower(4), upper(4), shapes(8), points(4), loc, scale, z
     integer :: i, j, h, checks, failures
+    real(dp), parameter :: skew_points(11) = [ &
+        -.9_dp,-.825_dp,-.75_dp,-.5_dp,-.25_dp,0.0_dp, &
+        .25_dp,.5_dp,.75_dp,.825_dp,.9_dp]
+    real(dp), parameter :: boundary_skews(2) = [.75_dp,.9_dp]
+    real(dp), parameter :: fitted_scales(2) = [9.026265604293837_dp,8.532460150892556_dp]
+    real(dp), parameter :: fitted_nnlfs(2) = [24.262217457254415_dp,24.488664184760914_dp]
     checks = 0
     failures = 0
     inf = positive_infinity(0.0_dp)
@@ -33,7 +39,7 @@ program test_censored_final
         levy_l_censored_loglikelihood(data),0.0_dp,'stable reflected Levy identity')
     do j = 1, 3
         alpha = 1.0_dp+.25_dp*real(j,dp)
-        beta = .75_dp
+        beta = .9_dp
         previous = -inf
         do i = -3, 3
             x = real(i,dp)
@@ -147,7 +153,7 @@ program test_censored_final
     call check(ieee_is_nan(studentized_range_censored_loglikelihood(empty,3.0_dp,101.0_dp)),'range df domain')
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,nan,.5_dp)),'stable NaN alpha')
     call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.1_dp,.5_dp)),'stable alpha domain')
-    call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.5_dp,.8_dp)),'stable beta domain')
+    call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.5_dp,.95_dp)),'stable beta domain')
     one = make_censored_data(uncensored=[7.0_dp])
     call check(ieee_is_finite(levy_stable_censored_loglikelihood(one,1.5_dp,.5_dp)),'stable tail density')
     one = make_censored_data(left=[nan])
@@ -227,7 +233,7 @@ program test_censored_final
     call close(fit%nllf,studentized_range_censored_nnlf(data,2.0_dp,100.0_dp), &
         3e-10_dp,'df100 fixed objective')
     do j = -1, 1, 2
-        beta = real(j,dp)*nearest(0.75_dp,1.0_dp)
+        beta = real(j,dp)*nearest(0.9_dp,1.0_dp)
         call check(ieee_is_nan(levy_stable_censored_loglikelihood(empty,1.5_dp,beta)), &
             'stable next outside skew boundary')
         call check(ieee_is_nan(levy_stable_censored_loglikelihood(data,1.5_dp,beta)), &
@@ -236,8 +242,8 @@ program test_censored_final
     ! Tail reflection, complements, switch continuity and physical narrow widths.
     do i = 1, 3
         alpha = 1.0_dp+0.25_dp*real(i,dp)
-        do j = -3, 3
-            beta = 0.25_dp*real(j,dp)
+        do j = 1, size(skew_points)
+            beta = skew_points(j)
             previous = 0.0_dp
             do h = 1, 6
                 x = 6.0_dp*10.0_dp**real(h-1,dp)
@@ -290,8 +296,11 @@ program test_censored_final
     call close(fit%params(4),9.92118608975177_dp,3e-6_dp,'stable tail fitted scale')
     call close(fit%nllf,23.868504660682664_dp,3e-10_dp,'stable tail fitted objective')
     ! New skew boundaries: affine tails and independent mixed-censor fits.
-    do j = -1, 1, 2
-        beta = 0.75_dp*real(j,dp)
+    do h = 1, size(boundary_skews)
+      do j = -1, 1, 2
+        beta = boundary_skews(h)*real(j,dp)
+        call close(levy_stable_censored_loglikelihood(empty,1.25_dp,beta), &
+            0.0_dp,0.0_dp,'skew boundary empty')
         x = real(j,dp)*1.0e300_dp
         y = nearest(x,1.0_dp)
         scale = 1.0e-200_dp
@@ -318,8 +327,9 @@ program test_censored_final
         upper(4) = 20.0_dp
         call levy_stable_fit(data,lower,upper,fit)
         call check(fit%success,'skew boundary free fit')
-        call close(fit%params(4),9.026265604293837_dp,3e-6_dp,'skew boundary fitted scale')
-        call close(fit%nllf,24.262217457254415_dp,3e-10_dp,'skew boundary fitted objective')
+        call close(fit%params(4),fitted_scales(h),3e-6_dp,'skew boundary fitted scale')
+        call close(fit%nllf,fitted_nnlfs(h),3e-10_dp,'skew boundary fitted objective')
+      end do
     end do
     write(*,'(a,i0,a,i0)') 'Final censored checks: ',checks,', failures: ',failures
     if (failures /= 0) stop 1

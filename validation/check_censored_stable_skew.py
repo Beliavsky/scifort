@@ -4,7 +4,7 @@
 Run check_censored_final.py --reuse first to compile the numerical drivers.
 Use --compile to rebuild the drivers and run the native regression directly.
 Reference formulas are shared with check_censored_stable_tails.py; see its
-provenance and stable_censored_skew_2026-11-19.md.
+provenance and stable_censored_skew09_2026-11-19.md.
 """
 import argparse
 from pathlib import Path
@@ -26,7 +26,9 @@ def build_references():
         inputs.append(f'{x:.17g}'+(' '+f'{end:.17g}' if end is not None else ''))
     with mp.workdps(90):
         for a,b in ((1.25,-.75),(1.25,.75),(1.5,-.75),(1.5,.75),
-                    (1.75,-.75),(1.75,.75),(1.37,-.625),(1.68,.625)):
+                    (1.75,-.75),(1.75,.75),(1.37,-.625),(1.68,.625),
+                    (1.25,-.9),(1.25,.9),(1.5,-.9),(1.5,.9),
+                    (1.75,-.9),(1.75,.9),(1.37,-.825),(1.68,.85)):
             for x in (0.,1.,6.,math.nextafter(6.,math.inf),8.,16.,64.,1e100,1e300):
                 refs = reference(x,a,b)
                 for part in range(3):
@@ -50,7 +52,7 @@ def build_references():
             add(a,b,5.99,3,left+mp.log(-mp.expm1(right-left)),end=6.01,
                 label='MP skew join interval')
             print('Stable skew fixtures ready',a,b,flush=True)
-        for b in (-.75,.75):
+        for b in (-.9,-.75,.75,.9):
             for x,scale in ((1e300,1e-200),(-1e300,1e-200),(1e200,1e200)):
                 loc = .3*scale
                 refs = reference((mp.mpf(x)-loc)/scale,1.25,b)
@@ -60,8 +62,8 @@ def build_references():
                 end = math.nextafter(x,math.inf)
                 add(1.25,b,x,3,refs[0]-mp.log(scale)+mp.log(mp.mpf(end)-x),
                     loc,scale,end,label='MP skew affine adjacent')
-    (CACHE/'stable-skew-cases.json').write_text(json.dumps(cases))
-    (CACHE/'stable-skew-input.txt').write_text('\n'.join(inputs)+'\n0\n')
+    (CACHE/'stable-skew09-cases.json').write_text(json.dumps(cases))
+    (CACHE/'stable-skew09-input.txt').write_text('\n'.join(inputs)+'\n0\n')
     return cases, inputs
 
 
@@ -98,8 +100,8 @@ def main():
     if args.compile:
         compile_drivers()
     if args.reuse:
-        cases = json.loads((CACHE/'stable-skew-cases.json').read_text())
-        inputs = (CACHE/'stable-skew-input.txt').read_text().splitlines()[:-1]
+        cases = json.loads((CACHE/'stable-skew09-cases.json').read_text())
+        inputs = (CACHE/'stable-skew09-input.txt').read_text().splitlines()[:-1]
     else:
         cases, inputs = build_references()
     profiles = ('checked','optimized') if args.profile == 'both' else (args.profile,)
@@ -117,14 +119,28 @@ def main():
             assert math.isfinite(error) and error <= tol,(profile,label,value,expected,error)
             worst = max(worst,error)
         print(profile,len(cases),'skew references passed; maximum error',worst,flush=True)
-    def objective(scale):
-        rv = stats.levy_stable(1.5,.75,scale=scale)
-        return -(sum(rv.logpdf([.5,1.,2.,8.]))+rv.logcdf(-10.)+rv.logsf(20.)+
-                 math.log(rv.sf(30.)-rv.sf(32.)))
-    fit = optimize.minimize_scalar(objective,bounds=(.5,20.),method='bounded',
-                                   options={'xatol':1e-10})
-    assert fit.success
-    print('Independent SciPy skew fit: scale',fit.x,'NNLF',fit.fun,flush=True)
+    for beta in (.75,.9):
+        def objective(scale):
+            rv = stats.levy_stable(1.5,beta,scale=scale)
+            return -(sum(rv.logpdf([.5,1.,2.,8.]))+rv.logcdf(-10.)+rv.logsf(20.)+
+                     math.log(rv.sf(30.)-rv.sf(32.)))
+        fit = optimize.minimize_scalar(objective,bounds=(.5,20.),method='bounded',
+                                       options={'xatol':1e-10})
+        assert fit.success
+        # Confirm the fitted objective with the independent high-precision
+        # Fourier reference as well as SciPy's piecewise stable evaluation.
+        with mp.workdps(90):
+            scale = mp.mpf(fit.x)
+            expected = sum(reference(mp.mpf(x)/scale,1.5,beta)[0]-mp.log(scale)
+                           for x in (.5,1.,2.,8.))
+            expected += reference(-mp.mpf(10)/scale,1.5,beta)[1]
+            expected += reference(mp.mpf(20)/scale,1.5,beta)[2]
+            left = reference(mp.mpf(30)/scale,1.5,beta)[2]
+            right = reference(mp.mpf(32)/scale,1.5,beta)[2]
+            expected += left+mp.log(-mp.expm1(right-left))
+            assert abs(float(expected)+fit.fun) < 1e-10, (beta,expected,fit.fun)
+        print('Independent SciPy skew fit: beta',beta,'scale',fit.x,'NNLF',fit.fun,
+              flush=True)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,11 @@
+## 2026-11-19 - stable censored skewness through 0.9
+
+- Extend general S1 stable censored likelihoods, NNLFs and bounded fits to
+  abs(beta)<=0.9, retaining 1.25<=alpha<=1.75 and existing affine limits.
+- Validate the new skew boundaries and interior shapes against independent
+  Fourier/asymptotic references, including extreme tails, narrow intervals,
+  overflowed standardized coordinates and reflected censored scale fits.
+
 ## 2026-11-19 - optimized-build numerical and error-path regressions
 
 - Preserve modified-Fresnel phase accuracy in optimized Windows builds by
