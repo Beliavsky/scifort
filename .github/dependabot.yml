@@ -1,0 +1,18 @@
+version: 2
+
+# overview: https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/configure-version-updates
+# package-ecosystems: https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#package-ecosystem-
+
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+
