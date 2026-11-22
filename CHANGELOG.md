@@ -1,3 +1,9 @@
+## 2026-11-22 - macOS CI fpm runtime dependencies
+
+- Install fpm through Homebrew on macOS so its required runtime libraries
+  are installed together, avoiding the downloaded binary's missing GCC 12 runtime.
+- Verify fpm starts before building on every CI platform.
+
 ## 2026-11-22 - ASCII policy check for source and configuration
 
 - Allow Unicode typography in Markdown and plain-text documentation while

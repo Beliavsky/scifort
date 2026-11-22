@@ -22,8 +22,18 @@ jobs:
           version: '14'
 
       - uses: fortran-lang/setup-fpm@v10
+        if: runner.os != 'macOS'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The downloaded macOS binary can require an unavailable GCC runtime.
+      # Homebrew installs fpm together with its runtime dependencies.
+      - name: Install fpm on macOS
+        if: runner.os == 'macOS'
+        run: brew install fpm
+
+      - name: Verify fpm installation
+        run: fpm --version
 
       - name: Check ASCII policy
         run: python tools/check_ascii.py
