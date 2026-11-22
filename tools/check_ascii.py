@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when project-authored text files contain non-ASCII characters."""
+"""Enforce ASCII in Fortran/C headers and configuration; allow Unicode docs."""
 
 from __future__ import annotations
 
@@ -7,10 +7,9 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SUFFIXES = {".f90", ".h", ".md", ".toml", ".yml", ".yaml", ".txt"}
+# Markdown, plain-text documentation, and licenses may use Unicode typography.
+SUFFIXES = {".f90", ".h", ".toml", ".yml", ".yaml"}
 SKIP_PARTS = {"build", ".git"}
-# Preserve reviewed third-party license text verbatim, including its typography.
-VERBATIM_LICENSES = {"LICENSES/CC-BY-4.0.txt"}
 
 
 def main() -> int:
@@ -20,8 +19,6 @@ def main() -> int:
             continue
         if any(part in SKIP_PARTS for part in path.parts):
             continue
-        if path.relative_to(ROOT).as_posix() in VERBATIM_LICENSES:
-            continue
         text = path.read_text(encoding="utf-8")
         for line_number, line in enumerate(text.splitlines(), start=1):
             try:
@@ -30,7 +27,7 @@ def main() -> int:
                 failures.append((path.relative_to(ROOT), line_number, line))
 
     for path, line_number, line in failures:
-        print(f"{path}:{line_number}: non-ASCII text: {line!r}")
+        print(f"{ascii(str(path))}:{line_number}: non-ASCII text: {ascii(line)}")
     return 1 if failures else 0
 
 

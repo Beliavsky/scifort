@@ -1,3 +1,10 @@
+## 2026-11-22 - ASCII policy check for source and configuration
+
+- Allow Unicode typography in Markdown and plain-text documentation while
+  retaining ASCII checks for Fortran source, C headers, and configuration.
+- Escape non-ASCII characters in diagnostics so Windows consoles can report
+  violations without an encoding error.
+
 ## 2026-11-19 - stable censored skewness through 0.9
 
 - Extend general S1 stable censored likelihoods, NNLFs and bounded fits to
