@@ -1,5 +1,13 @@
-! SPDX-License-Identifier: MIT
+! SPDX-License-Identifier: MIT AND BSD-3-Clause
 ! Copyright (c) 2026 SciFort contributors
+! Copyright 1984, 1987, 1988, 1989 by Stephen L. Moshier
+! Copyright 1984, 1995, 2000 by Stephen L. Moshier
+! Copyright (c) 2001-2002 Enthought, Inc. 2003-2024, SciPy Developers.
+! All rights reserved.
+!
+! Inverse-normal rational approximations and Horner evaluation adapted from
+! SciPy v1.15.3 xsf/cephes/ndtri.h, polevl.h and const.h (Cephes).
+! See CODE_PROVENANCE.md and LICENSES/scipy-cephes-ndtri-BSD-3-Clause.txt.
 
 module scifort_normal
     use scifort_constants, only : scifort_inv_sqrt_two_pi, &
@@ -241,15 +249,67 @@ contains
     end function standard_normal_logcdf
 
     pure elemental function standard_normal_ppf(p) result(x)
+        implicit none
         real(dp), intent(in) :: p !! lower-tail probability in [0, 1]
         real(dp) :: x
-
-        integer :: iteration
-        real(dp) :: lower
-        real(dp) :: midpoint
-        real(dp) :: q
-        real(dp) :: target
-        real(dp) :: upper
+        ! Cephes ndtri coefficients, in descending powers; see provenance.
+        real(dp), parameter :: p0(5) = [ &
+            -5.99633501014107895267e1_dp, &
+            9.80010754185999661536e1_dp, &
+            -5.66762857469070293439e1_dp, &
+            1.39312609387279679503e1_dp, &
+            -1.23916583867381258016e0_dp ]
+        real(dp), parameter :: q0(8) = [ &
+            1.95448858338141759834e0_dp, &
+            4.67627912898881538453e0_dp, &
+            8.63602421390890590575e1_dp, &
+            -2.25462687854119370527e2_dp, &
+            2.00260212380060660359e2_dp, &
+            -8.20372256168333339912e1_dp, &
+            1.59056225126211695515e1_dp, &
+            -1.18331621121330003142e0_dp ]
+        real(dp), parameter :: p1(9) = [ &
+            4.05544892305962419923e0_dp, &
+            3.15251094599893866154e1_dp, &
+            5.71628192246421288162e1_dp, &
+            4.40805073893200834700e1_dp, &
+            1.46849561928858024014e1_dp, &
+            2.18663306850790267539e0_dp, &
+            -1.40256079171354495875e-1_dp, &
+            -3.50424626827848203418e-2_dp, &
+            -8.57456785154685413611e-4_dp ]
+        real(dp), parameter :: q1(8) = [ &
+            1.57799883256466749731e1_dp, &
+            4.53907635128879210584e1_dp, &
+            4.13172038254672030440e1_dp, &
+            1.50425385692907503408e1_dp, &
+            2.50464946208309415979e0_dp, &
+            -1.42182922854787788574e-1_dp, &
+            -3.80806407691578277194e-2_dp, &
+            -9.33259480895457427372e-4_dp ]
+        real(dp), parameter :: p2(9) = [ &
+            3.23774891776946035970e0_dp, &
+            6.91522889068984211695e0_dp, &
+            3.93881025292474443415e0_dp, &
+            1.33303460815807542389e0_dp, &
+            2.01485389549179081538e-1_dp, &
+            1.23716634817820021358e-2_dp, &
+            3.01581553508235416007e-4_dp, &
+            2.65806974686737550832e-6_dp, &
+            6.23974539184983293730e-9_dp ]
+        real(dp), parameter :: q2(8) = [ &
+            6.02427039364742014255e0_dp, &
+            3.67983563856160859403e0_dp, &
+            1.37702099489081330271e0_dp, &
+            2.16236993594496635890e-1_dp, &
+            1.34204006088543189037e-2_dp, &
+            3.28014464682127739104e-4_dp, &
+            2.89247864745380683936e-6_dp, &
+            6.79019408009981274425e-9_dp ]
+        real(dp), parameter :: tail_cutoff = 0.13533528323661269189_dp
+        real(dp), parameter :: sqrt_two_pi = 2.50662827463100050242_dp
+        real(dp) :: y, z, y2, leading, correction
+        logical :: upper_tail
 
         if (p <= 0.0_dp) then
             x = negative_infinity(p)
@@ -259,43 +319,54 @@ contains
             return
         end if
 
-        if (p < 0.5_dp) then
-            q = p
-        else if (p > 0.5_dp) then
-            q = 1.0_dp - p
-        else
-            x = 0.0_dp
+        y = p
+        upper_tail = .false.
+        if (y > 1.0_dp-tail_cutoff) then
+            y = 1.0_dp-y
+            upper_tail = .true.
+        end if
+        if (y > tail_cutoff) then
+            y = y-0.5_dp
+            y2 = y*y
+            x = (y+y*(y2*normal_polynomial(y2,p0)/normal_monic_polynomial(y2,q0))) &
+                *sqrt_two_pi
             return
         end if
-        lower = -40.0_dp
-        upper = 0.0_dp
 
-        if (q < 1.0e-100_dp) then
-            target = log(q)
-            do iteration = 1, 100
-                midpoint = 0.5_dp * (lower + upper)
-                if (midpoint <= lower .or. midpoint >= upper) exit
-                if (standard_normal_logcdf(midpoint) < target) then
-                    lower = midpoint
-                else
-                    upper = midpoint
-                end if
-            end do
+        z = sqrt(-2.0_dp*log(y))
+        leading = z-log(z)/z
+        y = 1.0_dp/z
+        if (z < 8.0_dp) then
+            correction = y*normal_polynomial(y,p1)/normal_monic_polynomial(y,q1)
         else
-            target = q
-            do iteration = 1, 100
-                midpoint = 0.5_dp * (lower + upper)
-                if (midpoint <= lower .or. midpoint >= upper) exit
-                if (standard_normal_cdf(midpoint) < target) then
-                    lower = midpoint
-                else
-                    upper = midpoint
-                end if
-            end do
+            correction = y*normal_polynomial(y,p2)/normal_monic_polynomial(y,q2)
         end if
-
-        x = 0.5_dp * (lower + upper)
-        if (p > 0.5_dp) x = -x
+        x = leading-correction
+        if (.not. upper_tail) x = -x
     end function standard_normal_ppf
+
+    pure function normal_polynomial(x, coefficients) result(y)
+        implicit none
+        real(dp), intent(in) :: x !! polynomial argument
+        real(dp), intent(in) :: coefficients(:) !! coefficients in descending powers, nonempty
+        real(dp) :: y
+        integer :: i
+        y = coefficients(1)
+        do i=2,size(coefficients)
+            y = y*x+coefficients(i)
+        end do
+    end function normal_polynomial
+
+    pure function normal_monic_polynomial(x, coefficients) result(y)
+        implicit none
+        real(dp), intent(in) :: x !! polynomial argument
+        real(dp), intent(in) :: coefficients(:) !! descending coefficients excluding leading 1
+        real(dp) :: y
+        integer :: i
+        y = x+coefficients(1)
+        do i=2,size(coefficients)
+            y = y*x+coefficients(i)
+        end do
+    end function normal_monic_polynomial
 
 end module scifort_normal

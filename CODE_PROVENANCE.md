@@ -1,3 +1,48 @@
+## 2026-11-22 - Direct normal quantiles (SciPy / Cephes)
+
+`src/stats/normal.f90` adapts the rational inverse-normal approximations,
+six coefficient arrays, branch thresholds, normalization constant and Horner
+evaluation from SciPy v1.15.3, commit
+`e29dcb65a2040f04819b426a04b60d44a8f69c04`:
+
+- [`scipy/special/xsf/cephes/ndtri.h`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/special/xsf/cephes/ndtri.h)
+- [`scipy/special/xsf/cephes/polevl.h`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/special/xsf/cephes/polevl.h)
+- [`scipy/special/xsf/cephes/const.h`](https://github.com/scipy/scipy/blob/v1.15.3/scipy/special/xsf/cephes/const.h)
+
+These are adaptations, not original SciFort approximation coefficients.
+Cephes is by Stephen L. Moshier, with the C++ translation by SciPy developers
+in 2024. The applicable notices remain in source and the full SciPy license
+and Cephes entry from upstream `LICENSES_bundled.txt` are retained in
+[`LICENSES/scipy-cephes-ndtri-BSD-3-Clause.txt`](LICENSES/scipy-cephes-ndtri-BSD-3-Clause.txt).
+SciPy records Cephes redistribution under BSD-3-Clause with the author's
+permission. No GPL/LGPL implementation is imported.
+
+Changes: translate the scalar kernel to private pure Fortran procedures using
+SciFort's `dp`; retain all coefficient digits and branch tests; replace C++
+pointer-based Horner loops with array-indexed loops; preserve the public
+`normal_ppf`/`normal_isf` parameter validation, affine transform and endpoint
+handling. The original SciFort CDF, SF and logarithmic tails are unchanged.
+No new dependency, public symbol, C ABI entry point or random state is added.
+
+Established Fortran candidates were considered using the
+[Fortran-code-on-GitHub catalog](https://beliavsky.github.io/Fortran-code-on-GitHub/).
+The inspected stdlib normal module at commit
+`7a87e3e23f44fb9ec3b4532d22c2c101950e4a6b` and fstats normal module at commit
+`97ace75f4e0640eb9ad6aca406246ffe4b0f0211` do not supply a direct inverse CDF.
+Their implementation code was not adopted. The exactly inspected SciPy kernel
+was chosen for its direct evaluation and documented provenance.
+
+Validation adds `test/test_normal_quantile.f90` and
+`validation/check_normal_quantile.py`, with original SciFort test code.
+References use SciPy 1.15.3 and independent 400-digit mpmath 1.3.0 inversion
+of the defining error-function identity. Upstream `TestNdtri` in
+`scipy/special/tests/test_ndtr.py` was inspected; equivalent median, endpoint
+and invalid-domain behavior is covered. See
+[validation and timing record](validation/normal_quantile_2026-11-22.md).
+The Fligner statistic reference in `test/test_hypothesis_extended.f90` was
+independently recomputed with 100-digit arithmetic after the kernel change
+exposed a few-ulp reference discrepancy; its tolerance was retained.
+
 ## 2026-11-18 - Quantile, KSone and fixed-branch censored methods
 
 The new callbacks, public likelihoods/NNLFs, fit overloads, exports, native
@@ -8354,9 +8399,10 @@ reference is separately attributed under CC BY 4.0.
   power-series and algebraic identities. `floor_real` implements the mathematical
   floor using real truncation and a negative-fraction correction, without an
   intermediate integer conversion; nonfinite values pass through unchanged.
-- `src/stats/normal.f90`: standard normal `erfc` identity, a
-  Mills-ratio asymptotic expansion for log-CDF tails, and safeguarded
-  bisection for quantiles.
+- `src/stats/normal.f90`: original SciFort standard normal `erfc` identity
+  and Mills-ratio asymptotic expansion for log-CDF tails. Quantiles now adapt
+  the SciPy/Cephes rational kernel documented above; their original
+  safeguarded bisection was replaced on 2026-11-22.
 - `src/stats/uniform.f90`: direct implementation from the mathematical
   definition.
 - `src/stats/exponential.f90`: direct implementation with stable

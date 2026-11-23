@@ -4,6 +4,10 @@ See the [local Windows results from 2026-11-22](scipy_speed_windows_20261122.md)
 for a readable snapshot with all nine timings, accuracy checks, environment
 details, and individual samples.
 
+That snapshot predates the direct inverse-normal kernel. See the
+[normal quantile update](../validation/normal_quantile_2026-11-22.md) for its
+validation and focused timing comparison; the historical snapshot is preserved.
+
 Run from the repository root in CMD or a Unix shell:
 
 ```text

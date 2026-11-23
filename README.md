@@ -144,6 +144,7 @@ are recorded in [code provenance](CODE_PROVENANCE.md) and
 | Package or source | Use in SciFort |
 | --- | --- |
 | [SciPy](https://github.com/scipy/scipy) | Selected optimization, differentiation, interpolation, sparse-solver, signal, spatial-transform, special-function, and FFTLog fast Hankel kernels. |
+| [Cephes](https://github.com/scipy/scipy/tree/v1.15.3/scipy/special/xsf/cephes) (Stephen L. Moshier, through SciPy) | Direct inverse-normal rational approximations for normal quantiles and inverse survival probabilities. |
 | [Chebfun](https://chebfun.org/) | AAA rational approximation, adapted through SciPy with Oxford/Chebfun notices retained. |
 | [Reference-LAPACK](https://github.com/Reference-LAPACK/lapack) | Real QZ and block reordering; complex QZ and support kernels for AAA poles, zeros, residues, and cleanup through 512 support points. |
 | [perazz/FITPACK](https://github.com/perazz/fitpack) (Paul Dierckx / Federico Perini) | Native `make_splrep` / [`make_splprep`](docs/interpolate_make_splprep.md) object construction with [periodic boundaries](docs/interpolate_periodic_constructors.md), scalar/parametric automatic-knot `splrep`/`splprep` smoothing, periodic scalar/parametric `splrep`/`splprep` fitting, plus spherical spline constraints and banded adaptive solvers for [scattered](docs/interpolate_smooth_sphere.md) and [rectangular](docs/interpolate_rect_sphere.md) data. |

@@ -56,6 +56,14 @@ normal_ppf(p [, loc, scale])
 normal_isf(p [, loc, scale])
 ```
 
+`normal_ppf` and `normal_isf` use direct piecewise rational approximations
+adapted from SciPy/Cephes, rather than iterative CDF inversion. Their scalar
+and elemental-array interfaces are unchanged. Probabilities must be in [0,1],
+with infinite quantiles at the endpoints; invalid probabilities or location/
+scale parameters return NaN. The inverse survival function preserves small
+upper-tail probabilities without first subtracting them from one. See the
+[accuracy and timing record](../validation/normal_quantile_2026-11-22.md).
+
 ## Uniform
 
 The support is `[loc, loc + scale]`.

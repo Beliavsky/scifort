@@ -140,7 +140,8 @@ program test_hypothesis_extended
     call check_close('levene median statistic', lev%statistic, 7.584952754501659_dp, 3.0e-15_dp)
     call check_close('levene median pvalue', lev%pvalue, 0.002431505967249677_dp, 8.0e-17_dp)
     flig = fligner(groups)
-    call check_close('fligner median statistic', flig%statistic, 10.803687663522238_dp, 3.0e-15_dp)
+    ! Independent 100-digit score/statistic evaluation at the binary64 rank probabilities.
+    call check_close('fligner median statistic', flig%statistic, 10.803687663522234_dp, 3.0e-15_dp)
     call check_close('fligner median pvalue', flig%pvalue, 0.00450826080004775_dp, 8.0e-17_dp)
     lev = levene(groups, 'mean')
     call check_close('levene mean statistic', lev%statistic, 7.905194483442054_dp, 3.0e-15_dp)
@@ -194,7 +195,7 @@ contains
     subroutine check_close(name, actual, expected_value, tolerance)
         character(len=*), intent(in) :: name !! check label printed on failure
         real(dp), intent(in) :: actual !! computed value
-        real(dp), intent(in) :: expected_value !! SciPy 1.17.0 reference value
+        real(dp), intent(in) :: expected_value !! SciPy or independent high-precision reference
         real(dp), intent(in) :: tolerance !! maximum absolute error
 
         if (ieee_is_nan(actual) .or. abs(actual - expected_value) > tolerance) then

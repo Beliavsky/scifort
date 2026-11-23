@@ -6,6 +6,10 @@ one full operation at the listed size, rather than one element. See the
 [benchmark guide](README_scipy_speed.md) for inputs, APIs, timing boundaries,
 and instructions for running the comparison.
 
+The normal quantile row below uses the original bisection kernel. See the
+[direct inverse-normal update](../validation/normal_quantile_2026-11-22.md)
+for its subsequent accuracy checks and much faster local timings.
+
 ## Median elapsed times
 
 Each median uses seven separately timed batches after warmup and calibration.

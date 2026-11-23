@@ -15,6 +15,16 @@ source. Full terms: [`LICENSES/lapack-BSD-3-Clause.txt`](LICENSES/lapack-BSD-3-C
 Exact files, hashes and modifications: [source catalog](docs/linalg_real_qz_sources.md).
 No new linked numerical dependency is required.
 
+## Inverse normal quantiles (SciPy / Cephes, BSD-3-Clause)
+
+The private inverse-normal kernel and polynomial evaluators in
+`src/stats/normal.f90` adapt SciPy v1.15.3 `ndtri.h`, `polevl.h` and `const.h`,
+including Stephen L. Moshier's Cephes coefficients. Full upstream license
+texts and notices are retained in
+[`LICENSES/scipy-cephes-ndtri-BSD-3-Clause.txt`](LICENSES/scipy-cephes-ndtri-BSD-3-Clause.txt).
+Exact version, files and modifications are recorded in
+[code provenance](CODE_PROVENANCE.md).
+
 ## Adaptive knot generation (SciPy, BSD-3-Clause)
 
 `src/interpolate_generate_knots.f90` adapts selection and knot-placement logic

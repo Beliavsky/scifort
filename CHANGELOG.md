@@ -1,3 +1,13 @@
+## 2026-11-22 - direct normal quantiles
+
+- Replace repeated CDF bisection with an attributed BSD-3-Clause SciPy/Cephes
+  rational inverse-normal kernel, preserving public Fortran and C APIs.
+- Add high-precision, subnormal-tail, branch-boundary, endpoint, invalid-input,
+  monotonicity, array-agreement and dependent regression validation.
+- Record the focused normal-quantile benchmark before and after the change.
+- Correct one Fligner statistic reference using independent high-precision
+  arithmetic, retaining its existing absolute tolerance.
+
 ## 2026-11-22 - SciFort and SciPy workload benchmarks
 
 - Add a standalone optimized benchmark harness for scalar/array normal
