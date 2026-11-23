@@ -1,0 +1,145 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_laplace_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_isf_f64",
+        "scifort_laplace_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_logcdf_f64",
+        "scifort_laplace_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_logpdf_f64",
+        "scifort_laplace_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_logsf_f64",
+        "scifort_laplace_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_laplace_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_laplace_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_sf_f64",
+        "scifort_laplace_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/laplace.f90",
+  "source_sha256": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57"
+}

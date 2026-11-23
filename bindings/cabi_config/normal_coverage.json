@@ -1,6 +1,6 @@
 {
   "generated_symbol_count": 10,
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "procedures": [
     {
       "procedure": "normal_cdf",

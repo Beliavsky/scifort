@@ -1,0 +1,144 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/lognormal.f90",
+  "module": "scifort_lognormal",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_lognormal",
+  "header_guard": "SCIFORT_GENERATED_LOGNORMAL_H",
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "loc": "location",
+    "scale": "scale, > 0",
+    "s": "shape, finite and > 0"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/lognormal_generated.f90",
+    "header": "include/scifort_generated_lognormal.h",
+    "coverage": "bindings/cabi_config/lognormal_coverage.json"
+  },
+  "functions": {
+    "lognormal_pdf": {
+      "existing_scalar_symbol": "scifort_lognormal_pdf_f64",
+      "vector_symbol": "scifort_lognormal_pdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_logpdf": {
+      "symbol": "scifort_lognormal_logpdf_f64",
+      "vector_symbol": "scifort_lognormal_logpdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_cdf": {
+      "existing_scalar_symbol": "scifort_lognormal_cdf_f64",
+      "vector_symbol": "scifort_lognormal_cdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_sf": {
+      "symbol": "scifort_lognormal_sf_f64",
+      "vector_symbol": "scifort_lognormal_sf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_logcdf": {
+      "symbol": "scifort_lognormal_logcdf_f64",
+      "vector_symbol": "scifort_lognormal_logcdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_logsf": {
+      "symbol": "scifort_lognormal_logsf_f64",
+      "vector_symbol": "scifort_lognormal_logsf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_ppf": {
+      "existing_scalar_symbol": "scifort_lognormal_ppf_f64",
+      "vector_symbol": "scifort_lognormal_ppf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    },
+    "lognormal_isf": {
+      "symbol": "scifort_lognormal_isf_f64",
+      "vector_symbol": "scifort_lognormal_isf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "s",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "s",
+        "scale"
+      ]
+    }
+  },
+  "excluded": {}
+}

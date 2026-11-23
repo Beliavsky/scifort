@@ -32,3 +32,9 @@ Fortran array declarations and documented dimensions; see the
 Wrapper implementations must preserve the numerical results of the Fortran
 core and must document language-specific choices involving shapes, missing
 values, exceptions, and memory ownership.
+
+The generated ABI also covers all eight PDF/log-PDF/CDF/SF/log-CDF/log-SF/PPF/ISF
+methods for exponential, logistic, Laplace, Cauchy, Weibull and lognormal.
+Together with normal, these provide bulk entry points for all 56 distribution
+array workloads in the SciPy timing comparison. See the
+[family manifests and regeneration commands](cabi_config/README.md#benchmark-distribution-families).

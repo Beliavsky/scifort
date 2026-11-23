@@ -1,0 +1,145 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_cauchy_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_isf_f64",
+        "scifort_cauchy_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_logcdf_f64",
+        "scifort_cauchy_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_logpdf_f64",
+        "scifort_cauchy_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_logsf_f64",
+        "scifort_cauchy_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_cauchy_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_cauchy_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_sf_f64",
+        "scifort_cauchy_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/cauchy.f90",
+  "source_sha256": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5"
+}

@@ -1,3 +1,12 @@
+## 2026-11-23 - benchmark-family C ABI coverage
+
+- Add bulk-only generation with explicit records of existing scalar symbols.
+- Expose eight bulk and five additional scalar probability methods for each of
+  exponential, logistic, Laplace, Cauchy, Weibull and lognormal (78 new symbols).
+- Add batch regeneration/checking with cross-manifest symbol/output validation.
+- Preserve all existing scalar and normal bulk symbols and contracts; test
+  native/scalar/bulk agreement, call-level errors, endpoints and C/C++ clients.
+
 ## 2026-11-23 - explicit-shape C ABI adapters
 
 - Permit interoperable explicit-shape arrays in the ABI rules and prefer thin

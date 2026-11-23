@@ -44,3 +44,36 @@ contract; do not remove that policy when updating its schema version.
 
 Future Python wrappers can provide defaults and array conventions over this
 ABI. They are not implemented by this initial generator.
+
+## Benchmark distribution families
+
+[manifests.json](manifests.json) lists all eight configured modules. Regenerate
+or check them together from the repository root:
+
+```text
+python tools/cabi_generator/generate.py bindings/cabi_config/manifests.json --batch
+python tools/cabi_generator/generate.py bindings/cabi_config/manifests.json --batch --check
+```
+
+The [exponential](exponential.json), [logistic](logistic.json), [Laplace](laplace.json),
+[Cauchy](cauchy.json), [Weibull](weibull.json), and [lognormal](lognormal.json)
+manifests each account for all eight public probability methods: PDF, log-PDF,
+CDF, SF, log-CDF, log-SF, PPF and ISF. Each emits five new scalar symbols and
+eight bulk symbols, for 78 new symbols across these six families. PDF/CDF/PPF
+scalar symbols remain in `src/c_api/api.f90`; `existing_scalar_symbol` records
+them without emitting duplicate implementations or declarations.
+
+Together with normal, all 56 distribution-array benchmark workloads now have
+bulk entry points. New bulk adapters use explicit-shape Fortran arrays and require
+valid non-NULL, nonoverlapping buffers even for zero-length calls. All use
+`size_t` counts and return status 0 on success or 1 for invalid lengths/uniform
+parameters, preserving output on call-level errors. Shapes (`c` for Weibull,
+`s` for lognormal) and scale must be finite and positive; location must be finite.
+Scalar calls retain native validation and NaN/endpoint behavior. The header for
+each family documents the complete call contract and is included by `scifort.h`.
+
+The focused family test compiles verbatim production scalar wrapper bodies
+separately to avoid building unrelated distribution modules. It compares generated
+bulk results to those scalar wrappers and direct native calls in checked and
+optimized builds. This bounds validation to the changed ABI integration; it does
+not replace full-project validation before release or merge.

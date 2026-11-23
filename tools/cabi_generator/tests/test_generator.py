@@ -128,6 +128,73 @@ contains
                 with self.assertRaisesRegex(ValueError, message):
                     generator.generate(config, self.root)
 
+    def test_bulk_only_records_existing_scalar_without_emitting_it(self):
+        policy = self.config["functions"]["affine"]
+        policy["existing_scalar_symbol"] = policy.pop("symbol")
+        artifacts = generator.generate(self.config, self.root)
+        self.assertNotIn("function example_affine(", artifacts[self.root / "api.f90"])
+        self.assertNotIn("double example_affine(", artifacts[self.root / "api.h"])
+        report = json.loads(artifacts[self.root / "coverage.json"])
+        self.assertEqual(report["generated_symbol_count"], 1)
+        row = report["procedures"][0]
+        self.assertEqual(row["existing_scalar_symbol"], "example_affine")
+        self.assertEqual(row["symbols"], ["example_affine_array"])
+        policy["symbol"] = "other_scalar"
+        with self.assertRaisesRegex(ValueError, "mutually exclusive"):
+            generator.generate(self.config, self.root)
+        del policy["symbol"]
+        policy["existing_scalar_symbol"] = policy["vector_symbol"]
+        with self.assertRaisesRegex(ValueError, "cannot also be generated"):
+            generator.generate(self.config, self.root)
+
+    def test_batch_validates_all_manifests_and_collisions(self):
+        config = self.root / "config.json"
+        config.write_text(json.dumps(self.config))
+        batch = self.root / "batch.json"
+        batch.write_text(json.dumps(["config.json"]))
+        self.assertEqual(generator.collect(batch, self.root, True),
+                         generator.generate(self.config, self.root))
+        batch.write_text(json.dumps(["config.json", "config.json"]))
+        with self.assertRaisesRegex(ValueError, "duplicate manifest"):
+            generator.collect(batch, self.root, True)
+        second = copy.deepcopy(self.config)
+        second["outputs"] = dict(fortran="second.f90", header="second.h", coverage="second.json")
+        (self.root / "second_config.json").write_text(json.dumps(second))
+        batch.write_text(json.dumps(["config.json", "second_config.json"]))
+        with self.assertRaisesRegex(ValueError, "duplicate generated C symbol"):
+            generator.collect(batch, self.root, True)
+        second["functions"]["affine"]["symbol"] = "second_affine"
+        second["functions"]["affine"]["vector_symbol"] = "second_array"
+        second["outputs"]["header"] = "arithmetic.f90"
+        (self.root / "second_config.json").write_text(json.dumps(second))
+        with self.assertRaisesRegex(ValueError, "overwrite"):
+            generator.collect(batch, self.root, True)
+        batch.write_text('{}')
+        with self.assertRaisesRegex(ValueError, "nonempty JSON list"):
+            generator.collect(batch, self.root, True)
+
+    def test_batch_cli_is_read_only_on_drift_and_later_invalid_manifest(self):
+        config = self.root / "config.json"
+        config.write_text(json.dumps(self.config))
+        batch = self.root / "batch.json"
+        batch.write_text(json.dumps(["config.json"]))
+        command = [sys.executable, HERE.parent / "generate.py", batch,
+                   "--batch", "--root", self.root]
+        run(command, self.root)
+        run([*command, "--check"], self.root)
+        header = self.root / "api.h"
+        header.write_text("sentinel")
+        result = subprocess.run([str(x) for x in [*command, "--check"]],
+                                capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("stale", result.stderr)
+        self.assertEqual(header.read_text(), "sentinel")
+        (self.root / "invalid.json").write_text('{}')
+        batch.write_text(json.dumps(["config.json", "invalid.json"]))
+        result = subprocess.run([str(x) for x in command], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(header.read_text(), "sentinel")
+
     def test_explicit_shape_is_the_default_for_new_bulk_wrappers(self):
         del self.config["functions"]["affine"]["array_style"]
         legacy = generator.generate(self.config, self.root)[self.root / "api.f90"]

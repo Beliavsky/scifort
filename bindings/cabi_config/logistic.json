@@ -1,0 +1,127 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/logistic.f90",
+  "module": "scifort_logistic",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_logistic",
+  "header_guard": "SCIFORT_GENERATED_LOGISTIC_H",
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "loc": "location",
+    "scale": "scale, > 0"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/logistic_generated.f90",
+    "header": "include/scifort_generated_logistic.h",
+    "coverage": "bindings/cabi_config/logistic_coverage.json"
+  },
+  "functions": {
+    "logistic_pdf": {
+      "existing_scalar_symbol": "scifort_logistic_pdf_f64",
+      "vector_symbol": "scifort_logistic_pdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_logpdf": {
+      "symbol": "scifort_logistic_logpdf_f64",
+      "vector_symbol": "scifort_logistic_logpdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_cdf": {
+      "existing_scalar_symbol": "scifort_logistic_cdf_f64",
+      "vector_symbol": "scifort_logistic_cdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_sf": {
+      "symbol": "scifort_logistic_sf_f64",
+      "vector_symbol": "scifort_logistic_sf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_logcdf": {
+      "symbol": "scifort_logistic_logcdf_f64",
+      "vector_symbol": "scifort_logistic_logcdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_logsf": {
+      "symbol": "scifort_logistic_logsf_f64",
+      "vector_symbol": "scifort_logistic_logsf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_ppf": {
+      "existing_scalar_symbol": "scifort_logistic_ppf_f64",
+      "vector_symbol": "scifort_logistic_ppf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "logistic_isf": {
+      "symbol": "scifort_logistic_isf_f64",
+      "vector_symbol": "scifort_logistic_isf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    }
+  },
+  "excluded": {}
+}

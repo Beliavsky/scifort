@@ -7,6 +7,12 @@
 #include <stddef.h>
 #include "scifort_generated_normal.h"
 #include "scifort_generated_linalg.h"
+#include "scifort_generated_exponential.h"
+#include "scifort_generated_logistic.h"
+#include "scifort_generated_laplace.h"
+#include "scifort_generated_cauchy.h"
+#include "scifort_generated_weibull.h"
+#include "scifort_generated_lognormal.h"
 
 
 #ifdef __cplusplus

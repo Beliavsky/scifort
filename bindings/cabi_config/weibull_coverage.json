@@ -1,0 +1,153 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_weibull_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_isf_f64",
+        "scifort_weibull_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_logcdf_f64",
+        "scifort_weibull_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_logpdf_f64",
+        "scifort_weibull_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_logsf_f64",
+        "scifort_weibull_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_weibull_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_weibull_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_sf_f64",
+        "scifort_weibull_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/weibull.f90",
+  "source_sha256": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585"
+}

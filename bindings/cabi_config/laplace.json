@@ -1,0 +1,127 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/laplace.f90",
+  "module": "scifort_laplace",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_laplace",
+  "header_guard": "SCIFORT_GENERATED_LAPLACE_H",
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "loc": "location",
+    "scale": "scale, > 0"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/laplace_generated.f90",
+    "header": "include/scifort_generated_laplace.h",
+    "coverage": "bindings/cabi_config/laplace_coverage.json"
+  },
+  "functions": {
+    "laplace_pdf": {
+      "existing_scalar_symbol": "scifort_laplace_pdf_f64",
+      "vector_symbol": "scifort_laplace_pdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_logpdf": {
+      "symbol": "scifort_laplace_logpdf_f64",
+      "vector_symbol": "scifort_laplace_logpdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_cdf": {
+      "existing_scalar_symbol": "scifort_laplace_cdf_f64",
+      "vector_symbol": "scifort_laplace_cdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_sf": {
+      "symbol": "scifort_laplace_sf_f64",
+      "vector_symbol": "scifort_laplace_sf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_logcdf": {
+      "symbol": "scifort_laplace_logcdf_f64",
+      "vector_symbol": "scifort_laplace_logcdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_logsf": {
+      "symbol": "scifort_laplace_logsf_f64",
+      "vector_symbol": "scifort_laplace_logsf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_ppf": {
+      "existing_scalar_symbol": "scifort_laplace_ppf_f64",
+      "vector_symbol": "scifort_laplace_ppf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "laplace_isf": {
+      "symbol": "scifort_laplace_isf_f64",
+      "vector_symbol": "scifort_laplace_isf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    }
+  },
+  "excluded": {}
+}

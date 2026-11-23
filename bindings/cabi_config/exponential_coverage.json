@@ -1,0 +1,145 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_exponential_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_isf_f64",
+        "scifort_exponential_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_logcdf_f64",
+        "scifort_exponential_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_logpdf_f64",
+        "scifort_exponential_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_logsf_f64",
+        "scifort_exponential_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_exponential_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_exponential_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_sf_f64",
+        "scifort_exponential_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/exponential.f90",
+  "source_sha256": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c"
+}

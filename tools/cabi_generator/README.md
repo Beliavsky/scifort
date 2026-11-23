@@ -6,7 +6,7 @@ argument policies come from a JSON manifest. Its independent arithmetic fixture
 does not depend on SciFort. The intended extraction boundary is this directory;
 SciFort configuration and integration artifacts remain in the parent project.
 
-Version 0.2 supports private-by-default modules with explicit public exports,
+Version 0.3 supports private-by-default modules with explicit public exports,
 directly defined functions with `result(...)`, explicit scalar `real(kind)`
 argument/result declarations, and `intent(in)` inputs. Elemental functions can
 also receive a bulk wrapper with one varying input and uniform scalar parameters.
@@ -28,10 +28,8 @@ From the SciFort repository root, in CMD:
 
 ```text
 python -m pip install -r tools/cabi_generator/requirements.txt
-python tools/cabi_generator/generate.py bindings/cabi_config/normal.json
-python tools/cabi_generator/generate.py bindings/cabi_config/normal.json --check
-python tools/cabi_generator/generate.py bindings/cabi_config/linalg.json
-python tools/cabi_generator/generate.py bindings/cabi_config/linalg.json --check
+python tools/cabi_generator/generate.py bindings/cabi_config/manifests.json --batch
+python tools/cabi_generator/generate.py bindings/cabi_config/manifests.json --batch --check
 ```
 
 The configuration path is relative to the current directory. `--root PATH`
@@ -42,6 +40,12 @@ line endings normalized to LF, so Windows and Unix checkouts agree. `--check`
 exits nonzero if any artifact
 is missing or differs, and never writes files. Invalid manifests and unsupported
 selected interfaces are rejected before outputs are written.
+
+`--batch` reads a nonempty JSON list of manifest paths relative to the list file.
+It validates every manifest and rejects duplicate outputs/symbols or outputs that
+would overwrite any source/configuration before writing. `--check` works with
+single manifests and batches and never changes artifacts. File-system failures
+during writing are not transactional; correct the failure and regenerate.
 
 ## Configuration and contract
 
@@ -60,13 +64,24 @@ for schema version 2 with explicit-shape adapters. The top-level fields are:
 | `subroutines` | Optional mapping of assumed-shape subroutines to explicit-shape adapters |
 | `excluded` | Every remaining explicit public export, with a reason |
 
-Each function policy requires `symbol`. `vector_symbol` and `array_argument`
-request a bulk entry point for an elemental function. `finite` and `positive`
+A function policy requires `symbol` or `vector_symbol` (or both).
+`vector_symbol` and `array_argument` request a bulk entry point for an elemental function. `finite` and `positive`
 list uniform parameters checked before any output is changed. These constraints
 are explicit decisions, not guesses based on argument names. Native optional
 arguments require `optional_policy: "required"`: callers must supply them at
 the C boundary, and no defaults are inferred from procedure implementations.
 Scalar wrappers delegate numerical validation to the native procedure.
+
+A function policy may provide `symbol` for a generated scalar wrapper,
+`vector_symbol` for a generated bulk wrapper, or both. At least one is required.
+For bulk-only generation, `existing_scalar_symbol` optionally records a scalar
+entry point maintained elsewhere. It is mutually exclusive with `symbol`, is
+never emitted or redeclared, and does not contribute to `generated_symbol_count`.
+The coverage record separates this existing symbol from generated `symbols`.
+This is an explicit compatibility declaration, not automatic discovery or
+signature verification of an external ABI; integration tests must verify it.
+Existing symbols cannot collide with symbols generated in the same batch.
+See the [exponential manifest](../../bindings/cabi_config/exponential.json).
 
 For elemental bulk functions, `array_style` selects `explicit` or `pointer`.
 Schema version 2 defaults to `explicit`; version 1 retains the original `pointer`
@@ -148,14 +163,21 @@ endpoints, tails, NaN/infinity, invalid scales, scalar/bulk agreement, and
 independent standard-library references. It also checks null/empty/oversized
 bulk calls and output preservation.
 
-Windows validation of version 0.2 on 2026-11-23 passed all 17 focused tests
-(15 reusable tests and two SciFort integration tests with multiple methods/input cases), using
+The family integration test additionally compiles unchanged production scalar
+wrappers for the seven benchmark families, plus direct native-call oracles.
+It checks 53 scalar/bulk pairs (the five generated normal methods and all eight
+methods of the six added families), endpoints, tails, invalid uniform parameters,
+empty/oversized calls, output preservation, C clients and C++ declarations.
+The three original normal bulk methods remain unchanged.
+
+Windows validation of version 0.3 on 2026-11-23 passed 21 focused tests
+(18 reusable tests and three SciFort integration tests), using
 Python 3.13.3, fparser 0.2.5, and GNU Fortran/GCC/G++ 17.0.0 20260510
 (experimental). The commands above and the generator's `--check` command were
 run with `build/cabi-generator-venv/Scripts/python.exe`. Other operating systems
 and compilers have not yet been validated for this generator.
 
-These focused checks cover this additive normal-family interface change; the
+These focused checks cover the generator and configured ABI integrations; the
 numerical implementations, existing C symbols, and global build configuration
 are unchanged. Run the full project suite before release or merge as required
 by the repository rules.

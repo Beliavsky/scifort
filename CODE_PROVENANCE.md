@@ -1,3 +1,13 @@
+## 2026-11-23 - Bulk-only and benchmark-family C ABI generation
+
+The bulk-only policy, batch orchestration, six distribution manifests and family
+integration tests are original MIT-licensed interface/tooling code. Generated
+wrappers delegate to existing SciFort distribution implementations without
+copying or replacing numerical algorithms; their existing provenance remains
+applicable. The unchanged fparser 0.2.5 dependency and retained license described
+below still apply. Existing production scalar wrappers are compiled verbatim in
+the focused integration test, rather than reimplemented as reference wrappers.
+
 ## 2026-11-23 - Explicit-shape C ABI adapters
 
 `tools/cabi_generator/explicit_arrays.py` is original MIT-licensed generation
