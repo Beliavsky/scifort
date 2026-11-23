@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "output_directory": "bindings/python/scifort",
+  "groups": {
+    "normal": {
+      "manifest": "bindings/cabi_config/normal.json",
+      "prefix": "normal_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {
+        "normal_pdf": {
+          "symbol": "scifort_normal_pdf_f64",
+          "vector_symbol": "scifort_normal_pdf_vec_f64",
+          "array_argument": "x",
+          "optional_policy": "required",
+          "finite": [
+            "loc",
+            "scale"
+          ],
+          "positive": [
+            "scale"
+          ],
+          "array_style": "pointer"
+        },
+        "normal_cdf": {
+          "symbol": "scifort_normal_cdf_f64",
+          "vector_symbol": "scifort_normal_cdf_vec_f64",
+          "array_argument": "x",
+          "optional_policy": "required",
+          "finite": [
+            "loc",
+            "scale"
+          ],
+          "positive": [
+            "scale"
+          ],
+          "array_style": "pointer"
+        },
+        "normal_ppf": {
+          "symbol": "scifort_normal_ppf_f64",
+          "vector_symbol": "scifort_normal_ppf_vec_f64",
+          "array_argument": "p",
+          "optional_policy": "required",
+          "finite": [
+            "loc",
+            "scale"
+          ],
+          "positive": [
+            "scale"
+          ],
+          "array_style": "pointer"
+        }
+      }
+    },
+    "exponential": {
+      "manifest": "bindings/cabi_config/exponential.json",
+      "prefix": "exponential_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "logistic": {
+      "manifest": "bindings/cabi_config/logistic.json",
+      "prefix": "logistic_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "laplace": {
+      "manifest": "bindings/cabi_config/laplace.json",
+      "prefix": "laplace_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "cauchy": {
+      "manifest": "bindings/cabi_config/cauchy.json",
+      "prefix": "cauchy_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "weibull": {
+      "manifest": "bindings/cabi_config/weibull.json",
+      "prefix": "weibull_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "lognormal": {
+      "manifest": "bindings/cabi_config/lognormal.json",
+      "prefix": "lognormal_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    }
+  }
+}

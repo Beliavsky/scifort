@@ -1,3 +1,12 @@
+## 2026-11-23 - generated Python distribution interface
+
+- Generate a NumPy/ctypes interface from C manifests and explicit Python defaults
+  for eight methods across seven distribution families.
+- Add scalar and same-shape array calls, validated output buffers, status handling,
+  installable Python packaging and a focused cached development shared-library build.
+- Add 56 practical Python-to-SciPy workloads with validation and ratio summaries;
+  keep their reports separate from native-throughput measurements.
+
 ## 2026-11-23 - benchmark-family C ABI coverage
 
 - Add bulk-only generation with explicit records of existing scalar symbols.

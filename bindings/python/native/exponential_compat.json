@@ -1,0 +1,82 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_cdf_f64"
+      ]
+    },
+    {
+      "procedure": "exponential_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "exponential_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "exponential_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "exponential_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "exponential_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_exponential_ppf_f64"
+      ]
+    },
+    {
+      "procedure": "exponential_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/exponential.f90",
+  "source_sha256": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c"
+}

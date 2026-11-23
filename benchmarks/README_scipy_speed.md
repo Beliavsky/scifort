@@ -179,3 +179,24 @@ python benchmarks/test_compare_scipy.py
 
 - [SciPy distribution methods and lognormal parameterization](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html)
 - [SciPy Cholesky solves](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.cho_solve.html)
+
+## Python calling SciFort versus Python calling SciPy
+
+The separate `compare_python_scipy.py` harness uses the generated NumPy/ctypes
+interface for all 56 distribution-array workloads. Both backends are called from
+Python and allocate outputs; validation, dispatch, allocation and FFI overhead
+are included. SciPy uses public `scipy.stats` methods, including normal CDF/PPF.
+This measures a different boundary from the original native-throughput results;
+keep the two sets of reports separate.
+
+```text
+python benchmarks\compare_python_scipy.py --quick --check-only
+python benchmarks\compare_python_scipy.py
+```
+
+Reports, including automatic ratio summaries, are written to
+`build/python-scipy-speed/results.json` and `results.md`. The native library is
+built automatically with GNU Fortran and cached outside timings. NumPy and SciPy
+are required, but installation of the local Python package is optional for this
+repository script. See [Python interface](../bindings/python/README.md) for
+installation, memory contracts, build limitations and additional options.

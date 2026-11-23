@@ -1,0 +1,85 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_cdf_f64"
+      ]
+    },
+    {
+      "procedure": "weibull_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "weibull_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "weibull_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "weibull_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "c",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "weibull_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_weibull_ppf_f64"
+      ]
+    },
+    {
+      "procedure": "weibull_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/weibull.f90",
+  "source_sha256": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585"
+}

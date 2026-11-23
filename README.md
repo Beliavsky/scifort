@@ -115,8 +115,8 @@ Additional capabilities are labeled **SciFort extension**.
 An experimental C ABI is declared in [include/scifort.h](include/scifort.h).
 It provides distribution entry points using interoperable types, explicit
 lengths, caller-owned output memory, and integer status codes. Its coverage
-is smaller than the native Fortran API. Python, R, MATLAB, and Octave wrappers
-are planned; see [language bindings](bindings/README.md).
+is smaller than the native Fortran API. A generated Python interface covers seven distribution families;
+R, MATLAB, and Octave wrappers are planned; see [language bindings](bindings/README.md).
 
 A [C ABI generator prototype](tools/cabi_generator/README.md) now produces
 scalar and bulk wrappers for all eight probability methods of the seven

@@ -1,3 +1,20 @@
+## 2026-11-23 - Generated NumPy/ctypes interface
+
+`tools/cabi_generator/generate_python.py`, `python_runtime.py`, the Python policy,
+package glue, focused build script, tests and practical Python timing harness are
+original MIT-licensed interface/tooling code. The generated supplementary adapters
+call existing SciFort procedures; no numerical algorithms are copied or replaced.
+They are a separate development-library build and are not linked with the full
+manual C ABI. All existing numerical provenance and parser notices still apply.
+
+The runtime uses external NumPy for typed, aligned, contiguous caller-owned
+buffers and Python's standard-library ctypes for C calls. The implementation
+follows the documented [NumPy require](https://numpy.org/doc/2.2/reference/generated/numpy.require.html),
+[ndarray ctypes](https://numpy.org/doc/2.2/reference/generated/numpy.ndarray.ctypes.html)
+and [Python ctypes](https://docs.python.org/3/library/ctypes.html) interfaces.
+No upstream Python or NumPy implementation code is vendored or adapted. SciPy
+is an optional external comparison/test dependency, not part of the runtime.
+
 ## 2026-11-23 - Bulk-only and benchmark-family C ABI generation
 
 The bulk-only policy, batch orchestration, six distribution manifests and family

@@ -3,7 +3,7 @@
 Language bindings are intentionally not implemented as separate numerical
 libraries. They will wrap the stable C ABI declared in `include/scifort.h`.
 
-Planned layout:
+Binding directories (Python implemented; others planned):
 
 ```text
 bindings/python/
@@ -19,9 +19,9 @@ status codes. Generated normal-distribution scalar and bulk entry points now
 also cover SF, log-PDF, log-CDF, log-SF, and ISF; see the
 [generator configuration and coverage](cabi_config/README.md). Existing PDF,
 CDF, and PPF symbols retain their original implementations and behavior.
-For other families, survival, logarithmic, and inverse-survival methods remain
-native-Fortran-only, as do special-function, random-state, random-variate, and
-likelihood entry points.
+Outside the seven generated families listed below, survival, logarithmic and
+inverse-survival methods remain native-Fortran-only, as do special-function,
+random-state, random-variate and likelihood entry points.
 
 The generator also provides an explicit-shape C adapter for the native
 assumed-shape lower-triangular solver, `scifort_solve_lower_f64`. It uses ordinary
@@ -38,3 +38,9 @@ methods for exponential, logistic, Laplace, Cauchy, Weibull and lognormal.
 Together with normal, these provide bulk entry points for all 56 distribution
 array workloads in the SciPy timing comparison. See the
 [family manifests and regeneration commands](cabi_config/README.md#benchmark-distribution-families).
+
+A generated [NumPy/ctypes Python interface](python/README.md) now exposes these
+seven families, with scalar calls, same-shape arrays, explicit defaults and optional
+caller-owned output memory. The focused development build and practical
+Python-to-SciPy timing commands are documented there. R, MATLAB and Octave wrappers
+remain planned.

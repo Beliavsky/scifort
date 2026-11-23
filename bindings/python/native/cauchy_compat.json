@@ -1,0 +1,82 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_cdf_f64"
+      ]
+    },
+    {
+      "procedure": "cauchy_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "cauchy_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "cauchy_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "cauchy_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "cauchy_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_cauchy_ppf_f64"
+      ]
+    },
+    {
+      "procedure": "cauchy_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/cauchy.f90",
+  "source_sha256": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5"
+}

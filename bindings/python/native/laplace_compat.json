@@ -1,0 +1,82 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_cdf_f64"
+      ]
+    },
+    {
+      "procedure": "laplace_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "laplace_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "laplace_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "laplace_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "laplace_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_laplace_ppf_f64"
+      ]
+    },
+    {
+      "procedure": "laplace_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/laplace.f90",
+  "source_sha256": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57"
+}

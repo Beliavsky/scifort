@@ -1,0 +1,85 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "s",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "lognormal_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_lognormal_cdf_f64"
+      ]
+    },
+    {
+      "procedure": "lognormal_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "lognormal_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "lognormal_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "lognormal_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "s",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "lognormal_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_lognormal_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "s",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "lognormal_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_lognormal_ppf_f64"
+      ]
+    },
+    {
+      "procedure": "lognormal_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/lognormal.f90",
+  "source_sha256": "14ba6ae77569d7d4c0711cb9d66e73183d187407e3c06300c09a9488de8b9274"
+}

@@ -135,7 +135,8 @@ generics, reexports, derived types, callbacks, array-valued functions, and other
 unsupported interfaces cannot silently become scalar wrappers. This is not yet
 a whole-project scanner or a full Fortran semantic resolver. Default-public
 modules are rejected because complete reexport discovery needs more analysis.
-There is no Python binding generation in this first version.
+Python scalar/elemental binding generation is described below; other interface
+patterns are not yet exposed through Python.
 
 ## Checks
 
@@ -195,3 +196,29 @@ compatibility decisions belong in manifests and integration tests. fparser is
 an external build tool, not vendored code or a linked numerical dependency;
 see [provenance](../../CODE_PROVENANCE.md) and its retained
 [license text](../../LICENSES/fparser-BSD-3-Clause.txt).
+
+## Generated Python layer
+
+`generate_python.py` reads a separate Python policy referencing the same C
+manifests. The policy maps native procedure prefixes to Python method names,
+provides explicit finite numeric defaults and identifies any existing excluded
+C functions. Native scalar signatures still come from fparser; parameter defaults
+are never inferred. Each selected function needs scalar and bulk C symbols.
+
+```text
+python tools/cabi_generator/generate_python.py bindings/cabi_config/python.json
+python tools/cabi_generator/generate_python.py bindings/cabi_config/python.json --check
+```
+
+It emits `_generated.py`, a copy of the reusable `python_runtime.py`, and
+supplementary Fortran adapters for the focused standalone development build.
+The runtime depends on NumPy and Python ctypes, not fparser or SciFort-specific
+module names. Generated code exposes a generic `API` owner; SciFort's package
+exports it as `Scifort`. All numerical functions remain native. Both scalar and
+array paths, alignment, byte order, output aliasing, statuses and empty inputs
+are tested in the [Python integration](../../bindings/python/README.md).
+
+The supplements must not be linked alongside a full C ABI object defining the
+same symbols. They let a small distribution-only library build without compiling
+unrelated modules. The regular SciFort source and C ABI remain unchanged. Python
+policy/runtime and supplement outputs have their own read-only drift check.

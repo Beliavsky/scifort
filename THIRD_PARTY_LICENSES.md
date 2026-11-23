@@ -5,6 +5,15 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## Optional Python runtime and comparison dependencies
+
+The generated Python interface depends on external NumPy for array storage and
+validation. NumPy's core is [BSD-3-Clause licensed](https://numpy.org/doc/2.2/license.html).
+NumPy is installed separately and is not vendored or bundled in SciFort's Python
+wheel. Its distribution retains its own notices. SciPy is an optional external
+testing/benchmark dependency and is not imported by the runtime interface.
+No NumPy or SciPy implementation code is copied into the Python binding.
+
 ## C ABI generator parser (fparser, BSD-3-Clause)
 
 The optional developer tool `tools/cabi_generator` uses the external Python

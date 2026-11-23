@@ -42,8 +42,9 @@ version-2 elemental manifests default to explicit-shape bulk wrappers. The
 normal manifest pins `array_style: "pointer"` to retain its existing NULL-buffer
 contract; do not remove that policy when updating its schema version.
 
-Future Python wrappers can provide defaults and array conventions over this
-ABI. They are not implemented by this initial generator.
+The generated [Python interface](../python/README.md) supplies explicit defaults
+and array conventions over this ABI. [python.json](python.json) configures it;
+its generation and read-only check are separate from the C manifest batch.
 
 ## Benchmark distribution families
 

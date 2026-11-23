@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: MIT
+"""Reusable runtime for generated scalar/elemental binary64 C interfaces."""
+from __future__ import annotations
+
+import ctypes as C
+import os
+from pathlib import Path
+
+import numpy as np
+
+
+class Distribution:
+    """Own typed ctypes functions; input/output arrays remain alive during calls."""
+    _specs = {}
+
+    def __init__(self, library):
+        self._library = library
+        self._functions = {}
+        for name, spec in self._specs.items():
+            scalar = getattr(library, spec['scalar'])
+            scalar.argtypes = [C.c_double] * len(spec['arguments'])
+            scalar.restype = C.c_double
+            bulk = getattr(library, spec['bulk'])
+            bulk.argtypes = [C.c_size_t, *[C.c_void_p if a == spec['array'] else C.c_double
+                                         for a in spec['arguments']],
+                             C.c_void_p, C.POINTER(C.c_int)]
+            bulk.restype = None
+            self._functions[name] = (scalar, bulk)
+
+    @staticmethod
+    def _real_array(value, label):
+        array = np.asarray(value)
+        if array.dtype.kind not in 'biuf':
+            raise TypeError(f'{label} must contain real numbers')
+        return array
+
+    def _evaluate(self, name, value, parameters, out):
+        spec = self._specs[name]
+        params = []
+        for label, parameter in zip(spec['parameters'], parameters):
+            array = self._real_array(parameter, label)
+            if array.ndim:
+                raise TypeError(f'{label} must be scalar; broadcasting is not supported')
+            params.append(float(array))
+        original = self._real_array(value, spec['array'])
+        scalar, bulk = self._functions[name]
+        if original.ndim == 0:
+            if out is not None:
+                raise ValueError('out is supported only for array inputs')
+            values = dict(zip(spec['parameters'], params), **{spec['array']: float(original)})
+            return scalar(*(values[a] for a in spec['arguments']))
+        # Require alignment as well as contiguity; arbitrary ndarray views can be unaligned.
+        inputs = np.require(original, dtype=np.float64, requirements=['C', 'A'])
+        if out is None:
+            output = np.empty(inputs.shape, dtype=np.float64)
+        else:
+            if not isinstance(out, np.ndarray) or out.dtype != np.dtype(np.float64):
+                raise TypeError('out must be a native-endian float64 ndarray')
+            if (out.shape != inputs.shape or not out.flags.c_contiguous
+                    or not out.flags.aligned or not out.flags.writeable):
+                raise ValueError('out must match input shape and be contiguous, aligned and writable')
+            if np.may_share_memory(original, out):
+                raise ValueError('input and out must not overlap')
+            output = out
+        # Empty ndarray pointers need not be non-NULL; provide valid disjoint scratch buffers.
+        xbuffer = inputs if inputs.size else np.empty(1, dtype=np.float64)
+        ybuffer = output if output.size else np.empty(1, dtype=np.float64)
+        values = dict(zip(spec['parameters'], params),
+                      **{spec['array']: xbuffer.ctypes.data_as(C.c_void_p)})
+        status = C.c_int(-1)
+        bulk(inputs.size, *(values[a] for a in spec['arguments']),
+             ybuffer.ctypes.data_as(C.c_void_p), C.byref(status))
+        if status.value == 1:
+            raise ValueError('C ABI rejected the length or uniform parameters')
+        if status.value:
+            raise RuntimeError(f'C ABI returned unexpected status {status.value}')
+        return output
+
+
+class Library:
+    """Load a caller-selected shared library; never search the working directory."""
+    def __init__(self, path, *, dll_directories=()):
+        library_path = Path(path).expanduser().resolve(strict=True)
+        # add_dll_directory handles must remain live through library loading on Windows.
+        handles = []
+        try:
+            if os.name == 'nt':
+                handles = [os.add_dll_directory(str(Path(p).resolve(strict=True)))
+                           for p in dll_directories]
+            self._library = C.CDLL(str(library_path))
+        finally:
+            for handle in handles:
+                handle.close()
+        self.path = library_path

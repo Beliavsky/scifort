@@ -1,0 +1,85 @@
+{
+  "generated_symbol_count": 6,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_cdf_f64",
+        "scifort_normal_cdf_vec_f64"
+      ]
+    },
+    {
+      "procedure": "normal_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "normal_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "normal_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "normal_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_pdf_f64",
+        "scifort_normal_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_ppf_f64",
+        "scifort_normal_ppf_vec_f64"
+      ]
+    },
+    {
+      "procedure": "normal_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/normal.f90",
+  "source_sha256": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb"
+}

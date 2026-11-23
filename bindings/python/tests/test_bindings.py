@@ -1,0 +1,155 @@
+# SPDX-License-Identifier: MIT
+"""Test the generated package against SciPy and checked/optimized native libraries."""
+import ctypes as C
+import inspect
+import math
+import os
+from pathlib import Path
+import shutil
+import sys
+import unittest
+
+import numpy as np
+from scipy import stats
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+from build_library import build, FAMILIES
+from scifort import Scifort
+
+SCIPY_NAMES = dict(normal='norm', exponential='expon', weibull='weibull_min', lognormal='lognorm')
+METHODS = ('pdf', 'logpdf', 'cdf', 'sf', 'logcdf', 'logsf', 'ppf', 'isf')
+
+
+class BindingTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not shutil.which('gfortran'):
+            raise unittest.SkipTest('gfortran is required')
+        cls.apis = []
+        for checked in (True, False):
+            path, metadata = build(checked=checked)
+            cls.apis.append((checked, Scifort(path, dll_directories=metadata['dll_directories'])))
+
+    def test_all_methods_scalar_array_and_scipy_agreement(self):
+        for checked, api in self.apis:
+            for family in FAMILIES:
+                group = getattr(api, family)
+                scipy_group = getattr(stats, SCIPY_NAMES.get(family, family))
+                shape = (1.7,) if family == 'weibull' else ((.8,) if family == 'lognormal' else ())
+                for method in METHODS:
+                    with self.subTest(checked=checked, family=family, method=method):
+                        func, reference = getattr(group, method), getattr(scipy_group, method)
+                        values = (np.array([0., 1e-12, .1, .5, .9, 1-1e-12, 1., -.1, 1.1, np.nan])
+                                  if method in ('ppf', 'isf') else
+                                  np.array([-np.inf, -8., -.1, 0., .25, 1., 8., 40., np.inf, np.nan]))
+                        actual = func(values, *shape, loc=.25, scale=1.5)
+                        with np.errstate(invalid='ignore'):
+                            expected = reference(values, *shape, loc=.25, scale=1.5)
+                        # SciPy 1.15.3 returns NaN for Weibull density at +inf.
+                        # Preserve SciFort's established mathematical endpoint limits.
+                        if family == 'weibull' and method in ('pdf', 'logpdf'):
+                            endpoint = np.isposinf(values)
+                            limit = 0. if method == 'pdf' else -np.inf
+                            np.testing.assert_array_equal(actual[endpoint], limit)
+                            expected[endpoint] = limit
+                        # Density/probability comparisons use relative errors, including small tails.
+                        if method in ('pdf', 'cdf', 'sf'):
+                            np.testing.assert_allclose(actual, expected, rtol=4e-12, atol=0, equal_nan=True)
+                        else:
+                            np.testing.assert_allclose(actual, expected, rtol=4e-12, atol=3e-13, equal_nan=True)
+                        scalars = [func(float(x), *shape, loc=.25, scale=1.5) for x in values]
+                        np.testing.assert_array_equal(actual, scalars)
+                        output = np.empty_like(actual)
+                        self.assertIs(func(values, *shape, loc=.25, scale=1.5, out=output), output)
+                        np.testing.assert_array_equal(actual, output)
+                        self.assertIsInstance(func(.5, *shape), float)
+                        np.testing.assert_allclose(func(.5, *shape), reference(.5, *shape),
+                                                   rtol=4e-12, atol=3e-13)
+
+    def test_shapes_conversion_alignment_and_empty_inputs(self):
+        for _, api in self.apis:
+            func = api.normal.cdf
+            for x in ([0, 1, 2], np.arange(12).reshape(3, 4)[:, ::2],
+                      np.arange(6, dtype=np.float32).reshape(2, 3),
+                      np.array([1., 2.], dtype='>f8'), np.zeros((2, 0, 3))):
+                y = func(x)
+                self.assertEqual(y.shape, np.shape(x))
+                self.assertEqual(y.dtype, np.float64)
+                np.testing.assert_allclose(y, stats.norm.cdf(x), rtol=3e-13, atol=0)
+            unaligned = np.ndarray((2,), dtype=np.float64, buffer=bytearray(17), offset=1)
+            unaligned[:] = [0., 1.]
+            self.assertFalse(unaligned.flags.aligned)
+            np.testing.assert_allclose(func(unaligned), stats.norm.cdf(unaligned), rtol=3e-13)
+            self.assertIn('s', inspect.signature(api.lognormal.cdf).parameters)
+            self.assertEqual(inspect.signature(func).parameters['scale'].default, 1.)
+
+    def test_invalid_parameters_status_and_output_safety(self):
+        for _, api in self.apis:
+            x = np.array([0., 1., 2.])
+            for family in FAMILIES:
+                func = getattr(api, family).cdf
+                shape = [1.7] if family in ('weibull', 'lognormal') else []
+                for params in (dict(scale=0.), dict(scale=-1.), dict(scale=np.inf),
+                               dict(loc=np.nan), dict(loc=np.inf)):
+                    out = np.full_like(x, 99.)
+                    with self.assertRaises(ValueError):
+                        func(x, *shape, out=out, **params)
+                    np.testing.assert_array_equal(out, 99.)
+                    self.assertTrue(math.isnan(func(.5, *shape, **params)))
+                    with self.assertRaises(ValueError):
+                        func([], *shape, **params)
+                if shape:
+                    for bad in (0., -1., np.inf, np.nan):
+                        with self.assertRaises(ValueError):
+                            func(x, bad)
+            with self.assertRaises(TypeError):
+                api.normal.cdf(x, scale=[1.])
+            for bad in ([1+2j], ['1'], [object()]):
+                with self.assertRaises(TypeError):
+                    api.normal.cdf(bad)
+            invalid_outputs = [np.empty(3, dtype=np.float32), np.empty(4),
+                               np.empty(6)[::2], x, x[::-1]]
+            readonly = np.empty(3)
+            readonly.flags.writeable = False
+            invalid_outputs += [readonly, np.ndarray((3,), dtype=np.float64,
+                                                    buffer=bytearray(25), offset=1),
+                                np.empty(3, dtype='>f8')]
+            for out in invalid_outputs:
+                with self.assertRaises((TypeError, ValueError)):
+                    api.normal.cdf(x, out=out)
+            with self.assertRaises(ValueError):
+                api.normal.cdf(0., out=np.empty(()))
+
+    def test_unexpected_status_and_missing_library(self):
+        with self.assertRaises(FileNotFoundError):
+            Scifort(HERE / 'missing-library.so')
+        for _, api in self.apis:
+            group = api.normal
+            previous = group._functions['cdf']
+            def rejected(*args):
+                C.cast(args[-1], C.POINTER(C.c_int))[0] = 17
+            try:
+                group._functions['cdf'] = (previous[0], rejected)
+                with self.assertRaisesRegex(RuntimeError, '17'):
+                    group.cdf([0., 1.])
+            finally:
+                group._functions['cdf'] = previous
+
+    def test_round_trips_and_tail_probabilities(self):
+        p = np.array([1e-12, 1e-6, .1, .5, .9, 1-1e-6])
+        for _, api in self.apis:
+            for family in FAMILIES:
+                group = getattr(api, family)
+                shape = [1.7] if family in ('weibull', 'lognormal') else []
+                np.testing.assert_allclose(group.cdf(group.ppf(p, *shape), *shape), p,
+                                           rtol=2e-10, atol=0)
+                np.testing.assert_allclose(group.sf(group.isf(p, *shape), *shape), p,
+                                           rtol=2e-10, atol=0)
+            z = np.array([-40., -12., -8., 8., 12., 40.])
+            np.testing.assert_allclose(api.normal.logcdf(z), stats.norm.logcdf(z), rtol=4e-13, atol=0)
+            np.testing.assert_allclose(api.normal.logsf(z), stats.norm.logsf(z), rtol=4e-13, atol=0)
+
+
+if __name__ == '__main__':
+    unittest.main()

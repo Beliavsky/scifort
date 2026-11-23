@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scifort"
+version = "0.1.0"
+description = "NumPy interface to the SciFort binary64 C ABI"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+license = {file = "LICENSE"}
+
+[tool.setuptools]
+packages = ["scifort"]
