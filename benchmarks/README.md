@@ -1,3 +1,13 @@
+## SciFort versus SciPy timings
+
+See the [workload comparison guide](README_scipy_speed.md) for validated,
+optimized native Fortran versus SciPy timings, including scalar and array
+distributions, FFTs, LU solves, and interpolation. Run from the repository root:
+
+```text
+python benchmarks/compare_scipy.py
+```
+
 ## Cost-aware FFT convolution padding (2026-10-26)
 
 `bench_signal_fft_smooth_padding.f90` measures four one-dimensional and four

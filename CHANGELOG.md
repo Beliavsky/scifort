@@ -1,3 +1,12 @@
+## 2026-11-22 - SciFort and SciPy workload benchmarks
+
+- Add a standalone optimized benchmark harness for scalar/array normal
+  probabilities and quantiles, FFT plans, LU solves, and barycentric interpolation.
+- Check matching outputs before timing and record raw samples, tool versions,
+  compiler flags, thread settings, and backend details in a JSON report.
+- Provide a separate runtime-checked validation mode without running the full
+  library suite; library numerical implementations are unchanged.
+
 ## 2026-11-22 - macOS CI fpm runtime dependencies
 
 - Install fpm through Homebrew on macOS so its required runtime libraries

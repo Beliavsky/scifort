@@ -65,6 +65,9 @@ Changing compilation flags triggers a separate build. Reference comparisons
 driven by Python are documented under [validation](validation/) and are
 separate from the native FPM test suite.
 
+For matching native Fortran and SciPy timing comparisons, see the
+[benchmark guide](benchmarks/README_scipy_speed.md).
+
 ## Use from Fortran
 
 Add SciFort to another project's `fpm.toml`:
