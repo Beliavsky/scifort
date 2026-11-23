@@ -1,5 +1,8 @@
 ## 2026-11-23 - benchmark ratio summaries
 
+- Fix an extra delimiter column in the generated and saved summary tables so
+  GitHub renders them as Markdown tables; check column counts in regression tests.
+
 - Generate overall and category timing-ratio summaries automatically in every
   timed Markdown report, including focused runs; omit summaries in check-only
   mode and mark single-workload sample standard deviations as unavailable.

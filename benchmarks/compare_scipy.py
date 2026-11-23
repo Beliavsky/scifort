@@ -300,7 +300,7 @@ def ratio_summary_lines(rows):
              "workload ratios (divisor count - 1), not uncertainty in repeated timings.",
              "SD is n/a when a group contains only one workload.", "",
              "| Workloads | Count | Median | Geometric mean | Mean | SD | Min | Max |",
-             "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+             "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for label, selected in groups:
         ratios = [row["scipy_over_scifort"] for row in selected]
         if not all(np.isfinite(value) and value > 0 for value in ratios):

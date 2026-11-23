@@ -62,6 +62,11 @@ class BenchmarkSafeguards(unittest.TestCase):
         self.assertIn("| All | 3 | 1.000 | 1.000 | 1.750 | 1.984 | 0.250 | 4.000 |", text)
         self.assertIn("| Distributions | 2 | 0.625 | 0.500 | 0.625 | 0.530 | 0.250 | 1.000 |", text)
         self.assertIn("| FFTs | 1 | 4.000 | 4.000 | 4.000 | n/a | 4.000 | 4.000 |", text)
+        table = [line for line in text.splitlines() if line.startswith("|")]
+        # GFM requires the delimiter row to have the same cell count as the header.
+        self.assertEqual(len(table[0].strip("|").split("|")), 8)
+        for line in table[1:]:
+            self.assertEqual(len(line.strip("|").split("|")), 8, line)
         self.assertNotIn("| Linear solves |", text)
         self.assertNotIn("| Interpolation |", text)
         # Validation-only cases must not enter the timing statistics.
