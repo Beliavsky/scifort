@@ -1,5 +1,9 @@
 # SciFort versus SciPy workload timings
 
+See the [local Windows results from 2026-11-22](scipy_speed_windows_20261122.md)
+for a readable snapshot with all nine timings, accuracy checks, environment
+details, and individual samples.
+
 Run from the repository root in CMD or a Unix shell:
 
 ```text
