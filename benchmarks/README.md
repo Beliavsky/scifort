@@ -2,7 +2,8 @@
 
 See the [workload comparison guide](README_scipy_speed.md) for validated,
 optimized native Fortran versus SciPy timings, including scalar and array
-distributions, FFTs, LU solves, and interpolation. Run from the repository root:
+distributions, FFTs, dense solves, and interpolation across 80 workloads.
+Each run saves JSON and readable Markdown results. Run from the repository root:
 
 ```text
 python benchmarks/compare_scipy.py

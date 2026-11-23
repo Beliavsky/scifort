@@ -1,3 +1,13 @@
+## 2026-11-22 - expanded SciFort and SciPy timings
+
+- Expand the standalone benchmark suite from nine to 80 validated workloads:
+  seven distribution families and eight probability methods, forward/inverse
+  FFTs, dense factorized and triangular solves, and interpolation derivatives.
+- Add category selection and case listing without compilation, and write
+  readable Markdown reports alongside JSON samples and reproducibility data.
+- Keep benchmark changes separate from numerical library implementations;
+  document public SciPy API overhead and allocation differences explicitly.
+
 ## 2026-11-22 - direct normal quantiles
 
 - Replace repeated CDF bisection with an attributed BSD-3-Clause SciPy/Cephes
