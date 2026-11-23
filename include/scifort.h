@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include "scifort_generated_normal.h"
+#include "scifort_generated_linalg.h"
 
 
 #ifdef __cplusplus

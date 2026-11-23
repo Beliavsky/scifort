@@ -1,0 +1,88 @@
+{
+  "generated_symbol_count": 1,
+  "generator_version": "0.2.0",
+  "procedures": [
+    {
+      "procedure": "cholesky_lower",
+      "reason": "Not selected for the initial explicit-shape integration.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "linalg_status_invalid_shape",
+      "reason": "Native status constant, not a procedure to wrap.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "linalg_status_no_convergence",
+      "reason": "Native status constant, not a procedure to wrap.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "linalg_status_not_positive_definite",
+      "reason": "Native status constant, not a procedure to wrap.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "linalg_status_not_positive_semidefinite",
+      "reason": "Native status constant, not a procedure to wrap.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "linalg_status_singular",
+      "reason": "Native status constant, not a procedure to wrap.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "linalg_status_success",
+      "reason": "Native status constant, not a procedure to wrap.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "psd_decompose",
+      "reason": "Not selected for the initial explicit-shape integration.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "l",
+        "b",
+        "x",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "optional_promoted_to_required": [],
+      "procedure": "solve_lower",
+      "shapes": {
+        "b": [
+          "n"
+        ],
+        "l": [
+          "n",
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_solve_lower_f64"
+      ]
+    },
+    {
+      "procedure": "symmetric_eigen_jacobi",
+      "reason": "Not selected for the initial explicit-shape integration.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 10,
+  "source": "src/linalg.f90",
+  "source_sha256": "23bc73b777a6b2e731a79104417dabff7957a999fea9b51b2d5cde467e0e8e97"
+}

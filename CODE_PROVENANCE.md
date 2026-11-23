@@ -1,3 +1,19 @@
+## 2026-11-23 - Explicit-shape C ABI adapters
+
+`tools/cabi_generator/explicit_arrays.py` is original MIT-licensed generation
+logic. It reads procedure declarations through the existing unmodified fparser
+dependency and emits explicit-shape `bind(c)` Fortran adapters. It does not
+copy or reimplement numerical algorithms. The generated lower-triangular solver
+calls the existing `scifort_linalg:solve_lower` directly; its original provenance
+and mathematical behavior remain unchanged. Source and configuration are in
+`bindings/cabi_config/linalg.json`, with checked-in generated wrappers, header,
+and coverage. The existing parser license record below still applies.
+
+Schema version 2 adds the explicit-shape default for elemental bulk functions;
+version 1 retains its pointer default. Existing normal symbols explicitly retain
+their pointer/null-buffer contract. New array subroutine adapters use documented
+dimensions, matching interoperable kinds, and caller-owned column-major storage.
+
 ## 2026-11-23 - C ABI generator parser dependency
 
 `tools/cabi_generator/generate.py` is original MIT-licensed interface-generation

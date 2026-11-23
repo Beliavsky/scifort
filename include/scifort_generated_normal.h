@@ -8,27 +8,32 @@ extern "C" {
 #endif
 
 /* All native optional arguments are required at the C boundary.
- * Bulk: uniform scalar parameters, one contiguous input/output array.
+ * Elemental bulk: uniform scalar parameters, one input/output array.
  * Status 0: success; 1: invalid uniform parameter, null nonempty buffer,
  * or length exceeding the default Fortran integer maximum.
- * On error output is unchanged. Empty calls allow NULL buffers,
- * but still validate uniform parameters. Nonempty buffers must not overlap.
+ * On call-level errors output is unchanged. Empty calls still validate parameters.
+ * Buffer rules are stated per entry point. Nonempty buffers must not overlap.
  * Invalid individual values follow the native function's behavior.
  * The status pointer must always be valid. */
 
 double scifort_normal_isf_f64(double arg_p, double arg_loc, double arg_scale);
+/* Pointer bulk: NULL buffers are allowed only for n=0. */
 void scifort_normal_isf_vec_f64(size_t n, const double *arg_p, double arg_loc, double arg_scale, double *output, int *status);
 
 double scifort_normal_logcdf_f64(double arg_x, double arg_loc, double arg_scale);
+/* Pointer bulk: NULL buffers are allowed only for n=0. */
 void scifort_normal_logcdf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
 
 double scifort_normal_logpdf_f64(double arg_x, double arg_loc, double arg_scale);
+/* Pointer bulk: NULL buffers are allowed only for n=0. */
 void scifort_normal_logpdf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
 
 double scifort_normal_logsf_f64(double arg_x, double arg_loc, double arg_scale);
+/* Pointer bulk: NULL buffers are allowed only for n=0. */
 void scifort_normal_logsf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
 
 double scifort_normal_sf_f64(double arg_x, double arg_loc, double arg_scale);
+/* Pointer bulk: NULL buffers are allowed only for n=0. */
 void scifort_normal_sf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
 
 #ifdef __cplusplus

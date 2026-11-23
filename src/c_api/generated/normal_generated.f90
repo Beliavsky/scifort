@@ -27,6 +27,7 @@ contains
     function scifort_normal_isf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
         result(cg_result) bind(c, name="scifort_normal_isf_f64")
+        !! Forward one scalar evaluation to the native Fortran function.
         implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
@@ -42,14 +43,15 @@ contains
     subroutine scifort_normal_isf_vec_f64( &
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
         bind(c, name="scifort_normal_isf_vec_f64")
+        !! Evaluate independent inputs using uniform scalar parameters.
         implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         type(c_ptr), value, intent(in) :: cg_arg_0 !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         type(c_ptr), value, intent(in) :: cg_output !! caller-owned output buffer
-        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         real(c_double), pointer :: cg_x(:), cg_y(:)
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         integer :: cg_i
 
         cg_status=1_c_int
@@ -77,6 +79,7 @@ contains
     function scifort_normal_logcdf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
         result(cg_result) bind(c, name="scifort_normal_logcdf_f64")
+        !! Forward one scalar evaluation to the native Fortran function.
         implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
@@ -92,14 +95,15 @@ contains
     subroutine scifort_normal_logcdf_vec_f64( &
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
         bind(c, name="scifort_normal_logcdf_vec_f64")
+        !! Evaluate independent inputs using uniform scalar parameters.
         implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         type(c_ptr), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         type(c_ptr), value, intent(in) :: cg_output !! caller-owned output buffer
-        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         real(c_double), pointer :: cg_x(:), cg_y(:)
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         integer :: cg_i
 
         cg_status=1_c_int
@@ -127,6 +131,7 @@ contains
     function scifort_normal_logpdf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
         result(cg_result) bind(c, name="scifort_normal_logpdf_f64")
+        !! Forward one scalar evaluation to the native Fortran function.
         implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
@@ -142,14 +147,15 @@ contains
     subroutine scifort_normal_logpdf_vec_f64( &
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
         bind(c, name="scifort_normal_logpdf_vec_f64")
+        !! Evaluate independent inputs using uniform scalar parameters.
         implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         type(c_ptr), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         type(c_ptr), value, intent(in) :: cg_output !! caller-owned output buffer
-        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         real(c_double), pointer :: cg_x(:), cg_y(:)
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         integer :: cg_i
 
         cg_status=1_c_int
@@ -177,6 +183,7 @@ contains
     function scifort_normal_logsf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
         result(cg_result) bind(c, name="scifort_normal_logsf_f64")
+        !! Forward one scalar evaluation to the native Fortran function.
         implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
@@ -192,14 +199,15 @@ contains
     subroutine scifort_normal_logsf_vec_f64( &
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
         bind(c, name="scifort_normal_logsf_vec_f64")
+        !! Evaluate independent inputs using uniform scalar parameters.
         implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         type(c_ptr), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         type(c_ptr), value, intent(in) :: cg_output !! caller-owned output buffer
-        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         real(c_double), pointer :: cg_x(:), cg_y(:)
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         integer :: cg_i
 
         cg_status=1_c_int
@@ -227,6 +235,7 @@ contains
     function scifort_normal_sf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
         result(cg_result) bind(c, name="scifort_normal_sf_f64")
+        !! Forward one scalar evaluation to the native Fortran function.
         implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
@@ -242,14 +251,15 @@ contains
     subroutine scifort_normal_sf_vec_f64( &
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
         bind(c, name="scifort_normal_sf_vec_f64")
+        !! Evaluate independent inputs using uniform scalar parameters.
         implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         type(c_ptr), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! mean; required
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         type(c_ptr), value, intent(in) :: cg_output !! caller-owned output buffer
-        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         real(c_double), pointer :: cg_x(:), cg_y(:)
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid call
         integer :: cg_i
 
         cg_status=1_c_int

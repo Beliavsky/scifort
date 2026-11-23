@@ -23,6 +23,12 @@ For other families, survival, logarithmic, and inverse-survival methods remain
 native-Fortran-only, as do special-function, random-state, random-variate, and
 likelihood entry points.
 
+The generator also provides an explicit-shape C adapter for the native
+assumed-shape lower-triangular solver, `scifort_solve_lower_f64`. It uses ordinary
+Fortran array declarations and documented dimensions; see the
+[linear-algebra configuration](cabi_config/linalg.json) and
+[array interface contract](cabi_config/README.md).
+
 Wrapper implementations must preserve the numerical results of the Fortran
 core and must document language-specific choices involving shapes, missing
 values, exceptions, and memory ownership.

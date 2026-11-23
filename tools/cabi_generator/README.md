@@ -6,12 +6,15 @@ argument policies come from a JSON manifest. Its independent arithmetic fixture
 does not depend on SciFort. The intended extraction boundary is this directory;
 SciFort configuration and integration artifacts remain in the parent project.
 
-Version 0.1 supports private-by-default modules with explicit public exports,
+Version 0.2 supports private-by-default modules with explicit public exports,
 directly defined functions with `result(...)`, explicit scalar `real(kind)`
 argument/result declarations, and `intent(in)` inputs. Elemental functions can
 also receive a bulk wrapper with one varying input and uniform scalar parameters.
 The native real kind and its module are configured; conversion to/from
 `c_double` is explicit. SciFort's initial integration uses binary64 throughout.
+Rank-one/rank-two assumed-shape array subroutines can now receive explicit-shape
+`bind(c)` adapters, with a required native integer status output. Their native
+implementations are unchanged; no C implementation or pointer conversion is needed.
 
 The generator uses [fparser 0.2.5](https://pypi.org/project/fparser/0.2.5/)
 to parse Fortran syntax. It does not parse declarations using regular expressions
@@ -27,6 +30,8 @@ From the SciFort repository root, in CMD:
 python -m pip install -r tools/cabi_generator/requirements.txt
 python tools/cabi_generator/generate.py bindings/cabi_config/normal.json
 python tools/cabi_generator/generate.py bindings/cabi_config/normal.json --check
+python tools/cabi_generator/generate.py bindings/cabi_config/linalg.json
+python tools/cabi_generator/generate.py bindings/cabi_config/linalg.json --check
 ```
 
 The configuration path is relative to the current directory. `--root PATH`
@@ -41,7 +46,8 @@ selected interfaces are rejected before outputs are written.
 ## Configuration and contract
 
 See the [normal manifest](../../bindings/cabi_config/normal.json) for a complete
-schema-version-1 example. The top-level fields are:
+schema-version-1 example, and the [linear-algebra manifest](../../bindings/cabi_config/linalg.json)
+for schema version 2 with explicit-shape adapters. The top-level fields are:
 
 | Field | Meaning |
 | --- | --- |
@@ -51,6 +57,7 @@ schema-version-1 example. The top-level fields are:
 | `outputs` | Paths for `fortran`, `header`, and `coverage` artifacts |
 | `argument_docs` | One ASCII description per native input argument |
 | `functions` | Public functions to wrap and their C interface policies |
+| `subroutines` | Optional mapping of assumed-shape subroutines to explicit-shape adapters |
 | `excluded` | Every remaining explicit public export, with a reason |
 
 Each function policy requires `symbol`. `vector_symbol` and `array_argument`
@@ -61,18 +68,55 @@ arguments require `optional_policy: "required"`: callers must supply them at
 the C boundary, and no defaults are inferred from procedure implementations.
 Scalar wrappers delegate numerical validation to the native procedure.
 
-Bulk calls use `size_t`, raw input/output pointers, uniform doubles, and a
-caller-owned integer status. Status 0 means success; 1 means an invalid uniform
-parameter, null nonempty buffer, or length exceeding the compiler's default
-Fortran integer maximum. Output remains unchanged on those errors. Zero-length
-calls allow null buffers, but still validate uniform parameters. The status
-pointer must always be valid. Nonempty arrays must be suitably aligned, contain
-at least `n` doubles, and must not overlap. Invalid individual input values retain
+For elemental bulk functions, `array_style` selects `explicit` or `pointer`.
+Schema version 2 defaults to `explicit`; version 1 retains the original `pointer`
+default. Existing normal manifests explicitly select `pointer` to preserve their
+published null-buffer checks. Both styles have the same C pointer-and-length
+prototype, but different buffer preconditions. Explicit wrappers declare ordinary
+Fortran arrays such as `real(c_double) :: x(n)` and require valid non-NULL buffers,
+even for zero-length calls. Pointer wrappers validate null buffers and allow NULL
+for zero-length calls.
+
+Elemental bulk calls use `size_t`, uniform doubles, and a caller-owned integer
+status. Status 0 means success; 1 means an invalid uniform parameter, invalid
+pointer where checks are provided, or length exceeding the compiler's default
+Fortran integer maximum. Output remains unchanged on call-level errors. Empty
+calls still validate uniform parameters. Invalid individual input values retain
 the native function's NaN/infinity/endpoint behavior and do not become call-level
-status failures.
+status failures. The status pointer must always be valid. Arrays must be suitably
+aligned, hold the declared number of doubles, and must not overlap.
+
+### Assumed-shape subroutine adapters
+
+Each `subroutines` entry supplies `symbol`, `dimensions` (an ordered list of
+objects with `name` and `minimum` fields), `shapes` (array names mapped to lists of dimension names),
+`status_argument`, `invalid_status`, and a one-line `description`. Thus the
+linear-solver manifest maps native `l(:,:)`, `b(:)`, and `x(:)` to adapter
+arguments `l(n,n)`, `b(n)`, and `x(n)` with a by-value `integer(c_int)` order.
+Dimension names must differ from native argument names. Shared dimensions express
+required shape relationships; bounds and output sizes are explicit policy.
+Dimension-list order defines the leading C arguments and is recorded explicitly
+in coverage, so reordering JSON object keys does not change the ABI.
+
+Adapters accept explicit real scalars and assumed-shape arrays declared on the
+entity, for example `real(dp), intent(in) :: a(:,:)`. Optional, allocatable,
+pointer, callback, and additional integer arguments are not supported in this
+pattern. The required native status argument is default-integer `intent(out)`.
+Compile-time checks require the native real kind to equal `c_double` and the
+native default integer kind to equal `c_int`. Arrays are passed directly to the
+native procedure, without conversion buffers or wrapper allocation.
+
+All arrays use contiguous column-major storage. Callers must provide valid
+non-NULL buffers, including for permitted empty arrays, and adequate storage for
+every declared extent; these adapters cannot check buffer addresses or capacities.
+Output and mutable arguments use `intent(inout)` at the adapter boundary so an
+invalid-extent return preserves caller data. After validation, native status
+codes and output-on-failure semantics are preserved. Numerical failures can
+therefore leave native partial results. No leading dimensions, arbitrary strides,
+or pointer-style subroutine adapters are implemented yet.
 
 Every explicit public export must be generated or explicitly excluded. Public
-generics, reexports, derived types, arrays, callbacks, subroutines, and other
+generics, reexports, derived types, callbacks, array-valued functions, and other
 unsupported interfaces cannot silently become scalar wrappers. This is not yet
 a whole-project scanner or a full Fortran semantic resolver. Default-public
 modules are rejected because complete reexport discovery needs more analysis.
@@ -104,8 +148,8 @@ endpoints, tails, NaN/infinity, invalid scales, scalar/bulk agreement, and
 independent standard-library references. It also checks null/empty/oversized
 bulk calls and output preservation.
 
-Initial Windows validation on 2026-11-23 passed all 12 focused tests (11 reusable
-tests and one SciFort integration test with multiple methods/input cases), using
+Windows validation of version 0.2 on 2026-11-23 passed all 17 focused tests
+(15 reusable tests and two SciFort integration tests with multiple methods/input cases), using
 Python 3.13.3, fparser 0.2.5, and GNU Fortran/GCC/G++ 17.0.0 20260510
 (experimental). The commands above and the generator's `--check` command were
 run with `build/cabi-generator-venv/Scripts/python.exe`. Other operating systems
@@ -119,7 +163,7 @@ by the repository rules.
 ## Next interface patterns
 
 1. Additional scalar/elemental distribution families and bulk parameters.
-2. Explicit-rank array procedures and caller-owned output sizing.
+2. Additional explicit-rank array procedures, strides, and output sizing policies.
 3. Allocatable results using size-query/fill interfaces.
 4. Derived types using opaque handles with defined lifetimes.
 5. Callbacks, strings, and generic resolution with explicit policies.

@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "source": "src/linalg.f90",
+  "module": "scifort_linalg",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_linalg",
+  "header_guard": "SCIFORT_GENERATED_LINALG_H",
+  "functions": {},
+  "argument_docs": {
+    "n": "system order, >= 1",
+    "l": "lower-triangular matrix",
+    "b": "right-hand side",
+    "x": "solution of L x = b",
+    "status": "native linalg status; 1 for invalid order"
+  },
+  "subroutines": {
+    "solve_lower": {
+      "symbol": "scifort_solve_lower_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "l": [
+          "n",
+          "n"
+        ],
+        "b": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Solve a lower-triangular real linear system."
+    }
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/linalg_generated.f90",
+    "header": "include/scifort_generated_linalg.h",
+    "coverage": "bindings/cabi_config/linalg_coverage.json"
+  },
+  "excluded": {
+    "cholesky_lower": "Not selected for the initial explicit-shape integration.",
+    "psd_decompose": "Not selected for the initial explicit-shape integration.",
+    "symmetric_eigen_jacobi": "Not selected for the initial explicit-shape integration.",
+    "linalg_status_success": "Native status constant, not a procedure to wrap.",
+    "linalg_status_invalid_shape": "Native status constant, not a procedure to wrap.",
+    "linalg_status_not_positive_definite": "Native status constant, not a procedure to wrap.",
+    "linalg_status_not_positive_semidefinite": "Native status constant, not a procedure to wrap.",
+    "linalg_status_no_convergence": "Native status constant, not a procedure to wrap.",
+    "linalg_status_singular": "Native status constant, not a procedure to wrap."
+  }
+}

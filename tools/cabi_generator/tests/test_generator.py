@@ -24,9 +24,26 @@ def fixture_config():
                                                               coverage="coverage.json"),
                 argument_docs=dict(t="evaluation coordinate", shift="additive offset", gain="multiplier"),
                 functions=dict(affine=dict(symbol="example_affine", vector_symbol="example_affine_array",
-                                           array_argument="t", optional_policy="required",
+                                           array_argument="t", array_style="pointer", optional_policy="required",
                                            finite=["shift", "gain"], positive=["gain"])),
                 excluded=dict(total="Array arguments need a later interface pattern."))
+
+
+def array_fixture_config():
+    config = fixture_config()
+    config.update(schema_version=2, source="array_ops.f90", module="example_arrays", wrapper_module="example_array_api",
+                  header_guard="EXAMPLE_ARRAY_API_H", functions={}, excluded={},
+                  outputs=dict(fortran="array_api.f90", header="array_api.h", coverage="array_coverage.json"),
+                  argument_docs=dict(a="input matrix", gain="row-sum multiplier", y="scaled row sums",
+                                     status="0 success; 1 invalid dimensions", nrows="row count, >= 1",
+                                     ncols="column count, >= 1"),
+                  subroutines=dict(row_sums=dict(symbol="example_row_sums",
+                                                dimensions=[dict(name="nrows", minimum=1),
+                                                            dict(name="ncols", minimum=1)],
+                                                shapes=dict(a=["nrows", "ncols"], y=["nrows"]),
+                                                status_argument="status", invalid_status=1,
+                                                description="Scale the row sums of a real matrix.")))
+    return config
 
 
 def run(command, cwd):
@@ -111,6 +128,44 @@ contains
                 with self.assertRaisesRegex(ValueError, message):
                     generator.generate(config, self.root)
 
+    def test_explicit_shape_is_the_default_for_new_bulk_wrappers(self):
+        del self.config["functions"]["affine"]["array_style"]
+        legacy = generator.generate(self.config, self.root)[self.root / "api.f90"]
+        self.assertIn("c_f_pointer", legacy)
+        self.config["schema_version"] = 2
+        text = generator.generate(self.config, self.root)[self.root / "api.f90"]
+        self.assertIn("real(c_double), intent(in) :: cg_arg_0(cg_count)", text)
+        self.assertIn("real(c_double), intent(inout) :: cg_output(cg_count)", text)
+        self.assertNotIn("c_f_pointer", text)
+
+    def test_assumed_shape_subroutine_gets_an_explicit_shape_adapter(self):
+        shutil.copyfile(HERE / "fixtures/array_ops.f90", self.root / "array_ops.f90")
+        artifacts = generator.generate(array_fixture_config(), self.root)
+        text = artifacts[self.root / "array_api.f90"]
+        self.assertIn("real(c_double), intent(in) :: a(nrows,ncols)", text)
+        self.assertIn("real(c_double), intent(inout) :: y(nrows)", text)
+        self.assertNotIn("c_f_pointer", text)
+        report = json.loads(artifacts[self.root / "array_coverage.json"])
+        self.assertEqual(report["generated_symbol_count"], 1)
+        self.assertEqual(report["procedures"][0]["interface"], "explicit_shape_subroutine")
+        self.assertEqual(report["procedures"][0]["dimension_order"], ["nrows", "ncols"])
+        # JSON object key reordering must never change the C argument order.
+        reordered = json.loads(json.dumps(array_fixture_config(), sort_keys=True))
+        self.assertEqual(artifacts, generator.generate(reordered, self.root))
+
+    def test_invalid_array_shape_and_dimension_policies_are_rejected(self):
+        shutil.copyfile(HERE / "fixtures/array_ops.f90", self.root / "array_ops.f90")
+        for change, message in ((dict(shapes=dict(a=["nrows"], y=["nrows"])), "rank mismatch"),
+                                (dict(shapes=dict(a=["nrows", "unknown"], y=["nrows"])), "dimension names"),
+                                (dict(dimensions=[dict(name="a", minimum=1)]), "conflicts"),
+                                (dict(status_argument="gain"), "status must"),
+                                (dict(invalid_status=0), "invalid_status")):
+            with self.subTest(change=change):
+                config = array_fixture_config()
+                config["subroutines"]["row_sums"].update(change)
+                with self.assertRaisesRegex(ValueError, message):
+                    generator.generate(config, self.root)
+
     def test_cli_check_detects_stale_files_without_rewriting(self):
         config = self.root / "config.json"
         config.write_text(json.dumps(self.config))
@@ -148,6 +203,19 @@ class CompiledTests(unittest.TestCase):
             shutil.copyfile(HERE / "fixtures/arithmetic.f90", cls.root / "arithmetic.f90")
             for path, value in generator.generate(config, cls.root).items():
                 path.write_text(value)
+            explicit = copy.deepcopy(config)
+            explicit.update(schema_version=2, wrapper_module="example_explicit_api", header_guard="EXAMPLE_EXPLICIT_API_H",
+                            outputs=dict(fortran="explicit.f90", header="explicit.h", coverage="explicit.json"))
+            explicit["functions"]["affine"].update(symbol="example_explicit_affine",
+                                                   vector_symbol="example_explicit_affine_array")
+            del explicit["functions"]["affine"]["array_style"]
+            for path, value in generator.generate(explicit, cls.root).items():
+                path.write_text(value)
+            shutil.copyfile(HERE / "fixtures/array_ops.f90", cls.root / "array_ops.f90")
+            for path, value in generator.generate(array_fixture_config(), cls.root).items():
+                path.write_text(value)
+            sources = [cls.root / name for name in ("arithmetic.f90", "api.f90", "explicit.f90",
+                                                    "array_ops.f90", "array_api.f90")]
             for profile, flags in (("checked", ["-O0", "-g", "-fcheck=all", "-fbacktrace"]),
                                    ("optimized", ["-O3"])):
                 directory = cls.root / profile
@@ -156,12 +224,14 @@ class CompiledTests(unittest.TestCase):
                           "-J", directory, "-I", directory]
                 extension = ".dll" if os.name == "nt" else ".so"
                 fixture = directory / ("fixture" + extension)
-                run([*common, "-shared", "-fPIC", cls.root / "arithmetic.f90", cls.root / "api.f90",
+                run([*common, "-shared", "-fPIC", *sources,
                      "-o", fixture], directory)
                 cls.libs.append((profile, C.CDLL(str(fixture))))
                 # A real C client tests the generated header and link symbols.
                 client = directory / "client.c"
                 client.write_text('''#include "api.h"
+#include "explicit.h"
+#include "array_api.h"
 int main(void) {
     double x[3] = {-1.0, 0.0, 1.0}, y[3] = {99.0, 99.0, 99.0};
     int status = -1;
@@ -169,6 +239,12 @@ int main(void) {
     if (status != 0 || y[0] != -1.0 || y[1] != 2.0 || y[2] != 5.0) return 1;
     if (example_affine(5.0, 3.0, 2.0) != 13.0) return 2;
     example_affine_array(0, NULL, 0.0, 1.0, NULL, &status);
+    if (status != 0) return 3;
+    example_explicit_affine_array(3, x, 2.0, 3.0, y, &status);
+    if (status != 0 || y[0] != -1.0 || y[2] != 5.0) return 4;
+    double a[6] = {1,2,3,4,5,6}, sums[2] = {99,99};
+    example_row_sums(2, 3, a, 2.0, sums, &status);
+    if (status != 0 || sums[0] != 18 || sums[1] != 24) return 5;
     return status;
 }
 ''')
@@ -180,8 +256,28 @@ int main(void) {
                     run([cxx, "-std=c++17", "-Wall", "-Wextra", "-Werror", "-fsyntax-only",
                          "-I", cls.root, client], directory)
                 exe = directory / ("client.exe" if os.name == "nt" else "client")
-                run([*common, cls.root / "arithmetic.f90", cls.root / "api.f90", obj, "-o", exe], directory)
+                run([*common, *sources, obj, "-o", exe], directory)
                 run([exe], directory)
+                fclient = directory / "fortran_client.f90"
+                fclient.write_text('''program check_adapter
+    use, intrinsic :: iso_c_binding, only : c_double, c_int
+    use example_arrays, only : row_sums
+    use example_array_api, only : example_row_sums
+    implicit none
+    real(c_double) :: a(2,3), y(2), native(2)
+    integer(c_int) :: status
+    integer :: native_status
+    a=reshape([1.0_c_double,2.0_c_double,3.0_c_double,4.0_c_double, &
+        5.0_c_double,6.0_c_double],[2,3])
+    call row_sums(a,2.0_c_double,native,native_status)
+    call example_row_sums(2_c_int,3_c_int,a,2.0_c_double,y,status)
+    if (status /= 0 .or. native_status /= 0) error stop 1
+    if (any(y /= native)) error stop 2
+end program check_adapter
+''')
+                fexe = directory / ("fortran_client.exe" if os.name == "nt" else "fortran_client")
+                run([*common, *sources, fclient, "-o", fexe], directory)
+                run([fexe], directory)
         except Exception:
             cls.tearDownClass()
             raise
@@ -251,6 +347,33 @@ int main(void) {
                            output if out else None, C.byref(status))
                     self.assertEqual(status.value, expected_status)
                     self.assertEqual(output[0], 99.)
+
+    def test_explicit_bulk_and_rectangular_subroutine(self):
+        for profile, lib in self.libs:
+            with self.subTest(profile=profile):
+                vector = self.bind_vector(lib, "example_explicit_affine_array")
+                values, output = (C.c_double * 2)(2., 5.), (C.c_double * 2)(99., 99.)
+                status = C.c_int(-1)
+                vector(2, values, 3., 2., output, C.byref(status))
+                self.assertEqual(list(output), [7., 13.])
+                self.assertEqual(status.value, 0)
+                vector(0, values, 0., 1., output, C.byref(status))
+                self.assertEqual(status.value, 0)
+                vector(2, values, 0., 0., output, C.byref(status))
+                self.assertEqual(status.value, 1)
+                self.assertEqual(list(output), [7., 13.])
+                row_sums = lib.example_row_sums
+                row_sums.argtypes = [C.c_int, C.c_int, C.c_void_p, C.c_double, C.c_void_p,
+                                     C.POINTER(C.c_int)]
+                row_sums.restype = None
+                a = (C.c_double * 6)(1., 2., 3., 4., 5., 6.)
+                row_sums(2, 3, a, 2., output, C.byref(status))
+                self.assertEqual(status.value, 0)
+                self.assertEqual(list(output), [18., 24.])
+                for n, m in ((0, 3), (2, 0), (-1, 3)):
+                    row_sums(n, m, a, 2., output, C.byref(status))
+                    self.assertEqual(status.value, 1)
+                    self.assertEqual(list(output), [18., 24.])
 
 
 if __name__ == "__main__":

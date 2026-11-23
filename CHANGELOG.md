@@ -1,3 +1,13 @@
+## 2026-11-23 - explicit-shape C ABI adapters
+
+- Permit interoperable explicit-shape arrays in the ABI rules and prefer thin
+  Fortran adapters for straightforward array procedures.
+- Add schema-version-2 explicit-shape elemental bulk wrappers and rank-one/rank-two
+  assumed-shape subroutine adapters with configured dimensions and native status.
+- Generate a lower-triangular solver adapter and validate it from Fortran and C,
+  including rectangular fixture layouts, invalid extents, and native failure output.
+- Preserve version-1 pointer defaults and existing normal NULL-buffer contracts.
+
 ## 2026-11-23 - initial C ABI generator
 
 - Add a project-independent, manifest-driven generator using the pinned BSD

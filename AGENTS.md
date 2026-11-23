@@ -157,9 +157,14 @@ Never trade away correctness or provenance merely to add more functions.
 
 - The native Fortran API may use modules, generics, optional arguments, and
   derived types.
-- The C ABI may use only interoperable scalar types, explicit lengths,
-  assumed-size arrays, caller-owned memory, opaque `c_ptr` handles, and stable
-  symbol names.
+- The C ABI may use interoperable scalar types, explicit lengths,
+  interoperable explicit-shape or assumed-size arrays, caller-owned memory,
+  opaque `c_ptr` handles, and stable symbol names.
+- Prefer thin `bind(c)` adapters with explicit-shape arrays for straightforward
+  array procedures; retain assumed-shape arrays in the native numerical API.
+  Document dimensions, column-major layout, buffer validity, aliasing, and error
+  behavior. Use pointer-based adapters when null-buffer checks or other memory
+  handling require them. Preserve existing C symbols and buffer contracts.
 - Do not expose allocatable arrays, assumed-shape descriptors, Fortran
   `logical`, compiler-dependent character data, or noninteroperable derived
   types through `bind(c)`.

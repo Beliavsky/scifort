@@ -119,7 +119,8 @@ is smaller than the native Fortran API. Python, R, MATLAB, and Octave wrappers
 are planned; see [language bindings](bindings/README.md).
 
 A [C ABI generator prototype](tools/cabi_generator/README.md) now produces
-additional normal-distribution wrappers from project-specific configuration.
+additional normal-distribution wrappers and an explicit-shape linear-solver
+adapter from project-specific configuration.
 Generated wrappers are checked in; ordinary builds do not require the generator.
 
 SciFort is independent of SciPy, NumFOCUS, and the Python Software Foundation.
