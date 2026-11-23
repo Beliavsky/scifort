@@ -7,6 +7,9 @@
   readable Markdown reports alongside JSON samples and reproducibility data.
 - Keep benchmark changes separate from numerical library implementations;
   document public SciPy API overhead and allocation differences explicitly.
+- Refresh the primary Windows timing report with the saved 80-case run and
+  optimized normal quantiles; archive the initial nine-case measurements and
+  retain the concurrent CPU-load caveat.
 
 ## 2026-11-22 - direct normal quantiles
 

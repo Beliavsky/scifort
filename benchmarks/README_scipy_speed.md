@@ -1,10 +1,10 @@
 # SciFort versus SciPy workload timings
 
-See the [expanded 80-case Windows snapshot](scipy_speed_expanded_windows_20261122.md)
+See the [refreshed 80-case Windows snapshot](scipy_speed_windows_20261122.md)
 for current sample output. It was collected under concurrent CPU load; rerun
 on an idle machine for performance conclusions.
 
-The [historical nine-case Windows results from 2026-11-22](scipy_speed_windows_20261122.md)
+The [historical nine-case Windows results from 2026-11-22](scipy_speed_windows_20261122_initial.md)
 preserve the original measurements, accuracy checks, environment details,
 and individual samples.
 
