@@ -1,3 +1,14 @@
+## 2026-11-23 - initial C ABI generator
+
+- Add a project-independent, manifest-driven generator using the pinned BSD
+  fparser dependency, with explicit optional-argument policies, scalar and bulk
+  wrappers, C/C++ headers, coverage records, and a non-writing drift check.
+- Generate ten new normal-distribution C symbols for SF, log-PDF, log-CDF,
+  log-SF, and ISF, retaining all existing manually written C entry points.
+- Validate standalone and SciFort integrations in checked and optimized builds,
+  including native agreement, C client execution, buffer/parameter errors,
+  endpoints and nonfinite values. Retain dependency provenance and full licenses.
+
 ## 2026-11-23 - benchmark ratio summaries
 
 - Fix an extra delimiter column in the generated and saved summary tables so

@@ -37,7 +37,7 @@ uncertainty in repeated timings. Min and max are the smallest and largest
 workload ratios.
 
 | Workloads | Count | Median | Geometric mean | Mean | SD | Min | Max |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | All | 80 | 1.553 | 1.458 | 2.370 | 4.758 | 0.170 | 42.993 |
 | Distributions | 57 | 2.288 | 2.251 | 3.082 | 5.485 | 0.579 | 42.993 |
 | FFTs | 12 | 0.391 | 0.347 | 0.384 | 0.170 | 0.170 | 0.593 |
