@@ -27,10 +27,20 @@ was written primarily by ChatGPT with Extra High thinking effort.
 
 ## Build and run
 
-Install Git, FPM, and a Fortran compiler with Fortran 2018 support. GNU Fortran
-is used in the project's CI configuration for Linux, macOS, and Windows.
+Install Git, FPM, and a Fortran compiler with Fortran 2018 support.
 The first build fetches the QUADPACK, MINPACK, L-BFGS-B, and SLSQP dependencies
 declared in [fpm.toml](fpm.toml).
+
+The full native test suite passed locally on Windows on 2026-11-22 with
+GNU Fortran 17.0.0 (experimental, build 20260510) and fpm reporting
+`Version: 0.12.0, alpha`.
+
+The [CI workflow](.github/workflows/ci.yml) requests GNU Fortran 14 on Linux,
+macOS, and Windows. Linux and Windows use `setup-fpm@v11`, which defaults to
+fpm 0.13.0; macOS uses the Homebrew version of fpm. CI compatibility failures
+are still being investigated. These are tested and configured versions,
+rather than established minimum requirements. Check installed versions with
+`gfortran --version` and `fpm --version`.
 
 From the repository directory, run these commands in CMD or a Unix shell:
 
