@@ -37,10 +37,8 @@ GNU Fortran 17.0.0 (experimental, build 20260510) and fpm reporting
 
 The [CI workflow](.github/workflows/ci.yml) requests GNU Fortran 14 on Linux,
 macOS, and Windows. Linux and Windows use `setup-fpm@v11`, which defaults to
-fpm 0.13.0; macOS uses the Homebrew version of fpm. CI compatibility failures
-are still being investigated. These are tested and configured versions,
-rather than established minimum requirements. Check installed versions with
-`gfortran --version` and `fpm --version`.
+fpm 0.13.0; macOS uses the Homebrew version of fpm. This may account for
+continous integration failures.
 
 From the repository directory, run these commands in CMD or a Unix shell:
 
