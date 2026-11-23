@@ -53,6 +53,28 @@ class BenchmarkSafeguards(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("no workloads match", result.stderr)
 
+    def test_ratio_summaries_and_category_selection(self):
+        rows = [dict(case=name, category=group, scifort_seconds=[1.], scipy_over_scifort=value)
+                for name, group, value in (("normal_cdf_array", "distribution", .25),
+                                           ("normal_ppf_array", "distribution", 1.),
+                                           ("fft_prime_reuse", "fft", 4.))]
+        text = "\n".join(speed.ratio_summary_lines(rows))
+        self.assertIn("| All | 3 | 1.000 | 1.000 | 1.750 | 1.984 | 0.250 | 4.000 |", text)
+        self.assertIn("| Distributions | 2 | 0.625 | 0.500 | 0.625 | 0.530 | 0.250 | 1.000 |", text)
+        self.assertIn("| FFTs | 1 | 4.000 | 4.000 | 4.000 | n/a | 4.000 | 4.000 |", text)
+        self.assertNotIn("| Linear solves |", text)
+        self.assertNotIn("| Interpolation |", text)
+        # Validation-only cases must not enter the timing statistics.
+        rows.append(dict(case="barycentric", category="interpolation"))
+        self.assertEqual("\n".join(speed.ratio_summary_lines(rows)), text)
+        self.assertEqual(speed.ratio_summary_lines([rows[-1]]), [])
+
+    def test_ratio_summaries_reject_invalid_ratios(self):
+        for value in (0., -1., float("nan"), float("inf")):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                speed.ratio_summary_lines([dict(case="normal_cdf_array", scifort_seconds=[1.],
+                                               scipy_over_scifort=value)])
+
     def test_markdown_preserves_timings_and_check_only_results(self):
         base = dict(started_utc="test", platform="test", build=dict(compiler="gfortran", flags=[]),
                     python="3 test", numpy="test", scipy="test", quick=False, check_only=False)
@@ -62,9 +84,11 @@ class BenchmarkSafeguards(unittest.TestCase):
         text = speed.markdown_report(dict(base, cases=[row]))
         self.assertIn("| test | 16 | 2 | 4 | 2.000 | 0 |", text)
         self.assertIn("SciFort 1, 2, 3; SciPy 3, 4, 5.", text)
+        self.assertIn("| All | 1 | 2.000 | 2.000 | 2.000 | n/a | 2.000 | 2.000 |", text)
         text = speed.markdown_report(dict(base, check_only=True,
                                          cases=[dict(case="test", n=16, accuracy=row["accuracy"])]))
         self.assertIn("| test | 16 | - | - | - | 0 |", text)
+        self.assertNotIn("## Summary", text)
 
 
 if __name__ == "__main__":

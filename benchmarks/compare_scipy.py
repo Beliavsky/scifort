@@ -282,6 +282,40 @@ def check_checksum(actual: float, expected, count: int):
         raise RuntimeError(f"Timed checksum mismatch: {actual} versus {reference}")
 
 
+def ratio_summary_lines(rows):
+    """Summarize unrounded per-workload timing ratios for the selected cases."""
+    timed = [row for row in rows if "scifort_seconds" in row]
+    if not timed:
+        return []
+    groups = [("All", timed)]
+    for key, label in (("distribution", "Distributions"), ("fft", "FFTs"),
+                       ("linear_solve", "Linear solves"), ("interpolation", "Interpolation")):
+        selected = [row for row in timed if row.get("category", category(row["case"])) == key]
+        if selected:
+            groups.append((label, selected))
+    lines = ["## Summary of SciPy/SciFort time ratios", "",
+             "Each selected workload contributes one ratio of median elapsed times.",
+             "Statistics use unrounded ratios; values above one favor SciFort.",
+             "Mean is the arithmetic mean. SD is the sample standard deviation across",
+             "workload ratios (divisor count - 1), not uncertainty in repeated timings.",
+             "SD is n/a when a group contains only one workload.", "",
+             "| Workloads | Count | Median | Geometric mean | Mean | SD | Min | Max |",
+             "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    for label, selected in groups:
+        ratios = [row["scipy_over_scifort"] for row in selected]
+        if not all(np.isfinite(value) and value > 0 for value in ratios):
+            raise ValueError("Timing ratios must be finite and positive")
+        sd = f"{statistics.stdev(ratios):.3f}" if len(ratios) > 1 else "n/a"
+        lines.append(f"| {label} | {len(ratios)} | {statistics.median(ratios):.3f} | "
+                     f"{statistics.geometric_mean(ratios):.3f} | {statistics.mean(ratios):.3f} | "
+                     f"{sd} | {min(ratios):.3f} | {max(ratios):.3f} |")
+    lines += ["", "These describe the selected workloads, rather than overall library speedups.",
+              "Each case has equal weight; category counts, API and allocation differences,",
+              "and scalar Python call overhead affect the summaries. Background CPU load",
+              "can also affect results; use an idle machine for performance comparisons.", ""]
+    return lines
+
+
 def markdown_report(report):
     """Render the same results as JSON, without inventing missing timing data."""
     lines = ["# SciFort versus SciPy timings", "", f"Run: {report['started_utc']}", "",
@@ -291,9 +325,12 @@ def markdown_report(report):
              f"Python {report['python'].split()[0]}; NumPy {report['numpy']}; SciPy {report['scipy']}.", "",
              f"Quick workloads: {report['quick']}; validation only: {report['check_only']}.", "",
              "Times are milliseconds per full operation; ratios above one favor SciFort.",
-             "These are application workloads, including documented allocation and API overhead.", "",
-             "| Case | n | SciFort ms | SciPy ms | SciPy/SciFort | Max abs error |",
-             "| --- | ---: | ---: | ---: | ---: | ---: |"]
+             "These are application workloads, including documented allocation and API overhead.", ""]
+    if not report["check_only"]:
+        lines += ratio_summary_lines(report["cases"])
+    lines += ["## Per-workload results", "",
+              "| Case | n | SciFort ms | SciPy ms | SciPy/SciFort | Max abs error |",
+              "| --- | ---: | ---: | ---: | ---: | ---: |"]
     for row in report["cases"]:
         timing = (f"{row['scifort_median_seconds']*1000:.6g} | "
                   f"{row['scipy_median_seconds']*1000:.6g} | {row['scipy_over_scifort']:.3f}"

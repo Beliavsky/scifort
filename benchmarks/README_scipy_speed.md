@@ -125,8 +125,14 @@ These are warm repeated-use measurements, not cold-start latency measurements.
 
 Every successful run writes JSON and a sibling Markdown report, defaulting to
 `build/scipy-speed/results.json` and `build/scipy-speed/results.md`. Markdown
-contains a readable table and individual timing samples, or agreement checks
-without invented timings in check-only mode. JSON contains raw
+contains overall and category summary tables of the SciPy/SciFort time ratios
+(median, geometric mean, arithmetic mean, sample standard deviation, minimum,
+and maximum), per-workload results, and individual timing samples. Summaries
+are regenerated from unrounded ratios on every timed run, including focused
+case/category selections and quick runs. Each selected case has equal weight;
+sample SD is `n/a` for a single case. Check-only reports contain agreement
+checks and omit timing summaries. The tracked Windows snapshot is a separate
+saved report; running benchmarks updates the output files, not that snapshot. JSON contains raw
 per-operation samples, medians, batch sizes, accuracy results, clock information,
 compiler/version/flags, exact build commands, source hash, Python/NumPy/SciPy
 versions, platform, thread settings, and NumPy/SciPy build configurations.

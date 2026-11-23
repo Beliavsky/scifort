@@ -1,5 +1,9 @@
 ## 2026-11-23 - benchmark ratio summaries
 
+- Generate overall and category timing-ratio summaries automatically in every
+  timed Markdown report, including focused runs; omit summaries in check-only
+  mode and mark single-workload sample standard deviations as unavailable.
+
 - Add overall and category summaries of the saved SciPy/SciFort timing ratios:
   median, geometric mean, arithmetic mean, sample standard deviation, minimum,
   and maximum, calculated from unrounded values without rerunning benchmarks.
