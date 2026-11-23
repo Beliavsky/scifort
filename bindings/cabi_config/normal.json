@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "source": "src/stats/normal.f90",
+  "module": "scifort_normal",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_normal",
+  "header_guard": "SCIFORT_GENERATED_NORMAL_H",
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "loc": "mean",
+    "scale": "standard deviation, > 0"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/normal_generated.f90",
+    "header": "include/scifort_generated_normal.h",
+    "coverage": "bindings/cabi_config/normal_coverage.json"
+  },
+  "functions": {
+    "normal_logpdf": {
+      "symbol": "scifort_normal_logpdf_f64",
+      "vector_symbol": "scifort_normal_logpdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "normal_sf": {
+      "symbol": "scifort_normal_sf_f64",
+      "vector_symbol": "scifort_normal_sf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "normal_logcdf": {
+      "symbol": "scifort_normal_logcdf_f64",
+      "vector_symbol": "scifort_normal_logcdf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "normal_logsf": {
+      "symbol": "scifort_normal_logsf_f64",
+      "vector_symbol": "scifort_normal_logsf_vec_f64",
+      "array_argument": "x",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    },
+    "normal_isf": {
+      "symbol": "scifort_normal_isf_f64",
+      "vector_symbol": "scifort_normal_isf_vec_f64",
+      "array_argument": "p",
+      "optional_policy": "required",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "scale"
+      ]
+    }
+  },
+  "excluded": {
+    "normal_pdf": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+    "normal_cdf": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+    "normal_ppf": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged."
+  }
+}

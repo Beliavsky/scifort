@@ -1,3 +1,31 @@
+## 2026-11-23 - C ABI generator parser dependency
+
+`tools/cabi_generator/generate.py` is original MIT-licensed interface-generation
+code. It uses the unmodified external `fparser==0.2.5` Python package to parse
+Fortran syntax and inspects its abstract syntax tree. No fparser implementation
+is copied, translated, or vendored; no numerical implementation is generated or
+imported. The generator emits original `bind(c)` glue calling native procedures.
+
+Upstream project: [STFC fparser](https://github.com/stfc/fparser).
+Exact dependency release: [fparser 0.2.5 on PyPI](https://pypi.org/project/fparser/0.2.5/).
+AST API reference: [fparser2 documentation](https://fparser.readthedocs.io/en/stable/fparser2.html).
+The version is pinned in `tools/cabi_generator/requirements.txt`.
+
+The exact installed 0.2.5 wheel's `fparser-0.2.5.dist-info/licenses/LICENSE`
+was inspected. It retains the STFC modified-work BSD-3-Clause notice and the
+original Pearu Peterson / F2PY notice. That full file is preserved verbatim in
+[`LICENSES/fparser-BSD-3-Clause.txt`](LICENSES/fparser-BSD-3-Clause.txt).
+There are no upstream modifications or imported implementation files. This is
+a developer-only dependency: checked-in generated wrappers need neither Python
+nor fparser when building or using SciFort.
+
+The initial SciFort manifest selects five normal-distribution methods and
+explicitly excludes the three methods whose C wrappers already exist. Native
+normal implementations and all existing C symbols remain unchanged; their
+existing provenance and licenses still apply. Generated signatures, parameter
+constraints, and coverage are configuration decisions documented in
+[`bindings/cabi_config/README.md`](bindings/cabi_config/README.md).
+
 ## 2026-11-22 - Direct normal quantiles (SciPy / Cephes)
 
 `src/stats/normal.f90` adapts the rational inverse-normal approximations,

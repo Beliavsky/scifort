@@ -15,9 +15,13 @@ bindings/octave/
 The current development version provides scalar C ABI entry points for PDF
 or PMF, CDF, and PPF across every implemented distribution. Normal PDF, CDF,
 and PPF additionally provide bulk array entry points with explicit lengths and
-status codes. Survival, logarithmic, inverse-survival, special-function,
-random-state, random-variate, and likelihood entry points remain
-native-Fortran-only for now.
+status codes. Generated normal-distribution scalar and bulk entry points now
+also cover SF, log-PDF, log-CDF, log-SF, and ISF; see the
+[generator configuration and coverage](cabi_config/README.md). Existing PDF,
+CDF, and PPF symbols retain their original implementations and behavior.
+For other families, survival, logarithmic, and inverse-survival methods remain
+native-Fortran-only, as do special-function, random-state, random-variate, and
+likelihood entry points.
 
 Wrapper implementations must preserve the numerical results of the Fortran
 core and must document language-specific choices involving shapes, missing

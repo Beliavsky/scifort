@@ -5,6 +5,14 @@ Most SciFort numerical source is original MIT-licensed implementation.
 Standard mathematical formulas, language intrinsics, and numerical identities
 do not by themselves create a third-party source-code dependency.
 
+## C ABI generator parser (fparser, BSD-3-Clause)
+
+The optional developer tool `tools/cabi_generator` uses the external Python
+package `fparser==0.2.5`. It is not vendored or linked into SciFort. The release's
+full STFC and original F2PY/Pearu Peterson license notices are retained in
+[`LICENSES/fparser-BSD-3-Clause.txt`](LICENSES/fparser-BSD-3-Clause.txt).
+See [code provenance](CODE_PROVENANCE.md) for version and usage details.
+
 ## Real QZ and real block reordering (Reference-LAPACK, BSD-3-Clause)
 
 `src/linalg_qz_lapack.f90` adapts Reference-LAPACK v3.12.1 real QZ,

@@ -1,0 +1,109 @@
+{
+  "generated_symbol_count": 10,
+  "generator_version": "0.1.0",
+  "procedures": [
+    {
+      "procedure": "normal_cdf",
+      "reason": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_isf_f64",
+        "scifort_normal_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_logcdf_f64",
+        "scifort_normal_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_logpdf_f64",
+        "scifort_normal_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_logsf_f64",
+        "scifort_normal_logsf_vec_f64"
+      ]
+    },
+    {
+      "procedure": "normal_pdf",
+      "reason": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "normal_ppf",
+      "reason": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "normal_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_sf_f64",
+        "scifort_normal_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/normal.f90",
+  "source_sha256": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb"
+}

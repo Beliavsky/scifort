@@ -5,6 +5,7 @@
 #define SCIFORT_H
 
 #include <stddef.h>
+#include "scifort_generated_normal.h"
 
 
 #ifdef __cplusplus
