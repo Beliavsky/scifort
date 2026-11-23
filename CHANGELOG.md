@@ -1,3 +1,11 @@
+## 2026-11-23 - benchmark ratio summaries
+
+- Add overall and category summaries of the saved SciPy/SciFort timing ratios:
+  median, geometric mean, arithmetic mean, sample standard deviation, minimum,
+  and maximum, calculated from unrounded values without rerunning benchmarks.
+- Document workload weighting, scalar-call overhead, and concurrent CPU load
+  when interpreting the summaries.
+
 ## 2026-11-22 - expanded SciFort and SciPy timings
 
 - Expand the standalone benchmark suite from nine to 80 validated workloads:

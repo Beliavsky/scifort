@@ -27,6 +27,32 @@ Quick workloads: False; validation only: False.
 Times are milliseconds per full operation; ratios above one favor SciFort.
 These are application workloads, including documented allocation and API overhead.
 
+## Summary of SciPy/SciFort time ratios
+
+Each workload contributes one ratio of its median SciPy elapsed time to its
+median SciFort elapsed time. These summaries use unrounded saved ratios;
+ratios above one favor SciFort. Mean is the arithmetic mean. SD is the sample
+standard deviation across workload ratios (divisor `count - 1`), rather than
+uncertainty in repeated timings. Min and max are the smallest and largest
+workload ratios.
+
+| Workloads | Count | Median | Geometric mean | Mean | SD | Min | Max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| All | 80 | 1.553 | 1.458 | 2.370 | 4.758 | 0.170 | 42.993 |
+| Distributions | 57 | 2.288 | 2.251 | 3.082 | 5.485 | 0.579 | 42.993 |
+| FFTs | 12 | 0.391 | 0.347 | 0.384 | 0.170 | 0.170 | 0.593 |
+| Linear solves | 8 | 0.572 | 0.629 | 0.735 | 0.424 | 0.224 | 1.474 |
+| Interpolation | 3 | 1.066 | 1.129 | 1.140 | 0.195 | 0.993 | 1.361 |
+
+These are descriptive summaries of this benchmark selection, rather than
+overall library speedups. Distributions contribute 57 of the 80 workloads,
+and their API and allocation costs differ from other categories. The scalar
+normal-CDF loop includes Python call overhead and has the largest ratio,
+which particularly affects the arithmetic mean and SD. The concurrent
+CPU-load caveat above applies to all summaries.
+
+## Per-workload median times
+
 | Case | n | SciFort ms | SciPy ms | SciPy/SciFort | Max abs error |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | normal_pdf_array | 16384 | 0.902784 | 2.55069 | 2.825 | 5.55e-17 |
