@@ -4,7 +4,7 @@
     "bulk": 88,
     "elementwise": 88,
     "exports": 108,
-    "python": 88,
+    "python": 96,
     "scalar": 88
   },
   "procedures": [
@@ -491,7 +491,8 @@
     {
       "array_adapter": "scifort_cholesky_lower_f64",
       "module": "scifort_linalg",
-      "procedure": "cholesky_lower"
+      "procedure": "cholesky_lower",
+      "python": "linalg.cholesky_lower"
     },
     {
       "bulk_generated": false,
@@ -538,17 +539,20 @@
     {
       "array_adapter": "scifort_psd_decompose_f64",
       "module": "scifort_linalg",
-      "procedure": "psd_decompose"
+      "procedure": "psd_decompose",
+      "python": "linalg.psd_decompose"
     },
     {
       "array_adapter": "scifort_solve_lower_f64",
       "module": "scifort_linalg",
-      "procedure": "solve_lower"
+      "procedure": "solve_lower",
+      "python": "linalg.solve_lower"
     },
     {
       "array_adapter": "scifort_symmetric_eigen_jacobi_f64",
       "module": "scifort_linalg",
-      "procedure": "symmetric_eigen_jacobi"
+      "procedure": "symmetric_eigen_jacobi",
+      "python": "linalg.symmetric_eigen_jacobi"
     },
     {
       "bulk": "scifort_logistic_cdf_vec_f64",
@@ -713,7 +717,8 @@
     {
       "array_adapter": "scifort_invert_lower_f64",
       "module": "scifort_matrix_distribution_helpers",
-      "procedure": "invert_lower"
+      "procedure": "invert_lower",
+      "python": "linalg.invert_lower"
     },
     {
       "bulk_generated": false,
@@ -760,17 +765,20 @@
     {
       "array_adapter": "scifort_solve_lower_matrix_f64",
       "module": "scifort_matrix_distribution_helpers",
-      "procedure": "solve_lower_matrix"
+      "procedure": "solve_lower_matrix",
+      "python": "linalg.solve_lower_matrix"
     },
     {
       "array_adapter": "scifort_solve_spd_matrix_f64",
       "module": "scifort_matrix_distribution_helpers",
-      "procedure": "solve_spd_matrix"
+      "procedure": "solve_spd_matrix",
+      "python": "linalg.solve_spd_matrix"
     },
     {
       "array_adapter": "scifort_spd_factor_f64",
       "module": "scifort_matrix_distribution_helpers",
-      "procedure": "spd_factor"
+      "procedure": "spd_factor",
+      "python": "linalg.spd_factor"
     },
     {
       "bulk": "scifort_normal_cdf_vec_f64",

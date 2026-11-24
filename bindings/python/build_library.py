@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Build the distribution-only development shared library, without FPM or parser dependencies."""
+"""Build the reviewed development shared library, without FPM or parser dependencies."""
 from __future__ import annotations
 import argparse
 import hashlib

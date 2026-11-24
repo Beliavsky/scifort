@@ -27,6 +27,8 @@ module scifort_linalg
 contains
 
     pure subroutine cholesky_lower(a, l, status)
+        !! @dimension n = size(a,1)
+        !! @require n >= 1
         !! Compute a lower Cholesky factor; n = size(a,1), n >= 1.
         real(dp), intent(in) :: a(:, :) !! shape (n,n); symmetric matrix; only the lower triangle is read
         real(dp), intent(out) :: l(:, :) !! shape (n,n); lower Cholesky factor, A = L L^T
@@ -72,6 +74,8 @@ contains
     end subroutine cholesky_lower
 
     pure subroutine solve_lower(l, b, x, status)
+        !! @dimension n = size(b)
+        !! @require n >= 1
         !! Solve L*x = b by forward substitution; n = size(b), n >= 1.
         real(dp), intent(in) :: l(:, :) !! shape (n,n); nonsingular lower-triangular coefficient matrix
         real(dp), intent(in) :: b(:) !! shape (n); right-hand side vector
@@ -102,6 +106,8 @@ contains
     end subroutine solve_lower
 
     pure subroutine symmetric_eigen_jacobi(a, eigenvalues, eigenvectors, status)
+        !! @dimension n = size(a,1)
+        !! @require n >= 1
         !! Compute symmetric eigenpairs; n = size(a,1), n >= 1.
         real(dp), intent(in) :: a(:, :) !! shape (n,n); symmetric matrix; only the lower triangle is read
         real(dp), intent(out) :: eigenvalues(:) !! shape (n); eigenvalues in ascending order
@@ -223,6 +229,8 @@ contains
 
     pure subroutine psd_decompose(a, eigenvalues, eigenvectors, rank, log_pdet, cutoff, &
             status, allow_singular)
+        !! @dimension n = size(a,1)
+        !! @require n >= 1
         !! Compute PSD eigenpairs, numerical rank and log pseudo-determinant.
         !! n = size(a,1), n >= 1; array extents must match as documented below.
         real(dp), intent(in) :: a(:, :) !! shape (n,n); symmetric covariance-like matrix; lower triangle is authoritative

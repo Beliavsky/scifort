@@ -18,6 +18,19 @@
       "native_shape_documentation_review": [],
       "optional_promoted_to_required": [],
       "procedure": "cholesky_lower",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "a",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
       "shapes": {
         "a": [
           "n",
@@ -93,6 +106,19 @@
         "allow_singular"
       ],
       "procedure": "psd_decompose",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "a",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
       "shapes": {
         "a": [
           "n",
@@ -129,6 +155,19 @@
       "native_shape_documentation_review": [],
       "optional_promoted_to_required": [],
       "procedure": "solve_lower",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "b",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
       "shapes": {
         "b": [
           "n"
@@ -164,6 +203,19 @@
       "native_shape_documentation_review": [],
       "optional_promoted_to_required": [],
       "procedure": "symmetric_eigen_jacobi",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "a",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
       "shapes": {
         "a": [
           "n",
@@ -186,5 +238,5 @@
   ],
   "public_api_count": 10,
   "source": "src/linalg.f90",
-  "source_sha256": "2351316a91926978aceaf50e6f68764f191934b4383e32313266effb40721ce3"
+  "source_sha256": "b149cf757f3620cce4fcb2e8ecdbd705184534d0d81ed5ab908d464cd09d6788"
 }

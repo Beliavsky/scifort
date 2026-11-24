@@ -304,3 +304,17 @@ code was verified unchanged. No full FPM suite was run because the changed scope
 is optional interface/documentation tooling and adapters; no global build or
 numerical implementation changed. Existing distribution artifacts remain current.
 Other compilers/platforms and automatic FORD/Sphinx rendering remain unverified.
+
+## Python matrix groups and linalg shape contracts
+
+The Python policy's `array_groups.linalg` selects both matrix manifests. All eight
+adapters are available through `api.linalg`, with explicit boolean defaults,
+shape/layout/alias validation and named outputs alongside the native status.
+See the [Python matrix API](../python/README.md). No new C symbols or numerical
+implementations are introduced by this Python expansion.
+
+The four native linalg procedures now also opt into structured shape contracts,
+with definitions/minimums matching their manifests. Their generated
+[shape tables](../../docs/linalg_shapes.md) complement the existing
+[matrix-helper tables](../../docs/matrix_helper_shapes.md). The broader native
+documentation audit and automatic FORD/Sphinx integration remain future work.

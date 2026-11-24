@@ -9,7 +9,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | bulk | 88 |
 | array_adapters | 8 |
 | elementwise | 88 |
-| python | 88 |
+| python | 96 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -61,16 +61,16 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_laplace | laplace_pdf | scifort_laplace_pdf_f64 | scifort_laplace_pdf_vec_f64 |  | scifort_laplace_pdf_elementwise_f64 | laplace.pdf |
 | scifort_laplace | laplace_ppf | scifort_laplace_ppf_f64 | scifort_laplace_ppf_vec_f64 |  | scifort_laplace_ppf_elementwise_f64 | laplace.ppf |
 | scifort_laplace | laplace_sf | scifort_laplace_sf_f64 | scifort_laplace_sf_vec_f64 |  | scifort_laplace_sf_elementwise_f64 | laplace.sf |
-| scifort_linalg | cholesky_lower |  |  | scifort_cholesky_lower_f64 |  |  |
+| scifort_linalg | cholesky_lower |  |  | scifort_cholesky_lower_f64 |  | linalg.cholesky_lower |
 | scifort_linalg | linalg_status_invalid_shape |  |  |  |  |  |
 | scifort_linalg | linalg_status_no_convergence |  |  |  |  |  |
 | scifort_linalg | linalg_status_not_positive_definite |  |  |  |  |  |
 | scifort_linalg | linalg_status_not_positive_semidefinite |  |  |  |  |  |
 | scifort_linalg | linalg_status_singular |  |  |  |  |  |
 | scifort_linalg | linalg_status_success |  |  |  |  |  |
-| scifort_linalg | psd_decompose |  |  | scifort_psd_decompose_f64 |  |  |
-| scifort_linalg | solve_lower |  |  | scifort_solve_lower_f64 |  |  |
-| scifort_linalg | symmetric_eigen_jacobi |  |  | scifort_symmetric_eigen_jacobi_f64 |  |  |
+| scifort_linalg | psd_decompose |  |  | scifort_psd_decompose_f64 |  | linalg.psd_decompose |
+| scifort_linalg | solve_lower |  |  | scifort_solve_lower_f64 |  | linalg.solve_lower |
+| scifort_linalg | symmetric_eigen_jacobi |  |  | scifort_symmetric_eigen_jacobi_f64 |  | linalg.symmetric_eigen_jacobi |
 | scifort_logistic | logistic_cdf | scifort_logistic_cdf_f64 | scifort_logistic_cdf_vec_f64 |  | scifort_logistic_cdf_elementwise_f64 | logistic.cdf |
 | scifort_logistic | logistic_isf | scifort_logistic_isf_f64 | scifort_logistic_isf_vec_f64 |  | scifort_logistic_isf_elementwise_f64 | logistic.isf |
 | scifort_logistic | logistic_logcdf | scifort_logistic_logcdf_f64 | scifort_logistic_logcdf_vec_f64 |  | scifort_logistic_logcdf_elementwise_f64 | logistic.logcdf |
@@ -87,16 +87,16 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_lognormal | lognormal_pdf | scifort_lognormal_pdf_f64 | scifort_lognormal_pdf_vec_f64 |  | scifort_lognormal_pdf_elementwise_f64 | lognormal.pdf |
 | scifort_lognormal | lognormal_ppf | scifort_lognormal_ppf_f64 | scifort_lognormal_ppf_vec_f64 |  | scifort_lognormal_ppf_elementwise_f64 | lognormal.ppf |
 | scifort_lognormal | lognormal_sf | scifort_lognormal_sf_f64 | scifort_lognormal_sf_vec_f64 |  | scifort_lognormal_sf_elementwise_f64 | lognormal.sf |
-| scifort_matrix_distribution_helpers | invert_lower |  |  | scifort_invert_lower_f64 |  |  |
+| scifort_matrix_distribution_helpers | invert_lower |  |  | scifort_invert_lower_f64 |  | linalg.invert_lower |
 | scifort_matrix_distribution_helpers | log_multivariate_gamma |  |  |  |  |  |
 | scifort_matrix_distribution_helpers | matrix_status_invalid_parameter |  |  |  |  |  |
 | scifort_matrix_distribution_helpers | matrix_status_invalid_shape |  |  |  |  |  |
 | scifort_matrix_distribution_helpers | matrix_status_not_positive_definite |  |  |  |  |  |
 | scifort_matrix_distribution_helpers | matrix_status_success |  |  |  |  |  |
 | scifort_matrix_distribution_helpers | multivariate_digamma_sum |  |  |  |  |  |
-| scifort_matrix_distribution_helpers | solve_lower_matrix |  |  | scifort_solve_lower_matrix_f64 |  |  |
-| scifort_matrix_distribution_helpers | solve_spd_matrix |  |  | scifort_solve_spd_matrix_f64 |  |  |
-| scifort_matrix_distribution_helpers | spd_factor |  |  | scifort_spd_factor_f64 |  |  |
+| scifort_matrix_distribution_helpers | solve_lower_matrix |  |  | scifort_solve_lower_matrix_f64 |  | linalg.solve_lower_matrix |
+| scifort_matrix_distribution_helpers | solve_spd_matrix |  |  | scifort_solve_spd_matrix_f64 |  | linalg.solve_spd_matrix |
+| scifort_matrix_distribution_helpers | spd_factor |  |  | scifort_spd_factor_f64 |  | linalg.spd_factor |
 | scifort_normal | normal_cdf | scifort_normal_cdf_f64 | scifort_normal_cdf_vec_f64 |  | scifort_normal_cdf_elementwise_f64 | normal.cdf |
 | scifort_normal | normal_isf | scifort_normal_isf_f64 | scifort_normal_isf_vec_f64 |  | scifort_normal_isf_elementwise_f64 | normal.isf |
 | scifort_normal | normal_logcdf | scifort_normal_logcdf_f64 | scifort_normal_logcdf_vec_f64 |  | scifort_normal_logcdf_elementwise_f64 | normal.logcdf |

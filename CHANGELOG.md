@@ -1,3 +1,12 @@
+## 2026-11-24 - Python matrix adapters and linalg shape contracts
+
+- Expose eight existing C matrix adapters through generated `api.linalg` methods,
+  including native status/partial outputs and validated reusable column-major buffers.
+- Generate Python array metadata from reviewed manifests and structured contracts;
+  include array adapter dependencies automatically in the development shared library.
+- Extend structured native shape annotations and generated tables to the four
+  linalg procedures; retain existing distribution and C ABI behavior.
+
 ## 2026-11-24 - structured shape pilot and matrix-helper C adapters
 
 - Add four explicit-shape C adapters for matrix-distribution factorization,

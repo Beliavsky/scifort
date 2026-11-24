@@ -194,8 +194,8 @@ generics, reexports, derived types, callbacks, array-valued functions, and other
 unsupported interfaces cannot silently become scalar wrappers. This is not yet
 a whole-project scanner or a full Fortran semantic resolver. Default-public
 modules are rejected because complete reexport discovery needs more analysis.
-Python scalar/elemental binding generation is described below; other interface
-patterns are not yet exposed through Python.
+Python scalar/elemental and selected explicit-array binding generation are
+described below. Other interface patterns remain unsupported.
 
 ## Checks
 
@@ -468,3 +468,36 @@ coverage JSON. The unified pipeline generates/checks the Markdown file, aggregat
 the new header and updates reviewed-interface coverage. The Markdown can be
 included in documentation builds that support Markdown tables; no automatic
 FORD/Sphinx integration is introduced in this prototype.
+
+## Python array groups
+
+Python policy schema 1 optionally accepts `array_groups` alongside distribution
+`groups`. Each array group supplies a list of reviewed C `manifests` and an explicit
+`defaults` dictionary keyed by native procedure name. The SciFort `linalg` group
+combines `linalg.json` and `matrix_helpers.json`, with
+`"defaults": {"psd_decompose": {"allow_singular": true}}`.
+
+The reusable `generate_arrays.py` validates native declarations, C policies and
+opted-in structured contracts, then emits typed method metadata/signatures.
+Dimension definitions must reference input arrays so dimensions can be determined
+before allocating outputs. Exact array shapes and minimum sizes come from those
+checked contracts. All selected subroutines in the supplied manifests are exposed;
+names/defaults and group collisions are validated. Native scalar real inputs,
+scalar logical inputs with explicit C mappings, and scalar real/integer outputs
+are supported. Native `intent(inout)` arguments and optional array inputs are not
+supported in Python array groups yet. Methods return `ArrayResult(status, outputs)`;
+numerical statuses and partial outputs are retained.
+
+The runtime validates shapes, C integer extent limits, real numeric dtypes,
+column-major storage and buffer overlap. Inputs can be converted; caller-provided
+outputs must already satisfy the exact native-endian binary64 Fortran layout.
+Input/input, input/output and output/output overlap are conservatively rejected
+against original arrays. It supplies valid disjoint buffers for zero-size arrays
+and keeps all inputs/outputs and the shared-library owner alive through each call.
+
+The pipeline includes these primary C adapter roots in the optional development
+library's dependency closure and records array groups separately from distribution
+families. Array adapters use their primary C implementations, with no duplicate
+compatibility adapters. Combined coverage and discovery include the eight Python
+matrix methods. Regenerate/check with the unified workflow so the source plan,
+Python runtime copy and all contract tables stay current.

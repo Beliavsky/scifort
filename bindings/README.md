@@ -63,3 +63,7 @@ SPD factorization with log determinant, lower-triangular inversion, and triangul
 or SPD solves with multiple right-hand sides. Their native procedures pilot
 [structured shape contracts](../docs/matrix_helper_shapes.md), checked against
 reviewed wrapper dimensions and rendered as Markdown tables.
+
+The Python owner now exposes all eight reviewed matrix adapters under `api.linalg`.
+Their [Python interface contract](python/README.md) documents exact shapes,
+Fortran storage, named outputs, native statuses and caller-provided buffers.

@@ -158,6 +158,11 @@ def configured(root, batch=None, python=None):
                 row.update(scalar=entry.get('symbol') or entry.get('existing_scalar_symbol'),
                            bulk=entry.get('vector_symbol'),
                            python=f'{group}.{name[len(options["prefix"]):]}')
+        for group, settings in policy.get('array_groups', {}).items():
+            for manifest in settings['manifests']:
+                config = json.loads((root/manifest).read_text(encoding='utf-8'))
+                for name in config.get('subroutines', {}):
+                    native.setdefault((config['module'], name), {})['python'] = f'{group}.{name}'
     return native
 
 

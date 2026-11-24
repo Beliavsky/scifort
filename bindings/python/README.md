@@ -3,7 +3,7 @@
 This development interface exposes PDF, log-PDF, CDF, SF, log-CDF, log-SF, PPF,
 and ISF for `normal`, `exponential`, `logistic`, `laplace`, `cauchy`, `weibull`,
 `lognormal`, `gamma`, `beta`, Student `t`, and `chi2`. It uses NumPy arrays and the stable
-binary64 C calling convention.
+binary64 C calling convention. Eight matrix methods are available under `api.linalg`.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -53,7 +53,7 @@ Keep that runtime installed. The Python layer can also load a full SciFort share
 library exporting these symbols; FPM's ordinary library build is not itself a
 Python extension or a shared-library packaging step.
 
-## Python contract
+## Distribution contract
 
 - All-scalar arguments return a Python float. Zero-dimensional NumPy arguments are scalar.
 - Array-like real numeric input returns a native-endian float64 ndarray with the
@@ -85,6 +85,76 @@ Python extension or a shared-library packaging step.
   SciPy differences remain applicable. In particular SciPy 1.15.3 returns NaN
   for gamma/Weibull PDF/log-PDF at positive infinity, whereas SciFort returns the
   mathematical limits 0 and negative infinity.
+
+## Matrix procedures
+
+`api.linalg` exposes eight existing C adapters. Each returns an
+`ArrayResult(status, outputs)`, exported from `scifort`. `status` is the native
+integer status; `outputs` is a dictionary with the following keys:
+
+| Method | Inputs | Output keys |
+| --- | --- | --- |
+| `cholesky_lower` | A(n,n) | `l` |
+| `symmetric_eigen_jacobi` | A(n,n) | `eigenvalues`, `eigenvectors` |
+| `psd_decompose` | A(n,n), `allow_singular=True` | `eigenvalues`, `eigenvectors`, `rank`, `log_pdet`, `cutoff` |
+| `solve_lower` | L(n,n), b(n) | `x` |
+| `spd_factor` | A(n,n) | `l`, `logdet` |
+| `invert_lower` | L(n,n) | `linv` |
+| `solve_lower_matrix` | L(n,n), B(n,k) | `x` |
+| `solve_spd_matrix` | L(n,n), B(n,k) | `x` |
+
+n >= 1; k >= 0. Eigenvectors and RHS vectors occupy columns. The SPD solve uses
+a supplied lower Cholesky factor and solves `(L L^T) X = B`. Each call handles one
+matrix, with exact shape relationships and no matrix-batch broadcasting.
+See [linalg shape tables](../../docs/linalg_shapes.md) and
+[matrix-helper shape tables](../../docs/matrix_helper_shapes.md).
+
+```python
+a = np.array([[4., 1.], [1., 3.]])
+factorization = api.linalg.cholesky_lower(a)
+if factorization.status:
+    raise RuntimeError(f"Cholesky failed: {factorization.status}")
+lower = factorization.outputs["l"]
+solution = api.linalg.solve_spd_matrix(lower, np.array([[1.], [2.]]))
+if solution.status:
+    raise RuntimeError(f"Solve failed: {solution.status}")
+print(solution.outputs["x"])
+```
+
+Inputs accept real numeric array-like data. Row-major, noncontiguous, unaligned,
+integer/float32 and nonnative-endian arrays are converted to aligned,
+Fortran-contiguous binary64 buffers as needed. Read-only inputs are accepted.
+Complex/string/object inputs are rejected. Input buffers must not overlap each
+other, matching the existing C adapter contracts; possible overlap is checked
+against original arrays even when a conversion could make a copy.
+
+By default array outputs are newly allocated Fortran-contiguous float64 arrays.
+Pass `out={"l": buffer}` or another dictionary of array-output names to reuse
+buffers; supplying only some outputs is permitted. Every supplied buffer must
+have the exact shape, native-endian float64 dtype, Fortran-contiguous storage,
+alignment and write permission. Outputs must not overlap inputs or other outputs.
+The returned dictionary contains the supplied arrays by identity. Scalar outputs
+are returned as Python float/int values and do not accept caller buffers.
+
+Shape/type/layout/overlap errors raise before the C call and leave caller buffers
+untouched. Native numerical failures return a nonzero `status` with the native
+zeroed/partial/complete outputs, including changes to caller buffers. Always
+check status before using a factorization or solution. All C statuses are returned
+unchanged; the first four methods use `linalg_status_*`, while the last four use
+`matrix_status_*`. See the [C status and failure contracts](../cabi_config/README.md).
+
+`psd_decompose` explicitly defaults to allowing singular matrices, matching its
+native procedure. `allow_singular` must be a Python bool or NumPy boolean scalar;
+numeric flag values are rejected in Python. Allowed rank deficiency returns
+status 0; disallowed rank deficiency returns status 5 with computed rank/cutoff,
+complete eigenpairs and log_pdet=0. No Fortran logical representation crosses C.
+Empty RHS batches return shape (n,0); helper routines skip diagonal evaluation
+for those batches, even for otherwise-invalid diagonal values. Non-NULL scratch
+buffers are supplied for all zero-size arrays.
+
+The development library now includes both matrix modules/adapters and their
+module dependencies through its generated build plan. Rebuild the library when
+updating to this Python interface; older development DLLs may lack matrix symbols.
 
 ## Generation and shared-library boundary
 
@@ -328,3 +398,35 @@ and compilers remain unverified; timing baselines were not refreshed.
 
 The read-only pipeline check passed for all 75 artifacts. Changed local links,
 Fortran ASCII/line limits, encoding and whitespace checks also passed.
+
+## Matrix Python bindings and shape contracts (2026-11-24)
+
+The matrix interface above is generated from two reviewed C manifests and eight
+structured native shape contracts. The optional build plan includes both native
+matrix modules, their dependencies and their existing C adapters. No numerical
+implementation or existing C symbol changed.
+
+Validation commands (CMD):
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+python bindings/python/example.py
+```
+
+All 69 focused tests passed: 52 generator/workflow tests, 15 Python integration
+tests and two benchmark harness tests. Matrix integration tests cover all eight
+methods in checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) builds,
+including native statuses and partial outputs, singular matrices, empty RHS
+batches, shape constraints, conversions, caller buffers and overlap rejection.
+Validation used GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5 on Windows. The example ran successfully.
+The full FPM suite was not run because changes affect optional interface tooling
+and documentation, with unchanged numerical implementations and global build
+configuration. Other platforms and compilers remain unverified.
+
+The read-only pipeline check passed for all 80 artifacts. Changed local Markdown
+links, UTF-8/BOM, Fortran ASCII/line limits and whitespace checks passed. The
+native `linalg.f90` diff contains only comments. Timing baselines were not refreshed.

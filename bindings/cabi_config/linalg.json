@@ -44,7 +44,8 @@
       },
       "status_argument": "status",
       "invalid_status": 1,
-      "description": "Solve a lower-triangular real linear system."
+      "description": "Solve a lower-triangular real linear system.",
+      "shape_contract": true
     },
     "cholesky_lower": {
       "symbol": "scifort_cholesky_lower_f64",
@@ -66,7 +67,8 @@
       },
       "status_argument": "status",
       "invalid_status": 1,
-      "description": "Compute a lower Cholesky factor."
+      "description": "Compute a lower Cholesky factor.",
+      "shape_contract": true
     },
     "symmetric_eigen_jacobi": {
       "symbol": "scifort_symmetric_eigen_jacobi_f64",
@@ -91,7 +93,8 @@
       },
       "status_argument": "status",
       "invalid_status": 1,
-      "description": "Compute symmetric eigenvalues and eigenvectors."
+      "description": "Compute symmetric eigenvalues and eigenvectors.",
+      "shape_contract": true
     },
     "psd_decompose": {
       "symbol": "scifort_psd_decompose_f64",
@@ -122,13 +125,15 @@
           "false": 0,
           "true": 1
         }
-      }
+      },
+      "shape_contract": true
     }
   },
   "outputs": {
     "fortran": "src/c_api/generated/linalg_generated.f90",
     "header": "include/scifort_generated_linalg.h",
-    "coverage": "bindings/cabi_config/linalg_coverage.json"
+    "coverage": "bindings/cabi_config/linalg_coverage.json",
+    "shape_documentation": "docs/linalg_shapes.md"
   },
   "excluded": {
     "linalg_status_success": "Native status constant, not a procedure to wrap.",

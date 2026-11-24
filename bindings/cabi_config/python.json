@@ -144,5 +144,18 @@
       },
       "existing_functions": {}
     }
+  },
+  "array_groups": {
+    "linalg": {
+      "manifests": [
+        "bindings/cabi_config/linalg.json",
+        "bindings/cabi_config/matrix_helpers.json"
+      ],
+      "defaults": {
+        "psd_decompose": {
+          "allow_singular": true
+        }
+      }
+    }
   }
 }

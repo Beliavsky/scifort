@@ -157,6 +157,14 @@ def coverage(configs, python, root):
             row = rows[key]
             row.update(scalar=entry.get('symbol') or entry.get('existing_scalar_symbol'), bulk=entry['vector_symbol'],
                        python=f'{group}.{name[len(options["prefix"]):]}')
+    for group, settings in python.get('array_groups', {}).items():
+        for manifest in settings['manifests']:
+            native = json.loads((root/manifest).read_text(encoding='utf-8'))
+            for name in native.get('subroutines', {}):
+                key = (native['module'], name)
+                if key not in rows:
+                    raise ValueError(f'Python array manifest must be included in the C batch: {manifest}')
+                rows[key]['python'] = f'{group}.{name}'
     procedures = [rows[k] for k in sorted(rows)]
     counts = dict(exports=len(rows), scalar=sum(bool(r.get('scalar')) for r in procedures),
                   bulk=sum(bool(r.get('bulk')) for r in procedures),
@@ -211,8 +219,17 @@ def artifacts(config_path, root, *, check=False):
     for options in python['groups'].values():
         native = json.loads((root/options['manifest']).read_text(encoding='utf-8'))
         roots.append((root/native['outputs']['fortran']).resolve())
+    for settings in python.get('array_groups', {}).values():
+        for manifest in settings['manifests']:
+            path = (root/manifest).resolve()
+            if path not in configs_paths:
+                raise ValueError('each Python array manifest must appear in the C batch')
+            native = json.loads(path.read_text(encoding='utf-8'))
+            roots.append((root/native['outputs']['fortran']).resolve())
     plan, indexed = build_plan(roots, config['source_directories'], root, results)
     plan.update(families=sorted(python['groups']), pipeline_config=relative(config_path, root))
+    if python.get('array_groups'):
+        plan['array_groups'] = sorted(python['array_groups'])
     report = coverage(configs, python, root)
     headers = sorted((root/c['outputs']['header']).resolve() for c in configs)
     guard = config['aggregate_header_guard']
@@ -229,7 +246,7 @@ def artifacts(config_path, root, *, check=False):
                   (paths['aggregate_header'],'\n'.join(header))]
     protected = {config_path,paths['c_manifests'],paths['python_policy'],*configs_paths,
                  Path(__file__).resolve(),Path(generate.__file__).resolve(),
-                 Path(generate_python.__file__).resolve(),Path(generate_python.__file__).with_name('python_runtime.py').resolve()}
+                 Path(generate_python.__file__).resolve(),Path(generate_python.generate_arrays.__file__).resolve(),Path(generate_python.__file__).with_name('python_runtime.py').resolve()}
     protected.update((root/c['source']).resolve() for c in configs)
     # Original Fortran files discovered in the source roots must never become outputs.
     protected.update(path for path in indexed if path not in results)

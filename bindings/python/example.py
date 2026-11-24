@@ -21,6 +21,16 @@ def main():
     output = np.empty_like(x)
     api.normal.logpdf(x, loc=.5, scale=2., out=output)
     print('normal log-PDF in caller buffer:', output)
+    matrix = np.array([[4., 1.], [1., 3.]])
+    factorization = api.linalg.cholesky_lower(matrix)
+    if factorization.status:
+        raise RuntimeError(f'Cholesky failed: {factorization.status}')
+    solution = api.linalg.solve_spd_matrix(factorization.outputs['l'], np.array([[1.], [2.]]))
+    if solution.status:
+        raise RuntimeError(f'SPD solve failed: {solution.status}')
+    print('SPD solution:', solution.outputs['x'])
+    psd = api.linalg.psd_decompose(np.diag([4., 0., 1.]))
+    print('PSD status/rank:', psd.status, psd.outputs['rank'])
 
 
 if __name__ == '__main__':

@@ -1,3 +1,12 @@
+## 2026-11-24 - generated Python matrix interfaces
+
+The reusable Python array emitter/runtime, integration tests, explicit Python
+policy and build/coverage integration are original MIT-licensed interface tooling.
+They call the existing eight C matrix adapters. Native linalg changes are comments
+only; no numerical implementation, external algorithm or dependency is introduced.
+SciPy is used as an external test reference, not copied or linked into SciFort.
+Existing NumPy/parser dependency and native numerical provenance records apply.
+
 ## 2026-11-24 - structured shapes and matrix-distribution C helpers
 
 The shape-contract parser/renderer, source annotations, reviewed manifest and
