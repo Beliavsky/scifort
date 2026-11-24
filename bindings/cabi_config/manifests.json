@@ -9,5 +9,6 @@
   "linalg.json",
   "gamma.json",
   "beta.json",
-  "student_t.json"
+  "student_t.json",
+  "chi2.json"
 ]

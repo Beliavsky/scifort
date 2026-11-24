@@ -150,6 +150,80 @@ class Cauchy(Distribution):
         """Evaluate cauchy_sf; scalar parameters, optional array output buffer."""
         return self._evaluate('sf', x, (loc, scale), out)
 
+class Chi2(Distribution):
+    _specs = {'cdf': {'arguments': ['x', 'df', 'loc', 'scale'],
+             'array': 'x',
+             'bulk': 'scifort_chi2_cdf_vec_f64',
+             'parameters': ['df', 'loc', 'scale'],
+             'scalar': 'scifort_chi2_cdf_f64'},
+     'isf': {'arguments': ['p', 'df', 'loc', 'scale'],
+             'array': 'p',
+             'bulk': 'scifort_chi2_isf_vec_f64',
+             'parameters': ['df', 'loc', 'scale'],
+             'scalar': 'scifort_chi2_isf_f64'},
+     'logcdf': {'arguments': ['x', 'df', 'loc', 'scale'],
+                'array': 'x',
+                'bulk': 'scifort_chi2_logcdf_vec_f64',
+                'parameters': ['df', 'loc', 'scale'],
+                'scalar': 'scifort_chi2_logcdf_f64'},
+     'logpdf': {'arguments': ['x', 'df', 'loc', 'scale'],
+                'array': 'x',
+                'bulk': 'scifort_chi2_logpdf_vec_f64',
+                'parameters': ['df', 'loc', 'scale'],
+                'scalar': 'scifort_chi2_logpdf_f64'},
+     'logsf': {'arguments': ['x', 'df', 'loc', 'scale'],
+               'array': 'x',
+               'bulk': 'scifort_chi2_logsf_vec_f64',
+               'parameters': ['df', 'loc', 'scale'],
+               'scalar': 'scifort_chi2_logsf_f64'},
+     'pdf': {'arguments': ['x', 'df', 'loc', 'scale'],
+             'array': 'x',
+             'bulk': 'scifort_chi2_pdf_vec_f64',
+             'parameters': ['df', 'loc', 'scale'],
+             'scalar': 'scifort_chi2_pdf_f64'},
+     'ppf': {'arguments': ['p', 'df', 'loc', 'scale'],
+             'array': 'p',
+             'bulk': 'scifort_chi2_ppf_vec_f64',
+             'parameters': ['df', 'loc', 'scale'],
+             'scalar': 'scifort_chi2_ppf_f64'},
+     'sf': {'arguments': ['x', 'df', 'loc', 'scale'],
+            'array': 'x',
+            'bulk': 'scifort_chi2_sf_vec_f64',
+            'parameters': ['df', 'loc', 'scale'],
+            'scalar': 'scifort_chi2_sf_f64'}}
+
+    def cdf(self, x, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_cdf; scalar parameters, optional array output buffer."""
+        return self._evaluate('cdf', x, (df, loc, scale), out)
+
+    def isf(self, p, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_isf; scalar parameters, optional array output buffer."""
+        return self._evaluate('isf', p, (df, loc, scale), out)
+
+    def logcdf(self, x, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_logcdf; scalar parameters, optional array output buffer."""
+        return self._evaluate('logcdf', x, (df, loc, scale), out)
+
+    def logpdf(self, x, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_logpdf; scalar parameters, optional array output buffer."""
+        return self._evaluate('logpdf', x, (df, loc, scale), out)
+
+    def logsf(self, x, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_logsf; scalar parameters, optional array output buffer."""
+        return self._evaluate('logsf', x, (df, loc, scale), out)
+
+    def pdf(self, x, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_pdf; scalar parameters, optional array output buffer."""
+        return self._evaluate('pdf', x, (df, loc, scale), out)
+
+    def ppf(self, p, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_ppf; scalar parameters, optional array output buffer."""
+        return self._evaluate('ppf', p, (df, loc, scale), out)
+
+    def sf(self, x, df, loc=0.0, scale=1.0, *, out=None):
+        """Evaluate chi2_sf; scalar parameters, optional array output buffer."""
+        return self._evaluate('sf', x, (df, loc, scale), out)
+
 class Exponential(Distribution):
     _specs = {'cdf': {'arguments': ['x', 'loc', 'scale'],
              'array': 'x',
@@ -748,6 +822,7 @@ class API(Library):
         super().__init__(path, dll_directories=dll_directories)
         self.beta = Beta(self._library)
         self.cauchy = Cauchy(self._library)
+        self.chi2 = Chi2(self._library)
         self.exponential = Exponential(self._library)
         self.gamma = Gamma(self._library)
         self.laplace = Laplace(self._library)

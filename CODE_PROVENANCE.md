@@ -1,3 +1,18 @@
+## 2026-11-24 - Unified workflow and chi-square interface
+
+`tools/cabi_generator/pipeline.py`, its independent fixture tests, pipeline
+configuration and generated build/coverage/header metadata are original
+MIT-licensed interface/build tooling. Module declarations and USE relationships
+are read through the existing unmodified fparser dependency. No numerical code,
+coefficients or third-party algorithm implementation is imported or adapted.
+
+The chi-square C manifest and generated C/Python adapters call the existing
+`scifort_chi2` procedures, whose gamma-based implementation and provenance remain
+unchanged. The full manual scalar C symbols are retained. The standalone build
+still uses separate generated compatibility adapters and never links those
+with the full manual C API object. Existing parser and numerical license records
+continue to apply.
+
 ## 2026-11-24 - API inventory and gamma/beta/Student t interfaces
 
 `tools/cabi_generator/discover.py`, its independent tests, the reviewed three

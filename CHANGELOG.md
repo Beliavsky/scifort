@@ -1,3 +1,12 @@
+## 2026-11-24 - unified reviewed-interface workflow
+
+- Generate the development build's source list from reviewed roots and module
+  dependencies, with diagnostics for missing/ambiguous providers and cycles.
+- Add a single regeneration/read-only check for C/Python artifacts, source hashes,
+  aggregate public header and reviewed interface coverage.
+- Add chi-square C/Python methods (13 new C symbols) without editing a family or
+  source list in the builder; preserve existing scalar symbols and numerical code.
+
 ## 2026-11-24 - C ABI discovery and reviewed distribution expansion
 
 - Add AST-based API/C-binding inventory, separate native/C/Python coverage reports

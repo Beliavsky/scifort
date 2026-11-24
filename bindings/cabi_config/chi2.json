@@ -1,0 +1,144 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/chi2.f90",
+  "module": "scifort_chi2",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_chi2",
+  "header_guard": "SCIFORT_GENERATED_CHI2_H",
+  "outputs": {
+    "fortran": "src/c_api/generated/chi2_generated.f90",
+    "header": "include/scifort_generated_chi2.h",
+    "coverage": "bindings/cabi_config/chi2_coverage.json"
+  },
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "df": "degrees of freedom, finite and > 0",
+    "loc": "location, finite",
+    "scale": "scale, finite and > 0"
+  },
+  "functions": {
+    "chi2_cdf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_cdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_chi2_cdf_f64"
+    },
+    "chi2_isf": {
+      "symbol": "scifort_chi2_isf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_isf_vec_f64",
+      "array_argument": "p",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "chi2_logcdf": {
+      "symbol": "scifort_chi2_logcdf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_logcdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "chi2_logpdf": {
+      "symbol": "scifort_chi2_logpdf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_logpdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "chi2_logsf": {
+      "symbol": "scifort_chi2_logsf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_logsf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "chi2_pdf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_pdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_chi2_pdf_f64"
+    },
+    "chi2_ppf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_ppf_vec_f64",
+      "array_argument": "p",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_chi2_ppf_f64"
+    },
+    "chi2_sf": {
+      "symbol": "scifort_chi2_sf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_chi2_sf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "df",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    }
+  },
+  "excluded": {}
+}

@@ -24,6 +24,18 @@ and do not need Python or fparser.
 
 ## Regeneration
 
+For normal development, use the unified reviewed-interface workflow:
+
+```text
+python tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json
+python tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+```
+
+This refreshes/checks C wrappers, Python artifacts, dependency build inputs,
+aggregate header and combined coverage together. The individual commands below
+remain useful for debugging but do not update the complete build plan.
+
+
 From the SciFort repository root, in CMD:
 
 ```text
@@ -277,3 +289,57 @@ remove the draft/review metadata. The gamma/beta/t manifests show the result
 of that process. Existing drafts are never overwritten; inputs and referenced
 policies are protected from report writes. Normal filesystem failures during
 report writing are not transactional. The tool generates no numerical code.
+
+## Unified reviewed interface workflow
+
+`pipeline.py` reads [pipeline.json](../../bindings/cabi_config/pipeline.json),
+which names the C batch, Python policy, source search directories, build-plan
+output, coverage output and aggregate-header output/guard. Project names and
+mathematical policies remain in configuration. The reusable tool does not contain
+a family list or a special case for the chi-square distribution.
+
+The command validates and computes all artifacts before writing, and leaves
+unchanged outputs untouched. `--check` is
+read-only and reports missing/stale C, Python, header, build-plan or coverage
+artifacts. Invalid dependencies, source/config/template collisions or unresolved
+review policies fail before any files change. Filesystem write failures are not
+transactional; correct the failure and regenerate. Existing handwritten source
+and aggregate-header targets cannot be overwritten by regeneration.
+
+The build planner indexes MODULE statements with fparser's logical-line reader,
+then parses only the required source closure. It follows module and procedure-local
+USE statements, chooses providers by module declaration rather than filename,
+and sorts dependencies before dependents. Multiple modules in one file must
+already appear in a compilable order. Missing or ambiguous providers, dependency
+cycles and forward references within a file produce explicit diagnostics.
+Intrinsic USE statements do not need source providers. For implicit module nature,
+a configured source provider takes precedence; otherwise the standard intrinsic
+module set is recognized. NON_INTRINSIC imports always require a source provider.
+
+The planner currently supports free-form Fortran module sources accepted by the
+configured fparser grammar. Submodules, preprocessing, INCLUDE inputs, separately
+compiled external modules, non-module procedure dependencies and non-Fortran link
+inputs need explicit future support; they are not inferred from filenames.
+Required submodule/preprocessor/INCLUDE sources are rejected. Other standalone
+external procedure calls are outside module-dependency analysis and can still
+produce compiler/linker errors. The source index does not fully parse unrelated
+numerical bodies or large data initializers.
+
+The checked-in [build_sources.json](../../bindings/python/build_sources.json)
+records ordered files, dependency edges, module providers, Python group names
+and normalized UTF-8/LF source hashes. The development builder reads that plan
+without fparser and rejects changed source hashes with a regeneration diagnostic.
+Consequently even a dependency-body edit requires refreshing the reviewed
+pipeline before using this optional development build. Ordinary FPM builds are
+unchanged. This guard prevents silently compiling against stale build metadata.
+
+[interface_coverage.md](../../bindings/cabi_config/interface_coverage.md) and its
+JSON sibling report reviewed exports, scalar C symbols, bulk C symbols, array
+adapters and Python methods. They do not claim whole-project coverage or SciPy
+parity. The generated aggregate header keeps `scifort.h` declarations synchronized
+with the C batch without a handwritten list of family includes.
+
+To extend the workflow: review a native module's C manifest, list it in the C
+batch, and add its Python mapping/defaults when desired. Run the unified command
+and focused tests. Source dependencies, header aggregation, build ordering and
+coverage then update automatically. The chi-square addition exercises this path.

@@ -134,6 +134,15 @@
         "scale": 1.0
       },
       "existing_functions": {}
+    },
+    "chi2": {
+      "manifest": "bindings/cabi_config/chi2.json",
+      "prefix": "chi2_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
     }
   }
 }

@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import sys
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 from scipy import stats
@@ -15,10 +16,11 @@ from scipy import stats
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from build_library import build, FAMILIES
+import build_library as builder
 from scifort import Scifort
 
 SCIPY_NAMES = dict(normal='norm', exponential='expon', weibull='weibull_min', lognormal='lognorm')
-SHAPES = dict(weibull=(1.7,), lognormal=(.8,), gamma=(2.3,), beta=(2.3, 3.1), t=(5.,))
+SHAPES = dict(weibull=(1.7,), lognormal=(.8,), gamma=(2.3,), beta=(2.3, 3.1), t=(5.,), chi2=(5.,))
 METHODS = ('pdf', 'logpdf', 'cdf', 'sf', 'logcdf', 'logsf', 'ppf', 'isf')
 
 
@@ -47,9 +49,9 @@ class BindingTests(unittest.TestCase):
                         actual = func(values, *shape, loc=.25, scale=1.5)
                         with np.errstate(invalid='ignore'):
                             expected = reference(values, *shape, loc=.25, scale=1.5)
-                        # SciPy 1.15.3 returns NaN for gamma/Weibull density at +inf.
+                        # SciPy 1.15.3 returns NaN for gamma/chi-square/Weibull density at +inf.
                         # Preserve SciFort's established mathematical endpoint limits.
-                        if family in ('weibull', 'gamma') and method in ('pdf', 'logpdf'):
+                        if family in ('weibull', 'gamma', 'chi2') and method in ('pdf', 'logpdf'):
                             endpoint = np.isposinf(values)
                             limit = 0. if method == 'pdf' else -np.inf
                             np.testing.assert_array_equal(actual[endpoint], limit)
@@ -145,6 +147,18 @@ class BindingTests(unittest.TestCase):
                 np.testing.assert_array_equal(func(x, np.inf), normal(x))
                 self.assertEqual(func(.5, np.inf), normal(.5))
                 self.assertEqual(func([], np.inf).size, 0)
+
+    def test_generated_build_plan_and_stale_source_guard(self):
+        self.assertEqual(set(FAMILIES), set(builder.PLAN['families']))
+        self.assertIn('chi2', FAMILIES)
+        self.assertEqual(builder.PLAN['modules']['scifort_chi2'], 'src/stats/chi2.f90')
+        sources = list(builder.SOURCES)
+        self.assertLess(sources.index('src/stats/gamma.f90'), sources.index('src/stats/chi2.f90'))
+        hashes = dict(builder.PLAN['source_sha256'])
+        hashes[sources[0]] = 'deliberately stale'
+        with patch.dict(builder.PLAN, source_sha256=hashes):
+            with self.assertRaisesRegex(RuntimeError, 'regenerate'):
+                build()
 
     def test_unexpected_status_and_missing_library(self):
         with self.assertRaises(FileNotFoundError):

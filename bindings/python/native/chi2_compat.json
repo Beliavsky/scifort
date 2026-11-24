@@ -1,0 +1,85 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_cdf_f64"
+      ]
+    },
+    {
+      "procedure": "chi2_isf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "chi2_logcdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "chi2_logpdf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "chi2_logsf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_ppf_f64"
+      ]
+    },
+    {
+      "procedure": "chi2_sf",
+      "reason": "Provided by the primary C ABI build, not the standalone supplement.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/chi2.f90",
+  "source_sha256": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8"
+}

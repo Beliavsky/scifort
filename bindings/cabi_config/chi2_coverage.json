@@ -1,0 +1,153 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_chi2_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_isf_f64",
+        "scifort_chi2_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_logcdf_f64",
+        "scifort_chi2_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_logpdf_f64",
+        "scifort_chi2_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_logsf_f64",
+        "scifort_chi2_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_chi2_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_chi2_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "chi2_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_chi2_sf_f64",
+        "scifort_chi2_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/chi2.f90",
+  "source_sha256": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8"
+}

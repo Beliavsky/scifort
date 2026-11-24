@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "c_manifests": "bindings/cabi_config/manifests.json",
+  "python_policy": "bindings/cabi_config/python.json",
+  "source_directories": ["src"],
+  "build_manifest": "bindings/python/build_sources.json",
+  "coverage_report": "bindings/cabi_config/interface_coverage.json",
+  "aggregate_header": "include/scifort_generated.h",
+  "aggregate_header_guard": "SCIFORT_GENERATED_H"
+}

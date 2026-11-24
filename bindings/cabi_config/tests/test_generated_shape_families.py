@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Compile gamma, beta and Student t interfaces and compare bulk, scalar and native calls."""
+"""Compile gamma, beta, Student t and chi-square interfaces and compare bulk, scalar and native calls."""
 import ctypes as C
 import json
 import math
@@ -18,9 +18,9 @@ sys.path.insert(0, str(ROOT / 'tools/cabi_generator'))
 import generate
 from test_generated_normal import run
 
-FAMILIES = ('gamma', 'beta', 't')
+FAMILIES = ('gamma', 'beta', 't', 'chi2')
 FILES = {'t': 'student_t'}
-PARAMETERS = dict(gamma=[2.3, .25, 1.5], beta=[2.3, 3.1, .25, 1.5], t=[5., .25, 1.5])
+PARAMETERS = dict(gamma=[2.3, .25, 1.5], beta=[2.3, 3.1, .25, 1.5], t=[5., .25, 1.5], chi2=[5., .25, 1.5])
 METHODS = ('pdf', 'logpdf', 'cdf', 'sf', 'logcdf', 'logsf', 'ppf', 'isf')
 
 

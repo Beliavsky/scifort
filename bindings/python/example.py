@@ -12,6 +12,7 @@ def main():
     print('normal CDF:', api.normal.cdf(x))
     print('normal quantile:', api.normal.ppf(.975))
     print('Weibull survival:', api.weibull.sf(x, c=1.7))
+    print('chi-square CDF:', api.chi2.cdf([0., 1., 4.], df=5.))
     print('gamma CDF:', api.gamma.cdf([0., 1., 4.], a=2.3))
     print('beta quantiles:', api.beta.ppf([.1, .5, .9], a=2.3, b=3.1))
     print('Student t normal limit:', api.t.cdf(x, df=float('inf')))

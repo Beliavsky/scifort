@@ -1,0 +1,876 @@
+{
+  "counts": {
+    "array_adapters": 1,
+    "bulk": 88,
+    "exports": 98,
+    "python": 88,
+    "scalar": 88
+  },
+  "procedures": [
+    {
+      "bulk": "scifort_beta_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_cdf",
+      "python": "beta.cdf",
+      "scalar": "scifort_beta_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_beta_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_isf",
+      "python": "beta.isf",
+      "scalar": "scifort_beta_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_beta_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_logcdf",
+      "python": "beta.logcdf",
+      "scalar": "scifort_beta_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_beta_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_logpdf",
+      "python": "beta.logpdf",
+      "scalar": "scifort_beta_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_beta_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_logsf",
+      "python": "beta.logsf",
+      "scalar": "scifort_beta_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_beta_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_pdf",
+      "python": "beta.pdf",
+      "scalar": "scifort_beta_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_beta_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_ppf",
+      "python": "beta.ppf",
+      "scalar": "scifort_beta_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_beta_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_beta",
+      "procedure": "beta_sf",
+      "python": "beta.sf",
+      "scalar": "scifort_beta_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_cauchy_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_cdf",
+      "python": "cauchy.cdf",
+      "scalar": "scifort_cauchy_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_cauchy_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_isf",
+      "python": "cauchy.isf",
+      "scalar": "scifort_cauchy_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_cauchy_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_logcdf",
+      "python": "cauchy.logcdf",
+      "scalar": "scifort_cauchy_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_cauchy_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_logpdf",
+      "python": "cauchy.logpdf",
+      "scalar": "scifort_cauchy_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_cauchy_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_logsf",
+      "python": "cauchy.logsf",
+      "scalar": "scifort_cauchy_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_cauchy_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_pdf",
+      "python": "cauchy.pdf",
+      "scalar": "scifort_cauchy_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_cauchy_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_ppf",
+      "python": "cauchy.ppf",
+      "scalar": "scifort_cauchy_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_cauchy_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_cauchy",
+      "procedure": "cauchy_sf",
+      "python": "cauchy.sf",
+      "scalar": "scifort_cauchy_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_chi2_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_cdf",
+      "python": "chi2.cdf",
+      "scalar": "scifort_chi2_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_chi2_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_isf",
+      "python": "chi2.isf",
+      "scalar": "scifort_chi2_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_chi2_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_logcdf",
+      "python": "chi2.logcdf",
+      "scalar": "scifort_chi2_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_chi2_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_logpdf",
+      "python": "chi2.logpdf",
+      "scalar": "scifort_chi2_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_chi2_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_logsf",
+      "python": "chi2.logsf",
+      "scalar": "scifort_chi2_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_chi2_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_pdf",
+      "python": "chi2.pdf",
+      "scalar": "scifort_chi2_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_chi2_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_ppf",
+      "python": "chi2.ppf",
+      "scalar": "scifort_chi2_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_chi2_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_chi2",
+      "procedure": "chi2_sf",
+      "python": "chi2.sf",
+      "scalar": "scifort_chi2_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_exponential_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_cdf",
+      "python": "exponential.cdf",
+      "scalar": "scifort_exponential_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_exponential_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_isf",
+      "python": "exponential.isf",
+      "scalar": "scifort_exponential_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_exponential_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_logcdf",
+      "python": "exponential.logcdf",
+      "scalar": "scifort_exponential_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_exponential_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_logpdf",
+      "python": "exponential.logpdf",
+      "scalar": "scifort_exponential_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_exponential_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_logsf",
+      "python": "exponential.logsf",
+      "scalar": "scifort_exponential_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_exponential_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_pdf",
+      "python": "exponential.pdf",
+      "scalar": "scifort_exponential_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_exponential_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_ppf",
+      "python": "exponential.ppf",
+      "scalar": "scifort_exponential_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_exponential_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_exponential",
+      "procedure": "exponential_sf",
+      "python": "exponential.sf",
+      "scalar": "scifort_exponential_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_gamma_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_cdf",
+      "python": "gamma.cdf",
+      "scalar": "scifort_gamma_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_gamma_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_isf",
+      "python": "gamma.isf",
+      "scalar": "scifort_gamma_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_gamma_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_logcdf",
+      "python": "gamma.logcdf",
+      "scalar": "scifort_gamma_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_gamma_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_logpdf",
+      "python": "gamma.logpdf",
+      "scalar": "scifort_gamma_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_gamma_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_logsf",
+      "python": "gamma.logsf",
+      "scalar": "scifort_gamma_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_gamma_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_pdf",
+      "python": "gamma.pdf",
+      "scalar": "scifort_gamma_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_gamma_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_ppf",
+      "python": "gamma.ppf",
+      "scalar": "scifort_gamma_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_gamma_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_gamma",
+      "procedure": "gamma_sf",
+      "python": "gamma.sf",
+      "scalar": "scifort_gamma_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_laplace_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_cdf",
+      "python": "laplace.cdf",
+      "scalar": "scifort_laplace_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_laplace_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_isf",
+      "python": "laplace.isf",
+      "scalar": "scifort_laplace_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_laplace_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_logcdf",
+      "python": "laplace.logcdf",
+      "scalar": "scifort_laplace_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_laplace_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_logpdf",
+      "python": "laplace.logpdf",
+      "scalar": "scifort_laplace_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_laplace_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_logsf",
+      "python": "laplace.logsf",
+      "scalar": "scifort_laplace_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_laplace_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_pdf",
+      "python": "laplace.pdf",
+      "scalar": "scifort_laplace_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_laplace_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_ppf",
+      "python": "laplace.ppf",
+      "scalar": "scifort_laplace_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_laplace_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_laplace",
+      "procedure": "laplace_sf",
+      "python": "laplace.sf",
+      "scalar": "scifort_laplace_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected for the initial explicit-shape integration.",
+      "module": "scifort_linalg",
+      "procedure": "cholesky_lower",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a procedure to wrap.",
+      "module": "scifort_linalg",
+      "procedure": "linalg_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a procedure to wrap.",
+      "module": "scifort_linalg",
+      "procedure": "linalg_status_no_convergence",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a procedure to wrap.",
+      "module": "scifort_linalg",
+      "procedure": "linalg_status_not_positive_definite",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a procedure to wrap.",
+      "module": "scifort_linalg",
+      "procedure": "linalg_status_not_positive_semidefinite",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a procedure to wrap.",
+      "module": "scifort_linalg",
+      "procedure": "linalg_status_singular",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a procedure to wrap.",
+      "module": "scifort_linalg",
+      "procedure": "linalg_status_success",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected for the initial explicit-shape integration.",
+      "module": "scifort_linalg",
+      "procedure": "psd_decompose",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_solve_lower_f64",
+      "module": "scifort_linalg",
+      "procedure": "solve_lower"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected for the initial explicit-shape integration.",
+      "module": "scifort_linalg",
+      "procedure": "symmetric_eigen_jacobi",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_logistic_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_cdf",
+      "python": "logistic.cdf",
+      "scalar": "scifort_logistic_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_logistic_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_isf",
+      "python": "logistic.isf",
+      "scalar": "scifort_logistic_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_logistic_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_logcdf",
+      "python": "logistic.logcdf",
+      "scalar": "scifort_logistic_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_logistic_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_logpdf",
+      "python": "logistic.logpdf",
+      "scalar": "scifort_logistic_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_logistic_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_logsf",
+      "python": "logistic.logsf",
+      "scalar": "scifort_logistic_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_logistic_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_pdf",
+      "python": "logistic.pdf",
+      "scalar": "scifort_logistic_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_logistic_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_ppf",
+      "python": "logistic.ppf",
+      "scalar": "scifort_logistic_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_logistic_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_logistic",
+      "procedure": "logistic_sf",
+      "python": "logistic.sf",
+      "scalar": "scifort_logistic_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_lognormal_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_cdf",
+      "python": "lognormal.cdf",
+      "scalar": "scifort_lognormal_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_lognormal_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_isf",
+      "python": "lognormal.isf",
+      "scalar": "scifort_lognormal_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_lognormal_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_logcdf",
+      "python": "lognormal.logcdf",
+      "scalar": "scifort_lognormal_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_lognormal_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_logpdf",
+      "python": "lognormal.logpdf",
+      "scalar": "scifort_lognormal_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_lognormal_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_logsf",
+      "python": "lognormal.logsf",
+      "scalar": "scifort_lognormal_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_lognormal_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_pdf",
+      "python": "lognormal.pdf",
+      "scalar": "scifort_lognormal_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_lognormal_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_ppf",
+      "python": "lognormal.ppf",
+      "scalar": "scifort_lognormal_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_lognormal_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_lognormal",
+      "procedure": "lognormal_sf",
+      "python": "lognormal.sf",
+      "scalar": "scifort_lognormal_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_normal_cdf_vec_f64",
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "module": "scifort_normal",
+      "procedure": "normal_cdf",
+      "python": "normal.cdf",
+      "scalar": "scifort_normal_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_normal_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_normal",
+      "procedure": "normal_isf",
+      "python": "normal.isf",
+      "scalar": "scifort_normal_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_normal_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_normal",
+      "procedure": "normal_logcdf",
+      "python": "normal.logcdf",
+      "scalar": "scifort_normal_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_normal_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_normal",
+      "procedure": "normal_logpdf",
+      "python": "normal.logpdf",
+      "scalar": "scifort_normal_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_normal_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_normal",
+      "procedure": "normal_logsf",
+      "python": "normal.logsf",
+      "scalar": "scifort_normal_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_normal_pdf_vec_f64",
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "module": "scifort_normal",
+      "procedure": "normal_pdf",
+      "python": "normal.pdf",
+      "scalar": "scifort_normal_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_normal_ppf_vec_f64",
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "module": "scifort_normal",
+      "procedure": "normal_ppf",
+      "python": "normal.ppf",
+      "scalar": "scifort_normal_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_normal_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_normal",
+      "procedure": "normal_sf",
+      "python": "normal.sf",
+      "scalar": "scifort_normal_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_t_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_cdf",
+      "python": "t.cdf",
+      "scalar": "scifort_t_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_t_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_isf",
+      "python": "t.isf",
+      "scalar": "scifort_t_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_t_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_logcdf",
+      "python": "t.logcdf",
+      "scalar": "scifort_t_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_t_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_logpdf",
+      "python": "t.logpdf",
+      "scalar": "scifort_t_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_t_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_logsf",
+      "python": "t.logsf",
+      "scalar": "scifort_t_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_t_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_pdf",
+      "python": "t.pdf",
+      "scalar": "scifort_t_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_t_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_ppf",
+      "python": "t.ppf",
+      "scalar": "scifort_t_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_t_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_student_t",
+      "procedure": "t_sf",
+      "python": "t.sf",
+      "scalar": "scifort_t_sf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_weibull_cdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_cdf",
+      "python": "weibull.cdf",
+      "scalar": "scifort_weibull_cdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_weibull_isf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_isf",
+      "python": "weibull.isf",
+      "scalar": "scifort_weibull_isf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_weibull_logcdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_logcdf",
+      "python": "weibull.logcdf",
+      "scalar": "scifort_weibull_logcdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_weibull_logpdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_logpdf",
+      "python": "weibull.logpdf",
+      "scalar": "scifort_weibull_logpdf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_weibull_logsf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_logsf",
+      "python": "weibull.logsf",
+      "scalar": "scifort_weibull_logsf_f64",
+      "scalar_generated": true
+    },
+    {
+      "bulk": "scifort_weibull_pdf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_pdf",
+      "python": "weibull.pdf",
+      "scalar": "scifort_weibull_pdf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_weibull_ppf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_ppf",
+      "python": "weibull.ppf",
+      "scalar": "scifort_weibull_ppf_f64",
+      "scalar_generated": false
+    },
+    {
+      "bulk": "scifort_weibull_sf_vec_f64",
+      "bulk_generated": true,
+      "module": "scifort_weibull",
+      "procedure": "weibull_sf",
+      "python": "weibull.sf",
+      "scalar": "scifort_weibull_sf_f64",
+      "scalar_generated": true
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Reviewed C batch and Python policy only; not a whole-project inventory"
+}

@@ -131,3 +131,27 @@ quiet=` syntax outside the configured parser grammar). `scifort_power_transform`
 has default-public access, which the current public-export resolver deliberately
 rejects. These are discovery limitations; numerical source has not been rewritten
 to satisfy the parser. The three reviewed families have no such inventory errors.
+
+## Unified regeneration and chi-square
+
+Use the reviewed [pipeline policy](pipeline.json) to regenerate/check all related
+outputs together:
+
+```text
+python tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json
+python tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+```
+
+The batch now includes twelve modules: eleven distribution families and the
+existing lower-triangular solver. The [chi-square manifest](chi2.json) adds eight
+bulk symbols and five scalar symbols while preserving its three manual scalar
+symbols. Its degrees of freedom must be finite and positive, unlike Student t's
+permitted infinite-DF limit. Python exposes it as `api.chi2` with required `df`
+and explicit location/scale defaults 0/1.
+
+The [combined coverage table](interface_coverage.md) reports 88 scalar/bulk/Python
+method triples plus one array adapter. Constants/excluded solver exports remain
+visible in the JSON. The generated development build plan discovers the
+chi-square -> gamma -> incomplete-gamma/normal dependency chain and includes only
+Python-selected families, not the full manual C API object. The old 56-workload
+Python timing suite retains its existing scope and reports.

@@ -1,0 +1,313 @@
+{
+  "dependencies": {
+    "bindings/python/native/beta_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/beta.f90"
+    ],
+    "bindings/python/native/cauchy_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/cauchy.f90"
+    ],
+    "bindings/python/native/chi2_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/chi2.f90"
+    ],
+    "bindings/python/native/exponential_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/exponential.f90"
+    ],
+    "bindings/python/native/gamma_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/gamma.f90"
+    ],
+    "bindings/python/native/laplace_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/laplace.f90"
+    ],
+    "bindings/python/native/logistic_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/logistic.f90"
+    ],
+    "bindings/python/native/lognormal_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/lognormal.f90"
+    ],
+    "bindings/python/native/normal_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/normal.f90"
+    ],
+    "bindings/python/native/t_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/student_t.f90"
+    ],
+    "bindings/python/native/weibull_compat.f90": [
+      "src/kinds.f90",
+      "src/stats/weibull.f90"
+    ],
+    "src/c_api/generated/beta_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/beta.f90"
+    ],
+    "src/c_api/generated/cauchy_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/cauchy.f90"
+    ],
+    "src/c_api/generated/chi2_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/chi2.f90"
+    ],
+    "src/c_api/generated/exponential_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/exponential.f90"
+    ],
+    "src/c_api/generated/gamma_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/gamma.f90"
+    ],
+    "src/c_api/generated/laplace_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/laplace.f90"
+    ],
+    "src/c_api/generated/logistic_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/logistic.f90"
+    ],
+    "src/c_api/generated/lognormal_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/lognormal.f90"
+    ],
+    "src/c_api/generated/normal_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/normal.f90"
+    ],
+    "src/c_api/generated/student_t_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/student_t.f90"
+    ],
+    "src/c_api/generated/weibull_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/weibull.f90"
+    ],
+    "src/constants.f90": [
+      "src/kinds.f90"
+    ],
+    "src/kinds.f90": [],
+    "src/math.f90": [
+      "src/kinds.f90"
+    ],
+    "src/special/incomplete_beta.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_gamma.f90",
+      "src/special/log_gamma.f90"
+    ],
+    "src/special/incomplete_gamma.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/log_gamma.f90",
+      "src/stats/normal.f90"
+    ],
+    "src/special/log_gamma.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/stats/beta.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_beta.f90",
+      "src/special/log_gamma.f90"
+    ],
+    "src/stats/cauchy.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/stats/chi2.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/stats/gamma.f90"
+    ],
+    "src/stats/exponential.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/stats/gamma.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_gamma.f90"
+    ],
+    "src/stats/laplace.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/stats/logistic.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/stats/lognormal.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/stats/normal.f90"
+    ],
+    "src/stats/normal.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/stats/student_t.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_beta.f90",
+      "src/special/log_gamma.f90",
+      "src/stats/normal.f90"
+    ],
+    "src/stats/weibull.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ]
+  },
+  "families": [
+    "beta",
+    "cauchy",
+    "chi2",
+    "exponential",
+    "gamma",
+    "laplace",
+    "logistic",
+    "lognormal",
+    "normal",
+    "t",
+    "weibull"
+  ],
+  "modules": {
+    "cg_python_beta_compat": "bindings/python/native/beta_compat.f90",
+    "cg_python_cauchy_compat": "bindings/python/native/cauchy_compat.f90",
+    "cg_python_chi2_compat": "bindings/python/native/chi2_compat.f90",
+    "cg_python_exponential_compat": "bindings/python/native/exponential_compat.f90",
+    "cg_python_gamma_compat": "bindings/python/native/gamma_compat.f90",
+    "cg_python_laplace_compat": "bindings/python/native/laplace_compat.f90",
+    "cg_python_logistic_compat": "bindings/python/native/logistic_compat.f90",
+    "cg_python_lognormal_compat": "bindings/python/native/lognormal_compat.f90",
+    "cg_python_normal_compat": "bindings/python/native/normal_compat.f90",
+    "cg_python_t_compat": "bindings/python/native/t_compat.f90",
+    "cg_python_weibull_compat": "bindings/python/native/weibull_compat.f90",
+    "scifort_beta": "src/stats/beta.f90",
+    "scifort_c_api_generated_beta": "src/c_api/generated/beta_generated.f90",
+    "scifort_c_api_generated_cauchy": "src/c_api/generated/cauchy_generated.f90",
+    "scifort_c_api_generated_chi2": "src/c_api/generated/chi2_generated.f90",
+    "scifort_c_api_generated_exponential": "src/c_api/generated/exponential_generated.f90",
+    "scifort_c_api_generated_gamma": "src/c_api/generated/gamma_generated.f90",
+    "scifort_c_api_generated_laplace": "src/c_api/generated/laplace_generated.f90",
+    "scifort_c_api_generated_logistic": "src/c_api/generated/logistic_generated.f90",
+    "scifort_c_api_generated_lognormal": "src/c_api/generated/lognormal_generated.f90",
+    "scifort_c_api_generated_normal": "src/c_api/generated/normal_generated.f90",
+    "scifort_c_api_generated_student_t": "src/c_api/generated/student_t_generated.f90",
+    "scifort_c_api_generated_weibull": "src/c_api/generated/weibull_generated.f90",
+    "scifort_cauchy": "src/stats/cauchy.f90",
+    "scifort_chi2": "src/stats/chi2.f90",
+    "scifort_constants": "src/constants.f90",
+    "scifort_exponential": "src/stats/exponential.f90",
+    "scifort_gamma": "src/stats/gamma.f90",
+    "scifort_incomplete_beta": "src/special/incomplete_beta.f90",
+    "scifort_incomplete_gamma": "src/special/incomplete_gamma.f90",
+    "scifort_kinds": "src/kinds.f90",
+    "scifort_laplace": "src/stats/laplace.f90",
+    "scifort_log_gamma": "src/special/log_gamma.f90",
+    "scifort_logistic": "src/stats/logistic.f90",
+    "scifort_lognormal": "src/stats/lognormal.f90",
+    "scifort_math": "src/math.f90",
+    "scifort_normal": "src/stats/normal.f90",
+    "scifort_student_t": "src/stats/student_t.f90",
+    "scifort_weibull": "src/stats/weibull.f90"
+  },
+  "pipeline_config": "bindings/cabi_config/pipeline.json",
+  "schema_version": 1,
+  "source_sha256": {
+    "bindings/python/native/beta_compat.f90": "c7225e5e93d8b3f12f73cf955a2250ff7251b6d05b86a311a01aeeb1594fc255",
+    "bindings/python/native/cauchy_compat.f90": "987bdedb2f814f928b6fb45584975ea0dfcd783b5274d6d0361255dac8fa73e7",
+    "bindings/python/native/chi2_compat.f90": "fcd20b9013f68673b7bfa1e101f60ce823a1619fada8c873e215849e9db3ba8c",
+    "bindings/python/native/exponential_compat.f90": "3a452bc6b7264fdde0c329694c7d7e78b2bbfa624a441a49aedfa3cbce9386a2",
+    "bindings/python/native/gamma_compat.f90": "553d6ce68957aa4512dc4d75cc2637bdb1e62d7fe57707bcbb4e2ee84642be5e",
+    "bindings/python/native/laplace_compat.f90": "1949bfaab4f0615b5ca2185dc69c66612b95b009a4431a8e7bb9f331bb1d8a85",
+    "bindings/python/native/logistic_compat.f90": "1cbb4b934bbee0c7b684199fec72ddb8bad4a2aff212a61be7a94baf299ab859",
+    "bindings/python/native/lognormal_compat.f90": "577a022c19ba3be74f1fb668bdfd11970067853848de6ff2f91c5c694fd19735",
+    "bindings/python/native/normal_compat.f90": "7e5933c50ee3d54a4518dc7d0c8998c4b5bd96cb77f8e3781cd911156036e9dc",
+    "bindings/python/native/t_compat.f90": "ceda7f133c1da76f7f40e85d0fa9df61e4b5c35798bcaf9a50b7741653de9864",
+    "bindings/python/native/weibull_compat.f90": "9637ae14517c6b36f4d1742a18f9f11376f2964a32d4c0c152e719493e398968",
+    "src/c_api/generated/beta_generated.f90": "7ee64ce12639c7e3ad6d282825c67dacd2f024dd004f5538f33e61466ac5fce4",
+    "src/c_api/generated/cauchy_generated.f90": "2091ab4cf1b9f56358278708c4be5fa290b2a53c1873df2e5f0c1e8305f101f9",
+    "src/c_api/generated/chi2_generated.f90": "43d64bc92b77751573b4a84ec3e7d5c486d885334252d768c22b9fab9ec8d3f6",
+    "src/c_api/generated/exponential_generated.f90": "4392f6336e93c6f70c53644485251cf704d0e9985d442632877c94d5bcbd9c06",
+    "src/c_api/generated/gamma_generated.f90": "d549d2169b9f9cc911385e9de63d16a6c540bb64c31790a4b976eaf590d37c8d",
+    "src/c_api/generated/laplace_generated.f90": "1efc7920f0a9dbbe4800aa293cf9b79619d4b5afe2f808af58687609fd8e085a",
+    "src/c_api/generated/logistic_generated.f90": "d15c470d8608e279226399c7073ccba8233ebe163066afeb100cf7a362cf19f8",
+    "src/c_api/generated/lognormal_generated.f90": "b12ce2bcb409782cd55f554628acac38da77c8f2965504229d30caab68e56710",
+    "src/c_api/generated/normal_generated.f90": "e8c42b6b1b361facccaeff4cd82f5f5170ae37ddcd29f0c6d17b4c34e4de0653",
+    "src/c_api/generated/student_t_generated.f90": "cb550ca4641c5c30c8a1525313f86cfcc9b86a4267ad2ecdd5823047e08e2e38",
+    "src/c_api/generated/weibull_generated.f90": "1332f3a32486fbbe8e5c6bcbd9514613bbc6266153eec307fce2e7f4075379f3",
+    "src/constants.f90": "c49598c1f413384af26a4468b2ff442a68d5f015a983c404bd3150e6cdde874e",
+    "src/kinds.f90": "afbca1b088e17f5c0ff7930c693e9ae9e0b699b31a826cb25bc139597fe66f46",
+    "src/math.f90": "1dfdd6e012e1c6e7ad63e6744b0b57b8beee8700d2a2e51f0e8eb89caf8185db",
+    "src/special/incomplete_beta.f90": "dd7bd608158f5ec852aea0c6282a00d6d8b363316f26c688f986324ea69312a6",
+    "src/special/incomplete_gamma.f90": "a875fd5ea91ab4c560738d90e8c0f7e81da35fdf76719f378b26f87c063504c4",
+    "src/special/log_gamma.f90": "6b8eef3378bc4fbad5cd20d89749d849b7367b222a61c416eb7a9605271937b8",
+    "src/stats/beta.f90": "9a80b597be81fb97ee03e888388fe0f36faf51c6ca8c9f7ab1e5b5260696f049",
+    "src/stats/cauchy.f90": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5",
+    "src/stats/chi2.f90": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8",
+    "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
+    "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
+    "src/stats/laplace.f90": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57",
+    "src/stats/logistic.f90": "ee5488b4d39aacd4a2e1b3f4d364836e234a13d412bf327585d96e01518795a5",
+    "src/stats/lognormal.f90": "14ba6ae77569d7d4c0711cb9d66e73183d187407e3c06300c09a9488de8b9274",
+    "src/stats/normal.f90": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb",
+    "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",
+    "src/stats/weibull.f90": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585"
+  },
+  "sources": [
+    "src/kinds.f90",
+    "src/math.f90",
+    "src/constants.f90",
+    "src/special/log_gamma.f90",
+    "src/stats/normal.f90",
+    "src/special/incomplete_gamma.f90",
+    "src/special/incomplete_beta.f90",
+    "src/stats/beta.f90",
+    "bindings/python/native/beta_compat.f90",
+    "src/stats/cauchy.f90",
+    "bindings/python/native/cauchy_compat.f90",
+    "src/stats/gamma.f90",
+    "src/stats/chi2.f90",
+    "bindings/python/native/chi2_compat.f90",
+    "src/stats/exponential.f90",
+    "bindings/python/native/exponential_compat.f90",
+    "bindings/python/native/gamma_compat.f90",
+    "src/stats/laplace.f90",
+    "bindings/python/native/laplace_compat.f90",
+    "src/stats/logistic.f90",
+    "bindings/python/native/logistic_compat.f90",
+    "src/stats/lognormal.f90",
+    "bindings/python/native/lognormal_compat.f90",
+    "bindings/python/native/normal_compat.f90",
+    "src/stats/student_t.f90",
+    "bindings/python/native/t_compat.f90",
+    "src/stats/weibull.f90",
+    "bindings/python/native/weibull_compat.f90",
+    "src/c_api/generated/beta_generated.f90",
+    "src/c_api/generated/cauchy_generated.f90",
+    "src/c_api/generated/chi2_generated.f90",
+    "src/c_api/generated/exponential_generated.f90",
+    "src/c_api/generated/gamma_generated.f90",
+    "src/c_api/generated/laplace_generated.f90",
+    "src/c_api/generated/logistic_generated.f90",
+    "src/c_api/generated/lognormal_generated.f90",
+    "src/c_api/generated/normal_generated.f90",
+    "src/c_api/generated/student_t_generated.f90",
+    "src/c_api/generated/weibull_generated.f90"
+  ]
+}

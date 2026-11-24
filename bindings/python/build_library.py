@@ -12,15 +12,17 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-FAMILIES = ('normal', 'exponential', 'logistic', 'laplace', 'cauchy', 'weibull', 'lognormal',
-            'gamma', 'beta', 't')
-FAMILY_SOURCES = {'t': 'student_t'}
-SOURCES = ['src/kinds.f90', 'src/constants.f90', 'src/math.f90']
-SOURCES += ['src/stats/normal.f90', 'src/special/log_gamma.f90',
-            'src/special/incomplete_gamma.f90', 'src/special/incomplete_beta.f90']
-SOURCES += [f'src/stats/{FAMILY_SOURCES.get(f, f)}.f90' for f in FAMILIES if f != 'normal']
-SOURCES += [f'src/c_api/generated/{FAMILY_SOURCES.get(f, f)}_generated.f90' for f in FAMILIES]
-SOURCES += [f'bindings/python/native/{f}_compat.f90' for f in FAMILIES]
+PLAN_PATH = Path(__file__).with_name('build_sources.json')
+try:
+    PLAN = json.loads(PLAN_PATH.read_text(encoding='utf-8'))
+except (OSError, ValueError) as error:
+    raise RuntimeError('Missing/invalid generated build plan; regenerate the reviewed interface pipeline') from error
+if (not isinstance(PLAN, dict) or PLAN.get('schema_version') != 1 or not isinstance(PLAN.get('sources'), list)
+        or not isinstance(PLAN.get('families'), list)
+        or set(PLAN.get('source_sha256', {})) != set(PLAN['sources'])):
+    raise RuntimeError('Invalid generated build plan; regenerate the reviewed interface pipeline')
+FAMILIES = tuple(PLAN['families'])
+SOURCES = tuple(PLAN['sources'])
 
 
 def build(compiler='gfortran', checked=False, directory=None):
@@ -31,8 +33,13 @@ def build(compiler='gfortran', checked=False, directory=None):
     flags = ['-O0', '-g', '-fcheck=all', '-fbacktrace'] if checked else ['-O3']
     flags += ['-std=f2018', '-fimplicit-none', '-Werror=implicit-interface', '-shared', '-fPIC']
     digest = hashlib.sha256((compiler + version + repr(flags)).encode())
+    digest.update(PLAN_PATH.read_bytes())
     for source in SOURCES:
-        digest.update((ROOT / source).read_bytes())
+        path = ROOT / source
+        normalized = path.read_text(encoding='utf-8').encode('utf-8')
+        if hashlib.sha256(normalized).hexdigest() != PLAN['source_sha256'][source]:
+            raise RuntimeError(f'{source} changed; regenerate the reviewed interface pipeline before building')
+        digest.update(path.read_bytes())
     directory = Path(directory) if directory else ROOT / 'build/python-bindings' / digest.hexdigest()[:16]
     directory = directory.resolve()
     directory.mkdir(parents=True, exist_ok=True)
