@@ -1,3 +1,11 @@
+## 2026-11-24 - generated per-element distribution parameters
+
+The elementwise C emitter, Python broadcasting glue, reviewed normal/gamma
+policies and tests are original MIT-licensed interface tooling. They call the
+existing native scalar functions without introducing or adapting any numerical
+algorithm, coefficients or upstream implementation. Existing numerical provenance,
+fparser notices and NumPy dependency records continue to apply.
+
 ## 2026-11-24 - Unified workflow and chi-square interface
 
 `tools/cabi_generator/pipeline.py`, its independent fixture tests, pipeline

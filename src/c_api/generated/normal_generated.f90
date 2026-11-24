@@ -5,24 +5,59 @@ module scifort_c_api_generated_normal
         c_associated, c_f_pointer
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : cg_kind => dp
-    use scifort_normal, only : cg_native_0 => normal_isf
-    use scifort_normal, only : cg_native_1 => normal_logcdf
-    use scifort_normal, only : cg_native_2 => normal_logpdf
-    use scifort_normal, only : cg_native_3 => normal_logsf
-    use scifort_normal, only : cg_native_4 => normal_sf
+    use scifort_normal, only : cg_native_0 => normal_cdf
+    use scifort_normal, only : cg_native_1 => normal_isf
+    use scifort_normal, only : cg_native_2 => normal_logcdf
+    use scifort_normal, only : cg_native_3 => normal_logpdf
+    use scifort_normal, only : cg_native_4 => normal_logsf
+    use scifort_normal, only : cg_native_5 => normal_pdf
+    use scifort_normal, only : cg_native_6 => normal_ppf
+    use scifort_normal, only : cg_native_7 => normal_sf
     implicit none
     private
+    public :: scifort_normal_cdf_elementwise_f64
+    public :: scifort_normal_isf_elementwise_f64
     public :: scifort_normal_isf_f64
     public :: scifort_normal_isf_vec_f64
+    public :: scifort_normal_logcdf_elementwise_f64
     public :: scifort_normal_logcdf_f64
     public :: scifort_normal_logcdf_vec_f64
+    public :: scifort_normal_logpdf_elementwise_f64
     public :: scifort_normal_logpdf_f64
     public :: scifort_normal_logpdf_vec_f64
+    public :: scifort_normal_logsf_elementwise_f64
     public :: scifort_normal_logsf_f64
     public :: scifort_normal_logsf_vec_f64
+    public :: scifort_normal_pdf_elementwise_f64
+    public :: scifort_normal_ppf_elementwise_f64
+    public :: scifort_normal_sf_elementwise_f64
     public :: scifort_normal_sf_f64
     public :: scifort_normal_sf_vec_f64
 contains
+
+    subroutine scifort_normal_cdf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_cdf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_0( &
+                x=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_cdf_elementwise_f64
 
     function scifort_normal_isf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
@@ -34,7 +69,7 @@ contains
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         real(c_double) :: cg_result
 
-        cg_result=real(cg_native_0( &
+        cg_result=real(cg_native_1( &
             p=real(cg_arg_0,cg_kind), &
             loc=real(cg_arg_1,cg_kind), &
             scale=real(cg_arg_2,cg_kind)),c_double)
@@ -68,13 +103,37 @@ contains
         call c_f_pointer(cg_arg_0,cg_x,[int(cg_count)])
         call c_f_pointer(cg_output,cg_y,[int(cg_count)])
         do cg_i=1,int(cg_count)
-            cg_y(cg_i)=real(cg_native_0( &
+            cg_y(cg_i)=real(cg_native_1( &
                 p=real(cg_x(cg_i),cg_kind), &
                 loc=real(cg_arg_1,cg_kind), &
                 scale=real(cg_arg_2,cg_kind)),c_double)
         end do
         cg_status=0_c_int
     end subroutine scifort_normal_isf_vec_f64
+
+    subroutine scifort_normal_isf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_isf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_1( &
+                p=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_isf_elementwise_f64
 
     function scifort_normal_logcdf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
@@ -86,7 +145,7 @@ contains
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         real(c_double) :: cg_result
 
-        cg_result=real(cg_native_1( &
+        cg_result=real(cg_native_2( &
             x=real(cg_arg_0,cg_kind), &
             loc=real(cg_arg_1,cg_kind), &
             scale=real(cg_arg_2,cg_kind)),c_double)
@@ -120,13 +179,37 @@ contains
         call c_f_pointer(cg_arg_0,cg_x,[int(cg_count)])
         call c_f_pointer(cg_output,cg_y,[int(cg_count)])
         do cg_i=1,int(cg_count)
-            cg_y(cg_i)=real(cg_native_1( &
+            cg_y(cg_i)=real(cg_native_2( &
                 x=real(cg_x(cg_i),cg_kind), &
                 loc=real(cg_arg_1,cg_kind), &
                 scale=real(cg_arg_2,cg_kind)),c_double)
         end do
         cg_status=0_c_int
     end subroutine scifort_normal_logcdf_vec_f64
+
+    subroutine scifort_normal_logcdf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_logcdf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_2( &
+                x=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_logcdf_elementwise_f64
 
     function scifort_normal_logpdf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
@@ -138,7 +221,7 @@ contains
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         real(c_double) :: cg_result
 
-        cg_result=real(cg_native_2( &
+        cg_result=real(cg_native_3( &
             x=real(cg_arg_0,cg_kind), &
             loc=real(cg_arg_1,cg_kind), &
             scale=real(cg_arg_2,cg_kind)),c_double)
@@ -172,13 +255,37 @@ contains
         call c_f_pointer(cg_arg_0,cg_x,[int(cg_count)])
         call c_f_pointer(cg_output,cg_y,[int(cg_count)])
         do cg_i=1,int(cg_count)
-            cg_y(cg_i)=real(cg_native_2( &
+            cg_y(cg_i)=real(cg_native_3( &
                 x=real(cg_x(cg_i),cg_kind), &
                 loc=real(cg_arg_1,cg_kind), &
                 scale=real(cg_arg_2,cg_kind)),c_double)
         end do
         cg_status=0_c_int
     end subroutine scifort_normal_logpdf_vec_f64
+
+    subroutine scifort_normal_logpdf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_logpdf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_3( &
+                x=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_logpdf_elementwise_f64
 
     function scifort_normal_logsf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
@@ -190,7 +297,7 @@ contains
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         real(c_double) :: cg_result
 
-        cg_result=real(cg_native_3( &
+        cg_result=real(cg_native_4( &
             x=real(cg_arg_0,cg_kind), &
             loc=real(cg_arg_1,cg_kind), &
             scale=real(cg_arg_2,cg_kind)),c_double)
@@ -224,13 +331,85 @@ contains
         call c_f_pointer(cg_arg_0,cg_x,[int(cg_count)])
         call c_f_pointer(cg_output,cg_y,[int(cg_count)])
         do cg_i=1,int(cg_count)
-            cg_y(cg_i)=real(cg_native_3( &
+            cg_y(cg_i)=real(cg_native_4( &
                 x=real(cg_x(cg_i),cg_kind), &
                 loc=real(cg_arg_1,cg_kind), &
                 scale=real(cg_arg_2,cg_kind)),c_double)
         end do
         cg_status=0_c_int
     end subroutine scifort_normal_logsf_vec_f64
+
+    subroutine scifort_normal_logsf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_logsf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_4( &
+                x=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_logsf_elementwise_f64
+
+    subroutine scifort_normal_pdf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_pdf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_5( &
+                x=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_pdf_elementwise_f64
+
+    subroutine scifort_normal_ppf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_ppf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_6( &
+                p=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_ppf_elementwise_f64
 
     function scifort_normal_sf_f64( &
         cg_arg_0, cg_arg_1, cg_arg_2) &
@@ -242,7 +421,7 @@ contains
         real(c_double), value, intent(in) :: cg_arg_2 !! standard deviation, > 0; required
         real(c_double) :: cg_result
 
-        cg_result=real(cg_native_4( &
+        cg_result=real(cg_native_7( &
             x=real(cg_arg_0,cg_kind), &
             loc=real(cg_arg_1,cg_kind), &
             scale=real(cg_arg_2,cg_kind)),c_double)
@@ -276,12 +455,36 @@ contains
         call c_f_pointer(cg_arg_0,cg_x,[int(cg_count)])
         call c_f_pointer(cg_output,cg_y,[int(cg_count)])
         do cg_i=1,int(cg_count)
-            cg_y(cg_i)=real(cg_native_4( &
+            cg_y(cg_i)=real(cg_native_7( &
                 x=real(cg_x(cg_i),cg_kind), &
                 loc=real(cg_arg_1,cg_kind), &
                 scale=real(cg_arg_2,cg_kind)),c_double)
         end do
         cg_status=0_c_int
     end subroutine scifort_normal_sf_vec_f64
+
+    subroutine scifort_normal_sf_elementwise_f64( &
+        cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_output, cg_status) &
+        bind(c, name="scifort_normal_sf_elementwise_f64")
+        !! Evaluate corresponding elements of equally sized input arrays.
+        implicit none
+        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
+        real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
+        real(c_double), intent(in) :: cg_arg_1(cg_count) !! mean; per element
+        real(c_double), intent(in) :: cg_arg_2(cg_count) !! standard deviation, > 0; per element
+        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer
+        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length
+        integer :: cg_i
+
+        cg_status=1_c_int
+        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return
+        do cg_i=1,int(cg_count)
+            cg_output(cg_i)=real(cg_native_7( &
+                x=real(cg_arg_0(cg_i),cg_kind), &
+                loc=real(cg_arg_1(cg_i),cg_kind), &
+                scale=real(cg_arg_2(cg_i),cg_kind)),c_double)
+        end do
+        cg_status=0_c_int
+    end subroutine scifort_normal_sf_elementwise_f64
 
 end module scifort_c_api_generated_normal

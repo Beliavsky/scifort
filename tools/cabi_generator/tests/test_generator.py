@@ -71,6 +71,22 @@ class GeneratorTests(unittest.TestCase):
         self.assertEqual(report["procedures"][1]["state"], "excluded")
         self.assertNotIn("scifort", artifacts[self.root / "api.f90"].lower())
 
+    def test_elementwise_policy_validation_and_coverage(self):
+        entry = self.config['functions']['affine']
+        entry['elementwise_symbol'] = 'example_elements'
+        outputs = generator.generate(self.config, self.root)
+        report = json.loads(outputs[self.root / 'coverage.json'])
+        self.assertEqual(report['generated_symbol_count'], 3)
+        self.assertIn('example_elements', report['procedures'][0]['symbols'])
+        entry['elementwise_symbol'] = entry['symbol']
+        with self.assertRaisesRegex(ValueError, 'duplicate C symbol'):
+            generator.generate(self.config, self.root)
+        entry['elementwise_symbol'] = 'example_elements'
+        source = self.root / 'arithmetic.f90'
+        source.write_text(source.read_text().replace('elemental ', ''))
+        with self.assertRaisesRegex(ValueError, 'elemental'):
+            generator.generate(self.config, self.root)
+
     def test_unaccounted_public_api_is_an_error(self):
         self.config["excluded"].clear()
         with self.assertRaisesRegex(ValueError, "unaccounted=.*total"):
@@ -267,6 +283,7 @@ class CompiledTests(unittest.TestCase):
         cls.dll_directory = os.add_dll_directory(str(Path(cls.fc).parent)) if os.name == "nt" else None
         try:
             config = fixture_config()
+            config["functions"]["affine"]["elementwise_symbol"] = "example_affine_elements"
             shutil.copyfile(HERE / "fixtures/arithmetic.f90", cls.root / "arithmetic.f90")
             for path, value in generator.generate(config, cls.root).items():
                 path.write_text(value)
@@ -276,6 +293,7 @@ class CompiledTests(unittest.TestCase):
             explicit["functions"]["affine"].update(symbol="example_explicit_affine",
                                                    vector_symbol="example_explicit_affine_array")
             del explicit["functions"]["affine"]["array_style"]
+            del explicit["functions"]["affine"]["elementwise_symbol"]
             for path, value in generator.generate(explicit, cls.root).items():
                 path.write_text(value)
             shutil.copyfile(HERE / "fixtures/array_ops.f90", cls.root / "array_ops.f90")
@@ -312,7 +330,14 @@ int main(void) {
     double a[6] = {1,2,3,4,5,6}, sums[2] = {99,99};
     example_row_sums(2, 3, a, 2.0, sums, &status);
     if (status != 0 || sums[0] != 18 || sums[1] != 24) return 5;
-    return status;
+    double shifts[3] = {1,2,3}, gains[3] = {2,3,-1};
+    example_affine_elements(3, x, shifts, gains, y, &status);
+    if (status != 0 || y[0] != -1 || y[1] != 2 || y[2] != 2) return 6;
+    example_affine_elements(0, x, shifts, gains, y, &status);
+    if (status != 0) return 7;
+    example_affine_elements((size_t)2147483648ULL, x, shifts, gains, y, &status);
+    if (status != 1 || y[0] != -1) return 8;
+    return 0;
 }
 ''')
                 obj = directory / "client.o"

@@ -30,7 +30,8 @@
       "positive": [
         "scale"
       ],
-      "array_style": "pointer"
+      "array_style": "pointer",
+      "elementwise_symbol": "scifort_normal_logpdf_elementwise_f64"
     },
     "normal_sf": {
       "symbol": "scifort_normal_sf_f64",
@@ -44,7 +45,8 @@
       "positive": [
         "scale"
       ],
-      "array_style": "pointer"
+      "array_style": "pointer",
+      "elementwise_symbol": "scifort_normal_sf_elementwise_f64"
     },
     "normal_logcdf": {
       "symbol": "scifort_normal_logcdf_f64",
@@ -58,7 +60,8 @@
       "positive": [
         "scale"
       ],
-      "array_style": "pointer"
+      "array_style": "pointer",
+      "elementwise_symbol": "scifort_normal_logcdf_elementwise_f64"
     },
     "normal_logsf": {
       "symbol": "scifort_normal_logsf_f64",
@@ -72,7 +75,8 @@
       "positive": [
         "scale"
       ],
-      "array_style": "pointer"
+      "array_style": "pointer",
+      "elementwise_symbol": "scifort_normal_logsf_elementwise_f64"
     },
     "normal_isf": {
       "symbol": "scifort_normal_isf_f64",
@@ -86,12 +90,24 @@
       "positive": [
         "scale"
       ],
-      "array_style": "pointer"
+      "array_style": "pointer",
+      "elementwise_symbol": "scifort_normal_isf_elementwise_f64"
+    },
+    "normal_pdf": {
+      "existing_scalar_symbol": "scifort_normal_pdf_f64",
+      "optional_policy": "required",
+      "elementwise_symbol": "scifort_normal_pdf_elementwise_f64"
+    },
+    "normal_cdf": {
+      "existing_scalar_symbol": "scifort_normal_cdf_f64",
+      "optional_policy": "required",
+      "elementwise_symbol": "scifort_normal_cdf_elementwise_f64"
+    },
+    "normal_ppf": {
+      "existing_scalar_symbol": "scifort_normal_ppf_f64",
+      "optional_policy": "required",
+      "elementwise_symbol": "scifort_normal_ppf_elementwise_f64"
     }
   },
-  "excluded": {
-    "normal_pdf": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
-    "normal_cdf": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
-    "normal_ppf": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged."
-  }
+  "excluded": {}
 }

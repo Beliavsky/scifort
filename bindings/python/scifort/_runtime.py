@@ -26,6 +26,12 @@ class Distribution:
                              C.c_void_p, C.POINTER(C.c_int)]
             bulk.restype = None
             self._functions[name] = (scalar, bulk)
+            if spec.get('elementwise'):
+                elementwise = getattr(library, spec['elementwise'])
+                elementwise.argtypes = [C.c_size_t, *[C.c_void_p]*len(spec['arguments']),
+                                        C.c_void_p, C.POINTER(C.c_int)]
+                elementwise.restype = None
+                self._functions[name] += (elementwise,)
 
     @staticmethod
     def _real_array(value, label):
@@ -36,14 +42,15 @@ class Distribution:
 
     def _evaluate(self, name, value, parameters, out):
         spec = self._specs[name]
-        params = []
-        for label, parameter in zip(spec['parameters'], parameters):
-            array = self._real_array(parameter, label)
-            if array.ndim:
-                raise TypeError(f'{label} must be scalar; broadcasting is not supported')
-            params.append(float(array))
+        parameter_arrays = [self._real_array(p, label)
+                            for label, p in zip(spec['parameters'], parameters)]
+        if any(a.ndim for a in parameter_arrays):
+            if not spec.get('elementwise'):
+                raise TypeError('parameters must be scalar; broadcasting is not supported for this family')
+            return self._broadcast(name, value, parameter_arrays, out)
+        params = [float(a) for a in parameter_arrays]
         original = self._real_array(value, spec['array'])
-        scalar, bulk = self._functions[name]
+        scalar, bulk = self._functions[name][:2]
         if original.ndim == 0:
             if out is not None:
                 raise ValueError('out is supported only for array inputs')
@@ -59,7 +66,7 @@ class Distribution:
             if (out.shape != inputs.shape or not out.flags.c_contiguous
                     or not out.flags.aligned or not out.flags.writeable):
                 raise ValueError('out must match input shape and be contiguous, aligned and writable')
-            if np.may_share_memory(original, out):
+            if any(np.may_share_memory(a, out) for a in [original, *parameter_arrays]):
                 raise ValueError('input and out must not overlap')
             output = out
         # Empty ndarray pointers need not be non-NULL; provide valid disjoint scratch buffers.
@@ -72,6 +79,38 @@ class Distribution:
              ybuffer.ctypes.data_as(C.c_void_p), C.byref(status))
         if status.value == 1:
             raise ValueError('C ABI rejected the length or uniform parameters')
+        if status.value:
+            raise RuntimeError(f'C ABI returned unexpected status {status.value}')
+        return output
+
+    def _broadcast(self, name, value, parameters, out):
+        """Broadcast in Python; C receives only equally sized contiguous arrays."""
+        spec = self._specs[name]
+        originals = dict(zip(spec['parameters'], parameters),
+                         **{spec['array']: self._real_array(value, spec['array'])})
+        ordered = [originals[a] for a in spec['arguments']]
+        arrays = np.broadcast_arrays(*ordered)
+        shape = arrays[0].shape
+        if out is None:
+            output = np.empty(shape, dtype=np.float64)
+        else:
+            if not isinstance(out, np.ndarray) or out.dtype != np.dtype(np.float64):
+                raise TypeError('out must be a native-endian float64 ndarray')
+            if (out.shape != shape or not out.flags.c_contiguous
+                    or not out.flags.aligned or not out.flags.writeable):
+                raise ValueError('out must match broadcast shape and be contiguous, aligned and writable')
+            if any(np.may_share_memory(a, out) for a in ordered):
+                raise ValueError('input and out must not overlap')
+            output = out
+        buffers = [np.require(a, dtype=np.float64, requirements=['C', 'A'])
+                   if a.size else np.empty(1, dtype=np.float64) for a in arrays]
+        ybuffer = output if output.size else np.empty(1, dtype=np.float64)
+        status = C.c_int(-1)
+        self._functions[name][2](output.size,
+                                *(a.ctypes.data_as(C.c_void_p) for a in buffers),
+                                ybuffer.ctypes.data_as(C.c_void_p), C.byref(status))
+        if status.value == 1:
+            raise ValueError('C ABI rejected the length')
         if status.value:
             raise RuntimeError(f'C ABI returned unexpected status {status.value}')
         return output

@@ -52,9 +52,17 @@ def artifacts(config_path, root):
             raise ValueError('Python groups currently require scalar/elemental function manifests')
         functions = copy.deepcopy(config['functions'])
         extras = options['existing_functions']
-        if not isinstance(extras, dict) or set(extras) - set(config['excluded']):
-            raise ValueError(f'{group}: existing_functions must refer to excluded native exports')
-        functions.update(extras)
+        if not isinstance(extras, dict) or set(extras) - (set(config['excluded']) | {n for n, e in functions.items()
+                if e.get('existing_scalar_symbol') and not e.get('vector_symbol')}):
+            raise ValueError(f'{group}: existing_functions must refer to excluded exports or external scalar/bulk entries')
+        for native, extra in extras.items():
+            if not isinstance(extra, dict) or 'elementwise_symbol' in extra:
+                raise ValueError('configure elementwise_symbol in the primary C manifest')
+            existing = functions.get(native, {}).get('existing_scalar_symbol')
+            if existing and extra.get('symbol') != existing:
+                raise ValueError('existing scalar mapping must match the primary C manifest')
+            functions[native] = dict(functions.get(native, {}), **extra)
+            functions[native].pop('existing_scalar_symbol', None)
         defaults = options['defaults']
         if not isinstance(defaults, dict) or not all(type(v) in (int, float) and math.isfinite(v)
                                                    for v in defaults.values()):
@@ -96,15 +104,21 @@ def artifacts(config_path, root):
                 raise ValueError(f'{varying}: reserved Python argument')
             specs[method] = dict(scalar=scalar, bulk=entry['vector_symbol'], arguments=args,
                                  array=varying, parameters=parameters)
+            if entry.get('elementwise_symbol'):
+                specs[method]['elementwise'] = entry['elementwise_symbol']
             params = ', '.join(parameters) + (',' if len(parameters) == 1 else '')
             declarations = ', '.join(['self', varying, *signature, '*', 'out=None'])
+            description = ('broadcastable real inputs, optional array output buffer.'
+                           if entry.get('elementwise_symbol') else
+                           'scalar parameters, optional array output buffer.')
             methods += [f'    def {method}({declarations}):',
-                        f'        """Evaluate {native}; scalar parameters, optional array output buffer."""',
+                        f'        """Evaluate {native}; {description}"""',
                         f'        return self._evaluate({method!r}, {varying}, ({params}), out)', '']
             # A small standalone shared library needs the scalar symbols normally in api.f90.
             if entry.get('existing_scalar_symbol') or native in extras:
                 compatibility = copy.deepcopy(entry)
                 compatibility.pop('existing_scalar_symbol', None)
+                compatibility.pop('elementwise_symbol', None)
                 compatibility['symbol'] = scalar
                 if native not in extras:
                     for key in ('vector_symbol', 'array_argument', 'array_style', 'finite', 'positive'):

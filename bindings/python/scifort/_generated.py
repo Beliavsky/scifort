@@ -302,74 +302,82 @@ class Gamma(Distribution):
     _specs = {'cdf': {'arguments': ['x', 'a', 'loc', 'scale'],
              'array': 'x',
              'bulk': 'scifort_gamma_cdf_vec_f64',
+             'elementwise': 'scifort_gamma_cdf_elementwise_f64',
              'parameters': ['a', 'loc', 'scale'],
              'scalar': 'scifort_gamma_cdf_f64'},
      'isf': {'arguments': ['p', 'a', 'loc', 'scale'],
              'array': 'p',
              'bulk': 'scifort_gamma_isf_vec_f64',
+             'elementwise': 'scifort_gamma_isf_elementwise_f64',
              'parameters': ['a', 'loc', 'scale'],
              'scalar': 'scifort_gamma_isf_f64'},
      'logcdf': {'arguments': ['x', 'a', 'loc', 'scale'],
                 'array': 'x',
                 'bulk': 'scifort_gamma_logcdf_vec_f64',
+                'elementwise': 'scifort_gamma_logcdf_elementwise_f64',
                 'parameters': ['a', 'loc', 'scale'],
                 'scalar': 'scifort_gamma_logcdf_f64'},
      'logpdf': {'arguments': ['x', 'a', 'loc', 'scale'],
                 'array': 'x',
                 'bulk': 'scifort_gamma_logpdf_vec_f64',
+                'elementwise': 'scifort_gamma_logpdf_elementwise_f64',
                 'parameters': ['a', 'loc', 'scale'],
                 'scalar': 'scifort_gamma_logpdf_f64'},
      'logsf': {'arguments': ['x', 'a', 'loc', 'scale'],
                'array': 'x',
                'bulk': 'scifort_gamma_logsf_vec_f64',
+               'elementwise': 'scifort_gamma_logsf_elementwise_f64',
                'parameters': ['a', 'loc', 'scale'],
                'scalar': 'scifort_gamma_logsf_f64'},
      'pdf': {'arguments': ['x', 'a', 'loc', 'scale'],
              'array': 'x',
              'bulk': 'scifort_gamma_pdf_vec_f64',
+             'elementwise': 'scifort_gamma_pdf_elementwise_f64',
              'parameters': ['a', 'loc', 'scale'],
              'scalar': 'scifort_gamma_pdf_f64'},
      'ppf': {'arguments': ['p', 'a', 'loc', 'scale'],
              'array': 'p',
              'bulk': 'scifort_gamma_ppf_vec_f64',
+             'elementwise': 'scifort_gamma_ppf_elementwise_f64',
              'parameters': ['a', 'loc', 'scale'],
              'scalar': 'scifort_gamma_ppf_f64'},
      'sf': {'arguments': ['x', 'a', 'loc', 'scale'],
             'array': 'x',
             'bulk': 'scifort_gamma_sf_vec_f64',
+            'elementwise': 'scifort_gamma_sf_elementwise_f64',
             'parameters': ['a', 'loc', 'scale'],
             'scalar': 'scifort_gamma_sf_f64'}}
 
     def cdf(self, x, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_cdf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_cdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('cdf', x, (a, loc, scale), out)
 
     def isf(self, p, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_isf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_isf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('isf', p, (a, loc, scale), out)
 
     def logcdf(self, x, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_logcdf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_logcdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('logcdf', x, (a, loc, scale), out)
 
     def logpdf(self, x, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_logpdf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_logpdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('logpdf', x, (a, loc, scale), out)
 
     def logsf(self, x, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_logsf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_logsf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('logsf', x, (a, loc, scale), out)
 
     def pdf(self, x, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_pdf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_pdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('pdf', x, (a, loc, scale), out)
 
     def ppf(self, p, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_ppf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_ppf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('ppf', p, (a, loc, scale), out)
 
     def sf(self, x, a, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate gamma_sf; scalar parameters, optional array output buffer."""
+        """Evaluate gamma_sf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('sf', x, (a, loc, scale), out)
 
 class Laplace(Distribution):
@@ -598,74 +606,82 @@ class Normal(Distribution):
     _specs = {'cdf': {'arguments': ['x', 'loc', 'scale'],
              'array': 'x',
              'bulk': 'scifort_normal_cdf_vec_f64',
+             'elementwise': 'scifort_normal_cdf_elementwise_f64',
              'parameters': ['loc', 'scale'],
              'scalar': 'scifort_normal_cdf_f64'},
      'isf': {'arguments': ['p', 'loc', 'scale'],
              'array': 'p',
              'bulk': 'scifort_normal_isf_vec_f64',
+             'elementwise': 'scifort_normal_isf_elementwise_f64',
              'parameters': ['loc', 'scale'],
              'scalar': 'scifort_normal_isf_f64'},
      'logcdf': {'arguments': ['x', 'loc', 'scale'],
                 'array': 'x',
                 'bulk': 'scifort_normal_logcdf_vec_f64',
+                'elementwise': 'scifort_normal_logcdf_elementwise_f64',
                 'parameters': ['loc', 'scale'],
                 'scalar': 'scifort_normal_logcdf_f64'},
      'logpdf': {'arguments': ['x', 'loc', 'scale'],
                 'array': 'x',
                 'bulk': 'scifort_normal_logpdf_vec_f64',
+                'elementwise': 'scifort_normal_logpdf_elementwise_f64',
                 'parameters': ['loc', 'scale'],
                 'scalar': 'scifort_normal_logpdf_f64'},
      'logsf': {'arguments': ['x', 'loc', 'scale'],
                'array': 'x',
                'bulk': 'scifort_normal_logsf_vec_f64',
+               'elementwise': 'scifort_normal_logsf_elementwise_f64',
                'parameters': ['loc', 'scale'],
                'scalar': 'scifort_normal_logsf_f64'},
      'pdf': {'arguments': ['x', 'loc', 'scale'],
              'array': 'x',
              'bulk': 'scifort_normal_pdf_vec_f64',
+             'elementwise': 'scifort_normal_pdf_elementwise_f64',
              'parameters': ['loc', 'scale'],
              'scalar': 'scifort_normal_pdf_f64'},
      'ppf': {'arguments': ['p', 'loc', 'scale'],
              'array': 'p',
              'bulk': 'scifort_normal_ppf_vec_f64',
+             'elementwise': 'scifort_normal_ppf_elementwise_f64',
              'parameters': ['loc', 'scale'],
              'scalar': 'scifort_normal_ppf_f64'},
      'sf': {'arguments': ['x', 'loc', 'scale'],
             'array': 'x',
             'bulk': 'scifort_normal_sf_vec_f64',
+            'elementwise': 'scifort_normal_sf_elementwise_f64',
             'parameters': ['loc', 'scale'],
             'scalar': 'scifort_normal_sf_f64'}}
 
     def cdf(self, x, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_cdf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_cdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('cdf', x, (loc, scale), out)
 
     def isf(self, p, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_isf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_isf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('isf', p, (loc, scale), out)
 
     def logcdf(self, x, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_logcdf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_logcdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('logcdf', x, (loc, scale), out)
 
     def logpdf(self, x, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_logpdf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_logpdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('logpdf', x, (loc, scale), out)
 
     def logsf(self, x, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_logsf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_logsf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('logsf', x, (loc, scale), out)
 
     def pdf(self, x, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_pdf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_pdf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('pdf', x, (loc, scale), out)
 
     def ppf(self, p, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_ppf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_ppf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('ppf', p, (loc, scale), out)
 
     def sf(self, x, loc=0.0, scale=1.0, *, out=None):
-        """Evaluate normal_sf; scalar parameters, optional array output buffer."""
+        """Evaluate normal_sf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('sf', x, (loc, scale), out)
 
 class T(Distribution):

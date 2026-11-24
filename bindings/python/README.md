@@ -55,7 +55,7 @@ Python extension or a shared-library packaging step.
 
 ## Python contract
 
-- Scalar input returns a Python float. Zero-dimensional NumPy input is scalar.
+- All-scalar arguments return a Python float. Zero-dimensional NumPy arguments are scalar.
 - Array-like real numeric input returns a native-endian float64 ndarray with the
   same shape. Lists, integer/float32 arrays, noncontiguous views, unaligned arrays
   and nonnative-endian arrays are converted when needed. Complex, string and
@@ -63,14 +63,20 @@ Python extension or a shared-library packaging step.
   uniform parameters.
 - Location and scale default explicitly to 0 and 1 in the Python configuration.
   Weibull `c`, lognormal `s`, gamma `a`, beta `a, b`, and Student t/chi-square `df` are required. All parameters must be
-  scalar; broadcasting and per-element parameters are not implemented.
+  scalar for other families. Normal and gamma accept array-valued parameters
+  with NumPy broadcasting: `api.normal.cdf(0., loc=[-1., 0., 1.])` and
+  `api.gamma.cdf([[.5], [2.]], a=[1., 2., 3.])` return shapes `(3,)` and `(2, 3)`.
+  If any parameter is an array, every parameter is evaluated per element;
+  invalid parameter elements return the native result (usually NaN) rather than
+  raising a uniform-parameter error. Empty broadcasts evaluate no elements.
 - Optional `out=` accepts a writable, aligned, C-contiguous, native float64 NumPy
-  array of exactly the input shape. It is returned by identity. Wrong dtype,
-  shape, layout, read-only storage and possible overlap with the input are
-  rejected before the C call. Scalar input does not accept `out`.
+  array of exactly the input or broadcast result shape. It is returned by identity. Wrong dtype,
+  shape, layout, read-only storage and possible overlap with any input or parameter are
+  rejected before the C call. All-scalar calls do not accept `out`.
 - Scalar parameter errors retain native NaN results. Bulk call-level errors
   (invalid uniform parameters or rejected lengths) raise `ValueError`; output
-  remains unchanged. Invalid individual points/probabilities retain native
+  remains unchanged. These uniform-parameter checks apply when all parameters
+  are scalar. Invalid individual points/probabilities retain native
   NaN/infinity/support behavior. An unknown ABI status raises `RuntimeError`.
 - No numerical method is reimplemented in Python. Native behavior and intentional
   SciPy differences remain applicable. In particular SciPy 1.15.3 returns NaN
@@ -259,3 +265,26 @@ seven Python integration tests, one compiled C integration test exercising
 fixture compiles its generated source order under runtime checks and `-O3`.
 The unified check covers 75 artifacts, and the original 56 benchmark workloads
 passed validation with the new build plan. No timing baseline was refreshed.
+
+## Array-valued parameters (2026-11-24)
+
+Normal and gamma now expose 16 additional C elementwise entry points, used by
+Python when any parameter is an array. Existing scalar and uniform-parameter
+symbols and numerical implementations remain unchanged. Other Python families
+still require scalar parameters. The Python contract above specifies broadcasting,
+invalid-element behavior, output shape and overlap rules.
+
+Validation used the first five commands in the preceding validation block:
+41 generator/workflow tests, eight Python integration tests, one C integration
+test and two benchmark tests (52 total), plus the 75-artifact read-only pipeline
+check. Python and compiled C checks cover runtime-checked (`-O0 -g -fcheck=all
+-fbacktrace`) and optimized (`-O3`) builds with GNU Fortran/GCC/G++ 17.0.0
+20260510 (experimental) on Windows; Python/NumPy/SciPy/parser versions remain
+those recorded above. New tests cover all eight normal/gamma methods with mixed
+scalar/array parameters, multidimensional broadcasts, endpoints, invalid elements,
+round trips, dtype/layout conversions, empty results and overlap with any input.
+SciPy references explicitly use binary64 parameters to match this interface.
+Changed local links, generated Fortran ASCII/line limits and whitespace passed.
+No full FPM suite or timing-baseline refresh was run: changes are confined to
+interface tooling/adapters and the optional development build's generated hashes.
+Other compilers/platforms remain unverified.

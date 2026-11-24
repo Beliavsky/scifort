@@ -144,6 +144,8 @@ def coverage(configs, python, root):
             row.update(scalar=entry.get('symbol') or entry.get('existing_scalar_symbol'),
                        bulk=entry.get('vector_symbol'), scalar_generated=bool(entry.get('symbol')),
                        bulk_generated=bool(entry.get('vector_symbol')))
+            if entry.get('elementwise_symbol'):
+                row['elementwise'] = entry['elementwise_symbol']
         for name, entry in config.get('subroutines', {}).items():
             rows[(module, name)] = dict(module=module, procedure=name, array_adapter=entry['symbol'])
     for group, options in sorted(python['groups'].items()):
@@ -159,6 +161,7 @@ def coverage(configs, python, root):
     counts = dict(exports=len(rows), scalar=sum(bool(r.get('scalar')) for r in procedures),
                   bulk=sum(bool(r.get('bulk')) for r in procedures),
                   array_adapters=sum(bool(r.get('array_adapter')) for r in procedures),
+                  elementwise=sum(bool(r.get('elementwise')) for r in procedures),
                   python=sum(bool(r.get('python')) for r in procedures))
     return dict(schema_version=1, scope='Reviewed C batch and Python policy only; not a whole-project inventory',
                 counts=counts, procedures=procedures)
@@ -168,11 +171,11 @@ def coverage_markdown(report):
     lines = ['# Reviewed interface coverage', '', report['scope']+'.', '',
              '| Interface | Count |', '| --- | ---: |']
     lines += [f'| {key} | {value} |' for key, value in report['counts'].items()]
-    lines += ['', '| Module | Export | Scalar C | Bulk C | Array adapter | Python |',
-              '| --- | --- | --- | --- | --- | --- |']
+    lines += ['', '| Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |',
+              '| --- | --- | --- | --- | --- | --- | --- |']
     for row in report['procedures']:
         lines.append('| '+' | '.join(str(row.get(k) or '') for k in
-                                    ('module','procedure','scalar','bulk','array_adapter','python'))+' |')
+                                    ('module','procedure','scalar','bulk','array_adapter','elementwise','python'))+' |')
     lines += ['', 'C-manifest exclusion reasons and generated/existing symbol distinctions are in the JSON.', '']
     return '\n'.join(lines)
 

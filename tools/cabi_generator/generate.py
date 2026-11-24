@@ -154,10 +154,10 @@ def generate(config, root):
     entries, symbols = [], set()
     for name, policy in sorted(selected.items()):
         identifier(name)
-        allowed = {"symbol", "vector_symbol", "array_argument", "optional_policy", "finite", "positive", "array_style", "existing_scalar_symbol"}
-        if not isinstance(policy, dict) or set(policy) - allowed or not (policy.get("symbol") or policy.get("vector_symbol")):
+        allowed = {"symbol", "vector_symbol", "array_argument", "optional_policy", "finite", "positive", "array_style", "existing_scalar_symbol", "elementwise_symbol"}
+        if not isinstance(policy, dict) or set(policy) - allowed or not (policy.get("symbol") or policy.get("vector_symbol") or policy.get("elementwise_symbol")):
             raise ValueError(f"{name}: invalid or missing policy fields")
-        for key in ("symbol", "vector_symbol", "existing_scalar_symbol"):
+        for key in ("symbol", "vector_symbol", "existing_scalar_symbol", "elementwise_symbol"):
             if key in policy:
                 identifier(policy[key])
         existing = policy.get("existing_scalar_symbol")
@@ -169,6 +169,8 @@ def generate(config, root):
         if optional and policy.get("optional_policy") != "required":
             raise ValueError(f"{name}: explicitly set optional_policy=required to promote optional inputs")
         vector = policy.get("vector_symbol")
+        if policy.get("elementwise_symbol") and not elemental:
+            raise ValueError(f"{name}: elementwise wrappers require an elemental function")
         if policy.get("array_style", default_array_style) not in ("explicit", "pointer"):
             raise ValueError(f"{name}: array_style must be explicit or pointer")
         if "array_style" in policy and not vector:
@@ -185,7 +187,7 @@ def generate(config, root):
             doc = config["argument_docs"].get(arg)
             if not isinstance(doc, str) or not doc or "\n" in doc or not doc.isascii():
                 raise ValueError(f"{name}: argument_docs needs one ASCII line for {arg}")
-        for symbol in (policy.get("symbol"), vector):
+        for symbol in (policy.get("symbol"), vector, policy.get("elementwise_symbol")):
             if symbol:
                 identifier(symbol)
                 if symbol in symbols:
@@ -296,10 +298,39 @@ def generate(config, root):
             header.append("/* Pointer bulk: NULL buffers are allowed only for n=0. */" if pointer else
                           "/* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */")
             header.append(f"void {vector}(" + ", ".join(cargs) + ");")
+        elementwise = policy.get("elementwise_symbol")
+        if elementwise:
+            lines += [f"    subroutine {elementwise}( &",
+                      "        " + ", ".join(["cg_count", *arglist, "cg_output", "cg_status"]) + ") &",
+                      f'        bind(c, name="{elementwise}")',
+                      "        !! Evaluate corresponding elements of equally sized input arrays.",
+                      "        implicit none",
+                      "        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0"]
+            for arg in args:
+                lines.append(f"        real(c_double), intent(in) :: {aliases[arg]}(cg_count) "
+                             f"!! {config['argument_docs'][arg]}; per element")
+            lines += ["        real(c_double), intent(inout) :: cg_output(cg_count) !! output buffer",
+                      "        integer(c_int), intent(out) :: cg_status !! 0 success; 1 invalid length",
+                      "        integer :: cg_i", "", "        cg_status=1_c_int",
+                      "        if (cg_count < 0_c_size_t .or. cg_count > int(huge(0),c_size_t)) return",
+                      "        do cg_i=1,int(cg_count)"]
+            lines += call_lines(index, args, {a: f"{aliases[a]}(cg_i)" for a in args},
+                                "cg_output(cg_i)", indent="            ")
+            lines += ["        end do", "        cg_status=0_c_int",
+                      f"    end subroutine {elementwise}", ""]
+            header += ["/* Elementwise: all inputs are arrays of n doubles, in native argument order.",
+                       " * Valid aligned non-NULL buffers required even for n=0; output must not",
+                       " * overlap any input. Inputs may overlap each other. No uniform validation:",
+                       " * invalid parameter elements retain native results (usually NaN), status 0.",
+                       " * Status 1: rejected length, output unchanged. */",
+                       f"void {elementwise}(" + ", ".join(["size_t n",
+                           *[f"const double *arg_{a}" for a in args],
+                           "double *output", "int *status"]) + ");"]
         header.append("")
         coverage.append({"procedure": name, "state": "generated", "arguments": args,
                          "optional_promoted_to_required": optional,
-                         "symbols": ([symbol] if symbol else []) + ([vector] if vector else [])})
+                         "symbols": ([symbol] if symbol else []) + ([vector] if vector else [])
+                                    + ([elementwise] if elementwise else [])})
         if policy.get("existing_scalar_symbol"):
             coverage[-1]["existing_scalar_symbol"] = policy["existing_scalar_symbol"]
     for index, entry in enumerate(array_entries, start=len(entries)):

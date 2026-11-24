@@ -122,7 +122,7 @@ class BindingTests(unittest.TestCase):
                         with self.assertRaises(ValueError):
                             func(x, *invalid)
             with self.assertRaises(TypeError):
-                api.normal.cdf(x, scale=[1.])
+                api.beta.cdf(x, 2., 3., scale=[1.])
             for bad in ([1+2j], ['1'], [object()]):
                 with self.assertRaises(TypeError):
                     api.normal.cdf(bad)
@@ -138,6 +138,84 @@ class BindingTests(unittest.TestCase):
                     api.normal.cdf(x, out=out)
             with self.assertRaises(ValueError):
                 api.normal.cdf(0., out=np.empty(()))
+
+    def test_broadcast_parameters(self):
+        for checked, api in self.apis:
+            for family, reference in (('normal', stats.norm), ('gamma', stats.gamma)):
+                group = getattr(api, family)
+                for method in METHODS:
+                    with self.subTest(checked=checked, family=family, method=method):
+                        x = (np.array([[.01], [.5], [.99]]) if method in ('ppf', 'isf')
+                             else np.array([[-3.], [.2], [8.]]))
+                        loc = np.array([-.5, 0., .5], dtype='>f8')
+                        scale = np.array([1., 2., 3.], dtype=np.float32)
+                        args = (np.array([1., 2., 3.]),) if family == 'gamma' else ()
+                        func = getattr(group, method)
+                        actual = func(x, *args, loc=loc, scale=scale)
+                        # Match this binary64 interface's documented conversion. SciPy
+                        # otherwise keeps float32 precision in log(scale) for logpdf.
+                        expected = getattr(reference, method)(x, *args, loc=loc.astype(np.float64),
+                                                               scale=scale.astype(np.float64))
+                        np.testing.assert_allclose(actual, expected, rtol=4e-12, atol=3e-13)
+                        # Every element uses the unchanged native scalar function.
+                        for i, j in np.ndindex(actual.shape):
+                            shapes = (args[0][j],) if args else ()
+                            self.assertEqual(actual[i,j], func(x[i,0], *shapes,
+                                                              loc=float(loc[j]), scale=float(scale[j])))
+                        out = np.empty_like(actual)
+                        self.assertIs(func(x, *args, loc=loc, scale=scale, out=out), out)
+                        np.testing.assert_array_equal(out, actual)
+                        np.testing.assert_allclose(func(.5, *args, scale=scale),
+                                                   getattr(reference, method)(.5, *args, scale=scale.astype(np.float64)),
+                                                   rtol=4e-12, atol=3e-13)
+                # Array parameters follow native per-element behavior, including invalids.
+                for method in METHODS:
+                    func = getattr(group, method)
+                    scales = np.array([1., 0., -1., np.nan, np.inf])
+                    shapes = (2.,) if family == 'gamma' else ()
+                    actual = func(.5, *shapes, scale=scales)
+                    expected = [func(.5, *shapes, scale=float(v)) for v in scales]
+                    np.testing.assert_array_equal(actual, expected)
+                for method in METHODS:
+                    func = getattr(group, method)
+                    points = ([0., 1., -.1, 1.1, np.nan] if method in ('ppf', 'isf')
+                              else [-np.inf, 0., np.inf, np.nan, 1e100])
+                    scales = np.arange(1., 6.)
+                    shapes = (2.,) if family == 'gamma' else ()
+                    np.testing.assert_array_equal(func(points, *shapes, scale=scales),
+                        [func(v, *shapes, scale=float(t)) for v, t in zip(points, scales)])
+                probabilities = np.array([[1e-12], [.5], [1-1e-12]])
+                shapes = ([1., 2., 3.],) if family == 'gamma' else ()
+                # Zero gamma location avoids rounding a tiny quantile into an offset.
+                locations = [0., 0., 0.] if family == 'gamma' else [-.5, 0., .5]
+                quantiles = group.ppf(probabilities, *shapes, loc=locations, scale=[1., 2., 3.])
+                recovered = group.cdf(quantiles, *shapes, loc=locations, scale=[1., 2., 3.])
+                np.testing.assert_allclose(recovered, np.broadcast_to(probabilities, (3,3)),
+                                           rtol=2e-10, atol=0)
+                empty = group.cdf(np.empty((0,1)), *(([2., -1., np.nan],) if family == 'gamma' else ()),
+                                  scale=[1., 0., np.nan])
+                self.assertEqual(empty.shape, (0,3))
+            for label in ('loc', 'scale'):
+                a = np.array([1., 2., 3.])
+                with self.assertRaises(ValueError):
+                    api.normal.cdf(0., out=a, **{label:a})
+                np.testing.assert_array_equal(a, [1., 2., 3.])
+            a = np.array([1., 2., 3.])
+            with self.assertRaises(ValueError):
+                api.gamma.cdf(.5, a, out=a)
+            # Zero-dimensional parameter views also count as inputs for alias checks.
+            with self.assertRaises(ValueError):
+                api.normal.cdf(a, loc=a[:1].reshape(()), out=a)
+            for params in (dict(loc=np.ones(4)), dict(scale=[1+2j])):
+                with self.assertRaises((ValueError, TypeError)):
+                    api.normal.cdf(np.ones(3), **params)
+            for out in (np.empty((3,1)), np.empty(3, dtype='f4'), np.empty(6)[::2]):
+                with self.assertRaises((ValueError, TypeError)):
+                    api.normal.cdf(.5, loc=[0., 1., 2.], out=out)
+            unaligned = np.ndarray((3,), dtype=np.float64, buffer=bytearray(25), offset=1)
+            unaligned[:] = [1., 2., 3.]
+            np.testing.assert_allclose(api.normal.cdf(.5, scale=unaligned),
+                                       stats.norm.cdf(.5, scale=unaligned), rtol=3e-13)
 
     def test_infinite_student_df_is_exact_normal_limit(self):
         for _, api in self.apis:

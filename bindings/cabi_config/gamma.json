@@ -32,7 +32,8 @@
         "a",
         "scale"
       ],
-      "existing_scalar_symbol": "scifort_gamma_cdf_f64"
+      "existing_scalar_symbol": "scifort_gamma_cdf_f64",
+      "elementwise_symbol": "scifort_gamma_cdf_elementwise_f64"
     },
     "gamma_isf": {
       "symbol": "scifort_gamma_isf_f64",
@@ -47,7 +48,8 @@
       "positive": [
         "a",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_gamma_isf_elementwise_f64"
     },
     "gamma_logcdf": {
       "symbol": "scifort_gamma_logcdf_f64",
@@ -62,7 +64,8 @@
       "positive": [
         "a",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_gamma_logcdf_elementwise_f64"
     },
     "gamma_logpdf": {
       "symbol": "scifort_gamma_logpdf_f64",
@@ -77,7 +80,8 @@
       "positive": [
         "a",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_gamma_logpdf_elementwise_f64"
     },
     "gamma_logsf": {
       "symbol": "scifort_gamma_logsf_f64",
@@ -92,7 +96,8 @@
       "positive": [
         "a",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_gamma_logsf_elementwise_f64"
     },
     "gamma_pdf": {
       "optional_policy": "required",
@@ -107,7 +112,8 @@
         "a",
         "scale"
       ],
-      "existing_scalar_symbol": "scifort_gamma_pdf_f64"
+      "existing_scalar_symbol": "scifort_gamma_pdf_f64",
+      "elementwise_symbol": "scifort_gamma_pdf_elementwise_f64"
     },
     "gamma_ppf": {
       "optional_policy": "required",
@@ -122,7 +128,8 @@
         "a",
         "scale"
       ],
-      "existing_scalar_symbol": "scifort_gamma_ppf_f64"
+      "existing_scalar_symbol": "scifort_gamma_ppf_f64",
+      "elementwise_symbol": "scifort_gamma_ppf_elementwise_f64"
     },
     "gamma_sf": {
       "symbol": "scifort_gamma_sf_f64",
@@ -137,7 +144,8 @@
       "positive": [
         "a",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_gamma_sf_elementwise_f64"
     }
   },
   "excluded": {}

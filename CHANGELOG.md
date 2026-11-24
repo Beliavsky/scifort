@@ -1,3 +1,11 @@
+## 2026-11-24 - array-valued distribution parameters
+
+- Generate optional explicit-shape elementwise C wrappers with all inputs sharing
+  one length; retain existing scalar and uniform-parameter ABI contracts.
+- Add 16 new normal/gamma C symbols and NumPy broadcasting for all eight methods.
+- Validate broadcast output shape and overlap with every input; preserve native
+  invalid-element results and existing uniform-parameter call errors.
+
 ## 2026-11-24 - unified reviewed-interface workflow
 
 - Generate the development build's source list from reviewed roots and module

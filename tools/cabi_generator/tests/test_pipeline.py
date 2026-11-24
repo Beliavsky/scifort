@@ -65,7 +65,7 @@ end module
         self.assertNotIn('scifort',json.dumps(plan).lower())
         self.assertIn('#include "api.h"',outputs[self.root/'include/all.h'])
         coverage=json.loads(outputs[self.root/'interfaces.json'])
-        self.assertEqual(coverage['counts'],dict(exports=2,scalar=1,bulk=1,array_adapters=0,python=1))
+        self.assertEqual(coverage['counts'],dict(exports=2,scalar=1,bulk=1,array_adapters=0,elementwise=0,python=1))
         # No compiler-specific intrinsics need fake source files.
         self.assertNotIn('iso_c_binding',plan['modules'])
         fc=shutil.which('gfortran')

@@ -1,11 +1,23 @@
 {
-  "generated_symbol_count": 10,
+  "generated_symbol_count": 18,
   "generator_version": "0.3.0",
   "procedures": [
     {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_normal_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
       "procedure": "normal_cdf",
-      "reason": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
-      "state": "excluded"
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_cdf_elementwise_f64"
+      ]
     },
     {
       "arguments": [
@@ -21,7 +33,8 @@
       "state": "generated",
       "symbols": [
         "scifort_normal_isf_f64",
-        "scifort_normal_isf_vec_f64"
+        "scifort_normal_isf_vec_f64",
+        "scifort_normal_isf_elementwise_f64"
       ]
     },
     {
@@ -38,7 +51,8 @@
       "state": "generated",
       "symbols": [
         "scifort_normal_logcdf_f64",
-        "scifort_normal_logcdf_vec_f64"
+        "scifort_normal_logcdf_vec_f64",
+        "scifort_normal_logcdf_elementwise_f64"
       ]
     },
     {
@@ -55,7 +69,8 @@
       "state": "generated",
       "symbols": [
         "scifort_normal_logpdf_f64",
-        "scifort_normal_logpdf_vec_f64"
+        "scifort_normal_logpdf_vec_f64",
+        "scifort_normal_logpdf_elementwise_f64"
       ]
     },
     {
@@ -72,18 +87,43 @@
       "state": "generated",
       "symbols": [
         "scifort_normal_logsf_f64",
-        "scifort_normal_logsf_vec_f64"
+        "scifort_normal_logsf_vec_f64",
+        "scifort_normal_logsf_elementwise_f64"
       ]
     },
     {
+      "arguments": [
+        "x",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_normal_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
       "procedure": "normal_pdf",
-      "reason": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
-      "state": "excluded"
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_pdf_elementwise_f64"
+      ]
     },
     {
+      "arguments": [
+        "p",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_normal_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
       "procedure": "normal_ppf",
-      "reason": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
-      "state": "excluded"
+      "state": "generated",
+      "symbols": [
+        "scifort_normal_ppf_elementwise_f64"
+      ]
     },
     {
       "arguments": [
@@ -99,7 +139,8 @@
       "state": "generated",
       "symbols": [
         "scifort_normal_sf_f64",
-        "scifort_normal_sf_vec_f64"
+        "scifort_normal_sf_vec_f64",
+        "scifort_normal_sf_elementwise_f64"
       ]
     }
   ],

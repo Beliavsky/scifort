@@ -2,6 +2,7 @@
   "counts": {
     "array_adapters": 1,
     "bulk": 88,
+    "elementwise": 16,
     "exports": 98,
     "python": 88,
     "scalar": 88
@@ -298,6 +299,7 @@
     {
       "bulk": "scifort_gamma_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_cdf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_cdf",
       "python": "gamma.cdf",
@@ -307,6 +309,7 @@
     {
       "bulk": "scifort_gamma_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_isf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_isf",
       "python": "gamma.isf",
@@ -316,6 +319,7 @@
     {
       "bulk": "scifort_gamma_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_logcdf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_logcdf",
       "python": "gamma.logcdf",
@@ -325,6 +329,7 @@
     {
       "bulk": "scifort_gamma_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_logpdf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_logpdf",
       "python": "gamma.logpdf",
@@ -334,6 +339,7 @@
     {
       "bulk": "scifort_gamma_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_logsf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_logsf",
       "python": "gamma.logsf",
@@ -343,6 +349,7 @@
     {
       "bulk": "scifort_gamma_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_pdf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_pdf",
       "python": "gamma.pdf",
@@ -352,6 +359,7 @@
     {
       "bulk": "scifort_gamma_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_ppf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_ppf",
       "python": "gamma.ppf",
@@ -361,6 +369,7 @@
     {
       "bulk": "scifort_gamma_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_gamma_sf_elementwise_f64",
       "module": "scifort_gamma",
       "procedure": "gamma_sf",
       "python": "gamma.sf",
@@ -654,7 +663,7 @@
     {
       "bulk": "scifort_normal_cdf_vec_f64",
       "bulk_generated": false,
-      "c_manifest_exclusion": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "elementwise": "scifort_normal_cdf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_cdf",
       "python": "normal.cdf",
@@ -664,6 +673,7 @@
     {
       "bulk": "scifort_normal_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_normal_isf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_isf",
       "python": "normal.isf",
@@ -673,6 +683,7 @@
     {
       "bulk": "scifort_normal_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_normal_logcdf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_logcdf",
       "python": "normal.logcdf",
@@ -682,6 +693,7 @@
     {
       "bulk": "scifort_normal_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_normal_logpdf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_logpdf",
       "python": "normal.logpdf",
@@ -691,6 +703,7 @@
     {
       "bulk": "scifort_normal_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_normal_logsf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_logsf",
       "python": "normal.logsf",
@@ -700,7 +713,7 @@
     {
       "bulk": "scifort_normal_pdf_vec_f64",
       "bulk_generated": false,
-      "c_manifest_exclusion": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "elementwise": "scifort_normal_pdf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_pdf",
       "python": "normal.pdf",
@@ -710,7 +723,7 @@
     {
       "bulk": "scifort_normal_ppf_vec_f64",
       "bulk_generated": false,
-      "c_manifest_exclusion": "Scalar and bulk symbols already implemented in src/c_api/api.f90; retained unchanged.",
+      "elementwise": "scifort_normal_ppf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_ppf",
       "python": "normal.ppf",
@@ -720,6 +733,7 @@
     {
       "bulk": "scifort_normal_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_normal_sf_elementwise_f64",
       "module": "scifort_normal",
       "procedure": "normal_sf",
       "python": "normal.sf",

@@ -343,3 +343,25 @@ To extend the workflow: review a native module's C manifest, list it in the C
 batch, and add its Python mapping/defaults when desired. Run the unified command
 and focused tests. Source dependencies, header aggregation, build ordering and
 coverage then update automatically. The chi-square addition exercises this path.
+
+## Per-element parameters
+
+A function policy may additionally specify `elementwise_symbol`. This emits a new
+explicit-shape C entry point with `size_t n`, one `const double *` per native
+argument in declaration order, `double *output`, and `int *status`. The native
+function must be elemental. All input arrays have length n; input arrays may
+share storage, but output must not overlap any input. Every buffer must be valid,
+aligned and non-NULL even for n=0. The status pointer is always required.
+
+Status 1 rejects lengths exceeding the default Fortran integer maximum and leaves
+output unchanged. Status 0 includes invalid per-element parameters, whose results
+follow the native scalar function. The existing `finite` and `positive` policies
+apply only to uniform-parameter bulk symbols. No broadcast rules live in C.
+
+The generated Python runtime uses this optional symbol when any parameter has
+nonzero rank, broadcasts all inputs in NumPy, validates output shape and overlap
+against every original input, and prepares contiguous aligned binary64 buffers.
+All-scalar and uniform-parameter calls retain their existing paths and contracts.
+Normal and gamma are the first reviewed configurations with all eight methods.
+Regenerate with the unified pipeline so the development build hashes and combined
+coverage also include the new symbols.

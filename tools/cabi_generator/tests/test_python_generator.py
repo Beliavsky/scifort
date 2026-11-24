@@ -52,6 +52,28 @@ class PythonGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'excluded'):
             self.generate()
 
+    def test_elementwise_external_scalar_and_bulk_mapping(self):
+        manifest = fixture_config()
+        original = copy.deepcopy(manifest['functions']['affine'])
+        manifest['functions']['affine'] = dict(existing_scalar_symbol=original['symbol'],
+            elementwise_symbol='example_affine_elements', optional_policy='required')
+        (self.root / 'manifest.json').write_text(json.dumps(manifest))
+        extras = self.config['groups']['arithmetic']['existing_functions']
+        extras['affine'] = original
+        outputs = self.generate()
+        generated = outputs[self.root / 'python/example/_generated.py']
+        self.assertIn("'elementwise': 'example_affine_elements'", generated)
+        native = outputs[self.root / 'python/native/arithmetic_compat.f90']
+        self.assertNotIn('example_affine_elements', native)
+        self.assertIn('function example_affine(', native)
+        self.assertIn('subroutine example_affine_array(', native)
+        extras['affine']['symbol'] = 'wrong_scalar'
+        with self.assertRaisesRegex(ValueError, 'must match'):
+            self.generate()
+        extras['affine'] = dict(original, elementwise_symbol='wrong_extra')
+        with self.assertRaisesRegex(ValueError, 'primary C manifest'):
+            self.generate()
+
     def test_empty_and_reserved_groups_are_rejected(self):
         original = copy.deepcopy(self.config)
         self.config['groups'] = {}

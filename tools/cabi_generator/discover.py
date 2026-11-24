@@ -143,6 +143,8 @@ def configured(root, batch=None, python=None):
                 row = native.setdefault((config['module'], name), {})
                 row['scalar'] = policy.get('symbol') or policy.get('existing_scalar_symbol')
                 row['bulk'] = policy.get('vector_symbol')
+                if policy.get('elementwise_symbol'):
+                    row['elementwise'] = policy['elementwise_symbol']
             for name, policy in config.get('subroutines', {}).items():
                 native.setdefault((config['module'], name), {})['array_subroutine'] = policy['symbol']
     if python:

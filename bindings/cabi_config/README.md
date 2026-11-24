@@ -3,23 +3,24 @@
 The reusable implementation is in [tools/cabi_generator](../../tools/cabi_generator/README.md).
 This directory contains SciFort-specific interface and compatibility decisions.
 
-`normal.json` exposes scalar and bulk `isf`, `logcdf`, `logpdf`, `logsf`, and
-`sf` methods. Existing scalar and bulk `pdf`, `cdf`, and `ppf` wrappers remain
-in `src/c_api/api.f90`, with their original symbols and behavior. They are
-explicit exclusions in the generated coverage report, not missing methods.
+`normal.json` preserves the five generated scalar/uniform-bulk pairs and the
+three PDF/CDF/PPF scalar/bulk pairs maintained in `src/c_api/api.f90`. It adds
+eight new `scifort_normal_*_elementwise_f64` symbols. `gamma.json` adds the same
+elementwise pattern for its eight methods. All arguments to these new wrappers
+are explicit-shape arrays sharing one length; invalid parameter elements retain
+native results with status 0. They do not apply the uniform bulk parameter checks.
 
-The checked-in outputs are:
+- [Normal wrappers](../../src/c_api/generated/normal_generated.f90).
+- [Normal header](../../include/scifort_generated_normal.h).
+- [Normal coverage](normal_coverage.json).
+- [Gamma header](../../include/scifort_generated_gamma.h).
 
-- [Fortran wrappers](../../src/c_api/generated/normal_generated.f90), compiled by FPM.
-- [C header](../../include/scifort_generated_normal.h), included by `scifort.h`.
-- [Coverage record](normal_coverage.json), accounting for all eight public exports
-  and listing ten generated symbols.
-
-Regenerate after changing the manifest or native declarations; review the diff
-and run `--check` before committing. The manifest makes optional location and
-scale arguments required at the C boundary. Bulk calls validate finite location
-and finite positive scale before touching output. Their length/buffer/status
-contract is documented in the generated header and generator guide.
+Regenerate after changing manifests or native declarations, review the diff, and
+run the unified pipeline with `--check` before committing. Optional arguments
+are required at the C boundary. Existing uniform bulk calls still validate
+finite location and finite positive scale before touching output. Buffer,
+length and status contracts appear in the generated headers and generator guide.
+Python normal/gamma methods support NumPy broadcasting through the new symbols.
 
 `linalg.json` uses schema version 2 to wrap the existing assumed-shape
 `solve_lower(l(:,:),b(:),x(:),status)` procedure. Its generated adapter declares
