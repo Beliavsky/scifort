@@ -18,6 +18,7 @@ from build_library import build, FAMILIES
 from scifort import Scifort
 
 SCIPY_NAMES = dict(normal='norm', exponential='expon', weibull='weibull_min', lognormal='lognorm')
+SHAPES = dict(weibull=(1.7,), lognormal=(.8,), gamma=(2.3,), beta=(2.3, 3.1), t=(5.,))
 METHODS = ('pdf', 'logpdf', 'cdf', 'sf', 'logcdf', 'logsf', 'ppf', 'isf')
 
 
@@ -36,7 +37,7 @@ class BindingTests(unittest.TestCase):
             for family in FAMILIES:
                 group = getattr(api, family)
                 scipy_group = getattr(stats, SCIPY_NAMES.get(family, family))
-                shape = (1.7,) if family == 'weibull' else ((.8,) if family == 'lognormal' else ())
+                shape = SHAPES.get(family, ())
                 for method in METHODS:
                     with self.subTest(checked=checked, family=family, method=method):
                         func, reference = getattr(group, method), getattr(scipy_group, method)
@@ -46,13 +47,26 @@ class BindingTests(unittest.TestCase):
                         actual = func(values, *shape, loc=.25, scale=1.5)
                         with np.errstate(invalid='ignore'):
                             expected = reference(values, *shape, loc=.25, scale=1.5)
-                        # SciPy 1.15.3 returns NaN for Weibull density at +inf.
+                        # SciPy 1.15.3 returns NaN for gamma/Weibull density at +inf.
                         # Preserve SciFort's established mathematical endpoint limits.
-                        if family == 'weibull' and method in ('pdf', 'logpdf'):
+                        if family in ('weibull', 'gamma') and method in ('pdf', 'logpdf'):
                             endpoint = np.isposinf(values)
                             limit = 0. if method == 'pdf' else -np.inf
                             np.testing.assert_array_equal(actual[endpoint], limit)
                             expected[endpoint] = limit
+                        # SciPy 1.15.3 t(5) quantiles at .1/.9 miss ~3e-11.
+                        # Independent 80-digit mpmath inversion of the incomplete-beta
+                        # CDF gives |t| = 1.4758840488244810785464589478088632618.
+                        # Retain the strict tolerances using this reference at those points.
+                        if family == 't' and method in ('ppf', 'isf'):
+                            quantile = 1.4758840488244810785464589478088632618
+                            for probability, sign in ((.1, -1.), (.9, 1.)):
+                                if method == 'isf':
+                                    sign = -sign
+                                index = values == probability
+                                expected[index] = .25 + sign*1.5*quantile
+                                np.testing.assert_allclose(actual[index], expected[index],
+                                                           rtol=2e-15, atol=0)
                         # Density/probability comparisons use relative errors, including small tails.
                         if method in ('pdf', 'cdf', 'sf'):
                             np.testing.assert_allclose(actual, expected, rtol=4e-12, atol=0, equal_nan=True)
@@ -89,7 +103,7 @@ class BindingTests(unittest.TestCase):
             x = np.array([0., 1., 2.])
             for family in FAMILIES:
                 func = getattr(api, family).cdf
-                shape = [1.7] if family in ('weibull', 'lognormal') else []
+                shape = SHAPES.get(family, ())
                 for params in (dict(scale=0.), dict(scale=-1.), dict(scale=np.inf),
                                dict(loc=np.nan), dict(loc=np.inf)):
                     out = np.full_like(x, 99.)
@@ -99,10 +113,12 @@ class BindingTests(unittest.TestCase):
                     self.assertTrue(math.isnan(func(.5, *shape, **params)))
                     with self.assertRaises(ValueError):
                         func([], *shape, **params)
-                if shape:
-                    for bad in (0., -1., np.inf, np.nan):
+                for index in range(len(shape)):
+                    for bad in (0., -1., np.nan, -np.inf, *(() if family == 't' else (np.inf,))):
+                        invalid = list(shape)
+                        invalid[index] = bad
                         with self.assertRaises(ValueError):
-                            func(x, bad)
+                            func(x, *invalid)
             with self.assertRaises(TypeError):
                 api.normal.cdf(x, scale=[1.])
             for bad in ([1+2j], ['1'], [object()]):
@@ -120,6 +136,15 @@ class BindingTests(unittest.TestCase):
                     api.normal.cdf(x, out=out)
             with self.assertRaises(ValueError):
                 api.normal.cdf(0., out=np.empty(()))
+
+    def test_infinite_student_df_is_exact_normal_limit(self):
+        for _, api in self.apis:
+            for method in METHODS:
+                func, normal = getattr(api.t, method), getattr(api.normal, method)
+                x = np.array([0., 1e-12, .1, .5, .9, 1.]) if method in ('ppf', 'isf') else np.array([-8., 0., 8.])
+                np.testing.assert_array_equal(func(x, np.inf), normal(x))
+                self.assertEqual(func(.5, np.inf), normal(.5))
+                self.assertEqual(func([], np.inf).size, 0)
 
     def test_unexpected_status_and_missing_library(self):
         with self.assertRaises(FileNotFoundError):
@@ -141,7 +166,7 @@ class BindingTests(unittest.TestCase):
         for _, api in self.apis:
             for family in FAMILIES:
                 group = getattr(api, family)
-                shape = [1.7] if family in ('weibull', 'lognormal') else []
+                shape = SHAPES.get(family, ())
                 np.testing.assert_allclose(group.cdf(group.ppf(p, *shape), *shape), p,
                                            rtol=2e-10, atol=0)
                 np.testing.assert_allclose(group.sf(group.isf(p, *shape), *shape), p,

@@ -222,3 +222,58 @@ The supplements must not be linked alongside a full C ABI object defining the
 same symbols. They let a small distribution-only library build without compiling
 unrelated modules. The regular SciFort source and C ABI remain unchanged. Python
 policy/runtime and supplement outputs have their own read-only drift check.
+
+## API inventory and draft manifests
+
+`discover.py` inventories explicit public exports in private-by-default modules,
+including dummy types, ranks, shape declarations, optional flags and function
+results. Unsupported signatures, unresolved generics/types/constants/reexports,
+and default-public modules are reported explicitly. Scalar/elemental support is
+checked by the same signature validator used for generation. Array subroutines
+need reviewed dimension/status policies and are not automatically drafted as
+scalar functions; configured array adapters are counted separately.
+
+```text
+python tools/cabi_generator/discover.py src/stats/gamma.f90 src/stats/beta.f90 src/stats/student_t.f90 --abi-source src/c_api --manifest-batch bindings/cabi_config/manifests.json --python-policy bindings/cabi_config/python.json --output build/cabi-discovery/inventory.json
+```
+
+Inputs may be files or directories (recursive `.f90` discovery); `--abi-source`
+can be repeated. JSON records full argument details and reasons. Sibling Markdown
+shows separate counts for native exports, supported scalar/elemental patterns,
+observed C function/procedural bindings, configured scalar/bulk wrappers and
+Python methods. Counts apply only to inspected native files. Parser/module-access
+failures make the report incomplete and produce a nonzero exit status. Large
+data-initialization modules can take a long time in fparser; prefer a bounded set
+of numerical API files when reviewing a family. `--max-source-bytes N` explicitly
+skips larger native files, records their names/reasons and returns a nonzero
+incomplete report; the default has no size limit. It does not limit ABI-source
+parsing. `--progress` prints each native filename before parsing. The demonstrated
+complete report covers the three added families, not the whole repository.
+
+Observed C symbols come from `bind(c)` module procedures, linked to native
+exports through explicit `use ..., only:` imports, including renames. Both
+positional and keyword function references are recognized. These are syntactic
+links: no interprocedural tracing, implicit imports, external procedures or ABI
+compatibility proof is claimed. Configured coverage is read from explicit C
+manifests and Python policy; it does not assert that generated files, installed
+packages or loaded libraries exist. Other integer/array/callback patterns remain
+explicitly outside scalar/elemental draft generation.
+
+To create drafts in a new directory:
+
+```text
+python tools/cabi_generator/discover.py src/stats/gamma.f90 src/stats/beta.f90 src/stats/student_t.f90 --kind-module scifort_kinds --symbol-prefix scifort_ --draft-directory build/cabi-discovery/new-drafts --output build/cabi-discovery/draft-inventory.json
+```
+
+`--kind` defaults to `dp`; the kind module and symbol prefix must be supplied for
+drafting. Each draft includes `draft: true` and review instructions, which make
+it invalid input to the wrapper generator. Argument meanings, varying inputs,
+optional handling, finite/positive constraints and Python defaults remain
+unresolved. Symbol/output names are proposals, not API commitments. Existing
+C symbols must be reviewed before retaining or replacing proposed scalar symbols.
+
+Review and replace every placeholder, choose exclusions and output paths, then
+remove the draft/review metadata. The gamma/beta/t manifests show the result
+of that process. Existing drafts are never overwritten; inputs and referenced
+policies are protected from report writes. Normal filesystem failures during
+report writing are not transactional. The tool generates no numerical code.

@@ -1,3 +1,24 @@
+## 2026-11-24 - API inventory and gamma/beta/Student t interfaces
+
+`tools/cabi_generator/discover.py`, its independent tests, the reviewed three
+family manifests and generated interface glue are original MIT-licensed tooling.
+Discovery uses the existing unmodified fparser AST and creates no numerical
+implementation. Draft constraints/defaults are deliberately unresolved. The
+Fortran wrappers call existing SciFort gamma, beta and Student t implementations;
+their numerical provenance and third-party notices remain applicable. Existing
+manual C scalar implementations are retained and compiled verbatim in integration
+tests. No new dependency, numerical algorithm or upstream implementation is imported.
+
+The magnitude of the strict t(5) quantile reference at p=.1 was computed with
+mpmath at 80 decimal digits by solving
+`I_(5/(5+x*x))(5/2,1/2)/2 = .1` for positive `x`. It is
+`1.4758840488244810785464589478088632618159260296452738211106924703`.
+The regularized incomplete-beta definition is [DLMF 8.17.1-2](https://dlmf.nist.gov/8.17);
+the Student t relation is already documented in `src/stats/student_t.f90`.
+Symmetry supplies the opposite tail. This checks SciFort independently where
+SciPy 1.15.3's quantile reference differs by about 3e-11; no tolerance is widened
+and no numerical core behavior changes.
+
 ## 2026-11-23 - Generated NumPy/ctypes interface
 
 `tools/cabi_generator/generate_python.py`, `python_runtime.py`, the Python policy,

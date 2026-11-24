@@ -48,7 +48,7 @@ its generation and read-only check are separate from the C manifest batch.
 
 ## Benchmark distribution families
 
-[manifests.json](manifests.json) lists all eight configured modules. Regenerate
+[manifests.json](manifests.json) lists all eleven configured modules. Regenerate
 or check them together from the repository root:
 
 ```text
@@ -78,3 +78,56 @@ separately to avoid building unrelated distribution modules. It compares generat
 bulk results to those scalar wrappers and direct native calls in checked and
 optimized builds. This bounds validation to the changed ABI integration; it does
 not replace full-project validation before release or merge.
+
+## Gamma, beta and Student t
+
+The [gamma](gamma.json), [beta](beta.json) and [Student t](student_t.json)
+manifests were reviewed from discovery drafts. Each adds five scalar and eight
+bulk symbols (39 new C symbols total); existing PDF/CDF/PPF scalar definitions
+remain unchanged in `src/c_api/api.f90`. All three appear in the C batch and
+[Python policy](python.json), bringing coverage to 80 scalar/bulk method pairs
+and Python methods across ten families. This is configured family coverage,
+not a claim of full-project parity. The current Python timing benchmark still
+covers its original 56 workloads across seven families.
+
+Gamma shape `a` and beta shapes `a, b` must be finite and positive. Student t
+`df` must be positive but **may be positive infinity**, which delegates to the
+normal distribution. Bulk validation intentionally omits `df` from the finite
+list. All three require finite location and finite positive scale. Python
+requires the shapes and defaults only location/scale to 0/1; it exposes Student
+t as `api.t`, preserving the native `t_*` and existing `scifort_t_*` names.
+
+A report for these three families can be regenerated without writing wrappers:
+
+```text
+python tools/cabi_generator/discover.py src/stats/gamma.f90 src/stats/beta.f90 src/stats/student_t.f90 --abi-source src/c_api --manifest-batch bindings/cabi_config/manifests.json --python-policy bindings/cabi_config/python.json --output build/cabi-discovery/after.json
+```
+
+It writes JSON and a sibling Markdown report. The reviewed scope has 24 public
+methods, 24 observed scalar C wrappers, 24 observed procedural bulk wrappers,
+24 configured scalar symbols, 24 configured bulk symbols and 24 Python methods.
+Observed bindings come from syntactic imported references, not name matching;
+configured coverage does not prove that generated artifacts or binaries are current.
+Use the separate generation drift checks and focused integration tests.
+
+A wider `src/stats` scan is available locally in
+`build/cabi-discovery/distributions.json` and `.md`. It attempted 162 files,
+parsed 156, recorded five parser failures and explicitly skipped
+`qmc_sobol_data.f90` under a 1,000,000-byte limit. One parsed default-public module
+also remains unresolved. It therefore marks itself incomplete and exits nonzero.
+The resolved scope contains 1,273 public exports, with 909 supported scalar-function signatures
+and 906 supported elemental signatures; these include methods beyond the eight
+probability methods and are not counts of distributions or a SciPy parity score.
+The report records 80 configured scalar/bulk/Python method triples. Regenerate:
+
+```text
+python tools/cabi_generator/discover.py src/stats --progress --max-source-bytes 1000000 --abi-source src/c_api --manifest-batch bindings/cabi_config/manifests.json --python-policy bindings/cabi_config/python.json --output build/cabi-discovery/distributions.json
+```
+
+The five parser failures are `foldcauchy.f90` and `skewcauchy.f90` (fparser's
+intrinsic ATAN argument-count handling), plus `power_transform_engine.f90`,
+`probability_plot.f90` and `sample_distance.f90` (Fortran 2018 `error stop ...,
+quiet=` syntax outside the configured parser grammar). `scifort_power_transform`
+has default-public access, which the current public-export resolver deliberately
+rejects. These are discovery limitations; numerical source has not been rewritten
+to satisfy the parser. The three reviewed families have no such inventory errors.

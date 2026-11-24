@@ -6,5 +6,8 @@
   "cauchy.json",
   "weibull.json",
   "lognormal.json",
-  "linalg.json"
+  "linalg.json",
+  "gamma.json",
+  "beta.json",
+  "student_t.json"
 ]

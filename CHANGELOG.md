@@ -1,3 +1,12 @@
+## 2026-11-24 - C ABI discovery and reviewed distribution expansion
+
+- Add AST-based API/C-binding inventory, separate native/C/Python coverage reports
+  and non-executable draft manifests requiring explicit policy review.
+- Add gamma, beta and Student t scalar/bulk coverage (39 new C symbols) and
+  Python methods, retaining existing scalar symbols and the infinite-DF normal limit.
+- Validate reviewed policies, native/scalar/bulk agreement, C/C++ clients and
+  checked/optimized Python calls without changing numerical implementations.
+
 ## 2026-11-23 - generated Python distribution interface
 
 - Generate a NumPy/ctypes interface from C manifests and explicit Python defaults

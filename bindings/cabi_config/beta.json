@@ -1,0 +1,161 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/beta.f90",
+  "module": "scifort_beta",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_beta",
+  "header_guard": "SCIFORT_GENERATED_BETA_H",
+  "outputs": {
+    "fortran": "src/c_api/generated/beta_generated.f90",
+    "header": "include/scifort_generated_beta.h",
+    "coverage": "bindings/cabi_config/beta_coverage.json"
+  },
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "loc": "location, finite",
+    "scale": "scale, finite and > 0",
+    "a": "shape, finite and > 0",
+    "b": "shape, finite and > 0"
+  },
+  "functions": {
+    "beta_cdf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_cdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_beta_cdf_f64"
+    },
+    "beta_isf": {
+      "symbol": "scifort_beta_isf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_isf_vec_f64",
+      "array_argument": "p",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ]
+    },
+    "beta_logcdf": {
+      "symbol": "scifort_beta_logcdf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_logcdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ]
+    },
+    "beta_logpdf": {
+      "symbol": "scifort_beta_logpdf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_logpdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ]
+    },
+    "beta_logsf": {
+      "symbol": "scifort_beta_logsf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_logsf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ]
+    },
+    "beta_pdf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_pdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_beta_pdf_f64"
+    },
+    "beta_ppf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_ppf_vec_f64",
+      "array_argument": "p",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_beta_ppf_f64"
+    },
+    "beta_sf": {
+      "symbol": "scifort_beta_sf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_beta_sf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "a",
+        "b",
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "a",
+        "b",
+        "scale"
+      ]
+    }
+  },
+  "excluded": {}
+}

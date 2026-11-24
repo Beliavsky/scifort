@@ -1,0 +1,136 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/student_t.f90",
+  "module": "scifort_student_t",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_student_t",
+  "header_guard": "SCIFORT_GENERATED_STUDENT_T_H",
+  "outputs": {
+    "fortran": "src/c_api/generated/student_t_generated.f90",
+    "header": "include/scifort_generated_student_t.h",
+    "coverage": "bindings/cabi_config/student_t_coverage.json"
+  },
+  "argument_docs": {
+    "x": "evaluation point",
+    "p": "probability in [0, 1]",
+    "loc": "location, finite",
+    "scale": "scale, finite and > 0",
+    "df": "degrees of freedom, > 0; +infinity gives normal"
+  },
+  "functions": {
+    "t_cdf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_cdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_t_cdf_f64"
+    },
+    "t_isf": {
+      "symbol": "scifort_t_isf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_isf_vec_f64",
+      "array_argument": "p",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "t_logcdf": {
+      "symbol": "scifort_t_logcdf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_logcdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "t_logpdf": {
+      "symbol": "scifort_t_logpdf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_logpdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "t_logsf": {
+      "symbol": "scifort_t_logsf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_logsf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    },
+    "t_pdf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_pdf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_t_pdf_f64"
+    },
+    "t_ppf": {
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_ppf_vec_f64",
+      "array_argument": "p",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_t_ppf_f64"
+    },
+    "t_sf": {
+      "symbol": "scifort_t_sf_f64",
+      "optional_policy": "required",
+      "vector_symbol": "scifort_t_sf_vec_f64",
+      "array_argument": "x",
+      "finite": [
+        "loc",
+        "scale"
+      ],
+      "positive": [
+        "df",
+        "scale"
+      ]
+    }
+  },
+  "excluded": {}
+}

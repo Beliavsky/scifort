@@ -19,7 +19,7 @@ status codes. Generated normal-distribution scalar and bulk entry points now
 also cover SF, log-PDF, log-CDF, log-SF, and ISF; see the
 [generator configuration and coverage](cabi_config/README.md). Existing PDF,
 CDF, and PPF symbols retain their original implementations and behavior.
-Outside the seven generated families listed below, survival, logarithmic and
+Outside the ten generated families listed below, survival, logarithmic and
 inverse-survival methods remain native-Fortran-only, as do special-function,
 random-state, random-variate and likelihood entry points.
 
@@ -34,13 +34,19 @@ core and must document language-specific choices involving shapes, missing
 values, exceptions, and memory ownership.
 
 The generated ABI also covers all eight PDF/log-PDF/CDF/SF/log-CDF/log-SF/PPF/ISF
-methods for exponential, logistic, Laplace, Cauchy, Weibull and lognormal.
+methods for exponential, logistic, Laplace, Cauchy, Weibull, lognormal, gamma,
+beta and Student t.
 Together with normal, these provide bulk entry points for all 56 distribution
 array workloads in the SciPy timing comparison. See the
 [family manifests and regeneration commands](cabi_config/README.md#benchmark-distribution-families).
 
 A generated [NumPy/ctypes Python interface](python/README.md) now exposes these
-seven families, with scalar calls, same-shape arrays, explicit defaults and optional
+ten families, with scalar calls, same-shape arrays, explicit defaults and optional
 caller-owned output memory. The focused development build and practical
 Python-to-SciPy timing commands are documented there. R, MATLAB and Octave wrappers
 remain planned.
+
+The [discovery workflow](../tools/cabi_generator/README.md#api-inventory-and-draft-manifests)
+reports public interfaces, existing C bindings and configured C/Python coverage.
+The latest additions are available as `api.gamma`, `api.beta` and `api.t`, with
+required shapes `a`, `a, b` and degrees of freedom `df`, respectively.

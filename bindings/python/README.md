@@ -2,7 +2,8 @@
 
 This development interface exposes PDF, log-PDF, CDF, SF, log-CDF, log-SF, PPF,
 and ISF for `normal`, `exponential`, `logistic`, `laplace`, `cauchy`, `weibull`,
-and `lognormal`. It uses NumPy arrays and the stable binary64 C calling convention.
+`lognormal`, `gamma`, `beta`, and Student `t`. It uses NumPy arrays and the stable
+binary64 C calling convention.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -15,7 +16,7 @@ In CMD, with gfortran on PATH and NumPy installed:
 python bindings\python\example.py
 ```
 
-The example builds a cached, optimized, seven-family development shared library,
+The example builds a cached, optimized, ten-family development shared library,
 loads it, and demonstrates scalar calls, arrays, required shapes and reusable
 output memory. Compilation is outside all timings.
 
@@ -61,7 +62,7 @@ Python extension or a shared-library packaging step.
   object arrays are rejected. Empty arrays are supported and still validate
   uniform parameters.
 - Location and scale default explicitly to 0 and 1 in the Python configuration.
-  Weibull shape `c` and lognormal shape `s` are required. All parameters must be
+  Weibull `c`, lognormal `s`, gamma `a`, beta `a, b`, and Student t `df` are required. All parameters must be
   scalar; broadcasting and per-element parameters are not implemented.
 - Optional `out=` accepts a writable, aligned, C-contiguous, native float64 NumPy
   array of exactly the input shape. It is returned by identity. Wrong dtype,
@@ -73,7 +74,7 @@ Python extension or a shared-library packaging step.
   NaN/infinity/support behavior. An unknown ABI status raises `RuntimeError`.
 - No numerical method is reimplemented in Python. Native behavior and intentional
   SciPy differences remain applicable. In particular SciPy 1.15.3 returns NaN
-  for Weibull PDF/log-PDF at positive infinity, whereas SciFort returns the
+  for gamma/Weibull PDF/log-PDF at positive infinity, whereas SciFort returns the
   mathematical limits 0 and negative infinity.
 
 ## Generation and shared-library boundary
@@ -94,7 +95,7 @@ All outputs are checked in, so building the development library does not require
 that parser. The supplementary adapters under `native/` supply the scalar symbols
 normally defined in `src/c_api/api.f90` and the three original normal bulk methods.
 They call the same native procedures; they do not copy numerical algorithms.
-They are compiled **only** by the seven-family development builder, never together
+They are compiled **only** by the distribution-only development builder, never together
 with `src/c_api/api.f90`, which would duplicate C symbols. The normal supplementary
 bulk calls validate lengths and permit NULL buffers for empty calls. These
 supplements are a development build choice, not replacements for the established
@@ -165,3 +166,49 @@ passed validation and the short trial timing run. The wheel was unpacked under
 the native normal CDF. Generated-file drift, local links, Fortran ASCII/line
 lengths and whitespace checks passed. Trial timing output is not a publishable
 performance baseline.
+
+## Additional reviewed families (2026-11-24)
+
+The interface now has 80 methods across ten families. For example:
+
+```python
+api.gamma.cdf([0., 1., 4.], a=2.3)
+api.beta.ppf([.1, .5, .9], a=2.3, b=3.1)
+api.t.sf([-2., 0., 2.], df=5.)
+api.t.cdf([-1., 0., 1.], df=float("inf"))  # exact native normal limit
+```
+
+Gamma/beta shapes require finite positive values. Student t accepts any positive
+`df`, including infinity. Tests check this explicitly in scalar, array and empty
+array calls. The Python timing harness still measures its original 56 workloads;
+adding interface methods does not change those saved comparisons.
+
+SciPy 1.15.3 has small Student t(5) quantile errors at probabilities .1 and .9.
+Those two test references use an independent 80-digit incomplete-beta inversion
+instead of relaxing the common tolerances. Existing numerical implementations
+and public C scalar symbols are unchanged.
+
+Focused validation commands for this extension:
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s bindings/cabi_config/tests -p test_generated_shape_families.py -v
+python -m unittest discover -s bindings/python/tests -v
+python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
+```
+
+The new C integration test compiles verbatim production PDF/CDF/PPF scalar bodies
+and direct native oracles, then links real C clients and checks C++ headers. It
+checks all 24 methods in runtime-checked and optimized profiles, invalid uniform
+parameters, preservation of output, empty/oversized calls and infinite Student
+degrees of freedom. The Python integration covers all 80 methods in both profiles.
+Compiler, flags and environment remain those recorded above. The global FPM
+suite is not needed for these isolated tooling/interface additions.
+
+This extension passed 41 focused tests: 32 reusable generator/discovery tests,
+one compiled C ABI integration test with 24 methods in both profiles, six Python
+integration tests covering all 80 methods in both profiles, and two benchmark
+harness tests. The original 56 benchmark workloads also passed validation with
+the expanded development library. Generation drift checks covered 33 C artifacts
+and 32 Python/supplement artifacts. The updated example, local links, generated
+Fortran ASCII/line limits and whitespace checks passed. No full FPM run was made.

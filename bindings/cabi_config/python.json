@@ -107,6 +107,33 @@
         "scale": 1.0
       },
       "existing_functions": {}
+    },
+    "gamma": {
+      "manifest": "bindings/cabi_config/gamma.json",
+      "prefix": "gamma_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "beta": {
+      "manifest": "bindings/cabi_config/beta.json",
+      "prefix": "beta_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
+    },
+    "t": {
+      "manifest": "bindings/cabi_config/student_t.json",
+      "prefix": "t_",
+      "defaults": {
+        "loc": 0.0,
+        "scale": 1.0
+      },
+      "existing_functions": {}
     }
   }
 }

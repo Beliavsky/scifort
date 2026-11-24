@@ -1,0 +1,153 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_t_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_isf_f64",
+        "scifort_t_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_logcdf_f64",
+        "scifort_t_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_logpdf_f64",
+        "scifort_t_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_logsf_f64",
+        "scifort_t_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_t_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_t_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "t_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_t_sf_f64",
+        "scifort_t_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/student_t.f90",
+  "source_sha256": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e"
+}

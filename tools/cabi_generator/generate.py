@@ -26,9 +26,10 @@ def identifier(value):
     return value
 
 
-def public_api(path, module_name):
+def public_api(path, module_name, *, tree=None):
     """Read an AST; never infer a procedure signature from its implementation."""
-    tree = ParserFactory().create(std="f2008")(FortranFileReader(str(path)))
+    if tree is None:
+        tree = ParserFactory().create(std="f2008")(FortranFileReader(str(path)))
     modules = [m for m in walk(tree, F.Module)
                if str(m.content[0].items[1]).lower() == module_name]
     if len(modules) != 1:

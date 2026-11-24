@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Build the seven-family development shared library, without FPM or parser dependencies."""
+"""Build the distribution-only development shared library, without FPM or parser dependencies."""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -12,10 +12,14 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-FAMILIES = ('normal', 'exponential', 'logistic', 'laplace', 'cauchy', 'weibull', 'lognormal')
+FAMILIES = ('normal', 'exponential', 'logistic', 'laplace', 'cauchy', 'weibull', 'lognormal',
+            'gamma', 'beta', 't')
+FAMILY_SOURCES = {'t': 'student_t'}
 SOURCES = ['src/kinds.f90', 'src/constants.f90', 'src/math.f90']
-SOURCES += [f'src/stats/{f}.f90' for f in FAMILIES]
-SOURCES += [f'src/c_api/generated/{f}_generated.f90' for f in FAMILIES]
+SOURCES += ['src/stats/normal.f90', 'src/special/log_gamma.f90',
+            'src/special/incomplete_gamma.f90', 'src/special/incomplete_beta.f90']
+SOURCES += [f'src/stats/{FAMILY_SOURCES.get(f, f)}.f90' for f in FAMILIES if f != 'normal']
+SOURCES += [f'src/c_api/generated/{FAMILY_SOURCES.get(f, f)}_generated.f90' for f in FAMILIES]
 SOURCES += [f'bindings/python/native/{f}_compat.f90' for f in FAMILIES]
 
 

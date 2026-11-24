@@ -13,6 +13,9 @@
 #include "scifort_generated_cauchy.h"
 #include "scifort_generated_weibull.h"
 #include "scifort_generated_lognormal.h"
+#include "scifort_generated_gamma.h"
+#include "scifort_generated_beta.h"
+#include "scifort_generated_student_t.h"
 
 
 #ifdef __cplusplus

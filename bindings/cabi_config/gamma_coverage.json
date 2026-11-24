@@ -1,0 +1,153 @@
+{
+  "generated_symbol_count": 13,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_gamma_cdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_cdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_cdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_isf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_isf_f64",
+        "scifort_gamma_isf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_logcdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_logcdf_f64",
+        "scifort_gamma_logcdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_logpdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_logpdf_f64",
+        "scifort_gamma_logpdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_logsf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_logsf_f64",
+        "scifort_gamma_logsf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_gamma_pdf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_pdf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_pdf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "p",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "existing_scalar_symbol": "scifort_gamma_ppf_f64",
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_ppf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_ppf_vec_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "a",
+        "loc",
+        "scale"
+      ],
+      "optional_promoted_to_required": [
+        "loc",
+        "scale"
+      ],
+      "procedure": "gamma_sf",
+      "state": "generated",
+      "symbols": [
+        "scifort_gamma_sf_f64",
+        "scifort_gamma_sf_vec_f64"
+      ]
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/gamma.f90",
+  "source_sha256": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed"
+}
