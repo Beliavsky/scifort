@@ -1,3 +1,12 @@
+## 2026-11-24 - structured shape pilot and matrix-helper C adapters
+
+- Add four explicit-shape C adapters for matrix-distribution factorization,
+  inversion and multiple-RHS solves, retaining native statuses and failure outputs.
+- Pilot opt-in dimension/minimum/conditional-note annotations on those native
+  procedures, with strict agreement checks against reviewed wrapper manifests.
+- Generate Markdown declared/required shape tables and machine-readable contracts
+  in coverage; include the new artifacts in unified regeneration/drift checks.
+
 ## 2026-11-24 - dense decomposition C adapters and multivariate shape documentation
 
 - Add explicit-shape Cholesky, symmetric eigenpair and PSD decomposition C

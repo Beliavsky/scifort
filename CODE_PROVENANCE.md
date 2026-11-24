@@ -1,3 +1,14 @@
+## 2026-11-24 - structured shapes and matrix-distribution C helpers
+
+The shape-contract parser/renderer, source annotations, reviewed manifest and
+independent tests are original MIT-licensed interface/documentation tooling.
+The annotations are a SciFort-specific prototype, not imported FORD/Sphinx syntax
+or implementation. No new parser/runtime dependency is introduced. New C adapters
+call the unchanged native matrix-distribution helpers; tests compile the actual
+module and compare direct native calls, plus C client residual checks. Native
+source changes are comments only. No external numerical code, algorithm or
+coefficients are imported or adapted; existing provenance and licenses apply.
+
 ## 2026-11-24 - generated dense decompositions and logical adapters
 
 The integer-output/logical-mapping generator extension, manifests and independent

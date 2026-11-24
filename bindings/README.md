@@ -57,3 +57,9 @@ The [unified workflow](../tools/cabi_generator/README.md#unified-reviewed-interf
 now generates the dependency-ordered development build plan, aggregate C header
 and [reviewed interface coverage](cabi_config/interface_coverage.md). Adding the
 reviewed chi-square manifest did not require editing the development builder.
+
+The generated C ABI also exposes four [matrix-distribution helper adapters](cabi_config/matrix_helpers.json):
+SPD factorization with log determinant, lower-triangular inversion, and triangular
+or SPD solves with multiple right-hand sides. Their native procedures pilot
+[structured shape contracts](../docs/matrix_helper_shapes.md), checked against
+reviewed wrapper dimensions and rendered as Markdown tables.

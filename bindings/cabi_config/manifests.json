@@ -10,5 +10,6 @@
   "gamma.json",
   "beta.json",
   "student_t.json",
-  "chi2.json"
+  "chi2.json",
+  "matrix_helpers.json"
 ]

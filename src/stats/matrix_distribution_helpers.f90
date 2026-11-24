@@ -26,6 +26,8 @@ module scifort_matrix_distribution_helpers
 contains
 
     pure subroutine spd_factor(a, l, logdet, status)
+        !! @dimension n = size(a,1)
+        !! @require n >= 1
         !! n = size(a,1), n >= 1.
         real(dp), intent(in) :: a(:, :) !! shape (n,n); square SPD matrix; lower triangle defines symmetry
         real(dp), intent(out) :: l(:, :) !! shape (n,n); lower Cholesky factor
@@ -60,6 +62,11 @@ contains
     end subroutine spd_factor
 
     pure subroutine solve_lower_matrix(l, b, x, status)
+        !! @dimension n = size(l,1)
+        !! @require n >= 1
+        !! @dimension k = size(b,2)
+        !! @require k >= 0
+        !! @when k == 0 : Right-hand sides and triangular diagonals are not evaluated.
         !! n = size(l,1), k = size(b,2); n >= 1, k >= 0.
         !! With k = 0 no right-hand sides or triangular diagonals are evaluated.
         real(dp), intent(in) :: l(:, :) !! shape (n,n); nonsingular lower triangular matrix
@@ -94,6 +101,11 @@ contains
     end subroutine solve_lower_matrix
 
     pure subroutine solve_spd_matrix(l, b, x, status)
+        !! @dimension n = size(l,1)
+        !! @require n >= 1
+        !! @dimension k = size(b,2)
+        !! @require k >= 0
+        !! @when k == 0 : Right-hand sides and triangular diagonals are not evaluated.
         !! n = size(l,1), k = size(b,2); n >= 1, k >= 0.
         !! With k = 0 no right-hand sides or triangular diagonals are evaluated.
         real(dp), intent(in) :: l(:, :) !! shape (n,n); lower Cholesky factor of SPD coefficient matrix
@@ -129,6 +141,8 @@ contains
     end subroutine solve_spd_matrix
 
     pure subroutine invert_lower(l, linv, status)
+        !! @dimension n = size(l,1)
+        !! @require n >= 1
         !! n = size(l,1), n >= 1.
         real(dp), intent(in) :: l(:, :) !! shape (n,n); nonsingular lower triangular matrix
         real(dp), intent(out) :: linv(:, :) !! shape (n,n); inverse lower triangular matrix

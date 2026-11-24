@@ -428,3 +428,43 @@ The existing independent ABI fixtures also compiled and ran with GNU Fortran,
 GCC and G++ 17.0.0 20260510 (experimental) on Windows under runtime checks and
 `-O3`, using the flags documented above. The native solver and fixture changes
 are comments only; no numerical suite was rerun. Other platforms remain unverified.
+
+## Structured shape-contract prototype
+
+The four [matrix-helper adapters](../../bindings/cabi_config/matrix_helpers.json)
+pilot a SciFort-specific annotation convention. It is not FORD or Sphinx syntax.
+Readable trailing `!! shape (...)` comments remain the exact array-shape contract.
+Initial procedure documentation may add:
+
+```fortran
+    !! @dimension n = size(l,1)
+    !! @dimension k = size(b,2)
+    !! @require n >= 1
+    !! @require k >= 0
+    !! @when k == 0 : Right-hand sides and triangular diagonals are not evaluated.
+```
+
+Opt in with `"shape_contract": true` on a subroutine policy. Every configured
+dimension then needs exactly one `@dimension` definition and one `@require`
+minimum. Definitions accept `size(array,axis)` or `size(vector)`. The referenced
+array axis must carry the same dimension in the manifest. Minimums and trailing
+shape tuples must match that manifest exactly. Missing, conflicting, repeated or
+unsupported annotations are errors before any output is written. Existing
+non-opted-in adapters retain the advisory shape-comment review.
+
+`@when dimension == integer : description` is a structured conditional behavior
+note. Its dimension/value are validated, and its text is rendered in the generated
+documentation. It does not introduce a conditional runtime assertion or prove the
+behavior described; focused native/C tests check that behavior. This prototype
+does not yet support arithmetic extent expressions, capacity inequalities,
+optional-array conditions or general logical expressions. Unsupported constructs
+are rejected rather than evaluated or guessed. Source annotations never replace
+explicitly reviewed ABI policies, and executable source is not analyzed for them.
+
+An optional `outputs.shape_documentation` path ending in `.md` generates a
+[dimension and argument table](../../docs/matrix_helper_shapes.md), alongside
+Fortran/header/coverage outputs. The source-derived contract also appears in
+coverage JSON. The unified pipeline generates/checks the Markdown file, aggregates
+the new header and updates reviewed-interface coverage. The Markdown can be
+included in documentation builds that support Markdown tables; no automatic
+FORD/Sphinx integration is introduced in this prototype.

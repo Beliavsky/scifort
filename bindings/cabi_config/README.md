@@ -237,3 +237,70 @@ triangular diagonal evaluation. Source encoding/line limits, local links and
 whitespace checks passed. No full FPM suite was run: numerical implementations
 and global build configuration are unchanged, and the changed optional ABI/tool
 paths were tested directly. Other compilers/platforms remain unverified.
+
+## Matrix-distribution helpers and structured shapes
+
+[matrix_helpers.json](matrix_helpers.json) adds four explicit-shape C entry points
+that call the original native matrix-distribution helpers:
+
+| Symbol | Dimensions | Array arguments |
+| --- | --- | --- |
+| `scifort_spd_factor_f64` | n >= 1 | A(n,n), L(n,n) |
+| `scifort_invert_lower_f64` | n >= 1 | L(n,n), inverse(n,n) |
+| `scifort_solve_lower_matrix_f64` | n >= 1, k >= 0 | L(n,n), B(n,k), X(n,k) |
+| `scifort_solve_spd_matrix_f64` | n >= 1, k >= 0 | L(n,n), B(n,k), X(n,k) |
+
+The last routine solves `(L L^T) X = B` using a supplied lower Cholesky factor;
+it does not factor the matrix itself. `spd_factor` also returns `double *logdet`.
+All storage is column-major and caller-owned. Buffers must be valid, aligned,
+non-NULL and nonoverlapping, including scratch pointers for empty RHS arrays.
+Scalar output/status pointers must also be valid and non-NULL. There is no
+allocation or copying in the adapters; native routines may allocate their own
+workspaces (for example `solve_spd_matrix`).
+
+Adapter-invalid extents return status 1 with all outputs except status unchanged.
+After a native call, `matrix_status_*` values apply: 0 success, 1 invalid shape,
+2 invalid parameter, 3 factorization/triangular-diagonal failure. These differ
+from the linalg module's status values; use the contract of the called routine.
+Native failure outputs may be zeroed or partially computed and are preserved.
+`spd_factor` zeroes L/logdet before checking all matrix entries for finiteness;
+it returns status 2 for any nonfinite entry, including the upper triangle.
+It returns status 3 on Cholesky failure, with zero/partial L and logdet=0.
+Triangular routines use the lower triangle and reject zero/nonfinite diagonals
+when evaluated. Empty RHS batches (k=0) still validate array extents, then succeed
+without reading triangular diagonals or modifying the zero-size output.
+
+The native procedure headers now carry experimental `@dimension`, `@require`
+and `@when` annotations in addition to their trailing shape comments. See the
+[generated contract tables](../../docs/matrix_helper_shapes.md) and the
+[prototype grammar and limitations](../../tools/cabi_generator/README.md).
+Structured contracts are opt-in, fail generation on manifest disagreement and do
+not change numerical implementations. The new functions are currently C-facing;
+the generated Python distribution package does not expose them.
+
+Validation for the shape-contract pilot (CMD):
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s bindings/cabi_config/tests -p test_generated_matrix_helpers.py -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+```
+
+All 51 focused tests passed: 48 generator/workflow tests and three matrix-helper
+ABI tests. New cases cover strict source/manifest agreement, malformed or missing
+annotations, Markdown drift, non-writing failures, native/C outputs at orders 1
+and 2, three RHS columns, nonfinite/singular/indefinite inputs, invalid extents,
+and empty RHS batches with otherwise-invalid diagonals. The actual native helper
+module and its dependencies compiled in checked (`-O0 -g -fcheck=all -fbacktrace`)
+and optimized (`-O3`) configurations with GNU Fortran/GCC/G++ 17.0.0 20260510
+(experimental) on Windows. The compiler flags include `-std=f2018 -fimplicit-none
+-Werror=implicit-interface`; C clients compiled and ran with C11, and C++17 syntax
+checks passed, both with `-Wall -Wextra -Werror`. Independent C residual and
+log-determinant checks supplement direct native-oracle comparisons.
+
+The read-only pipeline check passed for all 79 artifacts. Source encoding,
+Fortran ASCII/line lengths, local links and whitespace passed; native executable
+code was verified unchanged. No full FPM suite was run because the changed scope
+is optional interface/documentation tooling and adapters; no global build or
+numerical implementation changed. Existing distribution artifacts remain current.
+Other compilers/platforms and automatic FORD/Sphinx rendering remain unverified.

@@ -130,11 +130,13 @@ def generate(config, root):
     guard = config["header_guard"]
     if not isinstance(guard, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]*", guard):
         raise ValueError("header_guard must be an uppercase C identifier")
-    if set(config["outputs"]) != {"fortran", "header", "coverage"}:
+    if set(config["outputs"]) - {"shape_documentation"} != {"fortran", "header", "coverage"}:
         raise ValueError("outputs must specify fortran, header, and coverage")
     source = (root / config["source"]).resolve()
     outputs = {key: (root / value).resolve() for key, value in config["outputs"].items()}
-    if len(set(outputs.values())) != 3 or source in outputs.values():
+    if 'shape_documentation' in outputs and outputs['shape_documentation'].suffix.lower() != '.md':
+        raise ValueError('shape_documentation must name a Markdown (.md) output')
+    if len(set(outputs.values())) != len(outputs) or source in outputs.values():
         raise ValueError("output paths must be distinct and must not overwrite the source")
     if not isinstance(config.get("subroutines", {}), dict):
         raise ValueError("subroutines must be an object")
@@ -348,9 +350,14 @@ def generate(config, root):
               "source_sha256": hashlib.sha256(source.read_text(encoding="utf-8").encode()).hexdigest(),
               "public_api_count": len(api), "generated_symbol_count": len(symbols),
               "procedures": sorted(coverage, key=lambda row: row["procedure"])}
-    return {outputs["fortran"]: "\n".join(lines) + "\n",
+    artifacts = {outputs["fortran"]: "\n".join(lines) + "\n",
             outputs["header"]: "\n".join(header) + "\n",
             outputs["coverage"]: json.dumps(report, indent=2, sort_keys=True) + "\n"}
+    if 'shape_documentation' in outputs:
+        if not any(entry.get('shape_contract') for entry in array_entries):
+            raise ValueError('shape_documentation needs at least one opted-in shape contract')
+        artifacts[outputs['shape_documentation']] = explicit_arrays.shape_contracts.markdown(config, array_entries)
+    return artifacts
 
 
 def call_lines(index, args, actuals, output, indent="        "):

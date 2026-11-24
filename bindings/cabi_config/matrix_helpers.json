@@ -1,0 +1,145 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/matrix_distribution_helpers.f90",
+  "module": "scifort_matrix_distribution_helpers",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_matrix_helpers",
+  "header_guard": "SCIFORT_GENERATED_MATRIX_HELPERS_H",
+  "functions": {},
+  "outputs": {
+    "fortran": "src/c_api/generated/matrix_helpers_generated.f90",
+    "header": "include/scifort_generated_matrix_helpers.h",
+    "coverage": "bindings/cabi_config/matrix_helpers_coverage.json",
+    "shape_documentation": "docs/matrix_helper_shapes.md"
+  },
+  "argument_docs": {
+    "n": "matrix order, >= 1",
+    "k": "right-hand-side column count, >= 0",
+    "a": "SPD coefficient matrix; all entries finite",
+    "l": "lower-triangular factor",
+    "b": "right-hand sides by column",
+    "x": "solution columns",
+    "linv": "inverse lower-triangular factor",
+    "logdet": "logarithm of determinant",
+    "status": "native matrix_status result; 1 for invalid extents"
+  },
+  "subroutines": {
+    "spd_factor": {
+      "symbol": "scifort_spd_factor_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "l": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Factor an SPD matrix and compute its log determinant.",
+      "shape_contract": true
+    },
+    "invert_lower": {
+      "symbol": "scifort_invert_lower_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "l": [
+          "n",
+          "n"
+        ],
+        "linv": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Invert a nonsingular lower-triangular matrix.",
+      "shape_contract": true
+    },
+    "solve_lower_matrix": {
+      "symbol": "scifort_solve_lower_matrix_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        },
+        {
+          "name": "k",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "l": [
+          "n",
+          "n"
+        ],
+        "b": [
+          "n",
+          "k"
+        ],
+        "x": [
+          "n",
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Solve lower-triangular systems with multiple right-hand sides.",
+      "shape_contract": true
+    },
+    "solve_spd_matrix": {
+      "symbol": "scifort_solve_spd_matrix_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        },
+        {
+          "name": "k",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "l": [
+          "n",
+          "n"
+        ],
+        "b": [
+          "n",
+          "k"
+        ],
+        "x": [
+          "n",
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Solve SPD systems using a supplied lower Cholesky factor.",
+      "shape_contract": true
+    }
+  },
+  "excluded": {
+    "matrix_status_success": "Native constant or special-function helper, not selected for these array adapters.",
+    "matrix_status_invalid_shape": "Native constant or special-function helper, not selected for these array adapters.",
+    "matrix_status_invalid_parameter": "Native constant or special-function helper, not selected for these array adapters.",
+    "matrix_status_not_positive_definite": "Native constant or special-function helper, not selected for these array adapters.",
+    "log_multivariate_gamma": "Native constant or special-function helper, not selected for these array adapters.",
+    "multivariate_digamma_sum": "Native constant or special-function helper, not selected for these array adapters."
+  }
+}

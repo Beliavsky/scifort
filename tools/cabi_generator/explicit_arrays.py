@@ -2,6 +2,8 @@
 """Validated explicit-shape adapters for native assumed-shape subroutines."""
 import re
 
+import shape_contracts
+
 from fparser.two import Fortran2003 as F
 
 
@@ -10,7 +12,7 @@ def prepare(config, api, identifier, source_lines):
     for name, policy in sorted(config.get("subroutines", {}).items()):
         identifier(name)
         fields = {"symbol", "dimensions", "shapes", "status_argument", "invalid_status", "description"}
-        if not isinstance(policy, dict) or set(policy) - {"logical_inputs"} != fields:
+        if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract"} != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         identifier(policy["symbol"])
         node = api[name]
@@ -132,8 +134,13 @@ def prepare(config, api, identifier, source_lines):
                 review.append(dict(argument=arg, required_shape=expected, documented_shape=documented,
                                    reason='missing or unsupported trailing shape comment' if documented is None
                                    else 'documented shape differs from wrapper policy'))
-        entries.append(dict(name=name, policy=policy, args=args, metadata=metadata,
-                            dimensions=dimensions, documentation_review=review))
+        entry = dict(name=name, policy=policy, args=args, metadata=metadata,
+                     dimensions=dimensions, documentation_review=review)
+        if 'shape_contract' in policy:
+            if type(policy['shape_contract']) is not bool or not policy['shape_contract']:
+                raise ValueError(f'{name}: shape_contract must be true when specified')
+            entry['shape_contract'] = shape_contracts.prepare(node, source_lines, entry)
+        entries.append(entry)
     return entries
 
 
@@ -207,4 +214,6 @@ def emit(entry, index, config):
                   native_shape_documentation_review=entry["documentation_review"])
     if policy.get('logical_inputs'):
         record['logical_inputs'] = policy['logical_inputs']
+    if entry.get('shape_contract'):
+        record['shape_contract'] = entry['shape_contract']
     return lines, header, record

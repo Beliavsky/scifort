@@ -1,0 +1,256 @@
+{
+  "generated_symbol_count": 4,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "l",
+        "linv",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "invert_lower",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "l",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "l": [
+          "n",
+          "n"
+        ],
+        "linv": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_invert_lower_f64"
+      ]
+    },
+    {
+      "procedure": "log_multivariate_gamma",
+      "reason": "Native constant or special-function helper, not selected for these array adapters.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_status_invalid_parameter",
+      "reason": "Native constant or special-function helper, not selected for these array adapters.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_status_invalid_shape",
+      "reason": "Native constant or special-function helper, not selected for these array adapters.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_status_not_positive_definite",
+      "reason": "Native constant or special-function helper, not selected for these array adapters.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_status_success",
+      "reason": "Native constant or special-function helper, not selected for these array adapters.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_digamma_sum",
+      "reason": "Native constant or special-function helper, not selected for these array adapters.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "l",
+        "b",
+        "x",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "k"
+      ],
+      "dimensions": {
+        "k": 0,
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "solve_lower_matrix",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "Right-hand sides and triangular diagonals are not evaluated.",
+            "dimension": "k",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "k": {
+            "argument": "b",
+            "axis": 2
+          },
+          "n": {
+            "argument": "l",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "k": 0,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "b": [
+          "n",
+          "k"
+        ],
+        "l": [
+          "n",
+          "n"
+        ],
+        "x": [
+          "n",
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_solve_lower_matrix_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "l",
+        "b",
+        "x",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "k"
+      ],
+      "dimensions": {
+        "k": 0,
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "solve_spd_matrix",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "Right-hand sides and triangular diagonals are not evaluated.",
+            "dimension": "k",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "k": {
+            "argument": "b",
+            "axis": 2
+          },
+          "n": {
+            "argument": "l",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "k": 0,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "b": [
+          "n",
+          "k"
+        ],
+        "l": [
+          "n",
+          "n"
+        ],
+        "x": [
+          "n",
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_solve_spd_matrix_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "a",
+        "l",
+        "logdet",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "spd_factor",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "a",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "l": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_spd_factor_f64"
+      ]
+    }
+  ],
+  "public_api_count": 10,
+  "source": "src/stats/matrix_distribution_helpers.f90",
+  "source_sha256": "1811a2fa5ad5b435c80aeb32de738a16a2ca6bef713010557c8fd10f89b58c41"
+}
