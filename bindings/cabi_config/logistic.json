@@ -29,7 +29,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_pdf_elementwise_f64"
     },
     "logistic_logpdf": {
       "symbol": "scifort_logistic_logpdf_f64",
@@ -42,7 +43,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_logpdf_elementwise_f64"
     },
     "logistic_cdf": {
       "existing_scalar_symbol": "scifort_logistic_cdf_f64",
@@ -55,7 +57,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_cdf_elementwise_f64"
     },
     "logistic_sf": {
       "symbol": "scifort_logistic_sf_f64",
@@ -68,7 +71,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_sf_elementwise_f64"
     },
     "logistic_logcdf": {
       "symbol": "scifort_logistic_logcdf_f64",
@@ -81,7 +85,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_logcdf_elementwise_f64"
     },
     "logistic_logsf": {
       "symbol": "scifort_logistic_logsf_f64",
@@ -94,7 +99,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_logsf_elementwise_f64"
     },
     "logistic_ppf": {
       "existing_scalar_symbol": "scifort_logistic_ppf_f64",
@@ -107,7 +113,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_ppf_elementwise_f64"
     },
     "logistic_isf": {
       "symbol": "scifort_logistic_isf_f64",
@@ -120,7 +127,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_logistic_isf_elementwise_f64"
     }
   },
   "excluded": {}

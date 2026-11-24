@@ -121,8 +121,8 @@ class BindingTests(unittest.TestCase):
                         invalid[index] = bad
                         with self.assertRaises(ValueError):
                             func(x, *invalid)
-            with self.assertRaises(TypeError):
-                api.beta.cdf(x, 2., 3., scale=[1.])
+            np.testing.assert_array_equal(api.beta.cdf(x, 2., 3., scale=[1.]),
+                                          api.beta.cdf(x, 2., 3.))
             for bad in ([1+2j], ['1'], [object()]):
                 with self.assertRaises(TypeError):
                     api.normal.cdf(bad)
@@ -217,6 +217,107 @@ class BindingTests(unittest.TestCase):
             np.testing.assert_allclose(api.normal.cdf(.5, scale=unaligned),
                                        stats.norm.cdf(.5, scale=unaligned), rtol=3e-13)
 
+    def test_remaining_family_broadcasts(self):
+        shape_arrays = dict(weibull=([1.3, 2., 3.],), lognormal=([.5, .8, 1.2],),
+                            beta=([2., 3., 4.], [3., 4., 5.]), t=([8., 12., 20.],),
+                            chi2=([2., 4., 6.],))
+        for checked, api in self.apis:
+            for family in FAMILIES:
+                if family in ('normal', 'gamma'):
+                    continue
+                group = getattr(api, family)
+                reference = getattr(stats, SCIPY_NAMES.get(family, family))
+                args = tuple(np.asarray(a) for a in shape_arrays.get(family, ()))
+                for method in METHODS:
+                    with self.subTest(checked=checked, family=family, method=method):
+                        func = getattr(group, method)
+                        points = (np.array([[.2], [.5], [.8]]) if method in ('ppf', 'isf')
+                                  else np.array([[-.5], [.5], [3.]]))
+                        loc = np.array([-.25, 0., .25], dtype='>f8')
+                        scale = np.array([1., 2., 3.], dtype=np.float32)
+                        actual = func(points, *args, loc=loc, scale=scale)
+                        expected = np.array([[func(float(v), *(float(a[j]) for a in args),
+                                                   loc=float(loc[j]), scale=float(scale[j]))
+                                              for j in range(3)] for v in points[:,0]])
+                        np.testing.assert_array_equal(actual, expected)
+                        if family == 't' and method in ('ppf', 'isf'):
+                            # SciPy 1.15.3 inverse-t has known reference inaccuracies.
+                            # Check its forward probability and exact native agreement.
+                            forward = reference.cdf if method == 'ppf' else reference.sf
+                            np.testing.assert_allclose(forward(actual, *args, loc=loc.astype('f8'),
+                                                              scale=scale.astype('f8')),
+                                                       np.broadcast_to(points, (3,3)),
+                                                       rtol=4e-12, atol=0)
+                        else:
+                            expected = getattr(reference, method)(points, *args,
+                                loc=loc.astype('f8'), scale=scale.astype('f8'))
+                            np.testing.assert_allclose(actual, expected, rtol=4e-12, atol=3e-13)
+                        out = np.empty_like(actual)
+                        self.assertIs(func(points, *args, loc=loc, scale=scale, out=out), out)
+                        np.testing.assert_array_equal(out, actual)
+                        # All shape arrays and loc/scale broadcast from scalar points too.
+                        actual = func(.5, *args, loc=loc, scale=scale)
+                        expected = [func(.5, *(float(a[j]) for a in args),
+                                         loc=float(loc[j]), scale=float(scale[j])) for j in range(3)]
+                        np.testing.assert_array_equal(actual, expected)
+                        edge = np.array([0., 1., -.1, 1.1, np.nan]) if method in ('ppf', 'isf') else np.array(
+                            [-np.inf, 0., 1., np.inf, np.nan])
+                        shapes = SHAPES.get(family, ())
+                        scales = np.arange(1., 6.)
+                        np.testing.assert_array_equal(func(edge, *shapes, scale=scales),
+                            [func(float(v), *shapes, scale=float(t)) for v, t in zip(edge, scales)])
+                self.assertEqual(group.cdf(np.empty((0,1)), *args, scale=[1., 0., np.nan]).shape, (0,3))
+                # Ordinary round trips avoid representational loss at shifted support endpoints.
+                probabilities = np.array([[.2], [.5], [.8]])
+                for inverse, forward in (('ppf', 'cdf'), ('isf', 'sf')):
+                    points = getattr(group, inverse)(probabilities, *args, scale=[1., 2., 3.])
+                    actual = getattr(group, forward)(points, *args, scale=[1., 2., 3.])
+                    np.testing.assert_allclose(actual, np.broadcast_to(probabilities, (3,3)),
+                                               rtol=4e-12, atol=0)
+
+    def test_remaining_family_invalid_elements_and_buffers(self):
+        for checked, api in self.apis:
+            for family in FAMILIES:
+                if family in ('normal', 'gamma'):
+                    continue
+                group = getattr(api, family)
+                shape = SHAPES.get(family, ())
+                for method in METHODS:
+                    func = getattr(group, method)
+                    for name, bad in (('loc', [-np.inf, np.inf, np.nan, 0., 1.]),
+                                      ('scale', [0., -1., np.nan, np.inf, 1.])):
+                        with self.subTest(checked=checked, family=family, method=method, parameter=name):
+                            np.testing.assert_array_equal(func(.5, *shape, **{name:bad}),
+                                [func(.5, *shape, **{name:v}) for v in bad])
+                    for index in range(len(shape)):
+                        bad = [0., -1., np.nan, np.inf, shape[index]]
+                        args = list(shape)
+                        args[index] = bad
+                        expected = []
+                        for v in bad:
+                            scalar_args = list(shape)
+                            scalar_args[index] = v
+                            expected.append(func(.5, *scalar_args))
+                        np.testing.assert_array_equal(func(.5, *args), expected)
+                for name in ('loc', 'scale'):
+                    a = np.array([1., 2., 3.])
+                    with self.assertRaises(ValueError):
+                        group.cdf(.5, *shape, out=a, **{name:a})
+                    np.testing.assert_array_equal(a, [1., 2., 3.])
+                for index in range(len(shape)):
+                    a = np.array([1., 2., 3.])
+                    args = list(shape)
+                    args[index] = a
+                    with self.assertRaises(ValueError):
+                        group.cdf(.5, *args, out=a)
+                    np.testing.assert_array_equal(a, [1., 2., 3.])
+                with self.assertRaises(ValueError):
+                    group.cdf(np.ones(2), *shape, scale=np.ones(3))
+                with self.assertRaises(ValueError):
+                    group.cdf(.5, *shape, scale=np.ones(3), out=np.empty((3,1)))
+                with self.assertRaises(TypeError):
+                    group.cdf(.5, *shape, scale=[1+2j])
+
     def test_infinite_student_df_is_exact_normal_limit(self):
         for _, api in self.apis:
             for method in METHODS:
@@ -225,10 +326,21 @@ class BindingTests(unittest.TestCase):
                 np.testing.assert_array_equal(func(x, np.inf), normal(x))
                 self.assertEqual(func(.5, np.inf), normal(.5))
                 self.assertEqual(func([], np.inf).size, 0)
+                df = np.full((2,1), np.inf)
+                loc, scale = np.array([-.5, 0., .5]), np.array([1., 2., 3.])
+                actual = func(x[:,None,None], df, loc=loc, scale=scale)
+                expected = normal(x[:,None,None], loc=np.broadcast_to(loc, (2,3)), scale=scale)
+                np.testing.assert_array_equal(actual, expected)
+                self.assertEqual(func(np.empty((0,1)), [np.inf]*3).shape, (0,3))
 
     def test_generated_build_plan_and_stale_source_guard(self):
         self.assertEqual(set(FAMILIES), set(builder.PLAN['families']))
         self.assertIn('chi2', FAMILIES)
+        for _, api in self.apis:
+            for family in FAMILIES:
+                specs = getattr(api, family)._specs
+                self.assertEqual(set(specs), set(METHODS))
+                self.assertTrue(all(s.get('elementwise') for s in specs.values()))
         self.assertEqual(builder.PLAN['modules']['scifort_chi2'], 'src/stats/chi2.f90')
         sources = list(builder.SOURCES)
         self.assertLess(sources.index('src/stats/gamma.f90'), sources.index('src/stats/chi2.f90'))

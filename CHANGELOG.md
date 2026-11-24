@@ -1,3 +1,12 @@
+## 2026-11-24 - broadcasting across configured distribution families
+
+- Add 72 elementwise C symbols for exponential, logistic, Laplace, Cauchy,
+  Weibull, lognormal, beta, Student t and chi-square, bringing the total to 88.
+- Support NumPy broadcasting for all eight methods across all eleven configured
+  families, preserving existing scalar/uniform-bulk contracts and native behavior.
+- Test per-element shape validation, support endpoints, empty results, buffer
+  overlap, round trips and Student t's infinite-df normal limit.
+
 ## 2026-11-24 - array-valued distribution parameters
 
 - Generate optional explicit-shape elementwise C wrappers with all inputs sharing

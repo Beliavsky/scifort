@@ -31,7 +31,8 @@
         "df",
         "scale"
       ],
-      "existing_scalar_symbol": "scifort_t_cdf_f64"
+      "existing_scalar_symbol": "scifort_t_cdf_f64",
+      "elementwise_symbol": "scifort_t_cdf_elementwise_f64"
     },
     "t_isf": {
       "symbol": "scifort_t_isf_f64",
@@ -45,7 +46,8 @@
       "positive": [
         "df",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_t_isf_elementwise_f64"
     },
     "t_logcdf": {
       "symbol": "scifort_t_logcdf_f64",
@@ -59,7 +61,8 @@
       "positive": [
         "df",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_t_logcdf_elementwise_f64"
     },
     "t_logpdf": {
       "symbol": "scifort_t_logpdf_f64",
@@ -73,7 +76,8 @@
       "positive": [
         "df",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_t_logpdf_elementwise_f64"
     },
     "t_logsf": {
       "symbol": "scifort_t_logsf_f64",
@@ -87,7 +91,8 @@
       "positive": [
         "df",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_t_logsf_elementwise_f64"
     },
     "t_pdf": {
       "optional_policy": "required",
@@ -101,7 +106,8 @@
         "df",
         "scale"
       ],
-      "existing_scalar_symbol": "scifort_t_pdf_f64"
+      "existing_scalar_symbol": "scifort_t_pdf_f64",
+      "elementwise_symbol": "scifort_t_pdf_elementwise_f64"
     },
     "t_ppf": {
       "optional_policy": "required",
@@ -115,7 +121,8 @@
         "df",
         "scale"
       ],
-      "existing_scalar_symbol": "scifort_t_ppf_f64"
+      "existing_scalar_symbol": "scifort_t_ppf_f64",
+      "elementwise_symbol": "scifort_t_ppf_elementwise_f64"
     },
     "t_sf": {
       "symbol": "scifort_t_sf_f64",
@@ -129,7 +136,8 @@
       "positive": [
         "df",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_t_sf_elementwise_f64"
     }
   },
   "excluded": {}

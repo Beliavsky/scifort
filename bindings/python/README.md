@@ -62,13 +62,16 @@ Python extension or a shared-library packaging step.
   object arrays are rejected. Empty arrays are supported and still validate
   uniform parameters.
 - Location and scale default explicitly to 0 and 1 in the Python configuration.
-  Weibull `c`, lognormal `s`, gamma `a`, beta `a, b`, and Student t/chi-square `df` are required. All parameters must be
-  scalar for other families. Normal and gamma accept array-valued parameters
+  Weibull `c`, lognormal `s`, gamma `a`, beta `a, b`, and Student t/chi-square
+  `df` are required. All eleven configured families accept array-valued parameters
   with NumPy broadcasting: `api.normal.cdf(0., loc=[-1., 0., 1.])` and
   `api.gamma.cdf([[.5], [2.]], a=[1., 2., 3.])` return shapes `(3,)` and `(2, 3)`.
   If any parameter is an array, every parameter is evaluated per element;
   invalid parameter elements return the native result (usually NaN) rather than
   raising a uniform-parameter error. Empty broadcasts evaluate no elements.
+  Student t allows positive infinite `df` per element and returns the normal
+  limit; chi-square requires finite positive `df`. Other shape parameters must
+  also be finite and positive. Shapes, location and scale may broadcast together.
 - Optional `out=` accepts a writable, aligned, C-contiguous, native float64 NumPy
   array of exactly the input or broadcast result shape. It is returned by identity. Wrong dtype,
   shape, layout, read-only storage and possible overlap with any input or parameter are
@@ -270,8 +273,7 @@ passed validation with the new build plan. No timing baseline was refreshed.
 
 Normal and gamma now expose 16 additional C elementwise entry points, used by
 Python when any parameter is an array. Existing scalar and uniform-parameter
-symbols and numerical implementations remain unchanged. Other Python families
-still require scalar parameters. The Python contract above specifies broadcasting,
+symbols and numerical implementations remain unchanged. This initial step covered two families; the expansion below covers the other nine. The Python contract above specifies broadcasting,
 invalid-element behavior, output shape and overlap rules.
 
 Validation used the first five commands in the preceding validation block:
@@ -288,3 +290,41 @@ Changed local links, generated Fortran ASCII/line limits and whitespace passed.
 No full FPM suite or timing-baseline refresh was run: changes are confined to
 interface tooling/adapters and the optional development build's generated hashes.
 Other compilers/platforms remain unverified.
+
+## Broadcasting across all configured families (2026-11-24)
+
+All 88 Python methods now accept array-valued parameters. The nine-family
+expansion adds 72 elementwise C symbols through reviewed manifests, using the
+existing generator/runtime without changes. Legacy scalar and uniform-bulk
+wrapper bodies and parameter policies are unchanged. The current Python contract
+above applies to every configured family.
+
+Validation commands (CMD):
+
+```text
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s bindings/cabi_config/tests -p test_generated_shape_families.py -v
+python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+python bindings/python/example.py
+```
+
+The 14 focused tests passed: ten Python integration tests across all 88 methods,
+two compiled C integration tests and two benchmark harness tests. Python and C
+integration used checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`)
+builds with GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental) on Windows. Python,
+NumPy, SciPy and fparser versions remain those recorded above. C clients link the
+elementwise gamma/beta/Student t/chi-square symbols and compile under C11 and
+C++17. The updated beta-broadcast and varying-df examples ran successfully.
+
+Coverage includes multidimensional and scalar-point broadcasts, both beta shapes,
+invalid shapes/location/scale, support/probability endpoints, empty results,
+round trips, output-buffer validation, and array-valued infinite Student t df.
+SciPy's known inverse-t reference inaccuracies are handled by checking forward
+probabilities and exact agreement with unchanged native scalar calls. No numerical
+source, generator implementation or global build configuration changed, so the
+full FPM suite and unchanged generator unit tests were not rerun. Other platforms
+and compilers remain unverified; timing baselines were not refreshed.
+
+The read-only pipeline check passed for all 75 artifacts. Changed local links,
+Fortran ASCII/line limits, encoding and whitespace checks also passed.

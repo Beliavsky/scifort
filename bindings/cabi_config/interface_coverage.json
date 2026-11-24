@@ -2,7 +2,7 @@
   "counts": {
     "array_adapters": 1,
     "bulk": 88,
-    "elementwise": 16,
+    "elementwise": 88,
     "exports": 98,
     "python": 88,
     "scalar": 88
@@ -11,6 +11,7 @@
     {
       "bulk": "scifort_beta_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_cdf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_cdf",
       "python": "beta.cdf",
@@ -20,6 +21,7 @@
     {
       "bulk": "scifort_beta_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_isf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_isf",
       "python": "beta.isf",
@@ -29,6 +31,7 @@
     {
       "bulk": "scifort_beta_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_logcdf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_logcdf",
       "python": "beta.logcdf",
@@ -38,6 +41,7 @@
     {
       "bulk": "scifort_beta_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_logpdf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_logpdf",
       "python": "beta.logpdf",
@@ -47,6 +51,7 @@
     {
       "bulk": "scifort_beta_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_logsf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_logsf",
       "python": "beta.logsf",
@@ -56,6 +61,7 @@
     {
       "bulk": "scifort_beta_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_pdf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_pdf",
       "python": "beta.pdf",
@@ -65,6 +71,7 @@
     {
       "bulk": "scifort_beta_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_ppf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_ppf",
       "python": "beta.ppf",
@@ -74,6 +81,7 @@
     {
       "bulk": "scifort_beta_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_beta_sf_elementwise_f64",
       "module": "scifort_beta",
       "procedure": "beta_sf",
       "python": "beta.sf",
@@ -83,6 +91,7 @@
     {
       "bulk": "scifort_cauchy_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_cdf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_cdf",
       "python": "cauchy.cdf",
@@ -92,6 +101,7 @@
     {
       "bulk": "scifort_cauchy_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_isf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_isf",
       "python": "cauchy.isf",
@@ -101,6 +111,7 @@
     {
       "bulk": "scifort_cauchy_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_logcdf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_logcdf",
       "python": "cauchy.logcdf",
@@ -110,6 +121,7 @@
     {
       "bulk": "scifort_cauchy_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_logpdf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_logpdf",
       "python": "cauchy.logpdf",
@@ -119,6 +131,7 @@
     {
       "bulk": "scifort_cauchy_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_logsf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_logsf",
       "python": "cauchy.logsf",
@@ -128,6 +141,7 @@
     {
       "bulk": "scifort_cauchy_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_pdf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_pdf",
       "python": "cauchy.pdf",
@@ -137,6 +151,7 @@
     {
       "bulk": "scifort_cauchy_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_ppf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_ppf",
       "python": "cauchy.ppf",
@@ -146,6 +161,7 @@
     {
       "bulk": "scifort_cauchy_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_cauchy_sf_elementwise_f64",
       "module": "scifort_cauchy",
       "procedure": "cauchy_sf",
       "python": "cauchy.sf",
@@ -155,6 +171,7 @@
     {
       "bulk": "scifort_chi2_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_cdf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_cdf",
       "python": "chi2.cdf",
@@ -164,6 +181,7 @@
     {
       "bulk": "scifort_chi2_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_isf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_isf",
       "python": "chi2.isf",
@@ -173,6 +191,7 @@
     {
       "bulk": "scifort_chi2_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_logcdf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_logcdf",
       "python": "chi2.logcdf",
@@ -182,6 +201,7 @@
     {
       "bulk": "scifort_chi2_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_logpdf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_logpdf",
       "python": "chi2.logpdf",
@@ -191,6 +211,7 @@
     {
       "bulk": "scifort_chi2_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_logsf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_logsf",
       "python": "chi2.logsf",
@@ -200,6 +221,7 @@
     {
       "bulk": "scifort_chi2_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_pdf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_pdf",
       "python": "chi2.pdf",
@@ -209,6 +231,7 @@
     {
       "bulk": "scifort_chi2_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_ppf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_ppf",
       "python": "chi2.ppf",
@@ -218,6 +241,7 @@
     {
       "bulk": "scifort_chi2_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_chi2_sf_elementwise_f64",
       "module": "scifort_chi2",
       "procedure": "chi2_sf",
       "python": "chi2.sf",
@@ -227,6 +251,7 @@
     {
       "bulk": "scifort_exponential_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_cdf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_cdf",
       "python": "exponential.cdf",
@@ -236,6 +261,7 @@
     {
       "bulk": "scifort_exponential_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_isf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_isf",
       "python": "exponential.isf",
@@ -245,6 +271,7 @@
     {
       "bulk": "scifort_exponential_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_logcdf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_logcdf",
       "python": "exponential.logcdf",
@@ -254,6 +281,7 @@
     {
       "bulk": "scifort_exponential_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_logpdf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_logpdf",
       "python": "exponential.logpdf",
@@ -263,6 +291,7 @@
     {
       "bulk": "scifort_exponential_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_logsf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_logsf",
       "python": "exponential.logsf",
@@ -272,6 +301,7 @@
     {
       "bulk": "scifort_exponential_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_pdf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_pdf",
       "python": "exponential.pdf",
@@ -281,6 +311,7 @@
     {
       "bulk": "scifort_exponential_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_ppf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_ppf",
       "python": "exponential.ppf",
@@ -290,6 +321,7 @@
     {
       "bulk": "scifort_exponential_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_exponential_sf_elementwise_f64",
       "module": "scifort_exponential",
       "procedure": "exponential_sf",
       "python": "exponential.sf",
@@ -379,6 +411,7 @@
     {
       "bulk": "scifort_laplace_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_cdf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_cdf",
       "python": "laplace.cdf",
@@ -388,6 +421,7 @@
     {
       "bulk": "scifort_laplace_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_isf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_isf",
       "python": "laplace.isf",
@@ -397,6 +431,7 @@
     {
       "bulk": "scifort_laplace_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_logcdf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_logcdf",
       "python": "laplace.logcdf",
@@ -406,6 +441,7 @@
     {
       "bulk": "scifort_laplace_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_logpdf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_logpdf",
       "python": "laplace.logpdf",
@@ -415,6 +451,7 @@
     {
       "bulk": "scifort_laplace_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_logsf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_logsf",
       "python": "laplace.logsf",
@@ -424,6 +461,7 @@
     {
       "bulk": "scifort_laplace_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_pdf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_pdf",
       "python": "laplace.pdf",
@@ -433,6 +471,7 @@
     {
       "bulk": "scifort_laplace_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_ppf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_ppf",
       "python": "laplace.ppf",
@@ -442,6 +481,7 @@
     {
       "bulk": "scifort_laplace_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_laplace_sf_elementwise_f64",
       "module": "scifort_laplace",
       "procedure": "laplace_sf",
       "python": "laplace.sf",
@@ -519,6 +559,7 @@
     {
       "bulk": "scifort_logistic_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_cdf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_cdf",
       "python": "logistic.cdf",
@@ -528,6 +569,7 @@
     {
       "bulk": "scifort_logistic_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_isf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_isf",
       "python": "logistic.isf",
@@ -537,6 +579,7 @@
     {
       "bulk": "scifort_logistic_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_logcdf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_logcdf",
       "python": "logistic.logcdf",
@@ -546,6 +589,7 @@
     {
       "bulk": "scifort_logistic_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_logpdf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_logpdf",
       "python": "logistic.logpdf",
@@ -555,6 +599,7 @@
     {
       "bulk": "scifort_logistic_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_logsf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_logsf",
       "python": "logistic.logsf",
@@ -564,6 +609,7 @@
     {
       "bulk": "scifort_logistic_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_pdf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_pdf",
       "python": "logistic.pdf",
@@ -573,6 +619,7 @@
     {
       "bulk": "scifort_logistic_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_ppf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_ppf",
       "python": "logistic.ppf",
@@ -582,6 +629,7 @@
     {
       "bulk": "scifort_logistic_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_logistic_sf_elementwise_f64",
       "module": "scifort_logistic",
       "procedure": "logistic_sf",
       "python": "logistic.sf",
@@ -591,6 +639,7 @@
     {
       "bulk": "scifort_lognormal_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_cdf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_cdf",
       "python": "lognormal.cdf",
@@ -600,6 +649,7 @@
     {
       "bulk": "scifort_lognormal_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_isf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_isf",
       "python": "lognormal.isf",
@@ -609,6 +659,7 @@
     {
       "bulk": "scifort_lognormal_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_logcdf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_logcdf",
       "python": "lognormal.logcdf",
@@ -618,6 +669,7 @@
     {
       "bulk": "scifort_lognormal_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_logpdf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_logpdf",
       "python": "lognormal.logpdf",
@@ -627,6 +679,7 @@
     {
       "bulk": "scifort_lognormal_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_logsf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_logsf",
       "python": "lognormal.logsf",
@@ -636,6 +689,7 @@
     {
       "bulk": "scifort_lognormal_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_pdf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_pdf",
       "python": "lognormal.pdf",
@@ -645,6 +699,7 @@
     {
       "bulk": "scifort_lognormal_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_ppf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_ppf",
       "python": "lognormal.ppf",
@@ -654,6 +709,7 @@
     {
       "bulk": "scifort_lognormal_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_lognormal_sf_elementwise_f64",
       "module": "scifort_lognormal",
       "procedure": "lognormal_sf",
       "python": "lognormal.sf",
@@ -743,6 +799,7 @@
     {
       "bulk": "scifort_t_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_cdf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_cdf",
       "python": "t.cdf",
@@ -752,6 +809,7 @@
     {
       "bulk": "scifort_t_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_isf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_isf",
       "python": "t.isf",
@@ -761,6 +819,7 @@
     {
       "bulk": "scifort_t_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_logcdf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_logcdf",
       "python": "t.logcdf",
@@ -770,6 +829,7 @@
     {
       "bulk": "scifort_t_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_logpdf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_logpdf",
       "python": "t.logpdf",
@@ -779,6 +839,7 @@
     {
       "bulk": "scifort_t_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_logsf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_logsf",
       "python": "t.logsf",
@@ -788,6 +849,7 @@
     {
       "bulk": "scifort_t_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_pdf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_pdf",
       "python": "t.pdf",
@@ -797,6 +859,7 @@
     {
       "bulk": "scifort_t_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_ppf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_ppf",
       "python": "t.ppf",
@@ -806,6 +869,7 @@
     {
       "bulk": "scifort_t_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_t_sf_elementwise_f64",
       "module": "scifort_student_t",
       "procedure": "t_sf",
       "python": "t.sf",
@@ -815,6 +879,7 @@
     {
       "bulk": "scifort_weibull_cdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_cdf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_cdf",
       "python": "weibull.cdf",
@@ -824,6 +889,7 @@
     {
       "bulk": "scifort_weibull_isf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_isf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_isf",
       "python": "weibull.isf",
@@ -833,6 +899,7 @@
     {
       "bulk": "scifort_weibull_logcdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_logcdf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_logcdf",
       "python": "weibull.logcdf",
@@ -842,6 +909,7 @@
     {
       "bulk": "scifort_weibull_logpdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_logpdf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_logpdf",
       "python": "weibull.logpdf",
@@ -851,6 +919,7 @@
     {
       "bulk": "scifort_weibull_logsf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_logsf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_logsf",
       "python": "weibull.logsf",
@@ -860,6 +929,7 @@
     {
       "bulk": "scifort_weibull_pdf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_pdf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_pdf",
       "python": "weibull.pdf",
@@ -869,6 +939,7 @@
     {
       "bulk": "scifort_weibull_ppf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_ppf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_ppf",
       "python": "weibull.ppf",
@@ -878,6 +949,7 @@
     {
       "bulk": "scifort_weibull_sf_vec_f64",
       "bulk_generated": true,
+      "elementwise": "scifort_weibull_sf_elementwise_f64",
       "module": "scifort_weibull",
       "procedure": "weibull_sf",
       "python": "weibull.sf",

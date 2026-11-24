@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 13,
+  "generated_symbol_count": 21,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -17,7 +17,8 @@
       "procedure": "t_cdf",
       "state": "generated",
       "symbols": [
-        "scifort_t_cdf_vec_f64"
+        "scifort_t_cdf_vec_f64",
+        "scifort_t_cdf_elementwise_f64"
       ]
     },
     {
@@ -35,7 +36,8 @@
       "state": "generated",
       "symbols": [
         "scifort_t_isf_f64",
-        "scifort_t_isf_vec_f64"
+        "scifort_t_isf_vec_f64",
+        "scifort_t_isf_elementwise_f64"
       ]
     },
     {
@@ -53,7 +55,8 @@
       "state": "generated",
       "symbols": [
         "scifort_t_logcdf_f64",
-        "scifort_t_logcdf_vec_f64"
+        "scifort_t_logcdf_vec_f64",
+        "scifort_t_logcdf_elementwise_f64"
       ]
     },
     {
@@ -71,7 +74,8 @@
       "state": "generated",
       "symbols": [
         "scifort_t_logpdf_f64",
-        "scifort_t_logpdf_vec_f64"
+        "scifort_t_logpdf_vec_f64",
+        "scifort_t_logpdf_elementwise_f64"
       ]
     },
     {
@@ -89,7 +93,8 @@
       "state": "generated",
       "symbols": [
         "scifort_t_logsf_f64",
-        "scifort_t_logsf_vec_f64"
+        "scifort_t_logsf_vec_f64",
+        "scifort_t_logsf_elementwise_f64"
       ]
     },
     {
@@ -107,7 +112,8 @@
       "procedure": "t_pdf",
       "state": "generated",
       "symbols": [
-        "scifort_t_pdf_vec_f64"
+        "scifort_t_pdf_vec_f64",
+        "scifort_t_pdf_elementwise_f64"
       ]
     },
     {
@@ -125,7 +131,8 @@
       "procedure": "t_ppf",
       "state": "generated",
       "symbols": [
-        "scifort_t_ppf_vec_f64"
+        "scifort_t_ppf_vec_f64",
+        "scifort_t_ppf_elementwise_f64"
       ]
     },
     {
@@ -143,7 +150,8 @@
       "state": "generated",
       "symbols": [
         "scifort_t_sf_f64",
-        "scifort_t_sf_vec_f64"
+        "scifort_t_sf_vec_f64",
+        "scifort_t_sf_elementwise_f64"
       ]
     }
   ],

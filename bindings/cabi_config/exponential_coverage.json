@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 13,
+  "generated_symbol_count": 21,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -16,7 +16,8 @@
       "procedure": "exponential_cdf",
       "state": "generated",
       "symbols": [
-        "scifort_exponential_cdf_vec_f64"
+        "scifort_exponential_cdf_vec_f64",
+        "scifort_exponential_cdf_elementwise_f64"
       ]
     },
     {
@@ -33,7 +34,8 @@
       "state": "generated",
       "symbols": [
         "scifort_exponential_isf_f64",
-        "scifort_exponential_isf_vec_f64"
+        "scifort_exponential_isf_vec_f64",
+        "scifort_exponential_isf_elementwise_f64"
       ]
     },
     {
@@ -50,7 +52,8 @@
       "state": "generated",
       "symbols": [
         "scifort_exponential_logcdf_f64",
-        "scifort_exponential_logcdf_vec_f64"
+        "scifort_exponential_logcdf_vec_f64",
+        "scifort_exponential_logcdf_elementwise_f64"
       ]
     },
     {
@@ -67,7 +70,8 @@
       "state": "generated",
       "symbols": [
         "scifort_exponential_logpdf_f64",
-        "scifort_exponential_logpdf_vec_f64"
+        "scifort_exponential_logpdf_vec_f64",
+        "scifort_exponential_logpdf_elementwise_f64"
       ]
     },
     {
@@ -84,7 +88,8 @@
       "state": "generated",
       "symbols": [
         "scifort_exponential_logsf_f64",
-        "scifort_exponential_logsf_vec_f64"
+        "scifort_exponential_logsf_vec_f64",
+        "scifort_exponential_logsf_elementwise_f64"
       ]
     },
     {
@@ -101,7 +106,8 @@
       "procedure": "exponential_pdf",
       "state": "generated",
       "symbols": [
-        "scifort_exponential_pdf_vec_f64"
+        "scifort_exponential_pdf_vec_f64",
+        "scifort_exponential_pdf_elementwise_f64"
       ]
     },
     {
@@ -118,7 +124,8 @@
       "procedure": "exponential_ppf",
       "state": "generated",
       "symbols": [
-        "scifort_exponential_ppf_vec_f64"
+        "scifort_exponential_ppf_vec_f64",
+        "scifort_exponential_ppf_elementwise_f64"
       ]
     },
     {
@@ -135,7 +142,8 @@
       "state": "generated",
       "symbols": [
         "scifort_exponential_sf_f64",
-        "scifort_exponential_sf_vec_f64"
+        "scifort_exponential_sf_vec_f64",
+        "scifort_exponential_sf_elementwise_f64"
       ]
     }
   ],

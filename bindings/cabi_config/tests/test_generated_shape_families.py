@@ -75,10 +75,18 @@ class ShapeFamilyAbiTests(unittest.TestCase):
                       'double x[1]={0.3}, y[1]; int status=-1;']
             for family in FAMILIES:
                 args = ','.join(str(v) for v in PARAMETERS[family])
+                pointers = []
+                for index, value in enumerate(PARAMETERS[family]):
+                    pointer = f'p_{family}_{index}'
+                    client.append(f'double {pointer}[1]={{{value}}};')
+                    pointers.append(pointer)
+                array_args = ','.join(pointers)
                 for method in METHODS:
                     name = f'scifort_{family}_{method}'
                     client += [f'{name}_vec_f64(1,x,{args},y,&status);',
-                               f'if(status || y[0]!={name}_f64(x[0],{args})) return 1;']
+                               f'if(status || y[0]!={name}_f64(x[0],{args})) return 1;',
+                               f'{name}_elementwise_f64(1,x,{array_args},y,&status);',
+                               f'if(status || y[0]!={name}_f64(x[0],{args})) return 2;']
             client += ['return 0;', '}']
             client_path = cls.directory / 'client.c'
             client_path.write_text('\n'.join(client), encoding='ascii')
@@ -124,6 +132,48 @@ class ShapeFamilyAbiTests(unittest.TestCase):
         if cls.dll_dir:
             cls.dll_dir.close()
         cls.temp.cleanup()
+
+    def test_elementwise_native_agreement(self):
+        for profile, lib in self.libs:
+            for family in FAMILIES:
+                for method in METHODS:
+                    with self.subTest(profile=profile, family=family, method=method):
+                        params = PARAMETERS[family]
+                        native = getattr(lib, f'native_{family}_{method}')
+                        native.argtypes = [C.c_double]*(1+len(params))
+                        native.restype = C.c_double
+                        func = getattr(lib, f'scifort_{family}_{method}_elementwise_f64')
+                        func.argtypes = [C.c_size_t, *[C.c_void_p]*(1+len(params)),
+                                         C.c_void_p, C.POINTER(C.c_int)]
+                        func.restype = None
+                        values = ([0., .2, .8, 1., math.nan] if method in ('ppf', 'isf')
+                                  else [-math.inf, 0., .5, math.inf, math.nan])
+                        parameter_values = [[p]*5 for p in params]
+                        for index, column in enumerate(parameter_values):
+                            column[1] += .5
+                            column[2] = math.nan
+                            column[3] = math.inf
+                            if index == len(params)-1:
+                                column[4] = 0.
+                        columns = [values, *parameter_values]
+                        buffers = [(C.c_double*5)(*column) for column in columns]
+                        y = (C.c_double*5)(*[99.]*5)
+                        status = C.c_int(-1)
+                        func(5, *buffers, y, C.byref(status))
+                        self.assertEqual(status.value, 0)
+                        for row, actual in zip(zip(*columns), y):
+                            expected = native(*row)
+                            if math.isnan(expected):
+                                self.assertTrue(math.isnan(actual))
+                            else:
+                                self.assertEqual(actual, expected)
+                        before = list(y)
+                        func(0, *buffers, y, C.byref(status))
+                        self.assertEqual(status.value, 0)
+                        func(C.c_size_t(-1).value, *buffers, y, C.byref(status))
+                        self.assertEqual(status.value, 1)
+                        for a, b in zip(y, before):
+                            self.assertTrue(math.isnan(a) if math.isnan(b) else a == b)
 
     def test_native_scalar_and_bulk_agreement(self):
         for profile, lib in self.libs:

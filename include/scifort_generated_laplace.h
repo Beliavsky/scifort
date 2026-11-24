@@ -18,32 +18,80 @@ extern "C" {
 
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_cdf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_cdf_elementwise_f64(size_t n, const double *arg_x, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 double scifort_laplace_isf_f64(double arg_p, double arg_loc, double arg_scale);
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_isf_vec_f64(size_t n, const double *arg_p, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_isf_elementwise_f64(size_t n, const double *arg_p, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 double scifort_laplace_logcdf_f64(double arg_x, double arg_loc, double arg_scale);
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_logcdf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_logcdf_elementwise_f64(size_t n, const double *arg_x, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 double scifort_laplace_logpdf_f64(double arg_x, double arg_loc, double arg_scale);
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_logpdf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_logpdf_elementwise_f64(size_t n, const double *arg_x, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 double scifort_laplace_logsf_f64(double arg_x, double arg_loc, double arg_scale);
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_logsf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_logsf_elementwise_f64(size_t n, const double *arg_x, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_pdf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_pdf_elementwise_f64(size_t n, const double *arg_x, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_ppf_vec_f64(size_t n, const double *arg_p, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_ppf_elementwise_f64(size_t n, const double *arg_p, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 double scifort_laplace_sf_f64(double arg_x, double arg_loc, double arg_scale);
 /* Explicit-shape bulk: valid non-NULL buffers are required even for n=0. */
 void scifort_laplace_sf_vec_f64(size_t n, const double *arg_x, double arg_loc, double arg_scale, double *output, int *status);
+/* Elementwise: all inputs are arrays of n doubles, in native argument order.
+ * Valid aligned non-NULL buffers required even for n=0; output must not
+ * overlap any input. Inputs may overlap each other. No uniform validation:
+ * invalid parameter elements retain native results (usually NaN), status 0.
+ * Status 1: rejected length, output unchanged. */
+void scifort_laplace_sf_elementwise_f64(size_t n, const double *arg_x, const double *arg_loc, const double *arg_scale, double *output, int *status);
 
 #ifdef __cplusplus
 }

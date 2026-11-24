@@ -20,7 +20,10 @@ run the unified pipeline with `--check` before committing. Optional arguments
 are required at the C boundary. Existing uniform bulk calls still validate
 finite location and finite positive scale before touching output. Buffer,
 length and status contracts appear in the generated headers and generator guide.
-Python normal/gamma methods support NumPy broadcasting through the new symbols.
+All eleven configured distribution families now provide eight elementwise
+symbols each (88 total). Python methods support NumPy broadcasting of shapes,
+location and scale. Student t retains its positive-infinite-df normal limit;
+chi-square and other shapes retain their finite-positive requirements.
 
 `linalg.json` uses schema version 2 to wrap the existing assumed-shape
 `solve_lower(l(:,:),b(:),x(:),status)` procedure. Its generated adapter declares

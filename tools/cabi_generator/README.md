@@ -362,6 +362,6 @@ The generated Python runtime uses this optional symbol when any parameter has
 nonzero rank, broadcasts all inputs in NumPy, validates output shape and overlap
 against every original input, and prepares contiguous aligned binary64 buffers.
 All-scalar and uniform-parameter calls retain their existing paths and contracts.
-Normal and gamma are the first reviewed configurations with all eight methods.
+All eleven reviewed distribution configurations provide this pattern for all eight methods.
 Regenerate with the unified pipeline so the development build hashes and combined
 coverage also include the new symbols.

@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 13,
+  "generated_symbol_count": 21,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -17,7 +17,8 @@
       "procedure": "lognormal_cdf",
       "state": "generated",
       "symbols": [
-        "scifort_lognormal_cdf_vec_f64"
+        "scifort_lognormal_cdf_vec_f64",
+        "scifort_lognormal_cdf_elementwise_f64"
       ]
     },
     {
@@ -35,7 +36,8 @@
       "state": "generated",
       "symbols": [
         "scifort_lognormal_isf_f64",
-        "scifort_lognormal_isf_vec_f64"
+        "scifort_lognormal_isf_vec_f64",
+        "scifort_lognormal_isf_elementwise_f64"
       ]
     },
     {
@@ -53,7 +55,8 @@
       "state": "generated",
       "symbols": [
         "scifort_lognormal_logcdf_f64",
-        "scifort_lognormal_logcdf_vec_f64"
+        "scifort_lognormal_logcdf_vec_f64",
+        "scifort_lognormal_logcdf_elementwise_f64"
       ]
     },
     {
@@ -71,7 +74,8 @@
       "state": "generated",
       "symbols": [
         "scifort_lognormal_logpdf_f64",
-        "scifort_lognormal_logpdf_vec_f64"
+        "scifort_lognormal_logpdf_vec_f64",
+        "scifort_lognormal_logpdf_elementwise_f64"
       ]
     },
     {
@@ -89,7 +93,8 @@
       "state": "generated",
       "symbols": [
         "scifort_lognormal_logsf_f64",
-        "scifort_lognormal_logsf_vec_f64"
+        "scifort_lognormal_logsf_vec_f64",
+        "scifort_lognormal_logsf_elementwise_f64"
       ]
     },
     {
@@ -107,7 +112,8 @@
       "procedure": "lognormal_pdf",
       "state": "generated",
       "symbols": [
-        "scifort_lognormal_pdf_vec_f64"
+        "scifort_lognormal_pdf_vec_f64",
+        "scifort_lognormal_pdf_elementwise_f64"
       ]
     },
     {
@@ -125,7 +131,8 @@
       "procedure": "lognormal_ppf",
       "state": "generated",
       "symbols": [
-        "scifort_lognormal_ppf_vec_f64"
+        "scifort_lognormal_ppf_vec_f64",
+        "scifort_lognormal_ppf_elementwise_f64"
       ]
     },
     {
@@ -143,7 +150,8 @@
       "state": "generated",
       "symbols": [
         "scifort_lognormal_sf_f64",
-        "scifort_lognormal_sf_vec_f64"
+        "scifort_lognormal_sf_vec_f64",
+        "scifort_lognormal_sf_elementwise_f64"
       ]
     }
   ],

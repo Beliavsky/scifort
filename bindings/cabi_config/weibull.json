@@ -32,7 +32,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_pdf_elementwise_f64"
     },
     "weibull_logpdf": {
       "symbol": "scifort_weibull_logpdf_f64",
@@ -47,7 +48,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_logpdf_elementwise_f64"
     },
     "weibull_cdf": {
       "existing_scalar_symbol": "scifort_weibull_cdf_f64",
@@ -62,7 +64,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_cdf_elementwise_f64"
     },
     "weibull_sf": {
       "symbol": "scifort_weibull_sf_f64",
@@ -77,7 +80,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_sf_elementwise_f64"
     },
     "weibull_logcdf": {
       "symbol": "scifort_weibull_logcdf_f64",
@@ -92,7 +96,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_logcdf_elementwise_f64"
     },
     "weibull_logsf": {
       "symbol": "scifort_weibull_logsf_f64",
@@ -107,7 +112,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_logsf_elementwise_f64"
     },
     "weibull_ppf": {
       "existing_scalar_symbol": "scifort_weibull_ppf_f64",
@@ -122,7 +128,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_ppf_elementwise_f64"
     },
     "weibull_isf": {
       "symbol": "scifort_weibull_isf_f64",
@@ -137,7 +144,8 @@
       "positive": [
         "c",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_weibull_isf_elementwise_f64"
     }
   },
   "excluded": {}

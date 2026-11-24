@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 13,
+  "generated_symbol_count": 21,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -18,7 +18,8 @@
       "procedure": "beta_cdf",
       "state": "generated",
       "symbols": [
-        "scifort_beta_cdf_vec_f64"
+        "scifort_beta_cdf_vec_f64",
+        "scifort_beta_cdf_elementwise_f64"
       ]
     },
     {
@@ -37,7 +38,8 @@
       "state": "generated",
       "symbols": [
         "scifort_beta_isf_f64",
-        "scifort_beta_isf_vec_f64"
+        "scifort_beta_isf_vec_f64",
+        "scifort_beta_isf_elementwise_f64"
       ]
     },
     {
@@ -56,7 +58,8 @@
       "state": "generated",
       "symbols": [
         "scifort_beta_logcdf_f64",
-        "scifort_beta_logcdf_vec_f64"
+        "scifort_beta_logcdf_vec_f64",
+        "scifort_beta_logcdf_elementwise_f64"
       ]
     },
     {
@@ -75,7 +78,8 @@
       "state": "generated",
       "symbols": [
         "scifort_beta_logpdf_f64",
-        "scifort_beta_logpdf_vec_f64"
+        "scifort_beta_logpdf_vec_f64",
+        "scifort_beta_logpdf_elementwise_f64"
       ]
     },
     {
@@ -94,7 +98,8 @@
       "state": "generated",
       "symbols": [
         "scifort_beta_logsf_f64",
-        "scifort_beta_logsf_vec_f64"
+        "scifort_beta_logsf_vec_f64",
+        "scifort_beta_logsf_elementwise_f64"
       ]
     },
     {
@@ -113,7 +118,8 @@
       "procedure": "beta_pdf",
       "state": "generated",
       "symbols": [
-        "scifort_beta_pdf_vec_f64"
+        "scifort_beta_pdf_vec_f64",
+        "scifort_beta_pdf_elementwise_f64"
       ]
     },
     {
@@ -132,7 +138,8 @@
       "procedure": "beta_ppf",
       "state": "generated",
       "symbols": [
-        "scifort_beta_ppf_vec_f64"
+        "scifort_beta_ppf_vec_f64",
+        "scifort_beta_ppf_elementwise_f64"
       ]
     },
     {
@@ -151,7 +158,8 @@
       "state": "generated",
       "symbols": [
         "scifort_beta_sf_f64",
-        "scifort_beta_sf_vec_f64"
+        "scifort_beta_sf_vec_f64",
+        "scifort_beta_sf_elementwise_f64"
       ]
     }
   ],

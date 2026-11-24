@@ -32,7 +32,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_pdf_elementwise_f64"
     },
     "lognormal_logpdf": {
       "symbol": "scifort_lognormal_logpdf_f64",
@@ -47,7 +48,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_logpdf_elementwise_f64"
     },
     "lognormal_cdf": {
       "existing_scalar_symbol": "scifort_lognormal_cdf_f64",
@@ -62,7 +64,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_cdf_elementwise_f64"
     },
     "lognormal_sf": {
       "symbol": "scifort_lognormal_sf_f64",
@@ -77,7 +80,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_sf_elementwise_f64"
     },
     "lognormal_logcdf": {
       "symbol": "scifort_lognormal_logcdf_f64",
@@ -92,7 +96,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_logcdf_elementwise_f64"
     },
     "lognormal_logsf": {
       "symbol": "scifort_lognormal_logsf_f64",
@@ -107,7 +112,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_logsf_elementwise_f64"
     },
     "lognormal_ppf": {
       "existing_scalar_symbol": "scifort_lognormal_ppf_f64",
@@ -122,7 +128,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_ppf_elementwise_f64"
     },
     "lognormal_isf": {
       "symbol": "scifort_lognormal_isf_f64",
@@ -137,7 +144,8 @@
       "positive": [
         "s",
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_lognormal_isf_elementwise_f64"
     }
   },
   "excluded": {}

@@ -29,7 +29,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_pdf_elementwise_f64"
     },
     "exponential_logpdf": {
       "symbol": "scifort_exponential_logpdf_f64",
@@ -42,7 +43,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_logpdf_elementwise_f64"
     },
     "exponential_cdf": {
       "existing_scalar_symbol": "scifort_exponential_cdf_f64",
@@ -55,7 +57,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_cdf_elementwise_f64"
     },
     "exponential_sf": {
       "symbol": "scifort_exponential_sf_f64",
@@ -68,7 +71,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_sf_elementwise_f64"
     },
     "exponential_logcdf": {
       "symbol": "scifort_exponential_logcdf_f64",
@@ -81,7 +85,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_logcdf_elementwise_f64"
     },
     "exponential_logsf": {
       "symbol": "scifort_exponential_logsf_f64",
@@ -94,7 +99,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_logsf_elementwise_f64"
     },
     "exponential_ppf": {
       "existing_scalar_symbol": "scifort_exponential_ppf_f64",
@@ -107,7 +113,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_ppf_elementwise_f64"
     },
     "exponential_isf": {
       "symbol": "scifort_exponential_isf_f64",
@@ -120,7 +127,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_exponential_isf_elementwise_f64"
     }
   },
   "excluded": {}

@@ -35,7 +35,8 @@ values, exceptions, and memory ownership.
 
 The generated ABI also covers all eight PDF/log-PDF/CDF/SF/log-CDF/log-SF/PPF/ISF
 methods for exponential, logistic, Laplace, Cauchy, Weibull, lognormal, gamma,
-beta, Student t and chi-square.
+beta, Student t and chi-square. All eleven families also provide elementwise
+C entry points for array-valued parameters; Python applies NumPy broadcasting.
 Together with normal, these provide bulk entry points for all 56 distribution
 array workloads in the SciPy timing comparison. See the
 [family manifests and regeneration commands](cabi_config/README.md#benchmark-distribution-families).

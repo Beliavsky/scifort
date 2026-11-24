@@ -29,7 +29,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_pdf_elementwise_f64"
     },
     "laplace_logpdf": {
       "symbol": "scifort_laplace_logpdf_f64",
@@ -42,7 +43,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_logpdf_elementwise_f64"
     },
     "laplace_cdf": {
       "existing_scalar_symbol": "scifort_laplace_cdf_f64",
@@ -55,7 +57,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_cdf_elementwise_f64"
     },
     "laplace_sf": {
       "symbol": "scifort_laplace_sf_f64",
@@ -68,7 +71,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_sf_elementwise_f64"
     },
     "laplace_logcdf": {
       "symbol": "scifort_laplace_logcdf_f64",
@@ -81,7 +85,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_logcdf_elementwise_f64"
     },
     "laplace_logsf": {
       "symbol": "scifort_laplace_logsf_f64",
@@ -94,7 +99,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_logsf_elementwise_f64"
     },
     "laplace_ppf": {
       "existing_scalar_symbol": "scifort_laplace_ppf_f64",
@@ -107,7 +113,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_ppf_elementwise_f64"
     },
     "laplace_isf": {
       "symbol": "scifort_laplace_isf_f64",
@@ -120,7 +127,8 @@
       ],
       "positive": [
         "scale"
-      ]
+      ],
+      "elementwise_symbol": "scifort_laplace_isf_elementwise_f64"
     }
   },
   "excluded": {}

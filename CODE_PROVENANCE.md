@@ -1,3 +1,11 @@
+## 2026-11-24 - elementwise interface coverage for eleven families
+
+The additional nine distribution manifests, generated adapters, Python metadata
+and focused tests reuse the original MIT-licensed interface generator. All new
+entry points delegate directly to existing SciFort scalar functions. No numerical
+implementation, coefficients, dependency or external algorithm is introduced or
+adapted. Existing numerical provenance and dependency notices remain applicable.
+
 ## 2026-11-24 - generated per-element distribution parameters
 
 The elementwise C emitter, Python broadcasting glue, reviewed normal/gamma
