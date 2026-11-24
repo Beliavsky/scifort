@@ -31,9 +31,10 @@ module scifort_multivariate_normal
 contains
 
     function multivariate_normal_logpdf(x, mean, cov, allow_singular) result(y)
-        real(dp), intent(in) :: x(:) !! point at which the density is evaluated
-        real(dp), intent(in), optional :: mean(:) !! mean vector; zero vector when absent
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); point at which the density is evaluated
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         logical, intent(in), optional :: allow_singular !! permit positive-semidefinite covariance (default false)
         real(dp) :: y
 
@@ -105,9 +106,10 @@ contains
     end function multivariate_normal_logpdf
 
     function multivariate_normal_pdf(x, mean, cov, allow_singular) result(y)
-        real(dp), intent(in) :: x(:) !! point at which the density is evaluated
-        real(dp), intent(in), optional :: mean(:) !! mean vector; zero vector when absent
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); point at which the density is evaluated
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         logical, intent(in), optional :: allow_singular !! permit positive-semidefinite covariance (default false)
         real(dp) :: y
 
@@ -139,14 +141,15 @@ contains
 
     function multivariate_normal_cdf(x, mean, cov, allow_singular, maxpts, abseps, releps, &
             lower_limit, state) result(y)
-        real(dp), intent(in) :: x(:) !! upper integration limits; last-axis point in SciPy terminology
-        real(dp), intent(in), optional :: mean(:) !! mean vector; zero vector when absent
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); upper integration limits; last-axis point in SciPy terminology
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         logical, intent(in), optional :: allow_singular !! permit positive-semidefinite covariance (default false)
         integer, intent(in), optional :: maxpts !! approximate maximum QMC points (default 1000000*dimension)
         real(dp), intent(in), optional :: abseps !! requested absolute integration error (default 1e-5)
         real(dp), intent(in), optional :: releps !! SciPy-compatible relative tolerance argument; currently informational
-        real(dp), intent(in), optional :: lower_limit(:) !! lower integration limits; -infinity when absent
+        real(dp), intent(in), optional :: lower_limit(:) !! shape (n); lower integration limits; -infinity when absent
         type(rng_state), intent(inout), optional :: state !! optional explicit RNG state for randomized QMC shifts
         real(dp) :: y
 
@@ -233,14 +236,15 @@ contains
 
     function multivariate_normal_logcdf(x, mean, cov, allow_singular, maxpts, abseps, releps, &
             lower_limit, state) result(y)
-        real(dp), intent(in) :: x(:) !! upper integration limits
-        real(dp), intent(in), optional :: mean(:) !! mean vector; zero vector when absent
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); upper integration limits
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         logical, intent(in), optional :: allow_singular !! permit positive-semidefinite covariance (default false)
         integer, intent(in), optional :: maxpts !! approximate maximum QMC points
         real(dp), intent(in), optional :: abseps !! requested absolute integration error
         real(dp), intent(in), optional :: releps !! SciPy-compatible relative tolerance argument
-        real(dp), intent(in), optional :: lower_limit(:) !! lower integration limits
+        real(dp), intent(in), optional :: lower_limit(:) !! shape (n); lower integration limits
         type(rng_state), intent(inout), optional :: state !! optional explicit RNG state for randomized QMC shifts
         real(dp) :: y
 
@@ -338,11 +342,12 @@ contains
     end function normal_log_interval
 
     subroutine multivariate_normal_marginal(dimensions, mean, cov, marginal_mean, marginal_cov, status)
-        integer, intent(in) :: dimensions(:) !! one-based indices of retained variables; must be unique
-        real(dp), intent(in) :: mean(:) !! original mean vector
-        real(dp), intent(in) :: cov(:, :) !! original covariance matrix; lower triangle is authoritative
-        real(dp), intent(out) :: marginal_mean(:) !! selected mean vector, in requested order
-        real(dp), intent(out) :: marginal_cov(:, :) !! selected covariance matrix, in requested order
+        !! n = size(mean), m = size(dimensions); 1 <= m <= n.
+        integer, intent(in) :: dimensions(:) !! shape (m); one-based indices of retained variables; must be unique
+        real(dp), intent(in) :: mean(:) !! shape (n); original mean vector
+        real(dp), intent(in) :: cov(:, :) !! shape (n,n); original covariance matrix; lower triangle is authoritative
+        real(dp), intent(out) :: marginal_mean(:) !! shape (m); selected mean vector, in requested order
+        real(dp), intent(out) :: marginal_cov(:, :) !! shape (m,m); selected covariance matrix, in requested order
         integer, intent(out) :: status !! zero on success; nonzero for invalid dimensions or shapes
 
         integer :: i
@@ -386,8 +391,9 @@ contains
     end subroutine multivariate_normal_marginal
 
     function multivariate_normal_entropy(mean, cov) result(h)
-        real(dp), intent(in), optional :: mean(:) !! mean vector used only to infer dimension
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        !! n = size(mean) if present, else size(cov,1), else 1; n >= 1.
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector used only to infer dimension
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         real(dp) :: h
 
         integer :: n
@@ -429,10 +435,11 @@ contains
     end function multivariate_normal_entropy
 
     subroutine multivariate_normal_rvs(state, sample, mean, cov, status)
+        !! n = size(sample), n >= 1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the draw
-        real(dp), intent(out) :: sample(:) !! generated vector; its length defines the dimension
-        real(dp), intent(in), optional :: mean(:) !! mean vector; zero vector when absent
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        real(dp), intent(out) :: sample(:) !! shape (n); generated vector; its length defines the dimension
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid covariance or shape
 
         integer :: i
@@ -483,10 +490,11 @@ contains
     end subroutine multivariate_normal_rvs
 
     subroutine multivariate_normal_rvs_array(state, samples, mean, cov, status)
+        !! n = size(samples,1), k = size(samples,2); k >= 0. n >= 1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :) !! samples by column, shape (dimension, n_samples)
-        real(dp), intent(in), optional :: mean(:) !! mean vector; zero vector when absent
-        real(dp), intent(in), optional :: cov(:, :) !! covariance matrix; identity when absent
+        real(dp), intent(out) :: samples(:, :) !! shape (n,k); samples by column
+        real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid covariance or shape
 
         integer :: i
@@ -538,12 +546,13 @@ contains
     end subroutine multivariate_normal_rvs_array
 
     subroutine multivariate_normal_fit(data, mean, cov, status, fixed_mean, fixed_cov)
-        real(dp), intent(in) :: data(:, :) !! observations by column, shape (dimension, n_observations)
-        real(dp), intent(out) :: mean(:) !! fitted or fixed mean vector
-        real(dp), intent(out) :: cov(:, :) !! fitted or fixed maximum-likelihood covariance matrix
+        !! n = size(data,1), k = size(data,2); n >= 1, k >= 1.
+        real(dp), intent(in) :: data(:, :) !! shape (n,k); observations by column
+        real(dp), intent(out) :: mean(:) !! shape (n); fitted or fixed mean vector
+        real(dp), intent(out) :: cov(:, :) !! shape (n,n); fitted or fixed maximum-likelihood covariance matrix
         integer, intent(out) :: status !! zero on success; nonzero for invalid input
-        real(dp), intent(in), optional :: fixed_mean(:) !! fixed mean vector, if supplied
-        real(dp), intent(in), optional :: fixed_cov(:, :) !! fixed PSD covariance matrix, if supplied
+        real(dp), intent(in), optional :: fixed_mean(:) !! shape (n); fixed mean vector, if supplied
+        real(dp), intent(in), optional :: fixed_cov(:, :) !! shape (n,n); fixed PSD covariance matrix, if supplied
 
         integer :: i
         integer :: j
@@ -610,11 +619,12 @@ contains
     end subroutine multivariate_normal_fit
 
     subroutine process_mean_cov(n, mean, cov, mu, covariance, status)
+        !! n is the requested dimension; n >= 0; optional arrays must match when present.
         integer, intent(in) :: n !! requested dimension
-        real(dp), intent(in), optional :: mean(:) !! optional mean vector
-        real(dp), intent(in), optional :: cov(:, :) !! optional covariance matrix
-        real(dp), intent(out) :: mu(:) !! expanded mean vector
-        real(dp), intent(out) :: covariance(:, :) !! expanded symmetric covariance matrix
+        real(dp), intent(in), optional :: mean(:) !! shape (n); optional mean vector
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); optional covariance matrix
+        real(dp), intent(out) :: mu(:) !! shape (n); expanded mean vector
+        real(dp), intent(out) :: covariance(:, :) !! shape (n,n); expanded symmetric covariance matrix
         integer, intent(out) :: status !! zero on success; nonzero on invalid shape/value
 
         integer :: i
@@ -654,8 +664,10 @@ contains
     end subroutine process_mean_cov
 
     pure subroutine copy_lower_symmetric(source, target)
-        real(dp), intent(in) :: source(:, :) !! source whose lower triangle is authoritative
-        real(dp), intent(out) :: target(:, :) !! symmetric copy of the lower triangle
+        !! n = size(target,1), k = size(target,2), m = size(source,1), p = size(source,2).
+        !! n >= 0, k >= n, m >= n, p >= n; extra target columns are zeroed.
+        real(dp), intent(in) :: source(:, :) !! shape (m,p); source whose lower triangle is authoritative
+        real(dp), intent(out) :: target(:, :) !! shape (n,k); symmetric copy of the lower triangle
 
         integer :: i
         integer :: j

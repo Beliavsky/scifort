@@ -26,8 +26,9 @@ module scifort_matrix_distribution_helpers
 contains
 
     pure subroutine spd_factor(a, l, logdet, status)
-        real(dp), intent(in) :: a(:, :) !! square SPD matrix; lower triangle defines symmetry
-        real(dp), intent(out) :: l(:, :) !! lower Cholesky factor
+        !! n = size(a,1), n >= 1.
+        real(dp), intent(in) :: a(:, :) !! shape (n,n); square SPD matrix; lower triangle defines symmetry
+        real(dp), intent(out) :: l(:, :) !! shape (n,n); lower Cholesky factor
         real(dp), intent(out) :: logdet !! logarithm of determinant
         integer, intent(out) :: status !! matrix_status_* result
 
@@ -59,9 +60,11 @@ contains
     end subroutine spd_factor
 
     pure subroutine solve_lower_matrix(l, b, x, status)
-        real(dp), intent(in) :: l(:, :) !! nonsingular lower triangular matrix
-        real(dp), intent(in) :: b(:, :) !! right-hand sides by column
-        real(dp), intent(out) :: x(:, :) !! solution of L X = B
+        !! n = size(l,1), k = size(b,2); n >= 1, k >= 0.
+        !! With k = 0 no right-hand sides or triangular diagonals are evaluated.
+        real(dp), intent(in) :: l(:, :) !! shape (n,n); nonsingular lower triangular matrix
+        real(dp), intent(in) :: b(:, :) !! shape (n,k); right-hand sides by column
+        real(dp), intent(out) :: x(:, :) !! shape (n,k); solution of L X = B
         integer, intent(out) :: status !! matrix_status_* result
 
         integer :: i
@@ -91,9 +94,11 @@ contains
     end subroutine solve_lower_matrix
 
     pure subroutine solve_spd_matrix(l, b, x, status)
-        real(dp), intent(in) :: l(:, :) !! lower Cholesky factor of SPD coefficient matrix
-        real(dp), intent(in) :: b(:, :) !! right-hand sides by column
-        real(dp), intent(out) :: x(:, :) !! solution of L L^T X = B
+        !! n = size(l,1), k = size(b,2); n >= 1, k >= 0.
+        !! With k = 0 no right-hand sides or triangular diagonals are evaluated.
+        real(dp), intent(in) :: l(:, :) !! shape (n,n); lower Cholesky factor of SPD coefficient matrix
+        real(dp), intent(in) :: b(:, :) !! shape (n,k); right-hand sides by column
+        real(dp), intent(out) :: x(:, :) !! shape (n,k); solution of L L^T X = B
         integer, intent(out) :: status !! matrix_status_* result
 
         integer :: i
@@ -124,8 +129,9 @@ contains
     end subroutine solve_spd_matrix
 
     pure subroutine invert_lower(l, linv, status)
-        real(dp), intent(in) :: l(:, :) !! nonsingular lower triangular matrix
-        real(dp), intent(out) :: linv(:, :) !! inverse lower triangular matrix
+        !! n = size(l,1), n >= 1.
+        real(dp), intent(in) :: l(:, :) !! shape (n,n); nonsingular lower triangular matrix
+        real(dp), intent(out) :: linv(:, :) !! shape (n,n); inverse lower triangular matrix
         integer, intent(out) :: status !! matrix_status_* result
 
         integer :: i

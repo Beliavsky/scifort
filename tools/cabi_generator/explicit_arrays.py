@@ -10,7 +10,7 @@ def prepare(config, api, identifier, source_lines):
     for name, policy in sorted(config.get("subroutines", {}).items()):
         identifier(name)
         fields = {"symbol", "dimensions", "shapes", "status_argument", "invalid_status", "description"}
-        if not isinstance(policy, dict) or set(policy) != fields:
+        if not isinstance(policy, dict) or set(policy) - {"logical_inputs"} != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         identifier(policy["symbol"])
         node = api[name]
@@ -51,8 +51,18 @@ def prepare(config, api, identifier, source_lines):
                 for entity in entities.items:
                     declared[str(entity.items[0]).lower()] = (dtype, attrs, entity)
                     declarations[str(entity.items[0]).lower()] = decl
+        logical_inputs = policy.get("logical_inputs", {})
+        if not isinstance(logical_inputs, dict) or set(logical_inputs) - set(args):
+            raise ValueError(f"{name}: logical_inputs must name native arguments")
+        for arg, mapping in logical_inputs.items():
+            if (not isinstance(mapping, dict) or set(mapping) != {"false", "true"}
+                    or any(type(v) is not int or not -2147483647 <= v <= 2147483647
+                           for v in mapping.values()) or mapping['false'] == mapping['true']):
+                raise ValueError(f"{name}: logical mapping needs distinct C int false/true values")
         metadata = {}
         status = policy["status_argument"]
+        if status in logical_inputs:
+            raise ValueError(f"{name}: status cannot be a logical mapping")
         if status not in args:
             raise ValueError(f"{name}: status_argument must name a native argument")
         for arg in args:
@@ -64,8 +74,22 @@ def prepare(config, api, identifier, source_lines):
                     raise ValueError(f"{name}: status must be a default-integer scalar intent(out)")
                 continue
             intent = next((value for value in ("in", "out", "inout") if f"intent({value})" in attrs), None)
-            if intent is None or attrs != {f"intent({intent})"}:
-                raise ValueError(f"{name}: {arg} requires intent and no optional/pointer/allocatable attributes")
+            base_attrs = attrs - {"optional"} if arg in logical_inputs else attrs
+            if intent is None or base_attrs != {f"intent({intent})"}:
+                raise ValueError(f"{name}: {arg} requires intent and no unconfigured optional attributes")
+            if str(dtype).lower() == "logical":
+                if (arg not in logical_inputs or intent != "in" or any(entity.items[1:])):
+                    raise ValueError(f"{name}: logical inputs need an explicit scalar mapping")
+                metadata[arg] = dict(intent=intent, rank=0, category='logical',
+                                     optional='optional' in attrs)
+                continue
+            if arg in logical_inputs:
+                raise ValueError(f"{name}: logical_inputs must map logical arguments")
+            if str(dtype).lower() == "integer":
+                if intent != "out" or any(entity.items[1:]):
+                    raise ValueError(f"{name}: only default-integer scalar outputs are supported")
+                metadata[arg] = dict(intent=intent, rank=0, category='integer')
+                continue
             kind = config["kind_name"]
             if str(dtype).lower().replace(" ", "") not in (f"real({kind})", f"real(kind={kind})"):
                 raise ValueError(f"{name}: {arg} must be real({kind})")
@@ -76,7 +100,7 @@ def prepare(config, api, identifier, source_lines):
             rank = len(shape.items) if shape else 0
             if rank > 2:
                 raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
-            metadata[arg] = dict(intent=intent, rank=rank)
+            metadata[arg] = dict(intent=intent, rank=rank, category='real')
         shapes = policy["shapes"]
         array_names = {a for a, value in metadata.items() if value["rank"]}
         if not isinstance(shapes, dict) or set(shapes) != array_names or not array_names:
@@ -133,11 +157,20 @@ def emit(entry, index, config):
             # Preserve output on adapter validation errors; native calls retain native intent.
             intent = "in" if info["intent"] == "in" else "inout"
             value = ", value" if info["rank"] == 0 and intent == "in" else ""
-            declaration = f"real(c_double){value}, intent({intent})"
-            ctype = "double" if value else ("const double *" if intent == "in" else "double *")
+            if info['category'] == 'logical':
+                declaration = "integer(c_int), value, intent(in)"
+                ctype = "int"
+            elif info['category'] == 'integer':
+                declaration = "integer(c_int), intent(inout)"
+                ctype = "int *"
+            else:
+                declaration = f"real(c_double){value}, intent({intent})"
+                ctype = "double" if value else ("const double *" if intent == "in" else "double *")
             cargs.append(f"{ctype} arg_{arg}")
         shape = "(" + ",".join(shapes[arg]) + ")" if arg in shapes else ""
         lines.append(f"        {declaration} :: {arg}{shape} !! {config['argument_docs'][arg]}")
+    for arg in policy.get('logical_inputs', {}):
+        lines.append(f"        logical :: cg_logical_{arg}")
     lines += ["        ! Direct array association requires matching native and C kinds.",
               "        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)",
               "        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)", "",
@@ -145,19 +178,33 @@ def emit(entry, index, config):
     for dim, minimum in dimensions.items():
         lines += [f"        if ({dim} < {minimum}_c_int) then",
                   f"            {status}={policy['invalid_status']}_c_int", "            return", "        end if"]
+    for arg, mapping in policy.get('logical_inputs', {}).items():
+        lines += [f"        if ({arg} /= {mapping['false']}_c_int .and. &",
+                  f"                {arg} /= {mapping['true']}_c_int) then",
+                  f"            {status}={policy['invalid_status']}_c_int", "            return", "        end if",
+                  f"        cg_logical_{arg}=({arg} == {mapping['true']}_c_int)"]
     lines += ["        ! The compiler supplies assumed-shape descriptors inside Fortran.",
               f"        call cg_native_{index}( &"]
     for i, arg in enumerate(args):
-        lines.append(f"            {arg}={arg}" + (", &" if i < len(args)-1 else ")"))
+        actual = f"cg_logical_{arg}" if arg in policy.get('logical_inputs', {}) else arg
+        lines.append(f"            {arg}={actual}" + (", &" if i < len(args)-1 else ")"))
     lines += [f"    end subroutine {symbol}", ""]
     header = [f"/* {policy['description']}",
               " * Explicit-shape arrays: contiguous column-major storage; no overlap.",
               " * All array pointers must be valid and non-NULL, including empty arrays.",
+              " * All scalar output pointers must also be valid and non-NULL.",
               f" * Invalid extents return status {policy['invalid_status']} without changing output.",
               " * Other status/output behavior is inherited from the native procedure. */",
               f"void {symbol}(" + ", ".join(cargs) + ");", ""]
+    if policy.get('logical_inputs'):
+        header[-3:-3] = [f" * {arg}: false={mapping['false']}, true={mapping['true']}; required, no default."
+                         for arg, mapping in policy['logical_inputs'].items()]
+        header[-3:-3] = [" * Other flag values return invalid status with all outputs unchanged."]
     record = dict(procedure=name, state="generated", symbols=[symbol], interface="explicit_shape_subroutine",
                   dimensions=dimensions, dimension_order=list(dimensions), shapes=shapes, status_argument=status,
-                  optional_promoted_to_required=[], arguments=args,
+                  optional_promoted_to_required=[a for a in args if metadata.get(a, {}).get('optional')],
+                  arguments=args,
                   native_shape_documentation_review=entry["documentation_review"])
+    if policy.get('logical_inputs'):
+        record['logical_inputs'] = policy['logical_inputs']
     return lines, header, record

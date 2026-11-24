@@ -167,3 +167,73 @@ visible in the JSON. The generated development build plan discovers the
 chi-square -> gamma -> incomplete-gamma/normal dependency chain and includes only
 Python-selected families, not the full manual C API object. The old 56-workload
 Python timing suite retains its existing scope and reports.
+
+## Dense matrix decompositions
+
+The reviewed `linalg.json` now generates four explicit-shape adapters:
+
+| C symbol | Arrays | Native operation |
+| --- | --- | --- |
+| `scifort_solve_lower_f64` | L(n,n), b(n), x(n) | Forward substitution |
+| `scifort_cholesky_lower_f64` | A(n,n), L(n,n) | Lower Cholesky factor |
+| `scifort_symmetric_eigen_jacobi_f64` | A(n,n), eigenvalues(n), eigenvectors(n,n) | Ascending symmetric eigenpairs |
+| `scifort_psd_decompose_f64` | A(n,n), eigenvalues(n), eigenvectors(n,n) | PSD eigenpairs, rank and log pseudo-determinant |
+
+All require n >= 1 and contiguous column-major storage. Every pointer, including
+scalar outputs, must be valid and non-NULL; writable buffers must not overlap
+other buffers. Input matrices use the lower triangle as authoritative. The PSD
+adapter also returns C `int *rank`, `double *log_pdet`, and `double *cutoff`.
+Its final by-value C `int allow_singular` is required: 0 rejects rank deficiency,
+1 permits it. Other values return status 1 and preserve all outputs except status.
+Invalid orders have the same adapter-level preservation behavior.
+
+Once the native procedure is called, its statuses and output-on-failure behavior
+apply. Status 0 means success; 1 invalid shape; 2 Cholesky non-positive-definite;
+3 PSD negative eigenvalue beyond tolerance; 4 eigensolver nonfinite input or lack
+of convergence; 5 singular triangular factor or rejected PSD rank deficiency.
+Outputs may then be zeroed, partially computed or complete; do not treat a
+nonzero status as a successful factorization. The PSD routine sets rank/log_pdet/
+cutoff to zero when eigendecomposition fails. For an indefinite matrix it returns
+rank=0 and log_pdet=0 with the computed cutoff; for disallowed rank deficiency it
+returns the computed rank/cutoff and log_pdet=0.
+
+On PSD success, cutoff is `1e6*epsilon(binary64)*max(abs(eigenvalues))`; rank
+counts eigenvalues above that cutoff, and log_pdet sums their logarithms. A zero
+matrix permitted as singular has rank=0, cutoff=0 and log_pdet=0. Existing native
+semantics, including tolerance of tiny negative eigenvalues, are preserved.
+These three new adapters do not change the existing solve-lower ABI and are not
+yet exposed through the generated Python distribution package.
+
+The shape-documentation audit also covers every assumed-shape dummy declaration
+in [multivariate normal](../../src/stats/multivariate_normal.f90),
+[multivariate t](../../src/stats/multivariate_t.f90) and
+[matrix-distribution helpers](../../src/stats/matrix_distribution_helpers.f90).
+It records dimensions, optional-array relationships, column-oriented samples,
+empty sample/right-hand-side batches and private helper capacity requirements.
+Student t's zero-draw batch skips parameter validation, whereas the normal batch
+validates its dimension and parameters even with no draws; comments preserve
+that distinction. The broader repository audit remains ongoing.
+
+Validation for this extension (CMD):
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s bindings/cabi_config/tests -p "test_generated_linalg*.py" -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+```
+
+All 48 focused tests passed: 45 reusable generator/workflow tests and three
+matrix ABI tests. The new decomposition tests were also rerun after adding
+one-dimensional analytic checks. Compiled fixtures and matrix adapters used GNU
+Fortran/GCC/G++ 17.0.0 20260510 (experimental) on Windows, checked with `-O0 -g
+-fcheck=all -fbacktrace` and optimized with `-O3`; the small independent logical
+fixture used `-O0 -fcheck=all` and `-O3`. All builds used `-std=f2018
+-fimplicit-none -Werror=implicit-interface`. C clients compiled/ran under C11
+with `-Wall -Wextra -Werror`, and the header/client syntax passed C++17 checks.
+The read-only workflow verified all 75 artifacts. The documentation audit
+covered 81 assumed-shape dummy declarations across the three native modules and
+confirmed unchanged executable code. Empty right-hand-side batches skip
+triangular diagonal evaluation. Source encoding/line limits, local links and
+whitespace checks passed. No full FPM suite was run: numerical implementations
+and global build configuration are unchanged, and the changed optional ABI/tool
+paths were tested directly. Other compilers/platforms remain unverified.

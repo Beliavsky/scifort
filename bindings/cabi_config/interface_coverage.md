@@ -7,7 +7,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 98 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 1 |
+| array_adapters | 4 |
 | elementwise | 88 |
 | python | 88 |
 
@@ -61,16 +61,16 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_laplace | laplace_pdf | scifort_laplace_pdf_f64 | scifort_laplace_pdf_vec_f64 |  | scifort_laplace_pdf_elementwise_f64 | laplace.pdf |
 | scifort_laplace | laplace_ppf | scifort_laplace_ppf_f64 | scifort_laplace_ppf_vec_f64 |  | scifort_laplace_ppf_elementwise_f64 | laplace.ppf |
 | scifort_laplace | laplace_sf | scifort_laplace_sf_f64 | scifort_laplace_sf_vec_f64 |  | scifort_laplace_sf_elementwise_f64 | laplace.sf |
-| scifort_linalg | cholesky_lower |  |  |  |  |  |
+| scifort_linalg | cholesky_lower |  |  | scifort_cholesky_lower_f64 |  |  |
 | scifort_linalg | linalg_status_invalid_shape |  |  |  |  |  |
 | scifort_linalg | linalg_status_no_convergence |  |  |  |  |  |
 | scifort_linalg | linalg_status_not_positive_definite |  |  |  |  |  |
 | scifort_linalg | linalg_status_not_positive_semidefinite |  |  |  |  |  |
 | scifort_linalg | linalg_status_singular |  |  |  |  |  |
 | scifort_linalg | linalg_status_success |  |  |  |  |  |
-| scifort_linalg | psd_decompose |  |  |  |  |  |
+| scifort_linalg | psd_decompose |  |  | scifort_psd_decompose_f64 |  |  |
 | scifort_linalg | solve_lower |  |  | scifort_solve_lower_f64 |  |  |
-| scifort_linalg | symmetric_eigen_jacobi |  |  |  |  |  |
+| scifort_linalg | symmetric_eigen_jacobi |  |  | scifort_symmetric_eigen_jacobi_f64 |  |  |
 | scifort_logistic | logistic_cdf | scifort_logistic_cdf_f64 | scifort_logistic_cdf_vec_f64 |  | scifort_logistic_cdf_elementwise_f64 | logistic.cdf |
 | scifort_logistic | logistic_isf | scifort_logistic_isf_f64 | scifort_logistic_isf_vec_f64 |  | scifort_logistic_isf_elementwise_f64 | logistic.isf |
 | scifort_logistic | logistic_logcdf | scifort_logistic_logcdf_f64 | scifort_logistic_logcdf_vec_f64 |  | scifort_logistic_logcdf_elementwise_f64 | logistic.logcdf |

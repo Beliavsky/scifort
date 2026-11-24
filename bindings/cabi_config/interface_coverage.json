@@ -1,6 +1,6 @@
 {
   "counts": {
-    "array_adapters": 1,
+    "array_adapters": 4,
     "bulk": 88,
     "elementwise": 88,
     "exports": 98,
@@ -489,11 +489,9 @@
       "scalar_generated": true
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected for the initial explicit-shape integration.",
+      "array_adapter": "scifort_cholesky_lower_f64",
       "module": "scifort_linalg",
-      "procedure": "cholesky_lower",
-      "scalar_generated": false
+      "procedure": "cholesky_lower"
     },
     {
       "bulk_generated": false,
@@ -538,11 +536,9 @@
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected for the initial explicit-shape integration.",
+      "array_adapter": "scifort_psd_decompose_f64",
       "module": "scifort_linalg",
-      "procedure": "psd_decompose",
-      "scalar_generated": false
+      "procedure": "psd_decompose"
     },
     {
       "array_adapter": "scifort_solve_lower_f64",
@@ -550,11 +546,9 @@
       "procedure": "solve_lower"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected for the initial explicit-shape integration.",
+      "array_adapter": "scifort_symmetric_eigen_jacobi_f64",
       "module": "scifort_linalg",
-      "procedure": "symmetric_eigen_jacobi",
-      "scalar_generated": false
+      "procedure": "symmetric_eigen_jacobi"
     },
     {
       "bulk": "scifort_logistic_cdf_vec_f64",

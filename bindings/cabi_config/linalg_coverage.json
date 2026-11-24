@@ -1,11 +1,38 @@
 {
-  "generated_symbol_count": 1,
+  "generated_symbol_count": 4,
   "generator_version": "0.3.0",
   "procedures": [
     {
+      "arguments": [
+        "a",
+        "l",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
       "procedure": "cholesky_lower",
-      "reason": "Not selected for the initial explicit-shape integration.",
-      "state": "excluded"
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "l": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_cholesky_lower_f64"
+      ]
     },
     {
       "procedure": "linalg_status_invalid_shape",
@@ -38,9 +65,52 @@
       "state": "excluded"
     },
     {
+      "arguments": [
+        "a",
+        "eigenvalues",
+        "eigenvectors",
+        "rank",
+        "log_pdet",
+        "cutoff",
+        "status",
+        "allow_singular"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "allow_singular"
+      ],
       "procedure": "psd_decompose",
-      "reason": "Not selected for the initial explicit-shape integration.",
-      "state": "excluded"
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "eigenvalues": [
+          "n"
+        ],
+        "eigenvectors": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_psd_decompose_f64"
+      ]
     },
     {
       "arguments": [
@@ -78,9 +148,40 @@
       ]
     },
     {
+      "arguments": [
+        "a",
+        "eigenvalues",
+        "eigenvectors",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
       "procedure": "symmetric_eigen_jacobi",
-      "reason": "Not selected for the initial explicit-shape integration.",
-      "state": "excluded"
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "eigenvalues": [
+          "n"
+        ],
+        "eigenvectors": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_symmetric_eigen_jacobi_f64"
+      ]
     }
   ],
   "public_api_count": 10,

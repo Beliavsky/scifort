@@ -126,9 +126,21 @@ Dimension-list order defines the leading C arguments and is recorded explicitly
 in coverage, so reordering JSON object keys does not change the ABI.
 
 Adapters accept explicit real scalars and assumed-shape arrays declared on the
-entity, for example `real(dp), intent(in) :: a(:,:)`. Optional, allocatable,
-pointer, callback, and additional integer arguments are not supported in this
-pattern. The required native status argument is default-integer `intent(out)`.
+entity, for example `real(dp), intent(in) :: a(:,:)`, plus default-integer scalar
+`intent(out)` results (C `int *`). The required native status argument is also
+default-integer `intent(out)`. Integer inputs/arrays, allocatable, pointer and
+callback arguments remain unsupported in this pattern.
+
+An optional `logical_inputs` object explicitly maps native scalar `logical,
+intent(in)` arguments to distinct integer `false` and `true` codes. For example,
+`"logical_inputs": {"allow_singular": {"false": 0, "true": 1}}` emits a required,
+by-value C `int` and converts it to a local native logical. Native optional logical
+inputs are supported only with this explicit mapping; their defaults are never
+inferred or applied at the C boundary. Other optional argument types remain
+unsupported. Unrecognized flag values return the configured invalid status
+before touching any output apart from status. All scalar output pointers must be
+valid, non-NULL and disjoint from input and other output storage. No Fortran
+logical representation is exposed through C.
 Compile-time checks require the native real kind to equal `c_double` and the
 native default integer kind to equal `c_int`. Arrays are passed directly to the
 native procedure, without conversion buffers or wrapper allocation.

@@ -37,9 +37,10 @@ module scifort_multivariate_t
 contains
 
     function multivariate_t_logpdf(x, loc, shape, df) result(y)
-        real(dp), intent(in) :: x(:) !! point at which the log density is evaluated
-        real(dp), intent(in), optional :: loc(:) !! location vector; zero when absent
-        real(dp), intent(in), optional :: shape(:, :) !! positive-semidefinite shape matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); point at which the log density is evaluated
+        real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
         real(dp) :: y
 
@@ -83,9 +84,10 @@ contains
     end function multivariate_t_logpdf
 
     function multivariate_t_pdf(x, loc, shape, df, allow_singular) result(y)
-        real(dp), intent(in) :: x(:) !! point at which the density is evaluated
-        real(dp), intent(in), optional :: loc(:) !! location vector; zero when absent
-        real(dp), intent(in), optional :: shape(:, :) !! positive-semidefinite shape matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); point at which the density is evaluated
+        real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
         logical, intent(in), optional :: allow_singular !! permit singular shape matrix (default false)
         real(dp) :: y
@@ -130,13 +132,14 @@ contains
     end function multivariate_t_pdf
 
     function multivariate_t_cdf(x, loc, shape, df, allow_singular, maxpts, lower_limit, state) result(y)
-        real(dp), intent(in) :: x(:) !! upper integration limits
-        real(dp), intent(in), optional :: loc(:) !! location vector; zero when absent
-        real(dp), intent(in), optional :: shape(:, :) !! positive-semidefinite shape matrix; identity when absent
+        !! n = size(x), n >= 1.
+        real(dp), intent(in) :: x(:) !! shape (n); upper integration limits
+        real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
         logical, intent(in), optional :: allow_singular !! permit singular shape matrix (default false)
         integer, intent(in), optional :: maxpts !! approximate QMC point limit (default 1000*dimension)
-        real(dp), intent(in), optional :: lower_limit(:) !! lower limits; -infinity when absent
+        real(dp), intent(in), optional :: lower_limit(:) !! shape (n); lower limits; -infinity when absent
         type(rng_state), intent(inout), optional :: state !! optional explicit RNG for randomized shifts
         real(dp) :: y
 
@@ -225,8 +228,9 @@ contains
     end function multivariate_t_cdf
 
     function multivariate_t_entropy(loc, shape, df) result(h)
-        real(dp), intent(in), optional :: loc(:) !! location vector, used to infer dimension
-        real(dp), intent(in), optional :: shape(:, :) !! positive-semidefinite shape matrix; identity when absent
+        !! n = size(loc) if present, else size(shape,1), else 1; n >= 1.
+        real(dp), intent(in), optional :: loc(:) !! shape (n); location vector, used to infer dimension
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
         real(dp) :: h
 
@@ -293,10 +297,11 @@ contains
     end function multivariate_t_entropy
 
     subroutine multivariate_t_rvs(state, sample, loc, shape, df, status)
+        !! n = size(sample), n >= 1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the draw
-        real(dp), intent(out) :: sample(:) !! generated vector; length defines dimension
-        real(dp), intent(in), optional :: loc(:) !! location vector; zero when absent
-        real(dp), intent(in), optional :: shape(:, :) !! positive-semidefinite shape matrix; identity when absent
+        real(dp), intent(out) :: sample(:) !! shape (n); generated vector; length defines dimension
+        real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid input
 
@@ -344,10 +349,12 @@ contains
     end subroutine multivariate_t_rvs
 
     subroutine multivariate_t_rvs_array(state, samples, loc, shape, df, status)
+        !! n = size(samples,1), k = size(samples,2); k >= 0. n >= 1 when k > 0.
+        !! With k = 0 there are no draws and parameters are not validated.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :) !! samples by column, shape (dimension, n_samples)
-        real(dp), intent(in), optional :: loc(:) !! location vector; zero when absent
-        real(dp), intent(in), optional :: shape(:, :) !! positive-semidefinite shape matrix; identity when absent
+        real(dp), intent(out) :: samples(:, :) !! shape (n,k); samples by column
+        real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid input
 
@@ -366,11 +373,12 @@ contains
     end subroutine multivariate_t_rvs_array
 
     subroutine multivariate_t_marginal(dimensions, loc, shape, marginal_loc, marginal_shape, status)
-        integer, intent(in) :: dimensions(:) !! one-based unique indices of retained variables
-        real(dp), intent(in) :: loc(:) !! original location vector
-        real(dp), intent(in) :: shape(:, :) !! original shape matrix; lower triangle is authoritative
-        real(dp), intent(out) :: marginal_loc(:) !! selected location vector
-        real(dp), intent(out) :: marginal_shape(:, :) !! selected shape matrix
+        !! n = size(loc), m = size(dimensions); 1 <= m <= n.
+        integer, intent(in) :: dimensions(:) !! shape (m); one-based unique indices of retained variables
+        real(dp), intent(in) :: loc(:) !! shape (n); original location vector
+        real(dp), intent(in) :: shape(:, :) !! shape (n,n); original shape matrix; lower triangle is authoritative
+        real(dp), intent(out) :: marginal_loc(:) !! shape (m); selected location vector
+        real(dp), intent(out) :: marginal_shape(:, :) !! shape (m,m); selected shape matrix
         integer, intent(out) :: status !! zero on success; nonzero for invalid dimensions/shapes
 
         integer :: i
@@ -414,10 +422,11 @@ contains
     end subroutine multivariate_t_marginal
 
     function logpdf_core(x, mu, eigenvalues, eigenvectors, log_pdet, cutoff, df) result(y)
-        real(dp), intent(in) :: x(:) !! evaluation point
-        real(dp), intent(in) :: mu(:) !! location vector
-        real(dp), intent(in) :: eigenvalues(:) !! ascending shape eigenvalues
-        real(dp), intent(in) :: eigenvectors(:, :) !! corresponding eigenvectors
+        !! n = size(x), n >= 1; vectors and eigenvector columns describe the same point.
+        real(dp), intent(in) :: x(:) !! shape (n); evaluation point
+        real(dp), intent(in) :: mu(:) !! shape (n); location vector
+        real(dp), intent(in) :: eigenvalues(:) !! shape (n); ascending shape eigenvalues
+        real(dp), intent(in) :: eigenvectors(:, :) !! shape (n,n); corresponding eigenvectors
         real(dp), intent(in) :: log_pdet !! log pseudo-determinant of shape
         real(dp), intent(in) :: cutoff !! numerical rank cutoff
         real(dp), intent(in) :: df !! finite positive degrees of freedom
@@ -448,12 +457,13 @@ contains
     end function logpdf_core
 
     subroutine process_loc_shape(n, loc, shape, df, mu, matrix, nu, status)
+        !! n is the requested dimension; n >= 0; optional arrays must match when present.
         integer, intent(in) :: n !! requested dimension
-        real(dp), intent(in), optional :: loc(:) !! optional location vector
-        real(dp), intent(in), optional :: shape(:, :) !! optional shape matrix
+        real(dp), intent(in), optional :: loc(:) !! shape (n); optional location vector
+        real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); optional shape matrix
         real(dp), intent(in), optional :: df !! optional degrees of freedom
-        real(dp), intent(out) :: mu(:) !! expanded location vector
-        real(dp), intent(out) :: matrix(:, :) !! expanded symmetric shape matrix
+        real(dp), intent(out) :: mu(:) !! shape (n); expanded location vector
+        real(dp), intent(out) :: matrix(:, :) !! shape (n,n); expanded symmetric shape matrix
         real(dp), intent(out) :: nu !! processed degrees of freedom
         integer, intent(out) :: status !! zero on success
 
@@ -500,8 +510,10 @@ contains
     end subroutine process_loc_shape
 
     pure subroutine copy_lower_symmetric(source, target)
-        real(dp), intent(in) :: source(:, :) !! source whose lower triangle is authoritative
-        real(dp), intent(out) :: target(:, :) !! symmetric lower-triangle copy
+        !! n = size(target,1), k = size(target,2), m = size(source,1), p = size(source,2).
+        !! n >= 0, k >= n, m >= n, p >= n; extra target columns are zeroed.
+        real(dp), intent(in) :: source(:, :) !! shape (m,p); source whose lower triangle is authoritative
+        real(dp), intent(out) :: target(:, :) !! shape (n,k); symmetric lower-triangle copy
 
         integer :: i
         integer :: j

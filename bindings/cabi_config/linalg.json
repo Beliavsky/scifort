@@ -12,7 +12,14 @@
     "l": "lower-triangular matrix",
     "b": "right-hand side",
     "x": "solution of L x = b",
-    "status": "native linalg status; 1 for invalid order"
+    "status": "native linalg status; 1 for invalid order",
+    "a": "symmetric matrix; lower triangle is authoritative",
+    "eigenvalues": "ascending eigenvalues",
+    "eigenvectors": "orthonormal eigenvectors by column",
+    "rank": "numerical rank",
+    "log_pdet": "logarithm of pseudo-determinant",
+    "cutoff": "numerical rank cutoff",
+    "allow_singular": "0 reject singular matrices; 1 permit singular matrices"
   },
   "subroutines": {
     "solve_lower": {
@@ -38,6 +45,84 @@
       "status_argument": "status",
       "invalid_status": 1,
       "description": "Solve a lower-triangular real linear system."
+    },
+    "cholesky_lower": {
+      "symbol": "scifort_cholesky_lower_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "l": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Compute a lower Cholesky factor."
+    },
+    "symmetric_eigen_jacobi": {
+      "symbol": "scifort_symmetric_eigen_jacobi_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "eigenvalues": [
+          "n"
+        ],
+        "eigenvectors": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Compute symmetric eigenvalues and eigenvectors."
+    },
+    "psd_decompose": {
+      "symbol": "scifort_psd_decompose_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "a": [
+          "n",
+          "n"
+        ],
+        "eigenvalues": [
+          "n"
+        ],
+        "eigenvectors": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Decompose a positive-semidefinite matrix and report numerical rank.",
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      }
     }
   },
   "outputs": {
@@ -46,9 +131,6 @@
     "coverage": "bindings/cabi_config/linalg_coverage.json"
   },
   "excluded": {
-    "cholesky_lower": "Not selected for the initial explicit-shape integration.",
-    "psd_decompose": "Not selected for the initial explicit-shape integration.",
-    "symmetric_eigen_jacobi": "Not selected for the initial explicit-shape integration.",
     "linalg_status_success": "Native status constant, not a procedure to wrap.",
     "linalg_status_invalid_shape": "Native status constant, not a procedure to wrap.",
     "linalg_status_not_positive_definite": "Native status constant, not a procedure to wrap.",

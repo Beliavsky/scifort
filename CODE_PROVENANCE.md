@@ -1,3 +1,13 @@
+## 2026-11-24 - generated dense decompositions and logical adapters
+
+The integer-output/logical-mapping generator extension, manifests and independent
+fixtures/native-oracle tests are original MIT-licensed interface tooling. Generated
+C adapters call existing SciFort Cholesky, Jacobi and PSD procedures without
+modifying their numerical implementations. Changes to multivariate normal/t and
+matrix-distribution helpers are documentation only. No third-party code,
+numerical algorithm, coefficients or dependency is imported or adapted; existing
+numerical provenance and license notices remain applicable.
+
 ## 2026-11-24 - assumed-shape documentation review
 
 The declaration-comment review and independent tests are original MIT-licensed

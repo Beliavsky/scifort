@@ -4,11 +4,84 @@ module scifort_c_api_generated_linalg
     use, intrinsic :: iso_c_binding, only : c_double, c_int, c_size_t
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : cg_kind => dp
-    use scifort_linalg, only : cg_native_0 => solve_lower
+    use scifort_linalg, only : cg_native_0 => cholesky_lower
+    use scifort_linalg, only : cg_native_1 => psd_decompose
+    use scifort_linalg, only : cg_native_2 => solve_lower
+    use scifort_linalg, only : cg_native_3 => symmetric_eigen_jacobi
     implicit none
     private
+    public :: scifort_cholesky_lower_f64
+    public :: scifort_psd_decompose_f64
     public :: scifort_solve_lower_f64
+    public :: scifort_symmetric_eigen_jacobi_f64
 contains
+
+    subroutine scifort_cholesky_lower_f64( &
+        n, a, l, status) &
+        bind(c, name="scifort_cholesky_lower_f64")
+        !! Compute a lower Cholesky factor.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! system order, >= 1
+        real(c_double), intent(in) :: a(n,n) !! symmetric matrix; lower triangle is authoritative
+        real(c_double), intent(inout) :: l(n,n) !! lower-triangular matrix
+        integer(c_int), intent(out) :: status !! native linalg status; 1 for invalid order
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_0( &
+            a=a, &
+            l=l, &
+            status=status)
+    end subroutine scifort_cholesky_lower_f64
+
+    subroutine scifort_psd_decompose_f64( &
+        n, a, eigenvalues, eigenvectors, rank, log_pdet, cutoff, status, allow_singular) &
+        bind(c, name="scifort_psd_decompose_f64")
+        !! Decompose a positive-semidefinite matrix and report numerical rank.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! system order, >= 1
+        real(c_double), intent(in) :: a(n,n) !! symmetric matrix; lower triangle is authoritative
+        real(c_double), intent(inout) :: eigenvalues(n) !! ascending eigenvalues
+        real(c_double), intent(inout) :: eigenvectors(n,n) !! orthonormal eigenvectors by column
+        integer(c_int), intent(inout) :: rank !! numerical rank
+        real(c_double), intent(inout) :: log_pdet !! logarithm of pseudo-determinant
+        real(c_double), intent(inout) :: cutoff !! numerical rank cutoff
+        integer(c_int), intent(out) :: status !! native linalg status; 1 for invalid order
+        integer(c_int), value, intent(in) :: allow_singular !! 0 reject singular matrices; 1 permit singular matrices
+        logical :: cg_logical_allow_singular
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (allow_singular /= 0_c_int .and. &
+                allow_singular /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        cg_logical_allow_singular=(allow_singular == 1_c_int)
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_1( &
+            a=a, &
+            eigenvalues=eigenvalues, &
+            eigenvectors=eigenvectors, &
+            rank=rank, &
+            log_pdet=log_pdet, &
+            cutoff=cutoff, &
+            status=status, &
+            allow_singular=cg_logical_allow_singular)
+    end subroutine scifort_psd_decompose_f64
 
     subroutine scifort_solve_lower_f64( &
         n, l, b, x, status) &
@@ -30,11 +103,38 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_0( &
+        call cg_native_2( &
             l=l, &
             b=b, &
             x=x, &
             status=status)
     end subroutine scifort_solve_lower_f64
+
+    subroutine scifort_symmetric_eigen_jacobi_f64( &
+        n, a, eigenvalues, eigenvectors, status) &
+        bind(c, name="scifort_symmetric_eigen_jacobi_f64")
+        !! Compute symmetric eigenvalues and eigenvectors.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! system order, >= 1
+        real(c_double), intent(in) :: a(n,n) !! symmetric matrix; lower triangle is authoritative
+        real(c_double), intent(inout) :: eigenvalues(n) !! ascending eigenvalues
+        real(c_double), intent(inout) :: eigenvectors(n,n) !! orthonormal eigenvectors by column
+        integer(c_int), intent(out) :: status !! native linalg status; 1 for invalid order
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_3( &
+            a=a, &
+            eigenvalues=eigenvalues, &
+            eigenvectors=eigenvectors, &
+            status=status)
+    end subroutine scifort_symmetric_eigen_jacobi_f64
 
 end module scifort_c_api_generated_linalg

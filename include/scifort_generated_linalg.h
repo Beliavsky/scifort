@@ -16,12 +16,39 @@ extern "C" {
  * Invalid individual values follow the native function's behavior.
  * The status pointer must always be valid. */
 
+/* Compute a lower Cholesky factor.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_cholesky_lower_f64(int arg_n, const double * arg_a, double * arg_l, int *arg_status);
+
+/* Decompose a positive-semidefinite matrix and report numerical rank.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * allow_singular: false=0, true=1; required, no default.
+ * Other flag values return invalid status with all outputs unchanged.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_psd_decompose_f64(int arg_n, const double * arg_a, double * arg_eigenvalues, double * arg_eigenvectors, int * arg_rank, double * arg_log_pdet, double * arg_cutoff, int *arg_status, int arg_allow_singular);
+
 /* Solve a lower-triangular real linear system.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
  * Invalid extents return status 1 without changing output.
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_solve_lower_f64(int arg_n, const double * arg_l, const double * arg_b, double * arg_x, int *arg_status);
+
+/* Compute symmetric eigenvalues and eigenvectors.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_symmetric_eigen_jacobi_f64(int arg_n, const double * arg_a, double * arg_eigenvalues, double * arg_eigenvectors, int *arg_status);
 
 #ifdef __cplusplus
 }

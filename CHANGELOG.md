@@ -1,3 +1,12 @@
+## 2026-11-24 - dense decomposition C adapters and multivariate shape documentation
+
+- Add explicit-shape Cholesky, symmetric eigenpair and PSD decomposition C
+  adapters, preserving native status and failure-output semantics.
+- Generate scalar integer outputs and explicitly mapped scalar logical inputs;
+  PSD requires C allow_singular=0/1 and rejects other flags without touching outputs.
+- Document every assumed-shape dummy in multivariate normal, multivariate t and
+  shared matrix-distribution helpers, including optional and empty-batch behavior.
+
 ## 2026-11-24 - native shape documentation review
 
 - Document the native lower-triangular solver's required array shapes, dimension
