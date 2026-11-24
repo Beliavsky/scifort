@@ -1,3 +1,15 @@
+## 2026-11-24 - native shape documentation review
+
+- Document the native lower-triangular solver's required array shapes, dimension
+  definition and minimum order next to its assumed-shape declarations.
+- Review native trailing shape comments against explicit-shape adapter policies;
+  record issues in coverage and print advisories during generation/checking.
+- Document the contributor workflow without inferring shapes from executable
+  code or rewriting native comments automatically.
+- Apply the shape-documentation rule to all constrained assumed-shape procedures,
+  public and private, independently of C wrappers. Complete the native linalg
+  module's Cholesky, Jacobi, PSD and eigenpair-sorting shape documentation.
+
 ## 2026-11-24 - broadcasting across configured distribution families
 
 - Add 72 elementwise C symbols for exponential, logistic, Laplace, Cauchy,

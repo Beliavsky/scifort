@@ -119,6 +119,14 @@ Never trade away correctness or provenance merely to add more functions.
   `real(dp), intent(in) :: scale !! standard deviation, > 0 (default 1)`.
   State what the argument means for that procedure, with its valid range,
   default, or units where they apply; do not restate the type or the name.
+  For every procedure with constrained assumed-shape array arguments, document
+  each array's required shape in that trailing comment, for example
+  `!! shape (n,n); lower-triangular matrix`. This applies to public and private
+  procedures, whether or not a C wrapper exists or is planned. Define dimension
+  names, relationships such as `n = size(b)`, minimum sizes, permitted empty
+  extents, and any capacity inequalities in the procedure documentation. Do not
+  invent restrictions for arrays whose lengths are unrestricted. When generating
+  a wrapper, also review these requirements against its configuration.
 - Use `newunit=` for file I/O and `i0` for unrestricted integer output.
 - Put one statement on each line.
 - Keep lines at or below 100 columns when practical and never exceed the

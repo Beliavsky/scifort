@@ -256,6 +256,7 @@ def main():
     args = parser.parse_args()
     try:
         outputs = artifacts(args.config, args.root.resolve(), check=args.check)
+        generate.print_documentation_reviews(outputs)
         if args.check:
             stale = [str(p) for p, text in outputs.items() if not p.exists() or p.read_text(encoding='utf-8') != text]
             if stale:

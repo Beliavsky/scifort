@@ -194,7 +194,7 @@ def generate(config, root):
                     raise ValueError(f"duplicate C symbol: {symbol}")
                 symbols.add(symbol)
         entries.append((name, args, optional, policy))
-    array_entries = explicit_arrays.prepare(config, api, identifier)
+    array_entries = explicit_arrays.prepare(config, api, identifier, source.read_text(encoding="utf-8").splitlines())
     for entry in array_entries:
         symbol = entry["policy"]["symbol"]
         if symbol in symbols:
@@ -398,6 +398,22 @@ def collect(config_path, root, batch=False):
     return artifacts
 
 
+def print_documentation_reviews(artifacts):
+    """Surface advisory native shape-documentation issues without rewriting source."""
+    for path, content in artifacts.items():
+        if path.suffix != '.json':
+            continue
+        report = json.loads(content)
+        if not isinstance(report, dict):
+            continue
+        for row in report.get('procedures', []):
+            for issue in row.get('native_shape_documentation_review', []):
+                shape = '(' + ','.join(issue['required_shape']) + ')'
+                print(f"cabi_generator documentation review: {report['source']}:"
+                      f"{row['procedure']}:{issue['argument']}: expected shape {shape}; "
+                      f"{issue['reason']}", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
@@ -408,6 +424,7 @@ def main():
     args = parser.parse_args()
     try:
         artifacts = collect(args.config, args.root.resolve(), args.batch)
+        print_documentation_reviews(artifacts)
         if args.check:
             stale = [str(path) for path, value in artifacts.items()
                      if not path.exists() or path.read_text(encoding="utf-8") != value]

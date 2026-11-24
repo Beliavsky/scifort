@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: MIT
 """Validated explicit-shape adapters for native assumed-shape subroutines."""
+import re
+
 from fparser.two import Fortran2003 as F
 
 
-def prepare(config, api, identifier):
+def prepare(config, api, identifier, source_lines):
     entries = []
     for name, policy in sorted(config.get("subroutines", {}).items()):
         identifier(name)
@@ -41,12 +43,14 @@ def prepare(config, api, identifier):
             raise ValueError(f"{name}: description must be one nonempty ASCII line")
         spec = next(n for n in node.content if isinstance(n, F.Specification_Part))
         declared = {}
+        declarations = {}
         for decl in spec.content:
             if isinstance(decl, F.Type_Declaration_Stmt):
                 dtype, attributes, entities = decl.items
                 attrs = {str(a).lower() for a in attributes.items} if attributes else set()
                 for entity in entities.items:
                     declared[str(entity.items[0]).lower()] = (dtype, attrs, entity)
+                    declarations[str(entity.items[0]).lower()] = decl
         metadata = {}
         status = policy["status_argument"]
         if status not in args:
@@ -90,7 +94,22 @@ def prepare(config, api, identifier):
             doc = config["argument_docs"].get(arg)
             if not isinstance(doc, str) or not doc or not doc.isascii() or "\n" in doc:
                 raise ValueError(f"{name}: argument_docs needs one ASCII line for {arg}")
-        entries.append(dict(name=name, policy=policy, args=args, metadata=metadata, dimensions=dimensions))
+        review = []
+        for arg, expected in shapes.items():
+            declaration = declarations[arg]
+            start, end = declaration.item.span
+            # Read only comments on this AST-identified declaration, never executable code.
+            comments = [line.split('!!', 1)[1].strip() for line in source_lines[start-1:end]
+                        if '!!' in line]
+            match = re.match(r"(?:shape\s*)?\(\s*([a-z]\w*(?:\s*,\s*[a-z]\w*)*)\s*\)(?:\s|[;:]|$)",
+                             ' '.join(comments), re.I)
+            documented = [v.strip().lower() for v in match[1].split(',')] if match else None
+            if documented != expected:
+                review.append(dict(argument=arg, required_shape=expected, documented_shape=documented,
+                                   reason='missing or unsupported trailing shape comment' if documented is None
+                                   else 'documented shape differs from wrapper policy'))
+        entries.append(dict(name=name, policy=policy, args=args, metadata=metadata,
+                            dimensions=dimensions, documentation_review=review))
     return entries
 
 
@@ -139,5 +158,6 @@ def emit(entry, index, config):
               f"void {symbol}(" + ", ".join(cargs) + ");", ""]
     record = dict(procedure=name, state="generated", symbols=[symbol], interface="explicit_shape_subroutine",
                   dimensions=dimensions, dimension_order=list(dimensions), shapes=shapes, status_argument=status,
-                  optional_promoted_to_required=[], arguments=args)
+                  optional_promoted_to_required=[], arguments=args,
+                  native_shape_documentation_review=entry["documentation_review"])
     return lines, header, record

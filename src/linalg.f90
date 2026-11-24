@@ -27,8 +27,9 @@ module scifort_linalg
 contains
 
     pure subroutine cholesky_lower(a, l, status)
-        real(dp), intent(in) :: a(:, :) !! square symmetric matrix; only the lower triangle is read
-        real(dp), intent(out) :: l(:, :) !! lower Cholesky factor, A = L L^T
+        !! Compute a lower Cholesky factor; n = size(a,1), n >= 1.
+        real(dp), intent(in) :: a(:, :) !! shape (n,n); symmetric matrix; only the lower triangle is read
+        real(dp), intent(out) :: l(:, :) !! shape (n,n); lower Cholesky factor, A = L L^T
         integer, intent(out) :: status !! zero on success; nonzero for invalid/non-SPD input
 
         integer :: i
@@ -71,9 +72,10 @@ contains
     end subroutine cholesky_lower
 
     pure subroutine solve_lower(l, b, x, status)
-        real(dp), intent(in) :: l(:, :) !! nonsingular lower-triangular coefficient matrix
-        real(dp), intent(in) :: b(:) !! right-hand side vector
-        real(dp), intent(out) :: x(:) !! solution of L x = b
+        !! Solve L*x = b by forward substitution; n = size(b), n >= 1.
+        real(dp), intent(in) :: l(:, :) !! shape (n,n); nonsingular lower-triangular coefficient matrix
+        real(dp), intent(in) :: b(:) !! shape (n); right-hand side vector
+        real(dp), intent(out) :: x(:) !! shape (n); solution of L*x = b
         integer, intent(out) :: status !! zero on success; nonzero for invalid/singular input
 
         integer :: i
@@ -100,9 +102,10 @@ contains
     end subroutine solve_lower
 
     pure subroutine symmetric_eigen_jacobi(a, eigenvalues, eigenvectors, status)
-        real(dp), intent(in) :: a(:, :) !! square symmetric matrix; only the lower triangle is read
-        real(dp), intent(out) :: eigenvalues(:) !! eigenvalues in ascending order
-        real(dp), intent(out) :: eigenvectors(:, :) !! corresponding orthonormal eigenvectors by column
+        !! Compute symmetric eigenpairs; n = size(a,1), n >= 1.
+        real(dp), intent(in) :: a(:, :) !! shape (n,n); symmetric matrix; only the lower triangle is read
+        real(dp), intent(out) :: eigenvalues(:) !! shape (n); eigenvalues in ascending order
+        real(dp), intent(out) :: eigenvectors(:, :) !! shape (n,n); corresponding orthonormal eigenvectors by column
         integer, intent(out) :: status !! zero on convergence; nonzero otherwise
 
         integer, parameter :: max_sweeps = 100
@@ -220,9 +223,11 @@ contains
 
     pure subroutine psd_decompose(a, eigenvalues, eigenvectors, rank, log_pdet, cutoff, &
             status, allow_singular)
-        real(dp), intent(in) :: a(:, :) !! symmetric covariance-like matrix; lower triangle is authoritative
-        real(dp), intent(out) :: eigenvalues(:) !! ascending eigenvalues
-        real(dp), intent(out) :: eigenvectors(:, :) !! orthonormal eigenvectors by column
+        !! Compute PSD eigenpairs, numerical rank and log pseudo-determinant.
+        !! n = size(a,1), n >= 1; array extents must match as documented below.
+        real(dp), intent(in) :: a(:, :) !! shape (n,n); symmetric covariance-like matrix; lower triangle is authoritative
+        real(dp), intent(out) :: eigenvalues(:) !! shape (n); ascending eigenvalues
+        real(dp), intent(out) :: eigenvectors(:, :) !! shape (n,n); orthonormal eigenvectors by column
         integer, intent(out) :: rank !! numerical rank using SciPy-compatible binary64 cutoff
         real(dp), intent(out) :: log_pdet !! logarithm of the pseudo-determinant
         real(dp), intent(out) :: cutoff !! eigenvalue magnitude cutoff for numerical rank
@@ -268,8 +273,11 @@ contains
     end subroutine psd_decompose
 
     pure subroutine sort_eigenpairs(eigenvalues, eigenvectors)
-        real(dp), intent(inout) :: eigenvalues(:) !! values sorted in ascending order in place
-        real(dp), intent(inout) :: eigenvectors(:, :) !! columns permuted with eigenvalues
+        !! Sort eigenvalues and permute the first n eigenvector columns together.
+        !! n = size(eigenvalues), m = size(eigenvectors,1), k = size(eigenvectors,2).
+        !! n and m may be zero; k >= n; any columns beyond n are unchanged.
+        real(dp), intent(inout) :: eigenvalues(:) !! shape (n); values sorted in ascending order in place
+        real(dp), intent(inout) :: eigenvectors(:, :) !! shape (m,k), k >= n; first n columns permuted with eigenvalues
 
         integer :: i
         integer :: j

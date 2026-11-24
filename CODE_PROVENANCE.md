@@ -1,3 +1,11 @@
+## 2026-11-24 - assumed-shape documentation review
+
+The declaration-comment review and independent tests are original MIT-licensed
+interface tooling. They compare source comments on AST-identified declarations
+against reviewed wrapper policies, using the existing unmodified fparser parser.
+Native linalg changes are documentation only. No numerical implementation,
+algorithm, dependency or third-party code is imported or adapted.
+
 ## 2026-11-24 - elementwise interface coverage for eleven families
 
 The additional nine distribution manifests, generated adapters, Python metadata

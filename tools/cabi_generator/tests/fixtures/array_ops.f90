@@ -6,11 +6,11 @@ module example_arrays
     public :: row_sums
 contains
     pure subroutine row_sums(a, gain, y, status)
-        !! Scale the row sums of a rectangular matrix.
+        !! Scale row sums; nrows = size(a,1), ncols = size(a,2), both >= 1 for the adapter.
         implicit none
-        real(c_double), intent(in) :: a(:,:) !! matrix in column-major storage
+        real(c_double), intent(in) :: a(:,:) !! shape (nrows,ncols); matrix in column-major storage
         real(c_double), intent(in) :: gain !! multiplier for each row sum
-        real(c_double), intent(out) :: y(:) !! one scaled sum per row
+        real(c_double), intent(out) :: y(:) !! shape (nrows); one scaled sum per row
         integer, intent(out) :: status !! 0 success; 1 incompatible shapes
         if (size(y) /= size(a,1)) then
             status=1

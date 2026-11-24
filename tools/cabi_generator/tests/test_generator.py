@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 """Project-independent generator and compiled arithmetic ABI checks."""
 import copy
+from contextlib import redirect_stderr
+import io
 import ctypes as C
 import json
 import math
@@ -235,6 +237,53 @@ contains
         # JSON object key reordering must never change the C argument order.
         reordered = json.loads(json.dumps(array_fixture_config(), sort_keys=True))
         self.assertEqual(artifacts, generator.generate(reordered, self.root))
+
+    def test_native_array_shape_comments_are_reviewed_without_rewriting(self):
+        source = self.root / 'array_ops.f90'
+        shutil.copyfile(HERE / 'fixtures/array_ops.f90', source)
+        config = array_fixture_config()
+        original = source.read_text()
+        def review():
+            artifacts = generator.generate(config, self.root)
+            report = json.loads(artifacts[self.root / 'array_coverage.json'])
+            return artifacts, report['procedures'][0]['native_shape_documentation_review']
+        artifacts, issues = review()
+        self.assertEqual(issues, [])
+        # Bare tuples, uppercase names, spaces and a continued declaration are accepted.
+        source.write_text(original.replace(':: a(:,:) !! shape (nrows,ncols);',
+            ':: a( &\n            :,:) !! ( NROWS, NCOLS );'))
+        self.assertEqual(review()[1], [])
+        source.write_text(original.replace('shape (nrows,ncols); ', ''))
+        before = source.read_bytes()
+        artifacts, issues = review()
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0]['argument'], 'a')
+        self.assertIsNone(issues[0]['documented_shape'])
+        self.assertEqual(issues[0]['required_shape'], ['nrows', 'ncols'])
+        self.assertEqual(source.read_bytes(), before)
+        output = io.StringIO()
+        with redirect_stderr(output):
+            generator.print_documentation_reviews(artifacts)
+        self.assertIn('array_ops.f90:row_sums:a: expected shape (nrows,ncols)', output.getvalue())
+        source.write_text(original.replace('shape (nrows,ncols)', 'shape (ncols,nrows)'))
+        issues = review()[1]
+        self.assertEqual(issues[0]['documented_shape'], ['ncols', 'nrows'])
+        self.assertIn('differs', issues[0]['reason'])
+        source.write_text(original.replace('shape (nrows)', 'shape (nrows,ncols)'))
+        self.assertEqual(review()[1][0]['argument'], 'y')
+
+    def test_missing_shape_comments_are_advisory_in_cli_and_check(self):
+        source = self.root / 'array_ops.f90'
+        shutil.copyfile(HERE / 'fixtures/array_ops.f90', source)
+        source.write_text(source.read_text().replace('shape (nrows,ncols); ', ''))
+        config = self.root / 'array.json'
+        config.write_text(json.dumps(array_fixture_config()))
+        command = [sys.executable, HERE.parent / 'generate.py', config, '--root', self.root]
+        generated = run(command, self.root)
+        self.assertIn('documentation review', generated.stderr)
+        checked = run([*command, '--check'], self.root)
+        self.assertIn('documentation review', checked.stderr)
+        self.assertIn('missing or unsupported', checked.stderr)
 
     def test_invalid_array_shape_and_dimension_policies_are_rejected(self):
         shutil.copyfile(HERE / "fixtures/array_ops.f90", self.root / "array_ops.f90")

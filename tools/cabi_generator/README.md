@@ -133,6 +133,41 @@ Compile-time checks require the native real kind to equal `c_double` and the
 native default integer kind to equal `c_int`. Arrays are passed directly to the
 native procedure, without conversion buffers or wrapper allocation.
 
+Required shapes belong in the documentation of every constrained assumed-shape
+procedure, public or private, independently of C wrapper selection. Define extent
+names, minimum sizes, allowed empty extents and capacity inequalities, without
+inventing restrictions for unconstrained arrays. Before generating an adapter,
+review these native requirements against the manifest. For example:
+
+```fortran
+    !! Solve L*x = b; n = size(b), n >= 1.
+    real(dp), intent(in) :: l(:,:) !! shape (n,n); lower-triangular matrix
+    real(dp), intent(in) :: b(:) !! shape (n); right-hand side
+    real(dp), intent(out) :: x(:) !! shape (n); solution
+```
+
+Define dimension names and their minimum sizes in the procedure documentation,
+then record matching dimensions/shapes in the manifest. The generator compares
+trailing FORD comments against the reviewed manifest, accepting `shape (n,n)` or
+`(n,n)` at the beginning of a comment (whitespace and case are ignored). It reads
+only declarations identified by the Fortran AST, including continued declarations.
+
+Missing, unsupported or mismatched tuples appear in the coverage record's
+`native_shape_documentation_review` list. Generation and `--check`, including the
+unified pipeline, print a `documentation review` advisory to stderr. An empty list
+means the documented tuples match the configuration. Advisories do not fail a
+build or rewrite native source; resolve them through human review. A successful
+`--check` verifies artifact freshness and can still print documentation advisories.
+
+The generator audits only procedures selected in its adapter manifests; it does
+not audit the documentation of the entire native library. The contributor rule
+also applies to procedures outside those manifests.
+
+This is a deliberately narrow documentation check, not semantic proof: it does
+not infer shapes from executable code, validate prose dimension definitions or
+minimum sizes, or understand alternative mathematical notation. More complicated
+relationships and any intentional dimension renaming need manual review.
+
 All arrays use contiguous column-major storage. Callers must provide valid
 non-NULL buffers, including for permitted empty arrays, and adequate storage for
 every declared extent; these adapters cannot check buffer addresses or capacities.
@@ -365,3 +400,19 @@ All-scalar and uniform-parameter calls retain their existing paths and contracts
 All eleven reviewed distribution configurations provide this pattern for all eight methods.
 Regenerate with the unified pipeline so the development build hashes and combined
 coverage also include the new symbols.
+
+## Native shape-documentation review validation (2026-11-24)
+
+The following CMD command passed all 43 focused generator/workflow tests:
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+```
+
+New tests cover matching/missing/mismatched tuples, rank/order differences,
+continued declarations, bare tuples, case/whitespace, coverage records, CLI
+advisories during generation and `--check`, and unchanged native source content.
+The existing independent ABI fixtures also compiled and ran with GNU Fortran,
+GCC and G++ 17.0.0 20260510 (experimental) on Windows under runtime checks and
+`-O3`, using the flags documented above. The native solver and fixture changes
+are comments only; no numerical suite was rerun. Other platforms remain unverified.

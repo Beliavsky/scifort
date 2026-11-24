@@ -41,6 +41,14 @@ leave output unchanged. Otherwise, native status codes apply: 0 success and
 5 singular/nonfinite diagonal, with the native routine's partial-output behavior.
 No allocation, buffer copying, or pointer conversion occurs in this adapter.
 
+The native `solve_lower` declaration documents shapes `(n,n)`, `(n)` and `(n)`,
+with `n = size(b), n >= 1` in its procedure description. These match the reviewed
+manifest. The [coverage record](linalg_coverage.json) has an empty
+`native_shape_documentation_review` list. Missing or mismatched native shape
+comments produce an advisory during generation/checking; native code is never
+rewritten automatically. See the [documentation convention](../../tools/cabi_generator/README.md).
+
+
 Schema-version-1 elemental manifests retain their pointer-based default. New
 version-2 elemental manifests default to explicit-shape bulk wrappers. The
 normal manifest pins `array_style: "pointer"` to retain its existing NULL-buffer
