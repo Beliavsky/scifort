@@ -318,3 +318,32 @@ with definitions/minimums matching their manifests. Their generated
 [shape tables](../../docs/linalg_shapes.md) complement the existing
 [matrix-helper tables](../../docs/matrix_helper_shapes.md). The broader native
 documentation audit and automatic FORD/Sphinx integration remain future work.
+
+## Multivariate normal density adapters
+
+[multivariate_normal.json](multivariate_normal.json) selects only PDF and log-PDF
+using the new `array_functions` pattern. Their generated signatures are:
+
+```c
+void scifort_multivariate_normal_pdf_f64(int n, const double *x,
+    const double *mean, const double *cov, int allow_singular,
+    double *value, int *status);
+void scifort_multivariate_normal_logpdf_f64(int n, const double *x,
+    const double *mean, const double *cov, int allow_singular,
+    double *value, int *status);
+```
+
+Inputs have shapes x(n), mean(n), cov(n,n), n >= 1, with contiguous column-major
+storage, valid/aligned/non-NULL/disjoint buffers and output pointers. Every input
+is required; flags are 0 false / 1 true. Invalid dimension/flag returns status 1
+and preserves `value`. Otherwise status is 0 and `value` is the unchanged native
+numerical result, including NaN for invalid covariance/mean or rejected singular
+covariance. The lower covariance triangle is authoritative; all entries must
+still be finite. These call-status codes are not `multivariate_status_*` numerical
+failure codes. There are no null-pointer checks or inferred buffer lengths.
+
+The original assumed-shape functions retain their Fortran optional arguments.
+Their reviewed annotations generate [native shape tables](../../docs/multivariate_normal_shapes.md).
+Python adds zero-mean/identity-covariance defaults through explicit policy and
+returns scalar floats; see the [Python contract](../python/README.md#multivariate-normal-densities).
+CDF, fitting, marginalization and random sampling remain outside this batch.

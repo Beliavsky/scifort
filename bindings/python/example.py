@@ -31,6 +31,9 @@ def main():
     print('SPD solution:', solution.outputs['x'])
     psd = api.linalg.psd_decompose(np.diag([4., 0., 1.]))
     print('PSD status/rank:', psd.status, psd.outputs['rank'])
+    print('multivariate normal PDF:', api.multivariate_normal.pdf([0., 0.]))
+    print('multivariate normal log-PDF:',
+          api.multivariate_normal.logpdf([.5, -.2], cov=[[2., .3], [.3, 1.]]))
 
 
 if __name__ == '__main__':

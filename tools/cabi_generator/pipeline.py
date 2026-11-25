@@ -146,7 +146,7 @@ def coverage(configs, python, root):
                        bulk_generated=bool(entry.get('vector_symbol')))
             if entry.get('elementwise_symbol'):
                 row['elementwise'] = entry['elementwise_symbol']
-        for name, entry in config.get('subroutines', {}).items():
+        for name, entry in dict(config.get('subroutines', {}), **config.get('array_functions', {})).items():
             rows[(module, name)] = dict(module=module, procedure=name, array_adapter=entry['symbol'])
     for group, options in sorted(python['groups'].items()):
         config = json.loads((root/options['manifest']).read_text(encoding='utf-8'))
@@ -160,11 +160,11 @@ def coverage(configs, python, root):
     for group, settings in python.get('array_groups', {}).items():
         for manifest in settings['manifests']:
             native = json.loads((root/manifest).read_text(encoding='utf-8'))
-            for name in native.get('subroutines', {}):
+            for name in dict(native.get('subroutines', {}), **native.get('array_functions', {})):
                 key = (native['module'], name)
                 if key not in rows:
                     raise ValueError(f'Python array manifest must be included in the C batch: {manifest}')
-                rows[key]['python'] = f'{group}.{name}'
+                rows[key]['python'] = f"{group}.{name[len(settings.get('prefix', '')):]}"
     procedures = [rows[k] for k in sorted(rows)]
     counts = dict(exports=len(rows), scalar=sum(bool(r.get('scalar')) for r in procedures),
                   bulk=sum(bool(r.get('bulk')) for r in procedures),

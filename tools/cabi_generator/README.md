@@ -15,6 +15,8 @@ The native real kind and its module are configured; conversion to/from
 Rank-one/rank-two assumed-shape array subroutines can now receive explicit-shape
 `bind(c)` adapters, with a required native integer status output. Their native
 implementations are unchanged; no C implementation or pointer conversion is needed.
+Scalar-result functions with array inputs use the separate `array_functions`
+pattern described below, including explicit promotion of optional real arrays.
 
 The generator uses [fparser 0.2.5](https://pypi.org/project/fparser/0.2.5/)
 to parse Fortran syntax. It does not parse declarations using regular expressions
@@ -137,7 +139,8 @@ intent(in)` arguments to distinct integer `false` and `true` codes. For example,
 by-value C `int` and converts it to a local native logical. Native optional logical
 inputs are supported only with this explicit mapping; their defaults are never
 inferred or applied at the C boundary. Other optional argument types remain
-unsupported. Unrecognized flag values return the configured invalid status
+unsupported for subroutines; `array_functions` has an explicit required-input policy.
+Unrecognized flag values return the configured invalid status
 before touching any output apart from status. All scalar output pointers must be
 valid, non-NULL and disjoint from input and other output storage. No Fortran
 logical representation is exposed through C.
@@ -501,3 +504,38 @@ families. Array adapters use their primary C implementations, with no duplicate
 compatibility adapters. Combined coverage and discovery include the eight Python
 matrix methods. Regenerate/check with the unified workflow so the source plan,
 Python runtime copy and all contract tables stay current.
+
+## Scalar-result functions with array inputs
+
+An optional `array_functions` manifest mapping uses the explicit-array policy
+fields (`symbol`, ordered `dimensions`, `shapes`, `status_argument`,
+`invalid_status`, `description`, optional `logical_inputs` and `shape_contract`)
+plus two required fields: `result_argument` and `optional_policy: "required"`.
+The result/status names are synthetic C output arguments, distinct from all
+native dummy and dimension names. Selected names must be disjoint from
+`functions`, `subroutines` and `excluded`.
+
+This pattern accepts directly defined non-bind(c), non-impure functions with an
+explicit scalar `real(kind)` result declaration and `result(...)`. Native inputs
+must be `intent(in)` real scalars or rank-one/rank-two assumed-shape real arrays,
+or scalar logicals with explicit integer mappings. Optional real/logical inputs
+are promoted to required C inputs. Arrays still require declared shapes; no
+optional-argument omission, result arrays, integer inputs, callbacks, descriptors
+or native algorithm changes are introduced.
+
+The adapter is a `void` C subroutine with ordered dimensions, native inputs,
+scalar result pointer and status pointer. It checks extents/flags before modifying
+the result, calls the native function and sets status 0. A valid call can return
+NaN/infinity: status denotes call validity, not numerical parameter validity.
+All pointer/alignment/column-major/nonoverlap contracts of explicit-array adapters
+apply. See the reviewed [multivariate normal policy](../../bindings/cabi_config/multivariate_normal.json).
+
+Python `array_groups` may specify a `prefix` stripped from native method names;
+default policies remain keyed by full native names. Scalar-result methods return
+Python float and expose no `out` argument. Explicit defaults for optional real
+arrays may be `{"fill": "zeros"}` or `{"fill": "identity"}` (square matrices only).
+They generate `None` defaults and materialize native binary64 arrays after input
+rank/dimension validation. Dimension definitions must use required inputs, never
+a defaulted array. Defaults are configured explicitly, not inferred from source
+comments, procedure names or executable branches. Existing subroutine methods
+retain `ArrayResult(status, outputs)` and their caller-buffer behavior.

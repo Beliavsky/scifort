@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 108 |
+| exports | 121 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 8 |
+| array_adapters | 10 |
 | elementwise | 88 |
-| python | 96 |
+| python | 98 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -97,6 +97,19 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_matrix_distribution_helpers | solve_lower_matrix |  |  | scifort_solve_lower_matrix_f64 |  | linalg.solve_lower_matrix |
 | scifort_matrix_distribution_helpers | solve_spd_matrix |  |  | scifort_solve_spd_matrix_f64 |  | linalg.solve_spd_matrix |
 | scifort_matrix_distribution_helpers | spd_factor |  |  | scifort_spd_factor_f64 |  | linalg.spd_factor |
+| scifort_multivariate_normal | multivariate_normal_cdf |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_entropy |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_fit |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_logcdf |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_logpdf |  |  | scifort_multivariate_normal_logpdf_f64 |  | multivariate_normal.logpdf |
+| scifort_multivariate_normal | multivariate_normal_marginal |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_pdf |  |  | scifort_multivariate_normal_pdf_f64 |  | multivariate_normal.pdf |
+| scifort_multivariate_normal | multivariate_normal_rvs |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_rvs_array |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_status_invalid_parameter |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_status_invalid_shape |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_status_linalg_failure |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_status_success |  |  |  |  |  |
 | scifort_normal | normal_cdf | scifort_normal_cdf_f64 | scifort_normal_cdf_vec_f64 |  | scifort_normal_cdf_elementwise_f64 | normal.cdf |
 | scifort_normal | normal_isf | scifort_normal_isf_f64 | scifort_normal_isf_vec_f64 |  | scifort_normal_isf_elementwise_f64 | normal.isf |
 | scifort_normal | normal_logcdf | scifort_normal_logcdf_f64 | scifort_normal_logcdf_vec_f64 |  | scifort_normal_logcdf_elementwise_f64 | normal.logcdf |

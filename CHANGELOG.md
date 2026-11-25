@@ -1,3 +1,14 @@
+## 2026-11-24 - multivariate normal density interfaces
+
+- Generate explicit-shape C adapters for scalar-result functions with array inputs,
+  required C arguments, separate call status and unchanged native numerical values.
+- Expose multivariate normal PDF/log-PDF in Python, with reviewed zero-mean and
+  identity-covariance defaults and validated vector/matrix inputs.
+- Preserve the final Windows DLL import name while staging shared-library builds,
+  allowing C/Fortran clients to load the development DLL.
+- Add structured native shape contracts and generated documentation for both
+  density functions; numerical implementations and existing symbols are unchanged.
+
 ## 2026-11-24 - Python matrix adapters and linalg shape contracts
 
 - Expose eight existing C matrix adapters through generated `api.linalg` methods,

@@ -113,7 +113,7 @@ def generate(config, root):
     required = {"schema_version", "source", "module", "kind_module", "kind_name",
                 "wrapper_module", "header_guard", "functions", "excluded", "outputs",
                 "argument_docs"}
-    if (not isinstance(config, dict) or set(config) - {"subroutines"} != required
+    if (not isinstance(config, dict) or set(config) - {"subroutines", "array_functions"} != required
             or type(config["schema_version"]) is not int or config["schema_version"] not in (1, 2)):
         raise ValueError(f"schema versions 1/2 require these fields (plus optional subroutines): {sorted(required)}")
     default_array_style = "pointer" if config["schema_version"] == 1 else "explicit"
@@ -138,14 +138,17 @@ def generate(config, root):
         raise ValueError('shape_documentation must name a Markdown (.md) output')
     if len(set(outputs.values())) != len(outputs) or source in outputs.values():
         raise ValueError("output paths must be distinct and must not overwrite the source")
-    if not isinstance(config.get("subroutines", {}), dict):
-        raise ValueError("subroutines must be an object")
+    for key in ('subroutines', 'array_functions'):
+        if not isinstance(config.get(key, {}), dict):
+            raise ValueError(f'{key} must be an object')
     api = public_api(source, config["module"])
     selected, excluded = config["functions"], config["excluded"]
     subroutines = config.get("subroutines", {})
-    if set(selected) & set(subroutines):
+    array_functions = config.get('array_functions', {})
+    if (set(selected) & (set(subroutines) | set(array_functions))
+            or set(subroutines) & set(array_functions)):
         raise ValueError("a procedure cannot be both a function and subroutine policy")
-    covered = set(selected) | set(subroutines)
+    covered = set(selected) | set(subroutines) | set(array_functions)
     if covered & set(excluded):
         raise ValueError("a procedure cannot be both generated and excluded")
     if covered | set(excluded) != set(api):

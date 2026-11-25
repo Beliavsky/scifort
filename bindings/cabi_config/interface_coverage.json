@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 8,
+    "array_adapters": 10,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 108,
-    "python": 96,
+    "exports": 121,
+    "python": 98,
     "scalar": 88
   },
   "procedures": [
@@ -779,6 +779,95 @@
       "module": "scifort_matrix_distribution_helpers",
       "procedure": "spd_factor",
       "python": "linalg.spd_factor"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_cdf",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_entropy",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_fit",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_logcdf",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_multivariate_normal_logpdf_f64",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_logpdf",
+      "python": "multivariate_normal.logpdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_marginal",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_multivariate_normal_pdf_f64",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_pdf",
+      "python": "multivariate_normal.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_normal_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_status_linalg_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_normal",
+      "procedure": "multivariate_status_success",
+      "scalar_generated": false
     },
     {
       "bulk": "scifort_normal_cdf_vec_f64",

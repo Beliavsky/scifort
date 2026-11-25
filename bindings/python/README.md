@@ -3,7 +3,8 @@
 This development interface exposes PDF, log-PDF, CDF, SF, log-CDF, log-SF, PPF,
 and ISF for `normal`, `exponential`, `logistic`, `laplace`, `cauchy`, `weibull`,
 `lognormal`, `gamma`, `beta`, Student `t`, and `chi2`. It uses NumPy arrays and the stable
-binary64 C calling convention. Eight matrix methods are available under `api.linalg`.
+binary64 C calling convention. Eight matrix methods are available under `api.linalg`,
+and multivariate normal PDF/log-PDF under `api.multivariate_normal`.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -155,6 +156,42 @@ buffers are supplied for all zero-size arrays.
 The development library now includes both matrix modules/adapters and their
 module dependencies through its generated build plan. Rebuild the library when
 updating to this Python interface; older development DLLs may lack matrix symbols.
+
+## Multivariate normal densities
+
+```python
+api.multivariate_normal.pdf([0., 0.])
+api.multivariate_normal.logpdf([.5, -.2], mean=[0., 1.], cov=[[2., .3], [.3, 1.]])
+api.multivariate_normal.pdf([1., 0.], cov=[[4., 0.], [0., 0.]], allow_singular=True)
+```
+
+Both methods accept one point `x(n)`, `mean(n)` and `cov(n,n)`, with n >= 1,
+and return a Python float. `mean=None` explicitly supplies a zero vector;
+`cov=None` explicitly supplies an identity matrix. `allow_singular=False` is
+the default and accepts Python/NumPy boolean scalars only. These defaults are
+reviewed Python policy; every input is required at the C boundary.
+
+The matrix input conversion and nonoverlap rules above apply. Point and mean
+must be vectors; covariance must be a square matrix. Scalar covariance, point
+batches and NumPy broadcasting are not supported by these two methods. No `out`
+argument is provided for scalar results. Shape/type/overlap errors raise before C.
+See the [generated native shape tables](../../docs/multivariate_normal_shapes.md).
+
+Numerical behavior follows the existing native procedures. Invalid covariance
+or nonfinite mean returns NaN, as does singular covariance unless
+`allow_singular=True`. A point outside a permitted singular covariance's support
+has PDF 0 and log-PDF negative infinity. The lower covariance triangle is
+authoritative, but **all entries must be finite**, including the upper triangle.
+Native NaN/infinity handling and numerical limitations are retained; this wrapper
+does not imply complete SciPy edge-case parity. Numerical NaN does not raise.
+
+The C symbols `scifort_multivariate_normal_pdf_f64` and
+`scifort_multivariate_normal_logpdf_f64` take dimension, point, mean, column-major
+covariance, integer singularity flag, scalar output pointer and status pointer.
+Status 1 rejects n < 1 or a flag other than 0/1, preserving the scalar output.
+Status 0 means the call was valid, even when its numerical result is NaN.
+All buffers/pointers must be valid, non-NULL, aligned and nonoverlapping.
+Rebuild the development library to obtain the two new symbols.
 
 ## Generation and shared-library boundary
 
@@ -430,3 +467,46 @@ configuration. Other platforms and compilers remain unverified.
 The read-only pipeline check passed for all 80 artifacts. Changed local Markdown
 links, UTF-8/BOM, Fortran ASCII/line limits and whitespace checks passed. The
 native `linalg.f90` diff contains only comments. Timing baselines were not refreshed.
+
+## Multivariate normal density interface validation (2026-11-24)
+
+Validation commands (CMD):
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+python bindings/python/example.py
+```
+
+All 78 focused tests passed: 56 generator/workflow tests, 20 Python integration
+tests and two benchmark harness tests. New independent fixtures cover function
+result/status emission, required optional arguments, invalid policy rejection,
+Python array defaults, method prefixes, build-plan/coverage integration, compiled
+C11 clients and C++17 header checks. The five multivariate integration tests cover
+reference values, default dimensions, singular support, invalid/nonfinite inputs,
+layout conversions, shape/alias rejection, C output preservation and direct
+native Fortran/C agreement. Numerical NaN/infinity values are retained.
+
+Tests ran on Windows with GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental),
+Python 3.13.3, NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. The development library
+was exercised in checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`)
+builds, also using `-std=f2018 -fimplicit-none -Werror=implicit-interface`.
+C clients use `-std=c11 -Wall -Wextra -Werror`; headers also pass C++17 checks.
+The example ran successfully. Other platforms/compilers remain unverified.
+
+The development DLL now links with its final basename inside a temporary staging
+directory before atomic publication. This preserves its embedded Windows import
+name for C/Fortran clients; old cached builds are invalidated. Both client types
+linked and ran successfully against the rebuilt DLLs.
+
+Native numerical implementations and global FPM configuration are unchanged;
+`multivariate_normal.f90` changes contain only documentation. Validation targets
+the affected optional generator/build/runtime paths, so the full FPM suite was
+not rerun. Timing baselines were not refreshed.
+
+The read-only pipeline check passed for all 84 artifacts. Shape-policy agreement,
+local Markdown links, encoding/BOM, Fortran ASCII/line limits and whitespace
+checks passed. Reviewed coverage now includes 98 Python methods and ten C array
+adapters; it remains a reviewed subset, not whole-project coverage.

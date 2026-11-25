@@ -1066,6 +1066,62 @@ class Linalg(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('spd_factor', {'a': a}, out)
 
+class Multivariate_normal(ArrayGroup):
+    _specs = {'logpdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
+                'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
+                'definitions': {'n': {'argument': 'x', 'axis': None}},
+                'dimensions': ['n'],
+                'inputs': ['x', 'mean', 'cov', 'allow_singular'],
+                'logical_inputs': {'allow_singular': {'false': 0, 'true': 1}},
+                'metadata': {'allow_singular': {'category': 'logical',
+                                                'intent': 'in',
+                                                'optional': True,
+                                                'rank': 0},
+                             'cov': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 2},
+                             'mean': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'n': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'cov': ['n', 'n'], 'mean': ['n'], 'x': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_multivariate_normal_logpdf_f64'},
+     'pdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
+             'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
+             'definitions': {'n': {'argument': 'x', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['x', 'mean', 'cov', 'allow_singular'],
+             'logical_inputs': {'allow_singular': {'false': 0, 'true': 1}},
+             'metadata': {'allow_singular': {'category': 'logical',
+                                             'intent': 'in',
+                                             'optional': True,
+                                             'rank': 0},
+                          'cov': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 2},
+                          'mean': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+             'minimums': {'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'cov': ['n', 'n'], 'mean': ['n'], 'x': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_multivariate_normal_pdf_f64'}}
+
+    def logpdf(self, x, mean=None, cov=None, allow_singular=False):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'mean': mean, 'cov': cov, 'allow_singular': allow_singular}, None)
+
+    def pdf(self, x, mean=None, cov=None, allow_singular=False):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'mean': mean, 'cov': cov, 'allow_singular': allow_singular}, None)
+
 class API(Library):
     """Explicit shared-library owner exposing the configured distribution and array groups."""
     def __init__(self, path, *, dll_directories=()):
@@ -1082,5 +1138,6 @@ class API(Library):
         self.t = T(self._library)
         self.weibull = Weibull(self._library)
         self.linalg = Linalg(self._library)
+        self.multivariate_normal = Multivariate_normal(self._library)
 
 __all__ = ["API"]

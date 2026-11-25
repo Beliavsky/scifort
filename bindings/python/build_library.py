@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN_PATH = Path(__file__).with_name('build_sources.json')
@@ -33,6 +34,7 @@ def build(compiler='gfortran', checked=False, directory=None):
     flags = ['-O0', '-g', '-fcheck=all', '-fbacktrace'] if checked else ['-O3']
     flags += ['-std=f2018', '-fimplicit-none', '-Werror=implicit-interface', '-shared', '-fPIC']
     digest = hashlib.sha256((compiler + version + repr(flags)).encode())
+    digest.update(b'link-with-final-library-basename-v2')
     digest.update(PLAN_PATH.read_bytes())
     for source in SOURCES:
         path = ROOT / source
@@ -50,16 +52,14 @@ def build(compiler='gfortran', checked=False, directory=None):
                     dll_directories=[str(Path(compiler).parent)] if os.name == 'nt' else [])
     cache = directory / 'build.json'
     if not library.exists() or not cache.exists() or json.loads(cache.read_text()) != metadata:
-        # Compile/link to a temporary name so failed builds cannot leave a valid-looking cache.
-        temporary = library.with_name('pending' + suffix)
-        try:
+        # Keep the final basename in the DLL import table while publishing atomically.
+        with tempfile.TemporaryDirectory(prefix='link-', dir=directory) as staging:
+            temporary = Path(staging) / library.name
             subprocess.run([compiler, *flags, '-J', str(directory), '-I', str(directory),
                             *[str(ROOT / p) for p in SOURCES], '-o', str(temporary)],
                            cwd=directory, check=True)
             temporary.replace(library)
             cache.write_text(json.dumps(metadata, indent=2)+'\n', encoding='utf-8')
-        finally:
-            temporary.unlink(missing_ok=True)
     return library, metadata
 
 

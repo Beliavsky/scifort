@@ -67,3 +67,8 @@ reviewed wrapper dimensions and rendered as Markdown tables.
 The Python owner now exposes all eight reviewed matrix adapters under `api.linalg`.
 Their [Python interface contract](python/README.md) documents exact shapes,
 Fortran storage, named outputs, native statuses and caller-provided buffers.
+
+Multivariate normal PDF/log-PDF are available through generated explicit-shape C
+adapters and `api.multivariate_normal.pdf/logpdf` in Python. See the
+[density input/default/error contract](python/README.md#multivariate-normal-densities)
+and [native shape tables](../docs/multivariate_normal_shapes.md).

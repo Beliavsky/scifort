@@ -154,6 +154,8 @@ class ArrayGroup:
         originals, values = {}, {}
         for arg in spec['inputs']:
             info, value = spec['metadata'][arg], inputs[arg]
+            if value is None and arg in spec.get('array_defaults', {}):
+                continue
             if info['category'] == 'logical':
                 if not isinstance(value, (bool, np.bool_)):
                     raise TypeError(f'{arg} must be a boolean')
@@ -165,10 +167,6 @@ class ArrayGroup:
             originals[arg] = array
             if not info['rank']:
                 values[arg] = float(array)
-        input_arrays = [a for arg, a in originals.items() if spec['metadata'][arg]['rank']]
-        for index, array in enumerate(input_arrays):
-            if any(np.may_share_memory(array, other) for other in input_arrays[:index]):
-                raise ValueError('input buffers must not overlap')
         dimensions = {}
         for dim in spec['dimensions']:
             definition = spec['definitions'][dim]
@@ -179,6 +177,14 @@ class ArrayGroup:
                 raise ValueError(f'{dim} is outside the supported C integer extent range')
             dimensions[dim] = length
         shapes = {a: tuple(dimensions[d] for d in dims) for a, dims in spec['shapes'].items()}
+        for arg, fill in spec.get('array_defaults', {}).items():
+            if inputs[arg] is None:
+                originals[arg] = (np.eye(shapes[arg][0], dtype=np.float64, order='F') if fill == 'identity'
+                                  else np.zeros(shapes[arg], dtype=np.float64, order='F'))
+        input_arrays = [a for arg, a in originals.items() if spec['metadata'][arg]['rank']]
+        for index, array in enumerate(input_arrays):
+            if any(np.may_share_memory(array, other) for other in input_arrays[:index]):
+                raise ValueError('input buffers must not overlap')
         for arg, original in originals.items():
             if arg in shapes and original.shape != shapes[arg]:
                 raise ValueError(f'{arg} must have shape {shapes[arg]}')
@@ -226,6 +232,10 @@ class ArrayGroup:
                               *(values[a] for a in spec['arguments']))
         for arg, scalar in scalars.items():
             outputs[arg] = scalar.value
+        if 'result_argument' in spec:
+            if status.value:
+                raise RuntimeError(f'C ABI returned unexpected status {status.value}')
+            return outputs[spec['result_argument']]
         return ArrayResult(status.value, outputs)
 
 

@@ -145,8 +145,9 @@ def configured(root, batch=None, python=None):
                 row['bulk'] = policy.get('vector_symbol')
                 if policy.get('elementwise_symbol'):
                     row['elementwise'] = policy['elementwise_symbol']
-            for name, policy in config.get('subroutines', {}).items():
-                native.setdefault((config['module'], name), {})['array_subroutine'] = policy['symbol']
+            for name, policy in dict(config.get('subroutines', {}), **config.get('array_functions', {})).items():
+                pattern = 'array_function' if name in config.get('array_functions', {}) else 'array_subroutine'
+                native.setdefault((config['module'], name), {})[pattern] = policy['symbol']
     if python:
         generate_python.artifacts(python, root)  # Validate signatures and explicit defaults without writing.
         policy = json.loads(python.read_text(encoding='utf-8'))
@@ -161,8 +162,8 @@ def configured(root, batch=None, python=None):
         for group, settings in policy.get('array_groups', {}).items():
             for manifest in settings['manifests']:
                 config = json.loads((root/manifest).read_text(encoding='utf-8'))
-                for name in config.get('subroutines', {}):
-                    native.setdefault((config['module'], name), {})['python'] = f'{group}.{name}'
+                for name in dict(config.get('subroutines', {}), **config.get('array_functions', {})):
+                    native.setdefault((config['module'], name), {})['python'] = f"{group}.{name[len(settings.get('prefix', '')):]}"
     return native
 
 
@@ -229,7 +230,8 @@ def inventory(paths, root, kind='dp', abi_paths=(), policies=None, max_source_by
                               configured_scalar=sum(bool(p['configured'].get('scalar')) for p in rows),
                               configured_bulk=sum(bool(p['configured'].get('bulk')) for p in rows),
                               python_methods=sum(bool(p['configured'].get('python')) for p in rows),
-                              configured_array_subroutines=sum(bool(p['configured'].get('array_subroutine')) for p in rows)))
+                              configured_array_subroutines=sum(bool(p['configured'].get('array_subroutine')) for p in rows),
+                              configured_array_functions=sum(bool(p['configured'].get('array_function')) for p in rows)))
 
 
 def draft(module, kind, kind_module, symbol_prefix):

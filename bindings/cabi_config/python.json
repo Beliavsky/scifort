@@ -156,6 +156,32 @@
           "allow_singular": true
         }
       }
+    },
+    "multivariate_normal": {
+      "manifests": [
+        "bindings/cabi_config/multivariate_normal.json"
+      ],
+      "prefix": "multivariate_normal_",
+      "defaults": {
+        "multivariate_normal_pdf": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "cov": {
+            "fill": "identity"
+          },
+          "allow_singular": false
+        },
+        "multivariate_normal_logpdf": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "cov": {
+            "fill": "identity"
+          },
+          "allow_singular": false
+        }
+      }
     }
   }
 }

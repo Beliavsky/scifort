@@ -9,16 +9,37 @@ from fparser.two import Fortran2003 as F
 
 def prepare(config, api, identifier, source_lines):
     entries = []
-    for name, policy in sorted(config.get("subroutines", {}).items()):
+    policies = dict(config.get("subroutines", {}), **config.get("array_functions", {}))
+    for name, policy in sorted(policies.items()):
         identifier(name)
         fields = {"symbol", "dimensions", "shapes", "status_argument", "invalid_status", "description"}
+        is_function = name in config.get('array_functions', {})
+        if is_function:
+            fields |= {'result_argument', 'optional_policy'}
         if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract"} != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         identifier(policy["symbol"])
         node = api[name]
-        if not isinstance(node, F.Subroutine_Subprogram) or node.content[0].items[3] is not None:
+        if is_function:
+            if not isinstance(node, F.Function_Subprogram):
+                raise ValueError(f'{name}: expected a directly defined function')
+            prefix, _, _, suffix = node.content[0].items
+            if (suffix is None or suffix.items[0] is None or suffix.items[1] is not None
+                    or any(str(p).lower() == 'impure' for p in (prefix.items if prefix else ()))):
+                raise ValueError(f'{name}: needs result(...), no bind(c) or impure prefix')
+            native_result = identifier(str(suffix.items[0]).lower())
+            if policy['optional_policy'] != 'required':
+                raise ValueError(f'{name}: optional_policy must be required')
+        elif not isinstance(node, F.Subroutine_Subprogram) or node.content[0].items[3] is not None:
             raise ValueError(f"{name}: expected a directly defined non-bind(c) subroutine")
         args = [identifier(str(a).lower()) for a in node.content[0].items[2].items]
+        native_args = args[:]
+        if is_function:
+            result = identifier(policy['result_argument'])
+            status = identifier(policy['status_argument'])
+            if result == status or result in args or status in args:
+                raise ValueError(f'{name}: synthetic result/status must be distinct from native arguments')
+            args += [result, status]
         dimensions = {}
         if not isinstance(policy["dimensions"], list) or not policy["dimensions"]:
             raise ValueError(f"{name}: dimensions must be an ordered list of name/minimum objects")
@@ -54,7 +75,7 @@ def prepare(config, api, identifier, source_lines):
                     declared[str(entity.items[0]).lower()] = (dtype, attrs, entity)
                     declarations[str(entity.items[0]).lower()] = decl
         logical_inputs = policy.get("logical_inputs", {})
-        if not isinstance(logical_inputs, dict) or set(logical_inputs) - set(args):
+        if not isinstance(logical_inputs, dict) or set(logical_inputs) - set(native_args):
             raise ValueError(f"{name}: logical_inputs must name native arguments")
         for arg, mapping in logical_inputs.items():
             if (not isinstance(mapping, dict) or set(mapping) != {"false", "true"}
@@ -67,7 +88,18 @@ def prepare(config, api, identifier, source_lines):
             raise ValueError(f"{name}: status cannot be a logical mapping")
         if status not in args:
             raise ValueError(f"{name}: status_argument must name a native argument")
+        if is_function:
+            kind = config['kind_name']
+            if native_result not in declared:
+                raise ValueError(f'{name}: result needs an explicit declaration')
+            dtype, attrs, entity = declared[native_result]
+            if (str(dtype).lower().replace(' ', '') not in (f'real({kind})', f'real(kind={kind})')
+                    or attrs or any(entity.items[1:])):
+                raise ValueError(f'{name}: only scalar real results are supported')
+            metadata[result] = dict(intent='out', rank=0, category='real')
         for arg in args:
+            if is_function and arg in (result, status):
+                continue
             if arg not in declared:
                 raise ValueError(f"{name}: {arg} needs an explicit declaration")
             dtype, attrs, entity = declared[arg]
@@ -76,9 +108,11 @@ def prepare(config, api, identifier, source_lines):
                     raise ValueError(f"{name}: status must be a default-integer scalar intent(out)")
                 continue
             intent = next((value for value in ("in", "out", "inout") if f"intent({value})" in attrs), None)
-            base_attrs = attrs - {"optional"} if arg in logical_inputs else attrs
+            base_attrs = attrs - {"optional"} if arg in logical_inputs or is_function else attrs
             if intent is None or base_attrs != {f"intent({intent})"}:
                 raise ValueError(f"{name}: {arg} requires intent and no unconfigured optional attributes")
+            if is_function and intent != 'in':
+                raise ValueError(f'{name}: array functions require intent(in) inputs')
             if str(dtype).lower() == "logical":
                 if (arg not in logical_inputs or intent != "in" or any(entity.items[1:])):
                     raise ValueError(f"{name}: logical inputs need an explicit scalar mapping")
@@ -103,6 +137,8 @@ def prepare(config, api, identifier, source_lines):
             if rank > 2:
                 raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
             metadata[arg] = dict(intent=intent, rank=rank, category='real')
+            if is_function and 'optional' in attrs:
+                metadata[arg]['optional'] = True
         shapes = policy["shapes"]
         array_names = {a for a, value in metadata.items() if value["rank"]}
         if not isinstance(shapes, dict) or set(shapes) != array_names or not array_names:
@@ -136,6 +172,8 @@ def prepare(config, api, identifier, source_lines):
                                    else 'documented shape differs from wrapper policy'))
         entry = dict(name=name, policy=policy, args=args, metadata=metadata,
                      dimensions=dimensions, documentation_review=review)
+        if is_function:
+            entry.update(native_args=native_args, result_argument=result)
         if 'shape_contract' in policy:
             if type(policy['shape_contract']) is not bool or not policy['shape_contract']:
                 raise ValueError(f'{name}: shape_contract must be true when specified')
@@ -190,11 +228,16 @@ def emit(entry, index, config):
                   f"                {arg} /= {mapping['true']}_c_int) then",
                   f"            {status}={policy['invalid_status']}_c_int", "            return", "        end if",
                   f"        cg_logical_{arg}=({arg} == {mapping['true']}_c_int)"]
+    native_args = entry.get('native_args', args)
+    call = (f"{entry['result_argument']}=cg_native_{index}" if 'result_argument' in entry
+            else f'call cg_native_{index}')
     lines += ["        ! The compiler supplies assumed-shape descriptors inside Fortran.",
-              f"        call cg_native_{index}( &"]
-    for i, arg in enumerate(args):
+              f"        {call}( &"]
+    for i, arg in enumerate(native_args):
         actual = f"cg_logical_{arg}" if arg in policy.get('logical_inputs', {}) else arg
-        lines.append(f"            {arg}={actual}" + (", &" if i < len(args)-1 else ")"))
+        lines.append(f"            {arg}={actual}" + (", &" if i < len(native_args)-1 else ")"))
+    if 'result_argument' in entry:
+        lines.append(f'        {status}=0_c_int')
     lines += [f"    end subroutine {symbol}", ""]
     header = [f"/* {policy['description']}",
               " * Explicit-shape arrays: contiguous column-major storage; no overlap.",
@@ -216,4 +259,10 @@ def emit(entry, index, config):
         record['logical_inputs'] = policy['logical_inputs']
     if entry.get('shape_contract'):
         record['shape_contract'] = entry['shape_contract']
+    if 'result_argument' in entry:
+        record.update(interface='explicit_shape_function', result_argument=entry['result_argument'])
+        header[-3:-3] = [' * Status 0 means the call was valid; native numerical NaN/infinity is retained.']
+        header = [line.replace(' * Other status/output behavior is inherited from the native procedure. */',
+                               ' * Numerical parameter errors use native values, not call-level statuses. */')
+                  for line in header]
     return lines, header, record

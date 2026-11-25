@@ -1,3 +1,12 @@
+## 2026-11-24 - multivariate normal density interface tooling
+
+The scalar-result array-function emitter, explicit C/Python policies, default-array
+handling, documentation and independent interface tests are original MIT SciFort
+work. The adapters call unchanged native multivariate normal PDF/log-PDF procedures.
+No external numerical implementation, algorithm, coefficient or dependency was
+imported or adapted. Existing native module and dependency provenance/licenses
+remain applicable. SciPy is an external test reference only; its source is not copied.
+
 ## 2026-11-24 - generated Python matrix interfaces
 
 The reusable Python array emitter/runtime, integration tests, explicit Python

@@ -128,8 +128,9 @@ Never trade away correctness or provenance merely to add more functions.
   invent restrictions for arrays whose lengths are unrestricted. When generating
   a wrapper, also review these requirements against its configuration.
   Structured `@dimension`, `@require`, and `@when` annotations are currently an
-  opt-in prototype for the eight reviewed linalg and matrix helpers; keep readable
-  trailing shape comments and follow `tools/cabi_generator/README.md`. Do not
+  opt-in prototype for reviewed linalg/matrix helpers and multivariate normal
+  density functions; keep readable trailing shape comments and follow
+  `tools/cabi_generator/README.md`. Do not
   apply the prototype broadly or treat conditional prose as verified assertions.
 - Use `newunit=` for file I/O and `i0` for unrestricted integer output.
 - Put one statement on each line.

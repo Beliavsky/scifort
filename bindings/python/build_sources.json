@@ -1,6 +1,7 @@
 {
   "array_groups": [
-    "linalg"
+    "linalg",
+    "multivariate_normal"
   ],
   "dependencies": {
     "bindings/python/native/beta_compat.f90": [
@@ -87,6 +88,10 @@
       "src/kinds.f90",
       "src/stats/matrix_distribution_helpers.f90"
     ],
+    "src/c_api/generated/multivariate_normal_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/multivariate_normal.f90"
+    ],
     "src/c_api/generated/normal_generated.f90": [
       "src/kinds.f90",
       "src/stats/normal.f90"
@@ -107,6 +112,9 @@
       "src/kinds.f90"
     ],
     "src/math.f90": [
+      "src/kinds.f90"
+    ],
+    "src/random.f90": [
       "src/kinds.f90"
     ],
     "src/special/digamma.f90": [
@@ -184,6 +192,23 @@
       "src/linalg.f90",
       "src/special/elementary.f90"
     ],
+    "src/stats/multivariate_integration.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/incomplete_gamma.f90",
+      "src/stats/normal.f90",
+      "src/stats/student_t.f90"
+    ],
+    "src/stats/multivariate_normal.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/linalg.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/stats/multivariate_integration.f90",
+      "src/stats/normal.f90"
+    ],
     "src/stats/normal.f90": [
       "src/constants.f90",
       "src/kinds.f90",
@@ -239,6 +264,7 @@
     "scifort_c_api_generated_logistic": "src/c_api/generated/logistic_generated.f90",
     "scifort_c_api_generated_lognormal": "src/c_api/generated/lognormal_generated.f90",
     "scifort_c_api_generated_matrix_helpers": "src/c_api/generated/matrix_helpers_generated.f90",
+    "scifort_c_api_generated_multivariate_normal": "src/c_api/generated/multivariate_normal_generated.f90",
     "scifort_c_api_generated_normal": "src/c_api/generated/normal_generated.f90",
     "scifort_c_api_generated_student_t": "src/c_api/generated/student_t_generated.f90",
     "scifort_c_api_generated_weibull": "src/c_api/generated/weibull_generated.f90",
@@ -258,7 +284,10 @@
     "scifort_lognormal": "src/stats/lognormal.f90",
     "scifort_math": "src/math.f90",
     "scifort_matrix_distribution_helpers": "src/stats/matrix_distribution_helpers.f90",
+    "scifort_multivariate_integration": "src/stats/multivariate_integration.f90",
+    "scifort_multivariate_normal": "src/stats/multivariate_normal.f90",
     "scifort_normal": "src/stats/normal.f90",
+    "scifort_random": "src/random.f90",
     "scifort_special_elementary": "src/special/elementary.f90",
     "scifort_student_t": "src/stats/student_t.f90",
     "scifort_weibull": "src/stats/weibull.f90"
@@ -287,6 +316,7 @@
     "src/c_api/generated/logistic_generated.f90": "55c171ea93a4c34a385ddba7e096758d07c4c8626d4ca07c8c5c7d925f30bfe0",
     "src/c_api/generated/lognormal_generated.f90": "4227348a38dcc8663865370649bd7324f056da70d96f832c7457f4f8526574c1",
     "src/c_api/generated/matrix_helpers_generated.f90": "ca33490309baf72cd79003fb447ef0227d74860ad6bf41b47d48933cadd0ac71",
+    "src/c_api/generated/multivariate_normal_generated.f90": "63bc151b406d87a32a433899ea35dc2c685e2cbb28315d6bc5dce4f666488f14",
     "src/c_api/generated/normal_generated.f90": "0724a9f4d76b161ebbfcb2691dd496e6cea8ef089b5d7547101d630d6d1c575c",
     "src/c_api/generated/student_t_generated.f90": "dc1c5f9e57a68f3448d9eafa22bd975f5eeadead0709aa48ec0e6e8381c7bd77",
     "src/c_api/generated/weibull_generated.f90": "90da7ffd10659ecae33b9757c4f8c851138cba04f13b233cdc465262f3a83581",
@@ -294,6 +324,7 @@
     "src/kinds.f90": "afbca1b088e17f5c0ff7930c693e9ae9e0b699b31a826cb25bc139597fe66f46",
     "src/linalg.f90": "b149cf757f3620cce4fcb2e8ecdbd705184534d0d81ed5ab908d464cd09d6788",
     "src/math.f90": "1dfdd6e012e1c6e7ad63e6744b0b57b8beee8700d2a2e51f0e8eb89caf8185db",
+    "src/random.f90": "47d6780213372febbbaabea82cf8acb52acb5425e9eced867f4750a8d6a3d098",
     "src/special/digamma.f90": "dd412031581245e621853d5ef8cb8347c28364fc4a8aa0c6735546b30aaca1aa",
     "src/special/elementary.f90": "6602603d453eca7cbe570ccc9747d1474dda4022520ba5317c9e4e47fb2d383d",
     "src/special/incomplete_beta.f90": "dd7bd608158f5ec852aea0c6282a00d6d8b363316f26c688f986324ea69312a6",
@@ -308,6 +339,8 @@
     "src/stats/logistic.f90": "ee5488b4d39aacd4a2e1b3f4d364836e234a13d412bf327585d96e01518795a5",
     "src/stats/lognormal.f90": "14ba6ae77569d7d4c0711cb9d66e73183d187407e3c06300c09a9488de8b9274",
     "src/stats/matrix_distribution_helpers.f90": "1811a2fa5ad5b435c80aeb32de738a16a2ca6bef713010557c8fd10f89b58c41",
+    "src/stats/multivariate_integration.f90": "c9aeb7ff1c9bfd2a1ff9c39cc65a2e4419c24899453f88371a569b1c9ade97d9",
+    "src/stats/multivariate_normal.f90": "41ffbb99ef550c2de3a4fceb561e7c05a5c57cd6ddbe92eac58750161fff0644",
     "src/stats/normal.f90": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb",
     "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",
     "src/stats/weibull.f90": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585"
@@ -355,6 +388,10 @@
     "src/special/elementary.f90",
     "src/stats/matrix_distribution_helpers.f90",
     "src/c_api/generated/matrix_helpers_generated.f90",
+    "src/random.f90",
+    "src/stats/multivariate_integration.f90",
+    "src/stats/multivariate_normal.f90",
+    "src/c_api/generated/multivariate_normal_generated.f90",
     "src/c_api/generated/normal_generated.f90",
     "src/c_api/generated/student_t_generated.f90",
     "src/c_api/generated/weibull_generated.f90"

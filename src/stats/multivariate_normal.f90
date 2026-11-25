@@ -31,6 +31,9 @@ module scifort_multivariate_normal
 contains
 
     function multivariate_normal_logpdf(x, mean, cov, allow_singular) result(y)
+        !! Evaluate the log density of a multivariate normal at one point.
+        !! @dimension n = size(x)
+        !! @require n >= 1
         !! n = size(x), n >= 1.
         real(dp), intent(in) :: x(:) !! shape (n); point at which the density is evaluated
         real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
@@ -106,6 +109,9 @@ contains
     end function multivariate_normal_logpdf
 
     function multivariate_normal_pdf(x, mean, cov, allow_singular) result(y)
+        !! Evaluate the density of a multivariate normal at one point.
+        !! @dimension n = size(x)
+        !! @require n >= 1
         !! n = size(x), n >= 1.
         real(dp), intent(in) :: x(:) !! shape (n); point at which the density is evaluated
         real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent

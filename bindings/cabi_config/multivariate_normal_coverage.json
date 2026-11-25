@@ -1,0 +1,186 @@
+{
+  "generated_symbol_count": 2,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "procedure": "multivariate_normal_cdf",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_normal_entropy",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_normal_fit",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_normal_logcdf",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "mean",
+        "cov",
+        "allow_singular",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mean",
+        "cov",
+        "allow_singular"
+      ],
+      "procedure": "multivariate_normal_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "cov": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_normal_logpdf_f64"
+      ]
+    },
+    {
+      "procedure": "multivariate_normal_marginal",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "mean",
+        "cov",
+        "allow_singular",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mean",
+        "cov",
+        "allow_singular"
+      ],
+      "procedure": "multivariate_normal_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "cov": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_normal_pdf_f64"
+      ]
+    },
+    {
+      "procedure": "multivariate_normal_rvs",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_normal_rvs_array",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_status_linalg_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 13,
+  "source": "src/stats/multivariate_normal.f90",
+  "source_sha256": "41ffbb99ef550c2de3a4fceb561e7c05a5c57cd6ddbe92eac58750161fff0644"
+}
