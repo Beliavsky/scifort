@@ -216,6 +216,20 @@
       ],
       "prefix": "dirichlet_",
       "defaults": {}
+    },
+    "multinomial": {
+      "manifests": [
+        "bindings/cabi_config/multinomial.json"
+      ],
+      "prefix": "multinomial_",
+      "defaults": {}
+    },
+    "multivariate_hypergeom": {
+      "manifests": [
+        "bindings/cabi_config/multivariate_hypergeom.json"
+      ],
+      "prefix": "multivariate_hypergeom_",
+      "defaults": {}
     }
   }
 }

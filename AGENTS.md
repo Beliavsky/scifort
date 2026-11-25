@@ -129,7 +129,7 @@ Never trade away correctness or provenance merely to add more functions.
   a wrapper, also review these requirements against its configuration.
   Structured `@dimension`, `@require`, and `@when` annotations are currently an
   opt-in prototype for reviewed linalg/matrix helpers, multivariate normal/Student t
-  densities and Dirichlet functions. Keep readable shape comments and follow
+  densities, Dirichlet, multinomial and multivariate hypergeometric functions. Keep readable shape comments and follow
   `tools/cabi_generator/README.md`. Do not apply the prototype broadly or treat
   conditional prose as verified assertions.
 - Use `newunit=` for file I/O and `i0` for unrestricted integer output.

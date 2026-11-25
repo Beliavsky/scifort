@@ -14,5 +14,7 @@
   "matrix_helpers.json",
   "multivariate_normal.json",
   "multivariate_t.json",
-  "dirichlet.json"
+  "dirichlet.json",
+  "multinomial.json",
+  "multivariate_hypergeom.json"
 ]

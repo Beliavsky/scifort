@@ -1,3 +1,13 @@
+## 2026-11-25 - multinomial and multivariate hypergeometric interfaces
+
+- Generate five C/Python methods for each family, including scalar masses,
+  multinomial entropy, and caller-owned moment/covariance results.
+- Extend the reusable generator/runtime to accept integer scalars and arrays,
+  with strict Python range/type checks and explicit widened overflow guards.
+- Document every assumed-shape argument in both native modules, including
+  sampling and private helpers, and generate reviewed shape/integer-bound tables.
+- Preserve native numerical implementations, probability adjustment and statuses.
+
 ## 2026-11-25 - Dirichlet interfaces and array-valued function adapters
 
 - Add generated C/Python PDF, log-PDF, entropy, mean, variance and covariance

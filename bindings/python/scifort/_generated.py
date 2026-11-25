@@ -1176,6 +1176,209 @@ class Linalg(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('spd_factor', {'a': a}, out)
 
+class Multinomial(ArrayGroup):
+    _specs = {'cov': {'arguments': ['n', 'p', 'value', 'status'],
+             'definitions': {'k': {'argument': 'p', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['n', 'p'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'logical_inputs': {},
+             'metadata': {'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'p': ['k'], 'value': ['k', 'k']},
+             'status': 'status',
+             'symbol': 'scifort_multinomial_cov_f64'},
+     'entropy': {'arguments': ['n', 'p', 'value', 'status'],
+                 'definitions': {'k': {'argument': 'p', 'axis': None}},
+                 'dimensions': ['k'],
+                 'inputs': ['n', 'p'],
+                 'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+                 'logical_inputs': {},
+                 'metadata': {'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                              'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'k': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'p': ['k']},
+                 'status': 'status',
+                 'symbol': 'scifort_multinomial_entropy_f64'},
+     'logpmf': {'arguments': ['x', 'n', 'p', 'value', 'status'],
+                'definitions': {'k': {'argument': 'p', 'axis': None}},
+                'dimensions': ['k'],
+                'inputs': ['x', 'n', 'p'],
+                'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+                'logical_inputs': {},
+                'metadata': {'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                             'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'k': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'p': ['k'], 'x': ['k']},
+                'status': 'status',
+                'symbol': 'scifort_multinomial_logpmf_f64'},
+     'mean': {'arguments': ['n', 'p', 'value', 'status'],
+              'definitions': {'k': {'argument': 'p', 'axis': None}},
+              'dimensions': ['k'],
+              'inputs': ['n', 'p'],
+              'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+              'logical_inputs': {},
+              'metadata': {'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                           'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+              'minimums': {'k': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'p': ['k'], 'value': ['k']},
+              'status': 'status',
+              'symbol': 'scifort_multinomial_mean_f64'},
+     'pmf': {'arguments': ['x', 'n', 'p', 'value', 'status'],
+             'definitions': {'k': {'argument': 'p', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['x', 'n', 'p'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'logical_inputs': {},
+             'metadata': {'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'p': ['k'], 'x': ['k']},
+             'status': 'status',
+             'symbol': 'scifort_multinomial_pmf_f64'}}
+
+    def cov(self, n, p, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('cov', {'n': n, 'p': p}, out)
+
+    def entropy(self, n, p):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'n': n, 'p': p}, None)
+
+    def logpmf(self, x, n, p):
+        """Return the native scalar value."""
+        return self._invoke('logpmf', {'x': x, 'n': n, 'p': p}, None)
+
+    def mean(self, n, p, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'n': n, 'p': p}, out)
+
+    def pmf(self, x, n, p):
+        """Return the native scalar value."""
+        return self._invoke('pmf', {'x': x, 'n': n, 'p': p}, None)
+
+class Multivariate_hypergeom(ArrayGroup):
+    _specs = {'cov': {'arguments': ['m', 'n', 'value', 'status'],
+             'definitions': {'k': {'argument': 'm', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['m', 'n'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'integer_sums': {'m': 2147483646},
+             'logical_inputs': {},
+             'metadata': {'m': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'m': ['k'], 'value': ['k', 'k']},
+             'status': 'status',
+             'symbol': 'scifort_multivariate_hypergeom_cov_f64'},
+     'logpmf': {'arguments': ['x', 'm', 'n', 'value', 'status'],
+                'definitions': {'k': {'argument': 'm', 'axis': None}},
+                'dimensions': ['k'],
+                'inputs': ['x', 'm', 'n'],
+                'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+                'integer_sums': {'m': 2147483646, 'x': 2147483646},
+                'logical_inputs': {},
+                'metadata': {'m': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                             'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'integer', 'intent': 'in', 'rank': 1}},
+                'minimums': {'k': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'m': ['k'], 'x': ['k']},
+                'status': 'status',
+                'symbol': 'scifort_multivariate_hypergeom_logpmf_f64'},
+     'mean': {'arguments': ['m', 'n', 'value', 'status'],
+              'definitions': {'k': {'argument': 'm', 'axis': None}},
+              'dimensions': ['k'],
+              'inputs': ['m', 'n'],
+              'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+              'integer_sums': {'m': 2147483646},
+              'logical_inputs': {},
+              'metadata': {'m': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                           'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+              'minimums': {'k': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'m': ['k'], 'value': ['k']},
+              'status': 'status',
+              'symbol': 'scifort_multivariate_hypergeom_mean_f64'},
+     'pmf': {'arguments': ['x', 'm', 'n', 'value', 'status'],
+             'definitions': {'k': {'argument': 'm', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['x', 'm', 'n'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'integer_sums': {'m': 2147483646, 'x': 2147483646},
+             'logical_inputs': {},
+             'metadata': {'m': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'integer', 'intent': 'in', 'rank': 1}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'m': ['k'], 'x': ['k']},
+             'status': 'status',
+             'symbol': 'scifort_multivariate_hypergeom_pmf_f64'},
+     'var': {'arguments': ['m', 'n', 'value', 'status'],
+             'definitions': {'k': {'argument': 'm', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['m', 'n'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'integer_sums': {'m': 2147483646},
+             'logical_inputs': {},
+             'metadata': {'m': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'m': ['k'], 'value': ['k']},
+             'status': 'status',
+             'symbol': 'scifort_multivariate_hypergeom_var_f64'}}
+
+    def cov(self, m, n, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('cov', {'m': m, 'n': n}, out)
+
+    def logpmf(self, x, m, n):
+        """Return the native scalar value."""
+        return self._invoke('logpmf', {'x': x, 'm': m, 'n': n}, None)
+
+    def mean(self, m, n, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'m': m, 'n': n}, out)
+
+    def pmf(self, x, m, n):
+        """Return the native scalar value."""
+        return self._invoke('pmf', {'x': x, 'm': m, 'n': n}, None)
+
+    def var(self, m, n, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('var', {'m': m, 'n': n}, out)
+
 class Multivariate_normal(ArrayGroup):
     _specs = {'logpdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
                 'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
@@ -1309,6 +1512,8 @@ class API(Library):
         self.weibull = Weibull(self._library)
         self.dirichlet = Dirichlet(self._library)
         self.linalg = Linalg(self._library)
+        self.multinomial = Multinomial(self._library)
+        self.multivariate_hypergeom = Multivariate_hypergeom(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)
         self.multivariate_t = Multivariate_t(self._library)
 

@@ -128,6 +128,10 @@ def markdown(config, entries):
             lines += [f"`{entry['result_argument']}` is the adapter output for the native array-valued result.", '']
         for dim, rule in contract.get('length_choices', {}).items():
             lines += [f"Required length choice: `{dim} in ({choice_text(rule)})`.", '']
+        for arg, bounds in entry['policy'].get('integer_limits', {}).items():
+            lines += [f"Adapter integer bounds: `{bounds['minimum']} <= {arg} <= {bounds['maximum']}`.", '']
+        for arg, ceiling in entry['policy'].get('integer_sums', {}).items():
+            lines += [f"Adapter widened sum bound: `sum(abs({arg})) <= {ceiling}`.", '']
         for note in contract['conditions']:
             lines += [f"When `{note['dimension']} == {note['value']}`: {note['description']}", '']
     return '\n'.join(lines)

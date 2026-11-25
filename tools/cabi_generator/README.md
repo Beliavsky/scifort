@@ -130,8 +130,8 @@ in coverage, so reordering JSON object keys does not change the ABI.
 Adapters accept explicit real scalars and assumed-shape arrays declared on the
 entity, for example `real(dp), intent(in) :: a(:,:)`, plus default-integer scalar
 `intent(out)` results (C `int *`). The required native status argument is also
-default-integer `intent(out)`. Integer inputs/arrays, allocatable, pointer and
-callback arguments remain unsupported in this pattern.
+default-integer `intent(out)`. Default-integer scalar/rank-one/two array inputs
+are also supported. Allocatable, pointer and callback arguments remain unsupported.
 
 An optional `logical_inputs` object explicitly maps native scalar `logical,
 intent(in)` arguments to distinct integer `false` and `true` codes. For example,
@@ -518,10 +518,10 @@ native dummy and dimension names. Selected names must be disjoint from
 
 This pattern accepts directly defined non-bind(c), non-impure functions with an
 explicit scalar or rank-one/two `real(kind)` result declaration and `result(...)`. Native inputs
-must be `intent(in)` real scalars or rank-one/rank-two assumed-shape real arrays,
+must be `intent(in)` real/default-integer scalars or rank-one/rank-two assumed-shape arrays,
 or scalar logicals with explicit integer mappings. Optional real/logical inputs
 are promoted to required C inputs. Arrays still require declared shapes; no
-optional-argument omission, integer inputs, callbacks, descriptors
+optional-argument omission, callbacks, descriptors
 or native algorithm changes are introduced.
 
 The adapter is a `void` C subroutine with ordered dimensions, native inputs,
@@ -577,3 +577,44 @@ invalid status. Python checks the same choices before allocating outputs or
 calling C. Structured contracts require exact source/policy agreement and render
 the choices in Markdown. `@when` prose remains descriptive, not a checked assertion.
 See the [reviewed Dirichlet manifest](../../bindings/cabi_config/dirichlet.json).
+
+## Integer inputs and explicit overflow policy
+
+Default-integer native `intent(in)` scalars map to by-value C int; rank-one/two
+integer inputs map to const C-int buffers with reviewed explicit shapes. Integer
+kinds other than the native default, integer array outputs and integer inout
+arguments remain unsupported. Existing scalar integer outputs are unchanged.
+Direct association requires native default integer kind to match `c_int`.
+Real-valued function results may depend on integer input sizes.
+
+Python accepts integer dtype inputs, including signed/unsigned and different
+endianness, checks their range, then converts arrays to aligned Fortran-contiguous
+`np.intc` buffers. It rejects floats, booleans, strings and object arrays; integer
+scalars also require integer dtype. Dimension checks precede element scans and
+output allocation. Output arrays remain binary64. Original-input nonoverlap
+checks apply even if conversion would create separate storage.
+
+Optional `integer_limits` maps integer input names to inclusive signed-C-int
+minimum/maximum values. Optional `integer_sums` maps rank-one integer input names
+to a nonnegative C-int absolute-sum ceiling, for example:
+
+```json
+"integer_limits": {"n": {"minimum": -2147483648, "maximum": 2147483646}},
+"integer_sums": {"m": 2147483646, "x": 2147483646}
+```
+
+These are explicit reviewed safety policies, not inferred from executable code.
+C adapters check them before the native call, returning configured invalid status
+and preserving results. Comparisons and absolute sums widen to `c_int64_t` before
+arithmetic, including before abs(INT_MIN). Rank-one C-int extents/elements bound
+the widened sum below 2**63. Python checks bounds before narrowing and uses the
+same widened sum. Signed 32-bit limits are the initial supported integer contract.
+Guards, bounds and sum limits appear in C headers, coverage and shape tables.
+
+The multinomial/hypergeometric policies cap n and hypergeometric absolute sums at
+2147483646 to protect existing default-integer sums and n+1/count+1 expressions.
+This deliberately bounds foreign calls without changing the native numerical
+API. Numerical parameter errors inside these bounds retain native NaN/zero
+semantics and valid-call status 0. See the reviewed
+[multinomial](../../bindings/cabi_config/multinomial.json) and
+[hypergeometric](../../bindings/cabi_config/multivariate_hypergeom.json) policies.

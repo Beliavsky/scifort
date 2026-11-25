@@ -1,3 +1,14 @@
+## 2026-11-25 - integer-input distribution interfaces
+
+The integer scalar/array adapter extension, explicit safety-bound policies,
+Python validation/conversions, independent fixtures and integration checks are
+original MIT SciFort interface work. New adapters call unchanged native
+multinomial and multivariate hypergeometric routines; no numerical implementation,
+coefficient or upstream source was imported or adapted. Existing module provenance
+and retained notices apply, including the hypergeometric module's MIT/BSD sampling
+notice and license text. SciPy is an external test reference only. Integer limits
+are reviewed ABI policy, not inferred mathematical properties of native code.
+
 ## 2026-11-25 - Dirichlet interfaces and array-result tooling
 
 The array-result/dimension-choice generator extensions, manifests, annotations,

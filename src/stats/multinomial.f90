@@ -26,9 +26,13 @@ module scifort_multinomial
 contains
 
     function multinomial_logpmf(x, n, p) result(y)
-        real(dp), intent(in) :: x(:) !! category counts; each value must be a nonnegative integer and sum to n
+        !! Evaluate the log probability mass at one category-count vector.
+        !! @dimension k = size(p)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        real(dp), intent(in) :: x(:) !! shape (k); category counts; each value must be a nonnegative integer and sum to n
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
         real(dp) :: y
 
         real(dp), allocatable :: pp(:)
@@ -53,18 +57,26 @@ contains
     end function multinomial_logpmf
 
     function multinomial_pmf(x, n, p) result(y)
-        real(dp), intent(in) :: x(:) !! category counts; each value must be a nonnegative integer and sum to n
+        !! Evaluate the probability mass at one category-count vector.
+        !! @dimension k = size(p)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        real(dp), intent(in) :: x(:) !! shape (k); category counts; each value must be a nonnegative integer and sum to n
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
         real(dp) :: y
 
         y = exp(multinomial_logpmf(x, n, p))
     end function multinomial_pmf
 
     function multinomial_mean(n, p) result(mu)
+        !! Compute the expected counts by category.
+        !! @dimension k = size(p)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
-        real(dp) :: mu(size(p))
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
+        real(dp) :: mu(size(p)) !! shape (k); expected category counts
 
         real(dp), allocatable :: pp(:)
         integer :: status
@@ -78,9 +90,13 @@ contains
     end function multinomial_mean
 
     function multinomial_cov(n, p) result(cov)
+        !! Compute the category-count covariance matrix.
+        !! @dimension k = size(p)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
-        real(dp) :: cov(size(p), size(p))
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
+        real(dp) :: cov(size(p), size(p)) !! shape (k,k); category-count covariances
 
         real(dp), allocatable :: pp(:)
         integer :: i
@@ -102,8 +118,12 @@ contains
     end function multinomial_cov
 
     function multinomial_entropy(n, p) result(h)
+        !! Compute the discrete entropy of the multinomial law.
+        !! @dimension k = size(p)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
         real(dp) :: h
 
         real(dp), allocatable :: pp(:)
@@ -133,10 +153,13 @@ contains
     end function multinomial_entropy
 
     subroutine multinomial_rvs(state, sample, n, p, status)
+        !! Draw one category-count vector using explicit RNG state.
+        !! k=size(p), k>=0 for storage; sample has the same length as p.
+        !! Valid probabilities require k>=1; empty p is invalid.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the draw
-        integer, intent(out) :: sample(:) !! generated category counts; sum equals n on success
+        integer, intent(out) :: sample(:) !! shape (k); generated category counts; sum equals n on success
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
         integer, intent(out), optional :: status !! zero on success; nonzero on invalid input
 
         real(dp), allocatable :: pp(:)
@@ -175,10 +198,14 @@ contains
     end subroutine multinomial_rvs
 
     subroutine multinomial_rvs_array(state, samples, n, p, status)
+        !! Draw category-count vectors by column using explicit RNG state.
+        !! k=size(p), n_samples=size(samples,2), both >=0; size(samples,1)=k.
+        !! Empty batches succeed without validating n or probability values.
+        !! Nonempty batches require a valid distribution with k>=1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        integer, intent(out) :: samples(:, :) !! samples by column, shape (K, n_samples)
+        integer, intent(out) :: samples(:, :) !! shape (k,n_samples); samples by column
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp), intent(in) :: p(:) !! category probabilities; SciPy-compatible final-entry normalization is applied
+        real(dp), intent(in) :: p(:) !! shape (k); category probabilities; final-entry adjustment applies
         integer, intent(out), optional :: status !! zero on success; nonzero on invalid input
 
         integer :: info
@@ -201,8 +228,11 @@ contains
     end subroutine multinomial_rvs_array
 
     subroutine process_probabilities(p, pp, status)
-        real(dp), intent(in) :: p(:) !! input category probabilities
-        real(dp), allocatable, intent(out) :: pp(:) !! adjusted category probabilities
+        !! Allocate and adjust probabilities using the final-category convention.
+        !! k=size(p), k>=0; pp is allocated with length k, also on failure.
+        !! A valid distribution requires k>=1 and finite adjusted probabilities.
+        real(dp), intent(in) :: p(:) !! shape (k); input category probabilities
+        real(dp), allocatable, intent(out) :: pp(:) !! shape (k); allocated adjusted probabilities
         integer, intent(out) :: status !! zero on success; nonzero for invalid probabilities
 
         real(dp), parameter :: probability_tolerance = 10.0_dp * epsilon(1.0_dp)
@@ -237,7 +267,10 @@ contains
     end subroutine process_probabilities
 
     pure logical function valid_counts(x, n) result(valid)
-        real(dp), intent(in) :: x(:) !! candidate category counts
+        !! Check finite nonnegative integer-valued counts with the requested sum.
+        !! k=size(x), k>=0; no fixed category count is required by this helper.
+        !! Empty x is permitted and has sum zero.
+        real(dp), intent(in) :: x(:) !! shape (k); candidate category counts
         integer, intent(in) :: n !! required total count
 
         valid = all(ieee_is_finite(x)) .and. all(x >= 0.0_dp) .and. &

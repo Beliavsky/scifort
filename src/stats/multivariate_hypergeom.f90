@@ -31,8 +31,12 @@ module scifort_multivariate_hypergeom
 contains
 
     function multivariate_hypergeom_logpmf(x, m, n) result(y)
-        integer, intent(in) :: x(:) !! observed counts by category
-        integer, intent(in) :: m(:) !! population counts by category
+        !! Evaluate the log probability mass at one category-count vector.
+        !! @dimension k = size(m)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        integer, intent(in) :: x(:) !! shape (k); observed nonnegative category counts, sum n
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
         real(dp) :: y
 
@@ -64,8 +68,12 @@ contains
     end function multivariate_hypergeom_logpmf
 
     function multivariate_hypergeom_pmf(x, m, n) result(y)
-        integer, intent(in) :: x(:) !! observed counts by category
-        integer, intent(in) :: m(:) !! population counts by category
+        !! Evaluate the probability mass at one category-count vector.
+        !! @dimension k = size(m)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        integer, intent(in) :: x(:) !! shape (k); observed nonnegative category counts, sum n
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
         real(dp) :: y
 
@@ -73,9 +81,13 @@ contains
     end function multivariate_hypergeom_pmf
 
     function multivariate_hypergeom_mean(m, n) result(mu)
-        integer, intent(in) :: m(:) !! population counts by category
+        !! Compute the expected counts by category.
+        !! @dimension k = size(m)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
-        real(dp) :: mu(size(m))
+        real(dp) :: mu(size(m)) !! shape (k); category count moments
 
         integer :: total
 
@@ -92,9 +104,13 @@ contains
     end function multivariate_hypergeom_mean
 
     function multivariate_hypergeom_var(m, n) result(v)
-        integer, intent(in) :: m(:) !! population counts by category
+        !! Compute count variances by category.
+        !! @dimension k = size(m)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
-        real(dp) :: v(size(m))
+        real(dp) :: v(size(m)) !! shape (k); category count moments
 
         real(dp) :: nn
         real(dp) :: total
@@ -116,9 +132,13 @@ contains
     end function multivariate_hypergeom_var
 
     function multivariate_hypergeom_cov(m, n) result(cov)
-        integer, intent(in) :: m(:) !! population counts by category
+        !! Compute the category-count covariance matrix.
+        !! @dimension k = size(m)
+        !! @require k >= 1
+        !! Native default-integer sums and count increments must be representable.
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
-        real(dp) :: cov(size(m), size(m))
+        real(dp) :: cov(size(m), size(m)) !! shape (k,k); category-count covariances
 
         integer :: i
         integer :: j
@@ -148,10 +168,13 @@ contains
     end function multivariate_hypergeom_cov
 
     subroutine multivariate_hypergeom_rvs(state, m, n, sample, status)
+        !! Draw category counts without replacement using explicit RNG state.
+        !! k=size(m), k>=0 for storage; size(sample)=k; a valid call requires k>=1.
+        !! Population sums must fit the native default integer.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        integer, intent(in) :: m(:) !! population counts by category
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
-        integer, intent(out) :: sample(:) !! sampled category counts
+        integer, intent(out) :: sample(:) !! shape (k); sampled category counts
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid input
 
         integer :: draw
@@ -189,10 +212,14 @@ contains
     end subroutine multivariate_hypergeom_rvs
 
     subroutine multivariate_hypergeom_rvs_array(state, m, n, samples, status)
+        !! Draw count vectors by column using explicit RNG state.
+        !! k=size(m), n_samples=size(samples,2); k>=1 and n_samples>=0 for valid calls.
+        !! size(samples,1)=k; empty batches still validate population and sample size.
+        !! Population sums must fit the native default integer.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        integer, intent(in) :: m(:) !! population counts by category
+        integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement
-        integer, intent(out) :: samples(:, :) !! samples by column, shape (categories, nsamples)
+        integer, intent(out) :: samples(:, :) !! shape (k,n_samples); samples by column
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid input
 
         integer :: j
@@ -218,7 +245,9 @@ contains
     end subroutine multivariate_hypergeom_rvs_array
 
     pure logical function valid_parameters(m, n) result(valid)
-        integer, intent(in) :: m(:) !! candidate population counts
+        !! Check population and draw counts; population sums must be representable.
+        !! k=size(m), k>=0; empty m returns false.
+        integer, intent(in) :: m(:) !! shape (k); candidate population counts
         integer, intent(in) :: n !! candidate sample size
 
         valid = size(m) >= 1 .and. all(m >= 0) .and. n >= 0
@@ -226,6 +255,8 @@ contains
     end function valid_parameters
 
     pure function log_binomial(n, k) result(y)
+        !! Compute the logarithm of a binomial coefficient through log gamma.
+        !! n+1 and k+1 must be representable native default integers.
         integer, intent(in) :: n !! nonnegative total count
         integer, intent(in) :: k !! selected count in [0,n]
         real(dp) :: y

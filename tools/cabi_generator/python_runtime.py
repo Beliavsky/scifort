@@ -128,6 +128,13 @@ class ArrayGroup:
     """Typed, descriptor-free C array calls driven by reviewed shape metadata."""
     _specs = {}
 
+    @staticmethod
+    def _integer_array(value, name):
+        array = np.asarray(value)
+        if array.dtype.kind not in 'iu':
+            raise TypeError(f'{name} must contain integers, without floats or booleans')
+        return array
+
     def __init__(self, library):
         self._library = library
         self._functions = {}
@@ -161,12 +168,13 @@ class ArrayGroup:
                     raise TypeError(f'{arg} must be a boolean')
                 values[arg] = spec['logical_inputs'][arg]['true' if value else 'false']
                 continue
-            array = Distribution._real_array(value, arg)
+            array = (self._integer_array(value, arg) if info['category'] == 'integer'
+                     else Distribution._real_array(value, arg))
             if array.ndim != info['rank']:
                 raise ValueError(f'{arg} must have rank {info["rank"]}')
             originals[arg] = array
             if not info['rank']:
-                values[arg] = float(array)
+                values[arg] = int(array) if info['category'] == 'integer' else float(array)
         dimensions = {}
         for dim in spec['dimensions']:
             definition = spec['definitions'][dim]
@@ -179,6 +187,18 @@ class ArrayGroup:
         for dim, rule in spec.get('length_choices', {}).items():
             if dimensions[dim] not in [dimensions[rule['dimension']] + offset for offset in rule['offsets']]:
                 raise ValueError(f'{dim} does not satisfy the required dimension choices')
+        for arg, array in originals.items():
+            if spec['metadata'][arg]['category'] != 'integer' or not array.size:
+                continue
+            minimum, maximum = int(np.min(array)), int(np.max(array))
+            limits = spec.get('integer_limits', {}).get(arg, dict(minimum=-2147483648, maximum=2147483647))
+            if minimum < limits['minimum'] or maximum > limits['maximum']:
+                raise ValueError(f'{arg} is outside the supported C integer range or configured limits')
+        for arg, ceiling in spec.get('integer_sums', {}).items():
+            # Rank one and C-int extents/elements bound the widened sum below 2**63.
+            total = np.sum(np.abs(originals[arg].astype(np.int64)), dtype=np.int64)
+            if total > ceiling:
+                raise ValueError(f'{arg} exceeds the configured absolute integer sum limit')
         shapes = {a: tuple(dimensions[d] for d in dims) for a, dims in spec['shapes'].items()}
         for arg, fill in spec.get('array_defaults', {}).items():
             if inputs[arg] is None:
@@ -228,8 +248,9 @@ class ArrayGroup:
         # Prepare C memory only after all Python validation. Keep every buffer alive.
         for arg, original in originals.items():
             if spec['metadata'][arg]['rank']:
-                buffers[arg] = (np.require(original, dtype=np.float64, requirements=['F', 'A'])
-                                if original.size else np.empty(1, dtype=np.float64))
+                dtype = np.intc if spec['metadata'][arg]['category'] == 'integer' else np.float64
+                buffers[arg] = (np.require(original, dtype=dtype, requirements=['F', 'A'])
+                                if original.size else np.empty(1, dtype=dtype))
                 values[arg] = buffers[arg].ctypes.data_as(C.c_void_p)
         for arg, array in outputs.items():
             buffers[arg] = array if array.size else np.empty(1, dtype=np.float64)

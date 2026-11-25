@@ -1,0 +1,296 @@
+{
+  "generated_symbol_count": 5,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "n",
+        "p",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(p)",
+        "size(p)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multinomial_cov",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "k"
+        ],
+        "value": [
+          "k",
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multinomial_cov_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "n",
+        "p",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multinomial_entropy",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multinomial_entropy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "n",
+        "p",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multinomial_logpmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "k"
+        ],
+        "x": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multinomial_logpmf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "n",
+        "p",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(p)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multinomial_mean",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multinomial_mean_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "n",
+        "p",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multinomial_pmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "k"
+        ],
+        "x": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multinomial_pmf_f64"
+      ]
+    },
+    {
+      "procedure": "multinomial_rvs",
+      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multinomial_rvs_array",
+      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multinomial_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multinomial_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multinomial_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 10,
+  "source": "src/stats/multinomial.f90",
+  "source_sha256": "03b8d4d3b9b30d4b0712f121fd2439772428ece048f037873e5fcfb82a469675"
+}

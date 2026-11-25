@@ -2,6 +2,8 @@
   "array_groups": [
     "dirichlet",
     "linalg",
+    "multinomial",
+    "multivariate_hypergeom",
     "multivariate_normal",
     "multivariate_t"
   ],
@@ -94,6 +96,14 @@
       "src/kinds.f90",
       "src/stats/matrix_distribution_helpers.f90"
     ],
+    "src/c_api/generated/multinomial_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/multinomial.f90"
+    ],
+    "src/c_api/generated/multivariate_hypergeom_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/multivariate_hypergeom.f90"
+    ],
     "src/c_api/generated/multivariate_normal_generated.f90": [
       "src/kinds.f90",
       "src/stats/multivariate_normal.f90"
@@ -164,6 +174,12 @@
       "src/special/incomplete_beta.f90",
       "src/special/log_gamma.f90"
     ],
+    "src/stats/binomial.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_beta.f90",
+      "src/stats/normal.f90"
+    ],
     "src/stats/cauchy.f90": [
       "src/constants.f90",
       "src/kinds.f90",
@@ -190,6 +206,10 @@
       "src/math.f90",
       "src/special/incomplete_gamma.f90"
     ],
+    "src/stats/hypergeom.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
     "src/stats/laplace.f90": [
       "src/constants.f90",
       "src/kinds.f90",
@@ -208,6 +228,20 @@
       "src/kinds.f90",
       "src/linalg.f90",
       "src/special/elementary.f90"
+    ],
+    "src/stats/multinomial.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/elementary.f90",
+      "src/stats/binomial.f90"
+    ],
+    "src/stats/multivariate_hypergeom.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/elementary.f90",
+      "src/stats/hypergeom.f90"
     ],
     "src/stats/multivariate_integration.f90": [
       "src/kinds.f90",
@@ -282,6 +316,7 @@
     "cg_python_t_compat": "bindings/python/native/t_compat.f90",
     "cg_python_weibull_compat": "bindings/python/native/weibull_compat.f90",
     "scifort_beta": "src/stats/beta.f90",
+    "scifort_binomial": "src/stats/binomial.f90",
     "scifort_c_api_generated_beta": "src/c_api/generated/beta_generated.f90",
     "scifort_c_api_generated_cauchy": "src/c_api/generated/cauchy_generated.f90",
     "scifort_c_api_generated_chi2": "src/c_api/generated/chi2_generated.f90",
@@ -293,6 +328,8 @@
     "scifort_c_api_generated_logistic": "src/c_api/generated/logistic_generated.f90",
     "scifort_c_api_generated_lognormal": "src/c_api/generated/lognormal_generated.f90",
     "scifort_c_api_generated_matrix_helpers": "src/c_api/generated/matrix_helpers_generated.f90",
+    "scifort_c_api_generated_multinomial": "src/c_api/generated/multinomial_generated.f90",
+    "scifort_c_api_generated_multivariate_hypergeom": "src/c_api/generated/multivariate_hypergeom_generated.f90",
     "scifort_c_api_generated_multivariate_normal": "src/c_api/generated/multivariate_normal_generated.f90",
     "scifort_c_api_generated_multivariate_t": "src/c_api/generated/multivariate_t_generated.f90",
     "scifort_c_api_generated_normal": "src/c_api/generated/normal_generated.f90",
@@ -305,6 +342,7 @@
     "scifort_dirichlet": "src/stats/dirichlet.f90",
     "scifort_exponential": "src/stats/exponential.f90",
     "scifort_gamma": "src/stats/gamma.f90",
+    "scifort_hypergeom": "src/stats/hypergeom.f90",
     "scifort_incomplete_beta": "src/special/incomplete_beta.f90",
     "scifort_incomplete_gamma": "src/special/incomplete_gamma.f90",
     "scifort_kinds": "src/kinds.f90",
@@ -315,6 +353,8 @@
     "scifort_lognormal": "src/stats/lognormal.f90",
     "scifort_math": "src/math.f90",
     "scifort_matrix_distribution_helpers": "src/stats/matrix_distribution_helpers.f90",
+    "scifort_multinomial": "src/stats/multinomial.f90",
+    "scifort_multivariate_hypergeom": "src/stats/multivariate_hypergeom.f90",
     "scifort_multivariate_integration": "src/stats/multivariate_integration.f90",
     "scifort_multivariate_normal": "src/stats/multivariate_normal.f90",
     "scifort_multivariate_t": "src/stats/multivariate_t.f90",
@@ -349,6 +389,8 @@
     "src/c_api/generated/logistic_generated.f90": "55c171ea93a4c34a385ddba7e096758d07c4c8626d4ca07c8c5c7d925f30bfe0",
     "src/c_api/generated/lognormal_generated.f90": "4227348a38dcc8663865370649bd7324f056da70d96f832c7457f4f8526574c1",
     "src/c_api/generated/matrix_helpers_generated.f90": "ca33490309baf72cd79003fb447ef0227d74860ad6bf41b47d48933cadd0ac71",
+    "src/c_api/generated/multinomial_generated.f90": "bbda3b235874eeaa5bb78f7bbf07f9ca1c876bac2e5462c774a868517d06cdb3",
+    "src/c_api/generated/multivariate_hypergeom_generated.f90": "c838f4afc19ea8324e97d17d90bb44aca55bd472cf0e9132bdb1d51245f70df4",
     "src/c_api/generated/multivariate_normal_generated.f90": "63bc151b406d87a32a433899ea35dc2c685e2cbb28315d6bc5dce4f666488f14",
     "src/c_api/generated/multivariate_t_generated.f90": "707b02802119ae897b260dc0b422f9770f8f55faaa8cce8bbd5c49af8ac118e2",
     "src/c_api/generated/normal_generated.f90": "0724a9f4d76b161ebbfcb2691dd496e6cea8ef089b5d7547101d630d6d1c575c",
@@ -365,15 +407,19 @@
     "src/special/incomplete_gamma.f90": "a875fd5ea91ab4c560738d90e8c0f7e81da35fdf76719f378b26f87c063504c4",
     "src/special/log_gamma.f90": "6b8eef3378bc4fbad5cd20d89749d849b7367b222a61c416eb7a9605271937b8",
     "src/stats/beta.f90": "9a80b597be81fb97ee03e888388fe0f36faf51c6ca8c9f7ab1e5b5260696f049",
+    "src/stats/binomial.f90": "a53ab15f1c61d297f0817b69491cb725577eb33ba5d705491bb5028bad551dc1",
     "src/stats/cauchy.f90": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5",
     "src/stats/chi2.f90": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8",
     "src/stats/dirichlet.f90": "c65c878799d28f7e669e37ba3ade3931481b3ecd5d223ac4cb5646ba4db63566",
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
+    "src/stats/hypergeom.f90": "f1667ae722f1af2262936c5110e26f71cfb715868c861c92b6196b5a2a53740a",
     "src/stats/laplace.f90": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57",
     "src/stats/logistic.f90": "ee5488b4d39aacd4a2e1b3f4d364836e234a13d412bf327585d96e01518795a5",
     "src/stats/lognormal.f90": "14ba6ae77569d7d4c0711cb9d66e73183d187407e3c06300c09a9488de8b9274",
     "src/stats/matrix_distribution_helpers.f90": "1811a2fa5ad5b435c80aeb32de738a16a2ca6bef713010557c8fd10f89b58c41",
+    "src/stats/multinomial.f90": "03b8d4d3b9b30d4b0712f121fd2439772428ece048f037873e5fcfb82a469675",
+    "src/stats/multivariate_hypergeom.f90": "faf4c74535781227b4003d508cf04977d5ebbb1704c79fca102e98107ad88d9f",
     "src/stats/multivariate_integration.f90": "c9aeb7ff1c9bfd2a1ff9c39cc65a2e4419c24899453f88371a569b1c9ade97d9",
     "src/stats/multivariate_normal.f90": "41ffbb99ef550c2de3a4fceb561e7c05a5c57cd6ddbe92eac58750161fff0644",
     "src/stats/multivariate_t.f90": "ea3a96719af85e5b9c518c05091477ad8a6e65fdd64dc56041c66fc5bff7ae3a",
@@ -427,6 +473,12 @@
     "src/c_api/generated/lognormal_generated.f90",
     "src/stats/matrix_distribution_helpers.f90",
     "src/c_api/generated/matrix_helpers_generated.f90",
+    "src/stats/binomial.f90",
+    "src/stats/multinomial.f90",
+    "src/c_api/generated/multinomial_generated.f90",
+    "src/stats/hypergeom.f90",
+    "src/stats/multivariate_hypergeom.f90",
+    "src/c_api/generated/multivariate_hypergeom_generated.f90",
     "src/stats/multivariate_integration.f90",
     "src/stats/multivariate_normal.f90",
     "src/c_api/generated/multivariate_normal_generated.f90",

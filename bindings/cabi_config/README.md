@@ -417,3 +417,33 @@ See [generated native shape tables](../../docs/dirichlet_shapes.md) and
 All assumed-shape procedures in the native module, including sampling and private
 validation, now document their dimensions. Sampling remains outside this C batch
 because explicit RNG state needs a separately reviewed handle design.
+
+## Multinomial and multivariate hypergeometric adapters
+
+[multinomial.json](multinomial.json) selects PMF, log-PMF, entropy, mean and
+covariance. [multivariate_hypergeom.json](multivariate_hypergeom.json) selects
+PMF, log-PMF, mean, variance and covariance. Their symbols are named
+`scifort_<family>_<method>_f64`; all are void subroutines with leading C-int
+category count k>=1, native argument order, result pointer and status pointer.
+Scalar native integers are by-value C int; integer arrays use `const int *`.
+Native real arrays and scalar/array results use double. Storage is contiguous,
+column-major, aligned, non-NULL, disjoint and caller-owned, with sufficient
+lengths. See their generated headers for exact prototypes.
+
+All methods limit n to [-2147483648,2147483646]. Hypergeometric integer x/m arrays
+also require sum(abs(array))<=2147483646, evaluated in widened arithmetic.
+These explicit call guards prevent overflow in native sums and count increments.
+Invalid extents or safety bounds return status 1 with results unchanged. Otherwise
+status is 0, including native NaN for invalid parameters or zero/-infinity for
+impossible observations. These are not native sampling status enumerations.
+The original Fortran API and numerical formulas are unchanged.
+
+Python integer values are checked before conversion to C int; floats and booleans
+are rejected for native integer arguments. Multinomial x is a native real array
+and retains its integer-valued support checks. Finite probabilities use the native
+final-entry adjustment before adjusted-range validation. See the detailed
+[Python input/buffer contract](../python/README.md#multinomial-and-multivariate-hypergeometric-distributions),
+[multinomial shape tables](../../docs/multinomial_shapes.md), and
+[hypergeometric shape tables](../../docs/multivariate_hypergeom_shapes.md).
+Sampling remains native-only pending explicit RNG handle design. Both modules'
+private and sampling array arguments now have readable shape documentation.

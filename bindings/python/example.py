@@ -45,6 +45,19 @@ def main():
     covariance = np.empty((3, 3), order='F')
     api.dirichlet.cov([2., 3., 4.], out=covariance)
     print('Dirichlet covariance:', covariance)
+    print('multinomial PMF/log-PMF:', api.multinomial.pmf([1., 3.], 4, [.2, .8]),
+          api.multinomial.logpmf([1., 3.], 4, [.2, .8]))
+    print('multinomial entropy/mean:', api.multinomial.entropy(4, [.2, .8]),
+          api.multinomial.mean(4, [.2, .8]))
+    print('multinomial covariance:', api.multinomial.cov(4, [.2, .8]))
+    print('multivariate hypergeometric PMF/log-PMF:',
+          api.multivariate_hypergeom.pmf([1, 3], [3, 5], 4),
+          api.multivariate_hypergeom.logpmf([1, 3], [3, 5], 4))
+    print('multivariate hypergeometric mean/variance:',
+          api.multivariate_hypergeom.mean([3, 5], 4),
+          api.multivariate_hypergeom.var([3, 5], 4))
+    print('multivariate hypergeometric covariance:',
+          api.multivariate_hypergeom.cov([3, 5], 4))
 
 
 if __name__ == '__main__':

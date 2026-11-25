@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 143 |
+| exports | 163 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 18 |
+| array_adapters | 28 |
 | elementwise | 88 |
-| python | 106 |
+| python | 116 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -108,6 +108,26 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_matrix_distribution_helpers | solve_lower_matrix |  |  | scifort_solve_lower_matrix_f64 |  | linalg.solve_lower_matrix |
 | scifort_matrix_distribution_helpers | solve_spd_matrix |  |  | scifort_solve_spd_matrix_f64 |  | linalg.solve_spd_matrix |
 | scifort_matrix_distribution_helpers | spd_factor |  |  | scifort_spd_factor_f64 |  | linalg.spd_factor |
+| scifort_multinomial | multinomial_cov |  |  | scifort_multinomial_cov_f64 |  | multinomial.cov |
+| scifort_multinomial | multinomial_entropy |  |  | scifort_multinomial_entropy_f64 |  | multinomial.entropy |
+| scifort_multinomial | multinomial_logpmf |  |  | scifort_multinomial_logpmf_f64 |  | multinomial.logpmf |
+| scifort_multinomial | multinomial_mean |  |  | scifort_multinomial_mean_f64 |  | multinomial.mean |
+| scifort_multinomial | multinomial_pmf |  |  | scifort_multinomial_pmf_f64 |  | multinomial.pmf |
+| scifort_multinomial | multinomial_rvs |  |  |  |  |  |
+| scifort_multinomial | multinomial_rvs_array |  |  |  |  |  |
+| scifort_multinomial | multinomial_status_invalid_parameter |  |  |  |  |  |
+| scifort_multinomial | multinomial_status_invalid_shape |  |  |  |  |  |
+| scifort_multinomial | multinomial_status_success |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_cov |  |  | scifort_multivariate_hypergeom_cov_f64 |  | multivariate_hypergeom.cov |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_logpmf |  |  | scifort_multivariate_hypergeom_logpmf_f64 |  | multivariate_hypergeom.logpmf |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_mean |  |  | scifort_multivariate_hypergeom_mean_f64 |  | multivariate_hypergeom.mean |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_pmf |  |  | scifort_multivariate_hypergeom_pmf_f64 |  | multivariate_hypergeom.pmf |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_rvs |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_rvs_array |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_status_invalid_parameter |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_status_invalid_shape |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_status_success |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_var |  |  | scifort_multivariate_hypergeom_var_f64 |  | multivariate_hypergeom.var |
 | scifort_multivariate_normal | multivariate_normal_cdf |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_entropy |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_fit |  |  |  |  |  |

@@ -82,3 +82,10 @@ Dirichlet PDF, log-PDF, entropy and moments are available through generated C
 adapters and `api.dirichlet`. Mean/variance/covariance return arrays with optional
 caller-owned buffers. See the [Python contract](python/README.md#dirichlet-distributions)
 and [native shape tables](../docs/dirichlet_shapes.md).
+
+Generated multinomial and multivariate hypergeometric interfaces provide masses
+and moments under `api.multinomial` and `api.multivariate_hypergeom`. Their
+[integer/buffer contract](python/README.md#multinomial-and-multivariate-hypergeometric-distributions)
+includes explicit overflow guards; see the
+[multinomial](../docs/multinomial_shapes.md) and
+[hypergeometric](../docs/multivariate_hypergeom_shapes.md) shape tables.

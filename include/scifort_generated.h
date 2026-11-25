@@ -13,6 +13,8 @@
 #include "scifort_generated_logistic.h"
 #include "scifort_generated_lognormal.h"
 #include "scifort_generated_matrix_helpers.h"
+#include "scifort_generated_multinomial.h"
+#include "scifort_generated_multivariate_hypergeom.h"
 #include "scifort_generated_multivariate_normal.h"
 #include "scifort_generated_multivariate_t.h"
 #include "scifort_generated_normal.h"

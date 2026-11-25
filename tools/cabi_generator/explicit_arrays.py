@@ -16,7 +16,7 @@ def prepare(config, api, identifier, source_lines):
         is_function = name in config.get('array_functions', {})
         if is_function:
             fields |= {'result_argument', 'optional_policy'}
-        if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract", "length_choices"} != fields:
+        if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract", "length_choices", "integer_limits", "integer_sums"} != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         identifier(policy["symbol"])
         node = api[name]
@@ -126,14 +126,10 @@ def prepare(config, api, identifier, source_lines):
                 continue
             if arg in logical_inputs:
                 raise ValueError(f"{name}: logical_inputs must map logical arguments")
-            if str(dtype).lower() == "integer":
-                if intent != "out" or any(entity.items[1:]):
-                    raise ValueError(f"{name}: only default-integer scalar outputs are supported")
-                metadata[arg] = dict(intent=intent, rank=0, category='integer')
-                continue
+            category = 'integer' if str(dtype).lower() == 'integer' else 'real'
             kind = config["kind_name"]
-            if str(dtype).lower().replace(" ", "") not in (f"real({kind})", f"real(kind={kind})"):
-                raise ValueError(f"{name}: {arg} must be real({kind})")
+            if category != 'integer' and str(dtype).lower().replace(" ", "") not in (f"real({kind})", f"real(kind={kind})"):
+                raise ValueError(f"{name}: {arg} must be real({kind}) or default integer")
             shape = entity.items[1]
             if any(entity.items[2:]) or (shape and (not isinstance(shape, F.Assumed_Shape_Spec_List)
                                                   or any(str(item) != ":" for item in shape.items))):
@@ -141,7 +137,9 @@ def prepare(config, api, identifier, source_lines):
             rank = len(shape.items) if shape else 0
             if rank > 2:
                 raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
-            metadata[arg] = dict(intent=intent, rank=rank, category='real')
+            if category == 'integer' and (intent == 'inout' or (intent == 'out' and rank)):
+                raise ValueError(f'{name}: integer arrays are input-only; integer outputs must be scalar')
+            metadata[arg] = dict(intent=intent, rank=rank, category=category)
             if is_function and 'optional' in attrs:
                 metadata[arg]['optional'] = True
         shapes = policy["shapes"]
@@ -158,6 +156,21 @@ def prepare(config, api, identifier, source_lines):
         if used != set(dimensions):
             raise ValueError(f"{name}: unused dimension names")
         choices = shape_contracts.length_choices(policy, dimensions)
+        for key in ('integer_limits', 'integer_sums'):
+            rules = policy.get(key, {})
+            if not isinstance(rules, dict):
+                raise ValueError(f'{name}: {key} must be an object')
+            for arg, rule in rules.items():
+                info = metadata.get(arg, {})
+                if info.get('category') != 'integer' or info.get('intent') != 'in':
+                    raise ValueError(f'{name}: {key} must name integer inputs')
+                if key == 'integer_limits':
+                    if (not isinstance(rule, dict) or set(rule) != {'minimum','maximum'}
+                            or any(type(v) is not int or not -2147483648 <= v <= 2147483647 for v in rule.values())
+                            or rule['minimum'] > rule['maximum']):
+                        raise ValueError(f'{name}: integer limits need ordered C int minimum/maximum')
+                elif (info['rank'] != 1 or type(rule) is not int or not 0 <= rule <= 2147483647):
+                    raise ValueError(f'{name}: integer sums need rank-one inputs and nonnegative C int absolute-sum limits')
         result_extents = []
         if is_function and metadata[result]['rank']:
             for dim, extent in zip(shapes[result], result_shape.items):
@@ -213,6 +226,8 @@ def emit(entry, index, config):
     dimensions, shapes = entry["dimensions"], policy["shapes"]
     lines = [f"    subroutine {symbol}( &", "        " + ", ".join([*dimensions, *args]) + ") &",
              f'        bind(c, name="{symbol}")', f"        !! {policy['description']}",
+             *(["        use, intrinsic :: iso_c_binding, only : c_int64_t"]
+               if policy.get('integer_limits') or policy.get('integer_sums') else []),
              "        implicit none"]
     cargs = []
     for dim in dimensions:
@@ -231,8 +246,8 @@ def emit(entry, index, config):
                 declaration = "integer(c_int), value, intent(in)"
                 ctype = "int"
             elif info['category'] == 'integer':
-                declaration = "integer(c_int), intent(inout)"
-                ctype = "int *"
+                declaration = f"integer(c_int){value}, intent({intent})"
+                ctype = 'int' if value else ('const int *' if intent == 'in' else 'int *')
             else:
                 declaration = f"real(c_double){value}, intent({intent})"
                 ctype = "double" if value else ("const double *" if intent == "in" else "double *")
@@ -260,6 +275,16 @@ def emit(entry, index, config):
                   f"                {arg} /= {mapping['true']}_c_int) then",
                   f"            {status}={policy['invalid_status']}_c_int", "            return", "        end if",
                   f"        cg_logical_{arg}=({arg} == {mapping['true']}_c_int)"]
+    for arg, rule in policy.get('integer_limits', {}).items():
+        array = metadata[arg]['rank'] > 0
+        checks = [f"{arg} < {rule['minimum']}_c_int64_t", f"{arg} > {rule['maximum']}_c_int64_t"]
+        if array:
+            checks = [f'any({check})' for check in checks]
+        lines += [f'        if ({checks[0]} .or. &', f'                {checks[1]}) then',
+                  f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
+    for arg, ceiling in policy.get('integer_sums', {}).items():
+        lines += [f'        if (sum(abs(int({arg},c_int64_t))) > {ceiling}_c_int64_t) then',
+                  f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
     native_args = entry.get('native_args', args)
     call = (f"{entry['result_argument']}=cg_native_{index}" if 'result_argument' in entry
             else f'call cg_native_{index}')
@@ -295,6 +320,15 @@ def emit(entry, index, config):
         record['length_choices'] = entry['length_choices']
         header[-3:-3] = [f" * Required: {dim} in ({shape_contracts.choice_text(rule)}); invalid status preserves output."
                          for dim, rule in entry['length_choices'].items()]
+    for key in ('integer_limits', 'integer_sums'):
+        if policy.get(key):
+            record[key] = policy[key]
+    if policy.get('integer_limits') or policy.get('integer_sums'):
+        header[-3:-3] = [f" * Required integer range: {r['minimum']} <= {a} <= {r['maximum']}."
+                         for a, r in policy.get('integer_limits', {}).items()]
+        header[-3:-3] = [f" * Required widened bound: sum(abs({a})) <= {ceiling}."
+                         for a, ceiling in policy.get('integer_sums', {}).items()]
+        header[-3:-3] = [f" * Rejected integer guards return status {policy['invalid_status']} with output unchanged."]
     if 'result_argument' in entry:
         record.update(interface='explicit_shape_function', result_argument=entry['result_argument'])
         header[-3:-3] = [' * Status 0 means the call was valid; native numerical NaN/infinity is retained.']

@@ -1,0 +1,319 @@
+{
+  "generated_symbol_count": 5,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "m",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "integer_sums": {
+        "m": 2147483646
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(m)",
+        "size(m)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multivariate_hypergeom_cov",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "m",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "m": [
+          "k"
+        ],
+        "value": [
+          "k",
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_hypergeom_cov_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "m",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "integer_sums": {
+        "m": 2147483646,
+        "x": 2147483646
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multivariate_hypergeom_logpmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "m",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "m": [
+          "k"
+        ],
+        "x": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_hypergeom_logpmf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "m",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "integer_sums": {
+        "m": 2147483646
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(m)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multivariate_hypergeom_mean",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "m",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "m": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_hypergeom_mean_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "m",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "integer_sums": {
+        "m": 2147483646,
+        "x": 2147483646
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multivariate_hypergeom_pmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "m",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "m": [
+          "k"
+        ],
+        "x": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_hypergeom_pmf_f64"
+      ]
+    },
+    {
+      "procedure": "multivariate_hypergeom_rvs",
+      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_hypergeom_rvs_array",
+      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_hypergeom_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_hypergeom_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_hypergeom_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "m",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "integer_sums": {
+        "m": 2147483646
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(m)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "multivariate_hypergeom_var",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "m",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "m": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_hypergeom_var_f64"
+      ]
+    }
+  ],
+  "public_api_count": 10,
+  "source": "src/stats/multivariate_hypergeom.f90",
+  "source_sha256": "faf4c74535781227b4003d508cf04977d5ebbb1704c79fca102e98107ad88d9f"
+}

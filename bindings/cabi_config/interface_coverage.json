@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 18,
+    "array_adapters": 28,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 143,
-    "python": 106,
+    "exports": 163,
+    "python": 116,
     "scalar": 88
   },
   "procedures": [
@@ -850,6 +850,136 @@
       "module": "scifort_matrix_distribution_helpers",
       "procedure": "spd_factor",
       "python": "linalg.spd_factor"
+    },
+    {
+      "array_adapter": "scifort_multinomial_cov_f64",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_cov",
+      "python": "multinomial.cov"
+    },
+    {
+      "array_adapter": "scifort_multinomial_entropy_f64",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_entropy",
+      "python": "multinomial.entropy"
+    },
+    {
+      "array_adapter": "scifort_multinomial_logpmf_f64",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_logpmf",
+      "python": "multinomial.logpmf"
+    },
+    {
+      "array_adapter": "scifort_multinomial_mean_f64",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_mean",
+      "python": "multinomial.mean"
+    },
+    {
+      "array_adapter": "scifort_multinomial_pmf_f64",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_pmf",
+      "python": "multinomial.pmf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multinomial",
+      "procedure": "multinomial_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_multivariate_hypergeom_cov_f64",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_cov",
+      "python": "multivariate_hypergeom.cov"
+    },
+    {
+      "array_adapter": "scifort_multivariate_hypergeom_logpmf_f64",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_logpmf",
+      "python": "multivariate_hypergeom.logpmf"
+    },
+    {
+      "array_adapter": "scifort_multivariate_hypergeom_mean_f64",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_mean",
+      "python": "multivariate_hypergeom.mean"
+    },
+    {
+      "array_adapter": "scifort_multivariate_hypergeom_pmf_f64",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_pmf",
+      "python": "multivariate_hypergeom.pmf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_multivariate_hypergeom_var_f64",
+      "module": "scifort_multivariate_hypergeom",
+      "procedure": "multivariate_hypergeom_var",
+      "python": "multivariate_hypergeom.var"
     },
     {
       "bulk_generated": false,

@@ -75,8 +75,10 @@ def prepare(policy, root, py_name):
                                                            and shape[0] == shape[1]))):
                             raise ValueError(f'{name}: array defaults need an optional array and zeros or square identity fill')
                         continue
-                    valid = type(value) is bool if info['category'] == 'logical' else (
-                        type(value) in (int, float) and math.isfinite(value))
+                    valid = (type(value) is bool if info['category'] == 'logical' else
+                             type(value) is int and -2147483648 <= value <= 2147483647
+                             if info['category'] == 'integer' else
+                             type(value) in (int, float) and math.isfinite(value))
                     if not valid:
                         raise ValueError(f'{name}: defaults must match scalar input types')
                 parameters, seen_default = [], False
@@ -103,6 +105,9 @@ def prepare(policy, root, py_name):
                     spec['result_argument'] = entry['result_argument']
                 if entry.get('length_choices'):
                     spec['length_choices'] = entry['length_choices']
+                for key in ('integer_limits', 'integer_sums'):
+                    if entry['policy'].get(key):
+                        spec[key] = entry['policy'][key]
                 specs[name] = spec
                 actuals = ', '.join(f'{a!r}: {a}' for a in inputs)
                 function_result = 'result_argument' in entry

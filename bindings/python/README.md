@@ -6,7 +6,8 @@ and ISF for `normal`, `exponential`, `logistic`, `laplace`, `cauchy`, `weibull`,
 binary64 C calling convention. Eight matrix methods are available under `api.linalg`,
 and multivariate normal/Student-t PDF/log-PDF under `api.multivariate_normal`
 and `api.multivariate_t`. `api.dirichlet` provides PDF, log-PDF, entropy, mean,
-variance and covariance.
+variance and covariance. Multinomial and multivariate hypergeometric methods are
+available under `api.multinomial` and `api.multivariate_hypergeom`.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -274,6 +275,65 @@ not native `dirichlet_status_*` error values. Native numerical implementations
 and their limitations are unchanged. Rebuild the development library for these
 six symbols. RNG procedures remain native Fortran APIs; their array shapes and
 empty-batch behavior are documented in the source.
+
+## Multinomial and multivariate hypergeometric distributions
+
+```python
+api.multinomial.pmf([1., 3.], n=4, p=[.2, .8])
+api.multinomial.logpmf([1., 3.], n=4, p=[.2, .8])
+api.multinomial.entropy(n=4, p=[.2, .8])
+api.multinomial.mean(n=4, p=[.2, .8])
+api.multinomial.cov(n=4, p=[.2, .8])
+api.multivariate_hypergeom.pmf([1, 3], m=[3, 5], n=4)
+api.multivariate_hypergeom.logpmf([1, 3], m=[3, 5], n=4)
+api.multivariate_hypergeom.mean(m=[3, 5], n=4)
+api.multivariate_hypergeom.var(m=[3, 5], n=4)
+api.multivariate_hypergeom.cov(m=[3, 5], n=4)
+```
+
+Both families use k >= 1 categories and return scalar floats or binary64 arrays.
+Mean/variance return shape (k), covariance shape (k,k); array methods accept
+`out=ndarray` with the same Fortran-contiguous storage, identity, alignment,
+write-permission and nonoverlap rules as Dirichlet. There is no broadcasting or
+point batching. See [multinomial shapes](../../docs/multinomial_shapes.md) and
+[multivariate hypergeometric shapes](../../docs/multivariate_hypergeom_shapes.md).
+
+Multinomial counts `x(k)` use the native real-array API, so floating-point input
+is accepted. A valid count vector is finite, nonnegative, integer-valued and sums
+to n; impossible counts return PMF 0/log-PMF negative infinity. Invalid n or
+adjusted probabilities return native NaN. All input probabilities must be finite.
+When their sum differs from 1 by more than `10*epsilon(binary64)`, native code
+replaces the final probability with `1-sum(p[:-1])`, then checks the adjusted
+vector lies in [0,1]. This can replace an originally negative/out-of-range final
+entry. The wrapper retains this native behavior. Zero trials are supported;
+entropy uses a native loop with work proportional to n times category count.
+
+Trial/draw count n must be a Python/NumPy integer scalar. Hypergeometric `x(k)`
+and population `m(k)` must contain integers; floating-point arrays (even integral
+ones), booleans, strings and object arrays are rejected. Signed/unsigned and
+nonnative-endian integer arrays are accepted after range checks and converted to
+aligned native `np.intc` storage. Noncontiguous and read-only inputs are accepted.
+No integer narrowing or float-to-integer truncation happens before validation.
+
+The integer ABI uses C int, with Python values checked against signed 32-bit
+bounds. These reviewed adapters further require n <= 2147483646, and the
+hypergeometric arrays each satisfy `sum(abs(array)) <= 2147483646`, evaluated in
+widened arithmetic. These call-level bounds prevent overflow in existing native
+default-integer sums and count increments. Out-of-range values raise before C;
+raw C guards return status 1 and preserve output. Smaller negative counts still
+reach native numerical validation: invalid population/draw parameters yield NaN,
+while impossible observations yield PMF 0/log-PMF negative infinity. Hypergeometric
+zero population with n=0 retains native PMF 1 and zero moments.
+
+Every C argument is required, with explicit category count k, native inputs,
+caller-owned result buffers and status. Arrays must be valid, aligned, contiguous,
+non-NULL and disjoint; real arrays/results use doubles, integer inputs use C int.
+Status 1 denotes invalid extent or configured integer bounds; status 0 retains
+native numerical results, including NaN. Numerical failures can write NaN into
+caller buffers; Python validation failures leave them untouched. These call
+statuses are separate from native sampling status constants. Rebuild the
+development library for the ten new symbols. Native numerical limitations remain
+unchanged; the source now documents sampling and private-helper shape contracts.
 
 ## Generation and shared-library boundary
 
@@ -669,3 +729,48 @@ are outside this batch. No new external dependency or numerical formula was
 introduced. The full FPM numerical suite was not rerun: the changed generator,
 optional ABI/runtime and dependency build plan are covered by the focused checks.
 Timing baselines were not refreshed.
+
+## Integer-input distribution interface validation (2026-11-25)
+
+Validation commands (CMD):
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+python -m unittest discover -s bindings/python/tests -p test_discrete_multivariate.py -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+python bindings/python/example.py
+```
+
+All 64 generator/workflow tests passed. Independent integer fixtures compile and
+run in checked and optimized profiles, including `-ftrapv` for the checked integer
+guards, INT_MIN/INT_MAX arrays, widened sum limits and unchanged rejected outputs.
+All 31 existing Python integration tests passed; the six new discrete-multivariate
+cases passed on their focused rerun after correcting a C test's bitwise covariance
+symmetry assumption to a numerical check. The native entries differed by one
+rounding unit; numerical implementations were not changed. These checks cover
+101 distinct test cases. The example ran successfully with all ten new methods.
+
+The new cases cover SciPy reference values, mass/support behavior, zero trials
+and populations, final-probability adjustment, entropy and covariance identities,
+integer dtype/endianness/alignment conversions, rejected floats/booleans/overflow,
+shape/alias validation, caller-buffer identity/preservation and direct native/C
+agreement. Compiled C clients call all ten symbols under C11 with
+`-Wall -Wextra -Werror`; headers pass C++17 checks.
+
+Validation used GNU Fortran 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5 on Windows, with GCC/G++ clients.
+The shared libraries use checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized
+(`-O3`) profiles, plus `-std=f2018 -fimplicit-none -Werror=implicit-interface`.
+Other platforms/compilers remain unverified. Native numerical limitations and
+probability-adjustment behavior are retained; explicit ABI bounds protect native
+integer arithmetic without extending its precision.
+
+The read-only pipeline check passed for all 100 artifacts. Native source diffs
+contain documentation only after stripping comments. Shape-policy agreement,
+Markdown local links, encoding/BOM, Fortran ASCII/line limits and whitespace
+checks passed. Coverage now records 116 Python methods and 28 array C adapters
+within the reviewed subset. No new dependency or numerical algorithm was added.
+The full FPM numerical suite was not rerun: focused checks cover the changed
+optional generator/runtime, C integration and dependency build plan. Timing
+baselines were not refreshed.
