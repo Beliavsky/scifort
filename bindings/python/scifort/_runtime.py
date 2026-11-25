@@ -176,6 +176,9 @@ class ArrayGroup:
             if not spec['minimums'][dim] <= length <= np.iinfo(np.intc).max:
                 raise ValueError(f'{dim} is outside the supported C integer extent range')
             dimensions[dim] = length
+        for dim, rule in spec.get('length_choices', {}).items():
+            if dimensions[dim] not in [dimensions[rule['dimension']] + offset for offset in rule['offsets']]:
+                raise ValueError(f'{dim} does not satisfy the required dimension choices')
         shapes = {a: tuple(dimensions[d] for d in dims) for a, dims in spec['shapes'].items()}
         for arg, fill in spec.get('array_defaults', {}).items():
             if inputs[arg] is None:
@@ -188,6 +191,11 @@ class ArrayGroup:
         for arg, original in originals.items():
             if arg in shapes and original.shape != shapes[arg]:
                 raise ValueError(f'{arg} must have shape {shapes[arg]}')
+        result = spec.get('result_argument')
+        if result and spec['metadata'][result]['rank'] and out is not None:
+            if not isinstance(out, np.ndarray):
+                raise TypeError('array-function out must be a NumPy ndarray')
+            out = {result: out}
         if out is None:
             out = {}
         if not isinstance(out, Mapping):

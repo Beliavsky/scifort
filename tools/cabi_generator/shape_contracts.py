@@ -3,10 +3,32 @@
 import re
 
 
+def length_choices(policy, dimensions):
+    """Validate finite choices of another dimension minus a nonnegative offset."""
+    choices = policy.get('length_choices', {})
+    if not isinstance(choices, dict):
+        raise ValueError('length_choices must be an object')
+    for dim, rule in choices.items():
+        if (dim not in dimensions or not isinstance(rule, dict)
+                or set(rule) != {'dimension', 'offsets'} or rule['dimension'] not in dimensions
+                or rule['dimension'] == dim):
+            raise ValueError('length choices must relate two distinct declared dimensions')
+        offsets = rule['offsets']
+        if (not isinstance(offsets, list) or not offsets
+                or any(type(v) is not int or not -2147483647 <= v <= 0 for v in offsets)
+                or len(set(offsets)) != len(offsets)):
+            raise ValueError('length choice offsets must be distinct nonpositive C int values')
+    return choices
+
+
+def choice_text(rule):
+    return ','.join(rule['dimension'] + (str(v) if v else '') for v in rule['offsets'])
+
+
 def prepare(node, source_lines, entry):
     """Validate source annotations against an explicitly reviewed wrapper policy."""
     name, policy = entry['name'], entry['policy']
-    definitions, minimums, conditions = {}, {}, []
+    definitions, minimums, conditions, choices = {}, {}, [], {}
     # Only the procedure's initial documentation block is eligible for directives.
     for line in source_lines[node.content[0].item.span[1]:]:
         text = line.strip()
@@ -38,6 +60,17 @@ def prepare(node, source_lines, entry):
                 raise ValueError(f'{name}: minimum for {dim} disagrees with wrapper policy')
             minimums[dim] = minimum
             continue
+        match = re.fullmatch(r'@require\s+(\w+)\s+in\s*\(([^)]+)\)', text, re.I)
+        if match:
+            dim = match[1].lower()
+            terms = [re.fullmatch(r'([a-z]\w*)(?:\s*-\s*([1-9][0-9]*))?', t.strip(), re.I)
+                     for t in match[2].split(',')]
+            if dim in choices or not all(terms) or len({t[1].lower() for t in terms}) != 1:
+                raise ValueError(f'{name}: unsupported or repeated dimension choices')
+            rule = dict(dimension=terms[0][1].lower(), offsets=[-int(t[2] or 0) for t in terms])
+            length_choices(dict(length_choices={dim:rule}), entry['dimensions'])
+            choices[dim] = rule
+            continue
         match = re.fullmatch(r'@when\s+(\w+)\s*==\s*(0|[1-9][0-9]*)\s*:\s*(.+)', text, re.I)
         if match:
             dim, value, description = match[1].lower(), int(match[2]), match[3].strip()
@@ -56,7 +89,12 @@ def prepare(node, source_lines, entry):
         raise ValueError(f'{name}: shape contract needs one definition and minimum for every dimension')
     if entry['documentation_review']:
         raise ValueError(f'{name}: shape contract requires matching trailing shape comments')
-    return dict(schema_version=1, definitions=definitions, minimums=minimums, conditions=conditions)
+    if choices != entry.get('length_choices', {}):
+        raise ValueError(f'{name}: source length choices disagree with wrapper policy')
+    contract = dict(schema_version=1, definitions=definitions, minimums=minimums, conditions=conditions)
+    if choices:
+        contract['length_choices'] = choices
+    return contract
 
 
 def markdown(config, entries):
@@ -81,10 +119,15 @@ def markdown(config, entries):
                 continue
             rank = entry['metadata'][arg]['rank']
             required = ','.join(entry['policy']['shapes'][arg])
-            declared = ','.join([':']*rank)
+            declared = ','.join(entry['result_extents'] if arg == entry.get('result_argument')
+                                and 'result_extents' in entry else [':']*rank)
             meaning = config['argument_docs'][arg].replace('|', r'\|')
             lines.append(f"| `{arg}` | `({declared})` | `({required})` | {meaning} |")
         lines.append('')
+        if entry.get('result_extents'):
+            lines += [f"`{entry['result_argument']}` is the adapter output for the native array-valued result.", '']
+        for dim, rule in contract.get('length_choices', {}).items():
+            lines += [f"Required length choice: `{dim} in ({choice_text(rule)})`.", '']
         for note in contract['conditions']:
             lines += [f"When `{note['dimension']} == {note['value']}`: {note['description']}", '']
     return '\n'.join(lines)

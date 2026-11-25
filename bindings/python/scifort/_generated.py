@@ -904,6 +904,116 @@ class Weibull(Distribution):
         """Evaluate weibull_sf; broadcastable real inputs, optional array output buffer."""
         return self._evaluate('sf', x, (c, loc, scale), out)
 
+class Dirichlet(ArrayGroup):
+    _specs = {'cov': {'arguments': ['alpha', 'value', 'status'],
+             'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['alpha'],
+             'logical_inputs': {},
+             'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'alpha': ['k'], 'value': ['k', 'k']},
+             'status': 'status',
+             'symbol': 'scifort_dirichlet_cov_f64'},
+     'entropy': {'arguments': ['alpha', 'value', 'status'],
+                 'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+                 'dimensions': ['k'],
+                 'inputs': ['alpha'],
+                 'logical_inputs': {},
+                 'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'k': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'alpha': ['k']},
+                 'status': 'status',
+                 'symbol': 'scifort_dirichlet_entropy_f64'},
+     'logpdf': {'arguments': ['x', 'alpha', 'value', 'status'],
+                'definitions': {'k': {'argument': 'alpha', 'axis': None},
+                                'm': {'argument': 'x', 'axis': None}},
+                'dimensions': ['k', 'm'],
+                'inputs': ['x', 'alpha'],
+                'length_choices': {'m': {'dimension': 'k', 'offsets': [0, -1]}},
+                'logical_inputs': {},
+                'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'k': 1, 'm': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'alpha': ['k'], 'x': ['m']},
+                'status': 'status',
+                'symbol': 'scifort_dirichlet_logpdf_f64'},
+     'mean': {'arguments': ['alpha', 'value', 'status'],
+              'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+              'dimensions': ['k'],
+              'inputs': ['alpha'],
+              'logical_inputs': {},
+              'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+              'minimums': {'k': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'alpha': ['k'], 'value': ['k']},
+              'status': 'status',
+              'symbol': 'scifort_dirichlet_mean_f64'},
+     'pdf': {'arguments': ['x', 'alpha', 'value', 'status'],
+             'definitions': {'k': {'argument': 'alpha', 'axis': None},
+                             'm': {'argument': 'x', 'axis': None}},
+             'dimensions': ['k', 'm'],
+             'inputs': ['x', 'alpha'],
+             'length_choices': {'m': {'dimension': 'k', 'offsets': [0, -1]}},
+             'logical_inputs': {},
+             'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+             'minimums': {'k': 1, 'm': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'alpha': ['k'], 'x': ['m']},
+             'status': 'status',
+             'symbol': 'scifort_dirichlet_pdf_f64'},
+     'var': {'arguments': ['alpha', 'value', 'status'],
+             'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['alpha'],
+             'logical_inputs': {},
+             'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'alpha': ['k'], 'value': ['k']},
+             'status': 'status',
+             'symbol': 'scifort_dirichlet_var_f64'}}
+
+    def cov(self, alpha, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('cov', {'alpha': alpha}, out)
+
+    def entropy(self, alpha):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'alpha': alpha}, None)
+
+    def logpdf(self, x, alpha):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'alpha': alpha}, None)
+
+    def mean(self, alpha, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'alpha': alpha}, out)
+
+    def pdf(self, x, alpha):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'alpha': alpha}, None)
+
+    def var(self, alpha, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('var', {'alpha': alpha}, out)
+
 class Linalg(ArrayGroup):
     _specs = {'cholesky_lower': {'arguments': ['a', 'l', 'status'],
                         'definitions': {'n': {'argument': 'a', 'axis': 1}},
@@ -1122,6 +1232,66 @@ class Multivariate_normal(ArrayGroup):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'mean': mean, 'cov': cov, 'allow_singular': allow_singular}, None)
 
+class Multivariate_t(ArrayGroup):
+    _specs = {'logpdf': {'arguments': ['x', 'loc', 'shape', 'df', 'value', 'status'],
+                'array_defaults': {'loc': 'zeros', 'shape': 'identity'},
+                'definitions': {'n': {'argument': 'x', 'axis': None}},
+                'dimensions': ['n'],
+                'inputs': ['x', 'loc', 'shape', 'df'],
+                'logical_inputs': {},
+                'metadata': {'df': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                             'loc': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 1},
+                             'shape': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 2},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'n': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'loc': ['n'], 'shape': ['n', 'n'], 'x': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_multivariate_t_logpdf_f64'},
+     'pdf': {'arguments': ['x', 'loc', 'shape', 'df', 'allow_singular', 'value', 'status'],
+             'array_defaults': {'loc': 'zeros', 'shape': 'identity'},
+             'definitions': {'n': {'argument': 'x', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['x', 'loc', 'shape', 'df', 'allow_singular'],
+             'logical_inputs': {'allow_singular': {'false': 0, 'true': 1}},
+             'metadata': {'allow_singular': {'category': 'logical',
+                                             'intent': 'in',
+                                             'optional': True,
+                                             'rank': 0},
+                          'df': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'loc': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 1},
+                          'shape': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+             'minimums': {'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'loc': ['n'], 'shape': ['n', 'n'], 'x': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_multivariate_t_pdf_f64'}}
+
+    def logpdf(self, x, loc=None, shape=None, df=1.0):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'loc': loc, 'shape': shape, 'df': df}, None)
+
+    def pdf(self, x, loc=None, shape=None, df=1.0, allow_singular=False):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'loc': loc, 'shape': shape, 'df': df, 'allow_singular': allow_singular}, None)
+
 class API(Library):
     """Explicit shared-library owner exposing the configured distribution and array groups."""
     def __init__(self, path, *, dll_directories=()):
@@ -1137,7 +1307,9 @@ class API(Library):
         self.normal = Normal(self._library)
         self.t = T(self._library)
         self.weibull = Weibull(self._library)
+        self.dirichlet = Dirichlet(self._library)
         self.linalg = Linalg(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)
+        self.multivariate_t = Multivariate_t(self._library)
 
 __all__ = ["API"]

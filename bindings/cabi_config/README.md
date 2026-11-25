@@ -347,3 +347,73 @@ Their reviewed annotations generate [native shape tables](../../docs/multivariat
 Python adds zero-mean/identity-covariance defaults through explicit policy and
 returns scalar floats; see the [Python contract](../python/README.md#multivariate-normal-densities).
 CDF, fitting, marginalization and random sampling remain outside this batch.
+
+## Multivariate Student t density adapters
+
+[multivariate_t.json](multivariate_t.json) reuses the existing array-function
+pattern for these signatures:
+
+```c
+void scifort_multivariate_t_pdf_f64(int n, const double *x,
+    const double *loc, const double *shape, double df, int allow_singular,
+    double *value, int *status);
+void scifort_multivariate_t_logpdf_f64(int n, const double *x,
+    const double *loc, const double *shape, double df,
+    double *value, int *status);
+```
+
+x(n), loc(n), shape(n,n), n >= 1; every native input is required in C. Storage
+is column-major, aligned and contiguous. All buffers and scalar output pointers
+must be valid, non-NULL and disjoint. PDF flags are 0 false / 1 true; log-PDF
+always permits singular shape and exposes no flag. Invalid n/PDF flag returns
+status 1, leaving `value` unchanged. Valid calls return status 0 even for native
+NaN, such as invalid df or a rejected shape matrix.
+
+Shape is not covariance: for finite df > 2 covariance is df/(df-2) times shape.
+All shape entries must be finite; the lower triangle is authoritative. Finite-df
+singular formulas use projected distances, while infinite df delegates to the
+native normal support check. Existing numerical behavior and limitations remain
+unchanged. These are call-status codes, not `multivariate_t_status_*` failures.
+
+See the [generated native shape tables](../../docs/multivariate_t_shapes.md)
+and [Python defaults/singularity contract](../python/README.md#multivariate-student-t-densities).
+Entropy, CDF, marginals and random sampling remain outside this batch.
+
+## Dirichlet density, entropy and moment adapters
+
+[dirichlet.json](dirichlet.json) selects six native functions:
+
+```c
+void scifort_dirichlet_pdf_f64(int k, int m, const double *x,
+    const double *alpha, double *value, int *status);
+void scifort_dirichlet_logpdf_f64(int k, int m, const double *x,
+    const double *alpha, double *value, int *status);
+void scifort_dirichlet_entropy_f64(int k, const double *alpha,
+    double *value, int *status);
+void scifort_dirichlet_mean_f64(int k, const double *alpha,
+    double *value, int *status);
+void scifort_dirichlet_var_f64(int k, const double *alpha,
+    double *value, int *status);
+void scifort_dirichlet_cov_f64(int k, const double *alpha,
+    double *value, int *status);
+```
+
+alpha(k), k>=1; densities accept x(m), m>=1, with m equal to k or k-1.
+For the shortened form the native function infers the final coordinate as
+1-sum(x), requiring k>=2. Scalar results use one double; mean/variance need k
+doubles and covariance needs k*k in column-major order. Buffers must be valid,
+aligned, contiguous, non-NULL and disjoint, including all output/status pointers.
+Callers provide sufficient storage; adapters do not inspect actual buffer sizes.
+
+Status 1 rejects invalid extents or point-length choices, preserving all result
+storage. Status 0 retains native numerical results, including NaN for invalid
+concentrations/simplex values. Native simplex tolerance is 1e-9; zero coordinates
+with concentration below 1 produce native NaN. These call statuses are distinct
+from native `dirichlet_status_*` numerical/sampling statuses. Numerical formulas
+and limitations are unchanged.
+
+See [generated native shape tables](../../docs/dirichlet_shapes.md) and
+[Python return/buffer contracts](../python/README.md#dirichlet-distributions).
+All assumed-shape procedures in the native module, including sampling and private
+validation, now document their dimensions. Sampling remains outside this C batch
+because explicit RNG state needs a separately reviewed handle design.

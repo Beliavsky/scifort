@@ -1,0 +1,172 @@
+{
+  "generated_symbol_count": 2,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "procedure": "multivariate_t_cdf",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_t_entropy",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "shape",
+        "df",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "loc",
+        "shape",
+        "df"
+      ],
+      "procedure": "multivariate_t_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "loc": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_t_logpdf_f64"
+      ]
+    },
+    {
+      "procedure": "multivariate_t_marginal",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "x",
+        "loc",
+        "shape",
+        "df",
+        "allow_singular",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "loc",
+        "shape",
+        "df",
+        "allow_singular"
+      ],
+      "procedure": "multivariate_t_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "loc": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_t_pdf_f64"
+      ]
+    },
+    {
+      "procedure": "multivariate_t_rvs",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_t_rvs_array",
+      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_t_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_t_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_t_status_linalg_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "multivariate_t_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 11,
+  "source": "src/stats/multivariate_t.f90",
+  "source_sha256": "ea3a96719af85e5b9c518c05091477ad8a6e65fdd64dc56041c66fc5bff7ae3a"
+}

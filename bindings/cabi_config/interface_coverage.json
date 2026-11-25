@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 10,
+    "array_adapters": 18,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 121,
-    "python": 98,
+    "exports": 143,
+    "python": 106,
     "scalar": 88
   },
   "procedures": [
@@ -247,6 +247,77 @@
       "python": "chi2.sf",
       "scalar": "scifort_chi2_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_dirichlet_cov_f64",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_cov",
+      "python": "dirichlet.cov"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_entropy_f64",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_entropy",
+      "python": "dirichlet.entropy"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_logpdf_f64",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_logpdf",
+      "python": "dirichlet.logpdf"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_mean_f64",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_mean",
+      "python": "dirichlet.mean"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_pdf_f64",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_pdf",
+      "python": "dirichlet.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_dirichlet_var_f64",
+      "module": "scifort_dirichlet",
+      "procedure": "dirichlet_var",
+      "python": "dirichlet.var"
     },
     {
       "bulk": "scifort_exponential_cdf_vec_f64",
@@ -867,6 +938,81 @@
       "c_manifest_exclusion": "Native status constant, not a callable procedure.",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_status_success",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_cdf",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_entropy",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_multivariate_t_logpdf_f64",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_logpdf",
+      "python": "multivariate_t.logpdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_marginal",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_multivariate_t_pdf_f64",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_pdf",
+      "python": "multivariate_t.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_status_linalg_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_multivariate_t",
+      "procedure": "multivariate_t_status_success",
       "scalar_generated": false
     },
     {

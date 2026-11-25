@@ -34,6 +34,17 @@ def main():
     print('multivariate normal PDF:', api.multivariate_normal.pdf([0., 0.]))
     print('multivariate normal log-PDF:',
           api.multivariate_normal.logpdf([.5, -.2], cov=[[2., .3], [.3, 1.]]))
+    print('multivariate Student t PDF:', api.multivariate_t.pdf([0., 0.], df=5.))
+    print('multivariate Student t log-PDF:',
+          api.multivariate_t.logpdf([.5, -.2], shape=[[2., .3], [.3, 1.]], df=5.))
+    print('Dirichlet log-PDF, inferred coordinate:', api.dirichlet.logpdf([.2, .3], [2., 3., 4.]))
+    print('Dirichlet PDF:', api.dirichlet.pdf([.2, .3, .5], [2., 3., 4.]))
+    print('Dirichlet entropy:', api.dirichlet.entropy([2., 3., 4.]))
+    print('Dirichlet mean/variance:', api.dirichlet.mean([2., 3., 4.]),
+          api.dirichlet.var([2., 3., 4.]))
+    covariance = np.empty((3, 3), order='F')
+    api.dirichlet.cov([2., 3., 4.], out=covariance)
+    print('Dirichlet covariance:', covariance)
 
 
 if __name__ == '__main__':

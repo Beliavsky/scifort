@@ -193,8 +193,9 @@ therefore leave native partial results. No leading dimensions, arbitrary strides
 or pointer-style subroutine adapters are implemented yet.
 
 Every explicit public export must be generated or explicitly excluded. Public
-generics, reexports, derived types, callbacks, array-valued functions, and other
-unsupported interfaces cannot silently become scalar wrappers. This is not yet
+generics, reexports, derived types, callbacks and unsupported function forms
+cannot silently become scalar wrappers. Reviewed explicit-array function policies
+are handled separately. This is not yet
 a whole-project scanner or a full Fortran semantic resolver. Default-public
 modules are rejected because complete reexport discovery needs more analysis.
 Python scalar/elemental and selected explicit-array binding generation are
@@ -505,7 +506,7 @@ compatibility adapters. Combined coverage and discovery include the eight Python
 matrix methods. Regenerate/check with the unified workflow so the source plan,
 Python runtime copy and all contract tables stay current.
 
-## Scalar-result functions with array inputs
+## Functions with array inputs and scalar/array results
 
 An optional `array_functions` manifest mapping uses the explicit-array policy
 fields (`symbol`, ordered `dimensions`, `shapes`, `status_argument`,
@@ -516,15 +517,15 @@ native dummy and dimension names. Selected names must be disjoint from
 `functions`, `subroutines` and `excluded`.
 
 This pattern accepts directly defined non-bind(c), non-impure functions with an
-explicit scalar `real(kind)` result declaration and `result(...)`. Native inputs
+explicit scalar or rank-one/two `real(kind)` result declaration and `result(...)`. Native inputs
 must be `intent(in)` real scalars or rank-one/rank-two assumed-shape real arrays,
 or scalar logicals with explicit integer mappings. Optional real/logical inputs
 are promoted to required C inputs. Arrays still require declared shapes; no
-optional-argument omission, result arrays, integer inputs, callbacks, descriptors
+optional-argument omission, integer inputs, callbacks, descriptors
 or native algorithm changes are introduced.
 
 The adapter is a `void` C subroutine with ordered dimensions, native inputs,
-scalar result pointer and status pointer. It checks extents/flags before modifying
+result buffer pointer and status pointer. It checks extents/flags before modifying
 the result, calls the native function and sets status 0. A valid call can return
 NaN/infinity: status denotes call validity, not numerical parameter validity.
 All pointer/alignment/column-major/nonoverlap contracts of explicit-array adapters
@@ -539,3 +540,40 @@ rank/dimension validation. Dimension definitions must use required inputs, never
 a defaulted array. Defaults are configured explicitly, not inferred from source
 comments, procedure names or executable branches. Existing subroutine methods
 retain `ArrayResult(status, outputs)` and their caller-buffer behavior.
+
+## Explicit array-valued results and dimension choices
+
+An `array_functions` policy may include the synthetic `result_argument` in
+`shapes`, with rank one or two. The native result must be explicitly declared
+with default lower bounds and extents exactly of the form `size(input)` (rank-one
+input) or `size(input,axis)` (axis 1/2). The AST-identified extent must map to the
+same reviewed dimension as the input axis. Allocatable/deferred/assumed-shape
+results, literal or general expression bounds and ranks above two remain
+unsupported. Native result declarations need matching trailing shape comments.
+Generated shape tables show their explicit extents and identify the adapter's
+result buffer. No mathematical output size is inferred from a function name.
+
+The C adapter assigns the native function result to caller-owned explicit-shape
+storage. It preserves the output on call-validation errors. The compiler/native
+function may create temporary storage for an array result; caller-owned C output
+does not promise an allocation-free numerical call. Python returns the ndarray,
+with optional `out=ndarray` identity preservation, exact shape/native-float64/F-layout
+checks and input/output nonoverlap checks. Matrix subroutines retain their existing
+`out={name: buffer}` and `ArrayResult` conventions.
+
+An optional `length_choices` policy maps a declared dimension to a finite list
+of another dimension plus nonpositive integer offsets, for example:
+
+```json
+"length_choices": {"m": {"dimension": "k", "offsets": [0, -1]}}
+```
+
+Its matching source directive is `!! @require m in (k,k-1)`. Both dimensions must
+be declared and distinct; offsets must be unique nonpositive C-int values.
+Positive offsets and arbitrary expressions are rejected. This restricted grammar
+uses no eval, source execution or inference. C guards run after extent minima,
+using safe subtractions; invalid choices preserve output and return the configured
+invalid status. Python checks the same choices before allocating outputs or
+calling C. Structured contracts require exact source/policy agreement and render
+the choices in Markdown. `@when` prose remains descriptive, not a checked assertion.
+See the [reviewed Dirichlet manifest](../../bindings/cabi_config/dirichlet.json).

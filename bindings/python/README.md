@@ -4,7 +4,9 @@ This development interface exposes PDF, log-PDF, CDF, SF, log-CDF, log-SF, PPF,
 and ISF for `normal`, `exponential`, `logistic`, `laplace`, `cauchy`, `weibull`,
 `lognormal`, `gamma`, `beta`, Student `t`, and `chi2`. It uses NumPy arrays and the stable
 binary64 C calling convention. Eight matrix methods are available under `api.linalg`,
-and multivariate normal PDF/log-PDF under `api.multivariate_normal`.
+and multivariate normal/Student-t PDF/log-PDF under `api.multivariate_normal`
+and `api.multivariate_t`. `api.dirichlet` provides PDF, log-PDF, entropy, mean,
+variance and covariance.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -192,6 +194,86 @@ Status 1 rejects n < 1 or a flag other than 0/1, preserving the scalar output.
 Status 0 means the call was valid, even when its numerical result is NaN.
 All buffers/pointers must be valid, non-NULL, aligned and nonoverlapping.
 Rebuild the development library to obtain the two new symbols.
+
+## Multivariate Student-t densities
+
+```python
+api.multivariate_t.pdf([0., 0.])
+api.multivariate_t.logpdf([.5, -.2], loc=[0., 1.], shape=[[2., .3], [.3, 1.]], df=5.)
+api.multivariate_t.pdf([1., 0.], shape=[[4., 0.], [0., 0.]], df=5., allow_singular=True)
+```
+
+Both methods accept one point `x(n)`, `loc(n)` and `shape(n,n)`, with n >= 1,
+and return a Python float. `loc=None` supplies zero location; `shape=None`
+supplies identity shape; `df=1` is the default. Degrees of freedom must be a real
+scalar greater than zero; positive infinity takes the native normal limit.
+**Shape is not covariance**: for finite df > 2 the covariance is
+`df/(df-2) * shape`. At infinite df the normal covariance is the supplied shape.
+
+PDF defaults to `allow_singular=False`; a rejected singular matrix returns NaN.
+Set `allow_singular=True` (Python/NumPy boolean scalar) to permit it. Log-PDF
+always permits positive-semidefinite singular shape and has **no**
+`allow_singular` argument, matching the existing native API. For finite df the
+native density formula uses projected distances without rejecting points in
+null-space directions. At infinite df it delegates to the native normal support
+check, so points outside singular support return PDF 0/log-PDF negative infinity.
+Both behaviors are retained by the wrappers.
+
+All shape entries must be finite, including the unused upper triangle; the lower
+triangle is authoritative. Invalid df, nonfinite location or invalid shape
+returns native NaN without raising. Native numerical limitations are retained.
+Input conversion, exact shape checking and nonoverlap rules match the multivariate
+normal methods. No point batching, parameter broadcasting, scalar shape or `out`
+argument is provided. See the [native shape tables](../../docs/multivariate_t_shapes.md).
+
+The C symbols `scifort_multivariate_t_pdf_f64` and
+`scifort_multivariate_t_logpdf_f64` require every native input. PDF takes the
+integer 0/1 singularity flag; log-PDF has no flag. Status 1 rejects n < 1 or an
+invalid PDF flag and preserves the scalar output. Otherwise status is 0, including
+for numerical NaN. C buffer validity/storage rules match the normal adapters;
+rebuild the development library to obtain these new symbols.
+
+## Dirichlet distributions
+
+```python
+api.dirichlet.pdf([.2, .3, .5], alpha=[2., 3., 4.])
+api.dirichlet.logpdf([.2, .3], alpha=[2., 3., 4.])  # infer final coordinate .5
+api.dirichlet.entropy([2., 3., 4.])
+api.dirichlet.mean([2., 3., 4.])
+api.dirichlet.var([2., 3., 4.])
+covariance = np.empty((3, 3), dtype=np.float64, order="F")
+api.dirichlet.cov([2., 3., 4.], out=covariance)
+```
+
+`alpha(k)` contains finite positive concentrations, k >= 1. Density methods
+accept a point `x(m)`, where m >= 1 and m is k or k-1. For m=k-1 the final
+coordinate is `1-sum(x)`; this shortened representation requires k >= 2.
+The full point must have finite coordinates in [0,1] and sum to 1 within the
+unchanged native absolute tolerance 1e-9. Length/type/overlap errors raise before
+C. Numerical parameter errors retain native NaN results without raising.
+At a zero coordinate whose concentration is below 1, native PDF/log-PDF return
+NaN; native boundary behavior is preserved. k=1 accepts only the full point [1].
+
+PDF, log-PDF and entropy return Python floats. Mean and variance return arrays
+of shape (k); covariance returns shape (k,k), with native-endian float64 and
+Fortran-contiguous storage. The array methods accept `out=ndarray`, return that
+same object, and use the matrix output rules above: exact shape, native float64,
+alignment, write permission and no overlap with inputs. Scalar methods have no
+`out` argument. Invalid concentrations fill native array outputs with NaN;
+pre-call validation failures leave caller buffers untouched. There is no point
+batching or parameter broadcasting. Inputs use the existing real-array conversion
+rules. See the [native shape tables](../../docs/dirichlet_shapes.md).
+
+The six `scifort_dirichlet_*_f64` C adapters require k, explicit density point
+length m when applicable, native inputs, caller-owned result storage and status.
+Array results need k or k*k doubles in column-major order. Status 1 rejects
+invalid extents or point-length choices without changing result buffers;
+status 0 retains native numerical values, including NaN. All C buffers must be
+valid, aligned, contiguous, non-NULL and disjoint. These are call-level statuses,
+not native `dirichlet_status_*` error values. Native numerical implementations
+and their limitations are unchanged. Rebuild the development library for these
+six symbols. RNG procedures remain native Fortran APIs; their array shapes and
+empty-batch behavior are documented in the source.
 
 ## Generation and shared-library boundary
 
@@ -510,3 +592,80 @@ The read-only pipeline check passed for all 84 artifacts. Shape-policy agreement
 local Markdown links, encoding/BOM, Fortran ASCII/line limits and whitespace
 checks passed. Reviewed coverage now includes 98 Python methods and ten C array
 adapters; it remains a reviewed subset, not whole-project coverage.
+
+## Multivariate Student t density interface validation (2026-11-24)
+
+Validation commands (CMD):
+
+```text
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+python bindings/python/example.py
+```
+
+All 25 Python integration tests passed, including five new Student t tests.
+Both checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries
+were exercised, using `-std=f2018 -fimplicit-none -Werror=implicit-interface`.
+The new tests cover 1D/2D/3D reference values, explicit and default parameters,
+finite df through 100, exact infinite-df agreement with the normal methods,
+singular PDF/log-PDF policies, invalid/nonfinite inputs, layout conversions,
+shape/alias rejection, and C call-status/output preservation. Compiled Fortran
+clients compare native and C results, including NaN/infinity cases. C clients
+compile/run under `-std=c11 -Wall -Wextra -Werror`; headers pass C++17 checks.
+The example ran successfully with both Student t methods.
+
+Validation used GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5 on Windows. Other platforms/compilers
+remain unverified. No generator implementation, Python runtime, numerical code
+or global FPM configuration changed. The native module diff contains comments
+only; tests target the expanded optional build plan and its interfaces. The full
+FPM suite and unchanged generator unit tests were not rerun. Timing baselines
+were not refreshed.
+
+The read-only pipeline check passed for all 88 artifacts. Native shape-policy
+agreement, Markdown local links, encoding/BOM, Fortran ASCII/line limits and
+whitespace checks passed. Reviewed coverage now includes 100 Python methods and
+12 C array adapters; whole-project coverage remains broader than this subset.
+
+## Dirichlet and array-result validation (2026-11-25)
+
+Validation commands (CMD):
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+python -m unittest discover -s bindings/python/tests -p test_dirichlet.py -v
+build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
+python bindings/python/example.py
+```
+
+All 60 generator/workflow tests passed, including independent compiled vector
+and matrix result fixtures, C buffer preservation, length-choice guards, invalid
+policies and source-contract drift. The 25 existing Python integration tests
+passed, and all six new Dirichlet tests passed on the focused rerun after fixing
+a ctypes scalar-output pointer type in the test. Together these cover 91 test
+cases. The implementation required no correction from the numerical comparisons.
+The example ran successfully with all six Dirichlet methods.
+
+Dirichlet coverage includes full/shortened points, k=1, simplex boundaries and
+sum tolerance, invalid/nonfinite concentrations, reference densities/entropy/
+moments, covariance identities, dtype/layout conversions, shape/alias rejection,
+caller-buffer identity and preservation, native NaN outputs and direct Fortran/C
+agreement. C clients exercise all six methods under C11 with
+`-Wall -Wextra -Werror`; headers also pass C++17 checks.
+
+Tests used GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5 on Windows. The libraries were tested
+in checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) builds, with
+`-std=f2018 -fimplicit-none -Werror=implicit-interface`. Other platforms and
+compilers remain unverified.
+
+All 92 artifacts passed the read-only pipeline check. Native shape-policy
+agreement, local Markdown links, encoding/BOM, Fortran ASCII/line limits and
+whitespace checks passed. Stripping comments confirms unchanged executable
+Dirichlet/Student t code. Sampling and private validation now have readable
+shape documentation, including the native empty-batch exception; RNG C handles
+are outside this batch. No new external dependency or numerical formula was
+introduced. The full FPM numerical suite was not rerun: the changed generator,
+optional ABI/runtime and dependency build plan are covered by the focused checks.
+Timing baselines were not refreshed.

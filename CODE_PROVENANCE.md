@@ -1,3 +1,22 @@
+## 2026-11-25 - Dirichlet interfaces and array-result tooling
+
+The array-result/dimension-choice generator extensions, manifests, annotations,
+independent fixtures and integration tests are original MIT SciFort interface
+work. Adapters call the unchanged native Dirichlet procedures; no numerical
+implementation, algorithm, coefficients or external dependency was imported or
+adapted. Existing native module provenance and notices remain applicable. SciPy
+is an external test reference only. Shape relationships are explicitly reviewed
+policy/source annotations, not inferred from executable code or model memory.
+
+## 2026-11-24 - multivariate Student t density interface integration
+
+The reviewed C/Python manifests, shape annotations, documentation and integration
+checks are original MIT SciFort interface work. Generated adapters call unchanged
+native multivariate Student t PDF/log-PDF procedures through the existing generator.
+No numerical implementation, algorithm, coefficients or external dependency was
+imported or adapted. Existing native module/dependency provenance and notices
+remain applicable. SciPy supplies external test references only; no source is copied.
+
 ## 2026-11-24 - multivariate normal density interface tooling
 
 The scalar-result array-function emitter, explicit C/Python policies, default-array

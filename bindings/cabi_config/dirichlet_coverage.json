@@ -1,0 +1,358 @@
+{
+  "generated_symbol_count": 6,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "alpha",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(alpha)",
+        "size(alpha)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_cov",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k",
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_cov_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "alpha",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_entropy",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_entropy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "alpha",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k",
+        "m"
+      ],
+      "dimensions": {
+        "k": 1,
+        "m": 1
+      },
+      "interface": "explicit_shape_function",
+      "length_choices": {
+        "m": {
+          "dimension": "k",
+          "offsets": [
+            0,
+            -1
+          ]
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          },
+          "m": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "length_choices": {
+          "m": {
+            "dimension": "k",
+            "offsets": [
+              0,
+              -1
+            ]
+          }
+        },
+        "minimums": {
+          "k": 1,
+          "m": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "x": [
+          "m"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "alpha",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(alpha)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_mean",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_mean_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "alpha",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k",
+        "m"
+      ],
+      "dimensions": {
+        "k": 1,
+        "m": 1
+      },
+      "interface": "explicit_shape_function",
+      "length_choices": {
+        "m": {
+          "dimension": "k",
+          "offsets": [
+            0,
+            -1
+          ]
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          },
+          "m": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "length_choices": {
+          "m": {
+            "dimension": "k",
+            "offsets": [
+              0,
+              -1
+            ]
+          }
+        },
+        "minimums": {
+          "k": 1,
+          "m": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "x": [
+          "m"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_pdf_f64"
+      ]
+    },
+    {
+      "procedure": "dirichlet_rvs",
+      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "dirichlet_rvs_array",
+      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "dirichlet_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "dirichlet_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "dirichlet_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "alpha",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(alpha)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_var",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_var_f64"
+      ]
+    }
+  ],
+  "public_api_count": 11,
+  "source": "src/stats/dirichlet.f90",
+  "source_sha256": "c65c878799d28f7e669e37ba3ade3931481b3ecd5d223ac4cb5646ba4db63566"
+}

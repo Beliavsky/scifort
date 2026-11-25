@@ -1,3 +1,21 @@
+## 2026-11-25 - Dirichlet interfaces and array-valued function adapters
+
+- Add generated C/Python PDF, log-PDF, entropy, mean, variance and covariance
+  interfaces for Dirichlet distributions, including caller-owned array results.
+- Extend the generator for explicit rank-one/two real function results and
+  reviewed finite dimension choices, enforced at C and Python boundaries.
+- Document all native Dirichlet assumed-shape arguments, sampling/empty-batch
+  constraints and result shapes; retain all numerical implementations.
+
+## 2026-11-24 - multivariate Student t density interfaces
+
+- Generate explicit-shape C and Python adapters for multivariate Student t PDF
+  and log-PDF using the existing scalar-result array-function generator.
+- Preserve zero-location, identity-shape and df=1 Python defaults, the infinite-df
+  normal limit, and the native PDF/log-PDF singularity-policy distinction.
+- Add structured native shape contracts, generated tables, C/native agreement
+  tests and documentation distinguishing shape from covariance.
+
 ## 2026-11-24 - multivariate normal density interfaces
 
 - Generate explicit-shape C adapters for scalar-result functions with array inputs,

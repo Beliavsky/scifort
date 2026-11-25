@@ -1,0 +1,195 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/dirichlet.f90",
+  "module": "scifort_dirichlet",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_dirichlet",
+  "header_guard": "SCIFORT_GENERATED_DIRICHLET_H",
+  "functions": {},
+  "argument_docs": {
+    "k": "concentration count, >= 1",
+    "m": "point length, >= 1; k or k-1",
+    "x": "simplex point; infer final coordinate when m=k-1",
+    "alpha": "finite positive concentration vector",
+    "value": "native scalar or array result; invalid parameters produce native NaN",
+    "status": "0 valid call; 1 invalid extent or length choice"
+  },
+  "array_functions": {
+    "dirichlet_logpdf": {
+      "symbol": "scifort_dirichlet_logpdf_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        },
+        {
+          "name": "m",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "m"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Dirichlet log density at a full or shortened simplex point.",
+      "shape_contract": true,
+      "length_choices": {
+        "m": {
+          "dimension": "k",
+          "offsets": [
+            0,
+            -1
+          ]
+        }
+      }
+    },
+    "dirichlet_pdf": {
+      "symbol": "scifort_dirichlet_pdf_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        },
+        {
+          "name": "m",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "m"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Dirichlet density at a full or shortened simplex point.",
+      "shape_contract": true,
+      "length_choices": {
+        "m": {
+          "dimension": "k",
+          "offsets": [
+            0,
+            -1
+          ]
+        }
+      }
+    },
+    "dirichlet_entropy": {
+      "symbol": "scifort_dirichlet_entropy_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Compute the differential entropy of a Dirichlet law.",
+      "shape_contract": true
+    },
+    "dirichlet_mean": {
+      "symbol": "scifort_dirichlet_mean_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Compute the componentwise Dirichlet mean.",
+      "shape_contract": true
+    },
+    "dirichlet_var": {
+      "symbol": "scifort_dirichlet_var_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Compute the componentwise Dirichlet variance.",
+      "shape_contract": true
+    },
+    "dirichlet_cov": {
+      "symbol": "scifort_dirichlet_cov_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k",
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Compute the Dirichlet covariance matrix.",
+      "shape_contract": true
+    }
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/dirichlet_generated.f90",
+    "header": "include/scifort_generated_dirichlet.h",
+    "coverage": "bindings/cabi_config/dirichlet_coverage.json",
+    "shape_documentation": "docs/dirichlet_shapes.md"
+  },
+  "excluded": {
+    "dirichlet_rvs": "Explicit RNG state requires a separately reviewed handle interface.",
+    "dirichlet_rvs_array": "Explicit RNG state requires a separately reviewed handle interface.",
+    "dirichlet_status_success": "Native status constant, not a callable procedure.",
+    "dirichlet_status_invalid_parameter": "Native status constant, not a callable procedure.",
+    "dirichlet_status_invalid_shape": "Native status constant, not a callable procedure."
+  }
+}

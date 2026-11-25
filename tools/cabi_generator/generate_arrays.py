@@ -101,11 +101,16 @@ def prepare(policy, root, py_name):
                     spec['array_defaults'] = array_defaults
                 if 'result_argument' in entry:
                     spec['result_argument'] = entry['result_argument']
+                if entry.get('length_choices'):
+                    spec['length_choices'] = entry['length_choices']
                 specs[name] = spec
                 actuals = ', '.join(f'{a!r}: {a}' for a in inputs)
-                scalar_result = 'result_argument' in entry
+                function_result = 'result_argument' in entry
+                scalar_result = function_result and not metadata[entry['result_argument']]['rank']
                 signature = ', '.join(['self', *parameters] + ([] if scalar_result else ['*', 'out=None']))
-                doc = 'Return the native scalar value.' if scalar_result else 'Return ArrayResult(status, outputs); retain native failure outputs.'
+                doc = ('Return the native scalar value.' if scalar_result else
+                       'Return the native array result; optionally use caller-owned out.' if function_result else
+                       'Return ArrayResult(status, outputs); retain native failure outputs.')
                 output = 'None' if scalar_result else 'out'
                 methods += [f'    def {name}({signature}):',
                             f'        """{doc}"""',

@@ -72,3 +72,13 @@ Multivariate normal PDF/log-PDF are available through generated explicit-shape C
 adapters and `api.multivariate_normal.pdf/logpdf` in Python. See the
 [density input/default/error contract](python/README.md#multivariate-normal-densities)
 and [native shape tables](../docs/multivariate_normal_shapes.md).
+
+Multivariate Student t PDF/log-PDF also use generated C adapters and
+`api.multivariate_t.pdf/logpdf`. See their
+[shape/default/singularity contract](python/README.md#multivariate-student-t-densities)
+and [native shape tables](../docs/multivariate_t_shapes.md).
+
+Dirichlet PDF, log-PDF, entropy and moments are available through generated C
+adapters and `api.dirichlet`. Mean/variance/covariance return arrays with optional
+caller-owned buffers. See the [Python contract](python/README.md#dirichlet-distributions)
+and [native shape tables](../docs/dirichlet_shapes.md).

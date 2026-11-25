@@ -37,6 +37,9 @@ module scifort_multivariate_t
 contains
 
     function multivariate_t_logpdf(x, loc, shape, df) result(y)
+        !! Evaluate multivariate Student t log density; singular shape is permitted.
+        !! @dimension n = size(x)
+        !! @require n >= 1
         !! n = size(x), n >= 1.
         real(dp), intent(in) :: x(:) !! shape (n); point at which the log density is evaluated
         real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
@@ -84,6 +87,9 @@ contains
     end function multivariate_t_logpdf
 
     function multivariate_t_pdf(x, loc, shape, df, allow_singular) result(y)
+        !! Evaluate multivariate Student t density; singular shape requires opt-in.
+        !! @dimension n = size(x)
+        !! @require n >= 1
         !! n = size(x), n >= 1.
         real(dp), intent(in) :: x(:) !! shape (n); point at which the density is evaluated
         real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent

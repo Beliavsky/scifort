@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 121 |
+| exports | 143 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 10 |
+| array_adapters | 18 |
 | elementwise | 88 |
-| python | 98 |
+| python | 106 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -37,6 +37,17 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_chi2 | chi2_pdf | scifort_chi2_pdf_f64 | scifort_chi2_pdf_vec_f64 |  | scifort_chi2_pdf_elementwise_f64 | chi2.pdf |
 | scifort_chi2 | chi2_ppf | scifort_chi2_ppf_f64 | scifort_chi2_ppf_vec_f64 |  | scifort_chi2_ppf_elementwise_f64 | chi2.ppf |
 | scifort_chi2 | chi2_sf | scifort_chi2_sf_f64 | scifort_chi2_sf_vec_f64 |  | scifort_chi2_sf_elementwise_f64 | chi2.sf |
+| scifort_dirichlet | dirichlet_cov |  |  | scifort_dirichlet_cov_f64 |  | dirichlet.cov |
+| scifort_dirichlet | dirichlet_entropy |  |  | scifort_dirichlet_entropy_f64 |  | dirichlet.entropy |
+| scifort_dirichlet | dirichlet_logpdf |  |  | scifort_dirichlet_logpdf_f64 |  | dirichlet.logpdf |
+| scifort_dirichlet | dirichlet_mean |  |  | scifort_dirichlet_mean_f64 |  | dirichlet.mean |
+| scifort_dirichlet | dirichlet_pdf |  |  | scifort_dirichlet_pdf_f64 |  | dirichlet.pdf |
+| scifort_dirichlet | dirichlet_rvs |  |  |  |  |  |
+| scifort_dirichlet | dirichlet_rvs_array |  |  |  |  |  |
+| scifort_dirichlet | dirichlet_status_invalid_parameter |  |  |  |  |  |
+| scifort_dirichlet | dirichlet_status_invalid_shape |  |  |  |  |  |
+| scifort_dirichlet | dirichlet_status_success |  |  |  |  |  |
+| scifort_dirichlet | dirichlet_var |  |  | scifort_dirichlet_var_f64 |  | dirichlet.var |
 | scifort_exponential | exponential_cdf | scifort_exponential_cdf_f64 | scifort_exponential_cdf_vec_f64 |  | scifort_exponential_cdf_elementwise_f64 | exponential.cdf |
 | scifort_exponential | exponential_isf | scifort_exponential_isf_f64 | scifort_exponential_isf_vec_f64 |  | scifort_exponential_isf_elementwise_f64 | exponential.isf |
 | scifort_exponential | exponential_logcdf | scifort_exponential_logcdf_f64 | scifort_exponential_logcdf_vec_f64 |  | scifort_exponential_logcdf_elementwise_f64 | exponential.logcdf |
@@ -110,6 +121,17 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_normal | multivariate_status_invalid_shape |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_status_linalg_failure |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_status_success |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_cdf |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_entropy |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_logpdf |  |  | scifort_multivariate_t_logpdf_f64 |  | multivariate_t.logpdf |
+| scifort_multivariate_t | multivariate_t_marginal |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_pdf |  |  | scifort_multivariate_t_pdf_f64 |  | multivariate_t.pdf |
+| scifort_multivariate_t | multivariate_t_rvs |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_rvs_array |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_status_invalid_parameter |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_status_invalid_shape |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_status_linalg_failure |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_status_success |  |  |  |  |  |
 | scifort_normal | normal_cdf | scifort_normal_cdf_f64 | scifort_normal_cdf_vec_f64 |  | scifort_normal_cdf_elementwise_f64 | normal.cdf |
 | scifort_normal | normal_isf | scifort_normal_isf_f64 | scifort_normal_isf_vec_f64 |  | scifort_normal_isf_elementwise_f64 | normal.isf |
 | scifort_normal | normal_logcdf | scifort_normal_logcdf_f64 | scifort_normal_logcdf_vec_f64 |  | scifort_normal_logcdf_elementwise_f64 | normal.logcdf |

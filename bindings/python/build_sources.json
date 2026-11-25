@@ -1,7 +1,9 @@
 {
   "array_groups": [
+    "dirichlet",
     "linalg",
-    "multivariate_normal"
+    "multivariate_normal",
+    "multivariate_t"
   ],
   "dependencies": {
     "bindings/python/native/beta_compat.f90": [
@@ -60,6 +62,10 @@
       "src/kinds.f90",
       "src/stats/chi2.f90"
     ],
+    "src/c_api/generated/dirichlet_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/dirichlet.f90"
+    ],
     "src/c_api/generated/exponential_generated.f90": [
       "src/kinds.f90",
       "src/stats/exponential.f90"
@@ -91,6 +97,10 @@
     "src/c_api/generated/multivariate_normal_generated.f90": [
       "src/kinds.f90",
       "src/stats/multivariate_normal.f90"
+    ],
+    "src/c_api/generated/multivariate_t_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/multivariate_t.f90"
     ],
     "src/c_api/generated/normal_generated.f90": [
       "src/kinds.f90",
@@ -164,6 +174,13 @@
       "src/math.f90",
       "src/stats/gamma.f90"
     ],
+    "src/stats/dirichlet.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/elementary.f90",
+      "src/stats/gamma.f90"
+    ],
     "src/stats/exponential.f90": [
       "src/kinds.f90",
       "src/math.f90"
@@ -208,6 +225,17 @@
       "src/random.f90",
       "src/stats/multivariate_integration.f90",
       "src/stats/normal.f90"
+    ],
+    "src/stats/multivariate_t.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/linalg.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/digamma.f90",
+      "src/stats/chi2.f90",
+      "src/stats/multivariate_integration.f90",
+      "src/stats/multivariate_normal.f90"
     ],
     "src/stats/normal.f90": [
       "src/constants.f90",
@@ -257,6 +285,7 @@
     "scifort_c_api_generated_beta": "src/c_api/generated/beta_generated.f90",
     "scifort_c_api_generated_cauchy": "src/c_api/generated/cauchy_generated.f90",
     "scifort_c_api_generated_chi2": "src/c_api/generated/chi2_generated.f90",
+    "scifort_c_api_generated_dirichlet": "src/c_api/generated/dirichlet_generated.f90",
     "scifort_c_api_generated_exponential": "src/c_api/generated/exponential_generated.f90",
     "scifort_c_api_generated_gamma": "src/c_api/generated/gamma_generated.f90",
     "scifort_c_api_generated_laplace": "src/c_api/generated/laplace_generated.f90",
@@ -265,6 +294,7 @@
     "scifort_c_api_generated_lognormal": "src/c_api/generated/lognormal_generated.f90",
     "scifort_c_api_generated_matrix_helpers": "src/c_api/generated/matrix_helpers_generated.f90",
     "scifort_c_api_generated_multivariate_normal": "src/c_api/generated/multivariate_normal_generated.f90",
+    "scifort_c_api_generated_multivariate_t": "src/c_api/generated/multivariate_t_generated.f90",
     "scifort_c_api_generated_normal": "src/c_api/generated/normal_generated.f90",
     "scifort_c_api_generated_student_t": "src/c_api/generated/student_t_generated.f90",
     "scifort_c_api_generated_weibull": "src/c_api/generated/weibull_generated.f90",
@@ -272,6 +302,7 @@
     "scifort_chi2": "src/stats/chi2.f90",
     "scifort_constants": "src/constants.f90",
     "scifort_digamma": "src/special/digamma.f90",
+    "scifort_dirichlet": "src/stats/dirichlet.f90",
     "scifort_exponential": "src/stats/exponential.f90",
     "scifort_gamma": "src/stats/gamma.f90",
     "scifort_incomplete_beta": "src/special/incomplete_beta.f90",
@@ -286,6 +317,7 @@
     "scifort_matrix_distribution_helpers": "src/stats/matrix_distribution_helpers.f90",
     "scifort_multivariate_integration": "src/stats/multivariate_integration.f90",
     "scifort_multivariate_normal": "src/stats/multivariate_normal.f90",
+    "scifort_multivariate_t": "src/stats/multivariate_t.f90",
     "scifort_normal": "src/stats/normal.f90",
     "scifort_random": "src/random.f90",
     "scifort_special_elementary": "src/special/elementary.f90",
@@ -309,6 +341,7 @@
     "src/c_api/generated/beta_generated.f90": "5da9b5ff02a690f1870edd72f7aec6a2c5eb162ad515161515d0b96a03ebc929",
     "src/c_api/generated/cauchy_generated.f90": "9dab382df6b53913e18e182c8662f85f83ff3c475fc448cf93fbb6ae43143f6c",
     "src/c_api/generated/chi2_generated.f90": "02fa558595d2479e319e7f812b5199f6aed767627bd92798fcc6abb89365eba9",
+    "src/c_api/generated/dirichlet_generated.f90": "b387ea83f110ac19fda0033cd2ac9df74ecab779f7fc443e06bbbee3f43c73fb",
     "src/c_api/generated/exponential_generated.f90": "0b573e7ae16b89708854e4893b9aa8c96a245331ccaab1edf47e33f9c69d7e53",
     "src/c_api/generated/gamma_generated.f90": "52dc2431ea06a1b38f6faa5fa4d8ef4230c8a9d30dff73775e1d2ef12585c280",
     "src/c_api/generated/laplace_generated.f90": "8c2dfd393a9d25ef918d738ab4647b965b2f9553c97e5b45d505aacfbc5ca99b",
@@ -317,6 +350,7 @@
     "src/c_api/generated/lognormal_generated.f90": "4227348a38dcc8663865370649bd7324f056da70d96f832c7457f4f8526574c1",
     "src/c_api/generated/matrix_helpers_generated.f90": "ca33490309baf72cd79003fb447ef0227d74860ad6bf41b47d48933cadd0ac71",
     "src/c_api/generated/multivariate_normal_generated.f90": "63bc151b406d87a32a433899ea35dc2c685e2cbb28315d6bc5dce4f666488f14",
+    "src/c_api/generated/multivariate_t_generated.f90": "707b02802119ae897b260dc0b422f9770f8f55faaa8cce8bbd5c49af8ac118e2",
     "src/c_api/generated/normal_generated.f90": "0724a9f4d76b161ebbfcb2691dd496e6cea8ef089b5d7547101d630d6d1c575c",
     "src/c_api/generated/student_t_generated.f90": "dc1c5f9e57a68f3448d9eafa22bd975f5eeadead0709aa48ec0e6e8381c7bd77",
     "src/c_api/generated/weibull_generated.f90": "90da7ffd10659ecae33b9757c4f8c851138cba04f13b233cdc465262f3a83581",
@@ -333,6 +367,7 @@
     "src/stats/beta.f90": "9a80b597be81fb97ee03e888388fe0f36faf51c6ca8c9f7ab1e5b5260696f049",
     "src/stats/cauchy.f90": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5",
     "src/stats/chi2.f90": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8",
+    "src/stats/dirichlet.f90": "c65c878799d28f7e669e37ba3ade3931481b3ecd5d223ac4cb5646ba4db63566",
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
     "src/stats/laplace.f90": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57",
@@ -341,6 +376,7 @@
     "src/stats/matrix_distribution_helpers.f90": "1811a2fa5ad5b435c80aeb32de738a16a2ca6bef713010557c8fd10f89b58c41",
     "src/stats/multivariate_integration.f90": "c9aeb7ff1c9bfd2a1ff9c39cc65a2e4419c24899453f88371a569b1c9ade97d9",
     "src/stats/multivariate_normal.f90": "41ffbb99ef550c2de3a4fceb561e7c05a5c57cd6ddbe92eac58750161fff0644",
+    "src/stats/multivariate_t.f90": "ea3a96719af85e5b9c518c05091477ad8a6e65fdd64dc56041c66fc5bff7ae3a",
     "src/stats/normal.f90": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb",
     "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",
     "src/stats/weibull.f90": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585"
@@ -377,6 +413,11 @@
     "src/c_api/generated/beta_generated.f90",
     "src/c_api/generated/cauchy_generated.f90",
     "src/c_api/generated/chi2_generated.f90",
+    "src/random.f90",
+    "src/special/digamma.f90",
+    "src/special/elementary.f90",
+    "src/stats/dirichlet.f90",
+    "src/c_api/generated/dirichlet_generated.f90",
     "src/c_api/generated/exponential_generated.f90",
     "src/c_api/generated/gamma_generated.f90",
     "src/c_api/generated/laplace_generated.f90",
@@ -384,14 +425,13 @@
     "src/c_api/generated/linalg_generated.f90",
     "src/c_api/generated/logistic_generated.f90",
     "src/c_api/generated/lognormal_generated.f90",
-    "src/special/digamma.f90",
-    "src/special/elementary.f90",
     "src/stats/matrix_distribution_helpers.f90",
     "src/c_api/generated/matrix_helpers_generated.f90",
-    "src/random.f90",
     "src/stats/multivariate_integration.f90",
     "src/stats/multivariate_normal.f90",
     "src/c_api/generated/multivariate_normal_generated.f90",
+    "src/stats/multivariate_t.f90",
+    "src/c_api/generated/multivariate_t_generated.f90",
     "src/c_api/generated/normal_generated.f90",
     "src/c_api/generated/student_t_generated.f90",
     "src/c_api/generated/weibull_generated.f90"

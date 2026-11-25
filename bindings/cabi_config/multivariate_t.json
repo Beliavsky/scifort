@@ -1,0 +1,99 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/multivariate_t.f90",
+  "module": "scifort_multivariate_t",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_multivariate_t",
+  "header_guard": "SCIFORT_GENERATED_MULTIVARIATE_T_H",
+  "functions": {},
+  "argument_docs": {
+    "n": "dimension, >= 1",
+    "x": "evaluation point",
+    "loc": "location vector; required at the C boundary",
+    "shape": "shape, not covariance; lower triangle used; all entries finite",
+    "df": "degrees of freedom, > 0; +infinity gives the normal limit",
+    "allow_singular": "0 reject singular shape; 1 permit singular shape",
+    "value": "native density or log density, including NaN on invalid parameters",
+    "status": "0 valid call; 1 invalid extent or logical flag"
+  },
+  "array_functions": {
+    "multivariate_t_pdf": {
+      "symbol": "scifort_multivariate_t_pdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n"
+        ],
+        "loc": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate multivariate Student t density; singular shape requires opt-in.",
+      "shape_contract": true,
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      }
+    },
+    "multivariate_t_logpdf": {
+      "symbol": "scifort_multivariate_t_logpdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n"
+        ],
+        "loc": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate multivariate Student t log density; singular shape is permitted.",
+      "shape_contract": true
+    }
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/multivariate_t_generated.f90",
+    "header": "include/scifort_generated_multivariate_t.h",
+    "coverage": "bindings/cabi_config/multivariate_t_coverage.json",
+    "shape_documentation": "docs/multivariate_t_shapes.md"
+  },
+  "excluded": {
+    "multivariate_t_cdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+    "multivariate_t_entropy": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+    "multivariate_t_marginal": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+    "multivariate_t_rvs": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+    "multivariate_t_rvs_array": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+    "multivariate_t_status_success": "Native status constant, not a callable procedure.",
+    "multivariate_t_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "multivariate_t_status_invalid_parameter": "Native status constant, not a callable procedure.",
+    "multivariate_t_status_linalg_failure": "Native status constant, not a callable procedure."
+  }
+}

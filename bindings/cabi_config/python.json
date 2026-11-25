@@ -182,6 +182,40 @@
           "allow_singular": false
         }
       }
+    },
+    "multivariate_t": {
+      "manifests": [
+        "bindings/cabi_config/multivariate_t.json"
+      ],
+      "prefix": "multivariate_t_",
+      "defaults": {
+        "multivariate_t_pdf": {
+          "loc": {
+            "fill": "zeros"
+          },
+          "shape": {
+            "fill": "identity"
+          },
+          "df": 1.0,
+          "allow_singular": false
+        },
+        "multivariate_t_logpdf": {
+          "loc": {
+            "fill": "zeros"
+          },
+          "shape": {
+            "fill": "identity"
+          },
+          "df": 1.0
+        }
+      }
+    },
+    "dirichlet": {
+      "manifests": [
+        "bindings/cabi_config/dirichlet.json"
+      ],
+      "prefix": "dirichlet_",
+      "defaults": {}
     }
   }
 }

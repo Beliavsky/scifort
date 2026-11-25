@@ -16,7 +16,7 @@ def prepare(config, api, identifier, source_lines):
         is_function = name in config.get('array_functions', {})
         if is_function:
             fields |= {'result_argument', 'optional_policy'}
-        if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract"} != fields:
+        if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract", "length_choices"} != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         identifier(policy["symbol"])
         node = api[name]
@@ -93,10 +93,15 @@ def prepare(config, api, identifier, source_lines):
             if native_result not in declared:
                 raise ValueError(f'{name}: result needs an explicit declaration')
             dtype, attrs, entity = declared[native_result]
+            result_shape = entity.items[1]
             if (str(dtype).lower().replace(' ', '') not in (f'real({kind})', f'real(kind={kind})')
-                    or attrs or any(entity.items[1:])):
-                raise ValueError(f'{name}: only scalar real results are supported')
-            metadata[result] = dict(intent='out', rank=0, category='real')
+                    or attrs or any(entity.items[2:])
+                    or (result_shape and (not isinstance(result_shape, F.Explicit_Shape_Spec_List)
+                                          or len(result_shape.items) > 2))):
+                raise ValueError(f'{name}: only scalar or explicit rank-one/two real results are supported')
+            metadata[result] = dict(intent='out', rank=len(result_shape.items) if result_shape else 0,
+                                    category='real')
+            declarations[result] = declarations[native_result]
         for arg in args:
             if is_function and arg in (result, status):
                 continue
@@ -152,6 +157,22 @@ def prepare(config, api, identifier, source_lines):
             used.update(shape)
         if used != set(dimensions):
             raise ValueError(f"{name}: unused dimension names")
+        choices = shape_contracts.length_choices(policy, dimensions)
+        result_extents = []
+        if is_function and metadata[result]['rank']:
+            for dim, extent in zip(shapes[result], result_shape.items):
+                lower, upper = extent.items
+                text = str(upper).lower().replace(' ', '')
+                match = re.fullmatch(r'size\(([a-z]\w*)(?:,([12]))?\)', text)
+                if lower is not None or not match:
+                    raise ValueError(f'{name}: result extents must be size(input[,axis]) with default lower bounds')
+                source, axis = match[1], int(match[2]) if match[2] else None
+                info = metadata.get(source, {})
+                if (info.get('intent') != 'in' or not info.get('rank')
+                        or (axis is None and info['rank'] != 1) or (axis and axis > info['rank'])
+                        or shapes[source][(axis or 1)-1] != dim):
+                    raise ValueError(f'{name}: native result extent disagrees with reviewed result shape')
+                result_extents.append(text)
         for arg in [*dimensions, *args]:
             doc = config["argument_docs"].get(arg)
             if not isinstance(doc, str) or not doc or not doc.isascii() or "\n" in doc:
@@ -174,6 +195,10 @@ def prepare(config, api, identifier, source_lines):
                      dimensions=dimensions, documentation_review=review)
         if is_function:
             entry.update(native_args=native_args, result_argument=result)
+            if result_extents:
+                entry['result_extents'] = result_extents
+        if choices:
+            entry['length_choices'] = choices
         if 'shape_contract' in policy:
             if type(policy['shape_contract']) is not bool or not policy['shape_contract']:
                 raise ValueError(f'{name}: shape_contract must be true when specified')
@@ -223,6 +248,13 @@ def emit(entry, index, config):
     for dim, minimum in dimensions.items():
         lines += [f"        if ({dim} < {minimum}_c_int) then",
                   f"            {status}={policy['invalid_status']}_c_int", "            return", "        end if"]
+    for dim, rule in entry.get('length_choices', {}).items():
+        terms = [f"{dim} /= {rule['dimension']}" + (f" - {-offset}_c_int" if offset else '')
+                 for offset in rule['offsets']]
+        lines += ['        if ( &']
+        lines += ['            ' + term + (' .and. &' if i < len(terms)-1 else ') then')
+                  for i, term in enumerate(terms)]
+        lines += [f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
     for arg, mapping in policy.get('logical_inputs', {}).items():
         lines += [f"        if ({arg} /= {mapping['false']}_c_int .and. &",
                   f"                {arg} /= {mapping['true']}_c_int) then",
@@ -259,10 +291,16 @@ def emit(entry, index, config):
         record['logical_inputs'] = policy['logical_inputs']
     if entry.get('shape_contract'):
         record['shape_contract'] = entry['shape_contract']
+    if entry.get('length_choices'):
+        record['length_choices'] = entry['length_choices']
+        header[-3:-3] = [f" * Required: {dim} in ({shape_contracts.choice_text(rule)}); invalid status preserves output."
+                         for dim, rule in entry['length_choices'].items()]
     if 'result_argument' in entry:
         record.update(interface='explicit_shape_function', result_argument=entry['result_argument'])
         header[-3:-3] = [' * Status 0 means the call was valid; native numerical NaN/infinity is retained.']
         header = [line.replace(' * Other status/output behavior is inherited from the native procedure. */',
                                ' * Numerical parameter errors use native values, not call-level statuses. */')
                   for line in header]
+        if entry.get('result_extents'):
+            record['native_result_extents'] = entry['result_extents']
     return lines, header, record

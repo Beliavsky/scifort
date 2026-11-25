@@ -12,5 +12,7 @@
   "student_t.json",
   "chi2.json",
   "matrix_helpers.json",
-  "multivariate_normal.json"
+  "multivariate_normal.json",
+  "multivariate_t.json",
+  "dirichlet.json"
 ]
