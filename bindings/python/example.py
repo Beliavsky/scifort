@@ -52,6 +52,10 @@ def main():
     covariance = np.empty((3, 3), order='F')
     api.dirichlet.cov([2., 3., 4.], out=covariance)
     print('Dirichlet covariance:', covariance)
+    stream = api.rng(seed=12345)
+    print('native uniforms:', stream.uniform(3))
+    draws = api.dirichlet.rvs_array(stream, [2., 3., 4.], n_samples=3)
+    print('Dirichlet samples:', draws.status, draws.outputs['samples'])
     print('multinomial PMF/log-PMF:', api.multinomial.pmf([1., 3.], 4, [.2, .8]),
           api.multinomial.logpmf([1., 3.], 4, [.2, .8]))
     print('multinomial entropy/mean:', api.multinomial.entropy(4, [.2, .8]),

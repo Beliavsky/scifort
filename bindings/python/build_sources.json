@@ -71,7 +71,9 @@
       "src/stats/chi2.f90"
     ],
     "src/c_api/generated/dirichlet_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/dirichlet.f90"
     ],
     "src/c_api/generated/dirichlet_multinomial_generated.f90": [
@@ -153,6 +155,9 @@
     "src/c_api/generated/wishart_generated.f90": [
       "src/kinds.f90",
       "src/stats/wishart.f90"
+    ],
+    "src/c_api/rng_bridge.f90": [
+      "src/random.f90"
     ],
     "src/constants.f90": [
       "src/kinds.f90"
@@ -440,6 +445,7 @@
     "scifort_normal": "src/stats/normal.f90",
     "scifort_poisson_binom": "src/stats/poisson_binom.f90",
     "scifort_random": "src/random.f90",
+    "scifort_rng_c_bridge": "src/c_api/rng_bridge.f90",
     "scifort_special_elementary": "src/special/elementary.f90",
     "scifort_student_t": "src/stats/student_t.f90",
     "scifort_weibull": "src/stats/weibull.f90",
@@ -462,7 +468,7 @@
     "src/c_api/generated/beta_generated.f90": "5da9b5ff02a690f1870edd72f7aec6a2c5eb162ad515161515d0b96a03ebc929",
     "src/c_api/generated/cauchy_generated.f90": "9dab382df6b53913e18e182c8662f85f83ff3c475fc448cf93fbb6ae43143f6c",
     "src/c_api/generated/chi2_generated.f90": "02fa558595d2479e319e7f812b5199f6aed767627bd92798fcc6abb89365eba9",
-    "src/c_api/generated/dirichlet_generated.f90": "b387ea83f110ac19fda0033cd2ac9df74ecab779f7fc443e06bbbee3f43c73fb",
+    "src/c_api/generated/dirichlet_generated.f90": "97c0288c0c44cda18e15fb8d3a422ccdbae741c4fa1f192944a5c3a6ad68b404",
     "src/c_api/generated/dirichlet_multinomial_generated.f90": "0d7e4449f2a145dac54aeaaa7ec8f79b70403b6f1dff62bde3687b22190fd381",
     "src/c_api/generated/exponential_generated.f90": "0b573e7ae16b89708854e4893b9aa8c96a245331ccaab1edf47e33f9c69d7e53",
     "src/c_api/generated/gamma_generated.f90": "52dc2431ea06a1b38f6faa5fa4d8ef4230c8a9d30dff73775e1d2ef12585c280",
@@ -483,6 +489,7 @@
     "src/c_api/generated/student_t_generated.f90": "dc1c5f9e57a68f3448d9eafa22bd975f5eeadead0709aa48ec0e6e8381c7bd77",
     "src/c_api/generated/weibull_generated.f90": "90da7ffd10659ecae33b9757c4f8c851138cba04f13b233cdc465262f3a83581",
     "src/c_api/generated/wishart_generated.f90": "53f2e565b29d955c0bacfbf33ef035c750cf466e6710e17c3083ace9bc0f4b4d",
+    "src/c_api/rng_bridge.f90": "964d64258685671cb15562c4bd10b48b7cb21d04f3936f1dd10f14753d799565",
     "src/constants.f90": "c49598c1f413384af26a4468b2ff442a68d5f015a983c404bd3150e6cdde874e",
     "src/kinds.f90": "afbca1b088e17f5c0ff7930c693e9ae9e0b699b31a826cb25bc139597fe66f46",
     "src/linalg.f90": "b149cf757f3620cce4fcb2e8ecdbd705184534d0d81ed5ab908d464cd09d6788",
@@ -497,7 +504,7 @@
     "src/stats/binomial.f90": "a53ab15f1c61d297f0817b69491cb725577eb33ba5d705491bb5028bad551dc1",
     "src/stats/cauchy.f90": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5",
     "src/stats/chi2.f90": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8",
-    "src/stats/dirichlet.f90": "c65c878799d28f7e669e37ba3ade3931481b3ecd5d223ac4cb5646ba4db63566",
+    "src/stats/dirichlet.f90": "79969ce80ce0427a9b5ef21ee14b4c6e582785e7b66aafe857834785b41a3862",
     "src/stats/dirichlet_multinomial.f90": "c5650f002d1b8d2c7bef8fb3e6d6e7d5a6539cbc2f5ebcbdcc5c982a976654bd",
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
@@ -553,6 +560,7 @@
     "src/c_api/generated/cauchy_generated.f90",
     "src/c_api/generated/chi2_generated.f90",
     "src/random.f90",
+    "src/c_api/rng_bridge.f90",
     "src/special/digamma.f90",
     "src/special/elementary.f90",
     "src/stats/dirichlet.f90",

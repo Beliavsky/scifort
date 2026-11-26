@@ -17,7 +17,7 @@ def prepare(policy, root, py_name):
         if group in policy['groups'] or group in {'api', 'library', 'distribution', 'path', 'arraygroup'}:
             raise ValueError(f'{group}: reserved or duplicate array group')
         if (not isinstance(settings, dict) or set(settings) -
-                {'prefix', 'dimension_defaults', 'dimension_sources', 'zero_based_indices'} !=
+                {'prefix', 'dimension_defaults', 'dimension_sources', 'zero_based_indices', 'output_dimensions'} !=
                 {'manifests', 'defaults'}):
             raise ValueError('array groups need manifests and defaults')
         prefix = settings.get('prefix', '')
@@ -32,9 +32,13 @@ def prepare(policy, root, py_name):
             raise ValueError('dimension_defaults must map native procedures to dimension values')
         sources = settings.get('dimension_sources', {})
         indices = settings.get('zero_based_indices', {})
+        output_dimensions = settings.get('output_dimensions', {})
+        if not isinstance(output_dimensions, dict):
+            raise ValueError('output_dimensions must map native procedures to dimension defaults')
         if not isinstance(sources, dict) or not isinstance(indices, dict):
             raise ValueError('dimension_sources and zero_based_indices must map native procedures')
         used_sources, used_indices = set(), set()
+        used_output_dimensions = set()
         specs, methods, used_defaults, used_dimension_defaults = {}, [], set(), set()
         for path in paths:
             manifest = (root/path).resolve()
@@ -62,7 +66,7 @@ def prepare(policy, root, py_name):
                 optional_arrays = entry.get('optional_arrays', {})
                 flags = set(optional_arrays.values())
                 inputs = [a for a in entry['args'] if a != status and a not in flags
-                          and metadata[a]['intent'] == 'in']
+                          and (metadata[a]['intent'] == 'in' or metadata[a]['category'] == 'state')]
                 outputs = [a for a in entry['args'] if a != status and metadata[a]['intent'] == 'out']
                 if set(inputs + outputs + [status]) | flags != set(entry['args']):
                     raise ValueError('Python array adapters do not yet support native intent(inout)')
@@ -70,7 +74,22 @@ def prepare(policy, root, py_name):
                     py_name(arg)
                     if arg in {'self', 'out'}:
                         raise ValueError(f'{arg}: reserved Python argument')
+                output_sizes = output_dimensions.get(native_name, {})
+                if native_name in output_dimensions:
+                    used_output_dimensions.add(native_name)
+                if not isinstance(output_sizes, dict) or (native_name in output_dimensions and not output_sizes):
+                    raise ValueError('output dimensions need a nonempty dimension/default object')
+                for dim, value in output_sizes.items():
+                    py_name(dim)
+                    if dim in {'self', 'out'}:
+                        raise ValueError('output dimension name conflicts with a Python parameter')
+                    definition = contract['definitions'].get(dim, {})
+                    if (definition.get('argument') not in outputs or dim in entry['args']
+                            or type(value) is not int or not entry['dimensions'][dim] <= value <= 2147483647):
+                        raise ValueError('output dimension must be defined by an output array and have a valid default')
                 for dim, definition in contract['definitions'].items():
+                    if dim in output_sizes:
+                        continue
                     if definition['argument'] not in inputs or definition['argument'] in optional_arrays:
                         raise ValueError(f'{name}: dimension {dim} must be determined by an input array')
                 values = defaults.get(native_name, {})
@@ -79,6 +98,8 @@ def prepare(policy, root, py_name):
                 if not isinstance(values, dict) or set(values) - set(inputs):
                     raise ValueError(f'{name}: defaults must name scalar inputs')
                 for arg, value in values.items():
+                    if metadata[arg]['category'] == 'state':
+                        raise ValueError('state arguments cannot have defaults')
                     if arg in optional_arrays:
                         raise ValueError('presence-controlled arrays use None, not configured fills/defaults')
                     info = metadata[arg]
@@ -116,6 +137,10 @@ def prepare(policy, root, py_name):
                             logical_inputs=entry['policy'].get('logical_inputs', {}))
                 if optional_arrays:
                     spec['optional_arrays'] = optional_arrays
+                if entry.get('state_codecs'):
+                    spec['state_codecs'] = entry['state_codecs']
+                if output_sizes:
+                    spec['output_dimensions'] = output_sizes
                 array_defaults = {a: v['fill'] for a, v in values.items() if metadata[a]['rank']}
                 if array_defaults:
                     spec['array_defaults'] = array_defaults
@@ -179,9 +204,14 @@ def prepare(policy, root, py_name):
                         spec[key] = entry['policy'][key]
                 specs[name] = spec
                 actuals = ', '.join(f'{a!r}: {a}' for a in inputs)
+                if output_sizes:
+                    actuals += ', ' + ', '.join(f'{d!r}: {d}' for d in output_sizes)
                 function_result = 'result_argument' in entry
                 scalar_result = function_result and not metadata[entry['result_argument']]['rank']
-                signature = ', '.join(['self', *parameters] + ([] if scalar_result else ['*', 'out=None']))
+                keywords = [f'{d}={v}' for d, v in output_sizes.items()]
+                if not scalar_result:
+                    keywords.append('out=None')
+                signature = ', '.join(['self', *parameters] + (['*', *keywords] if keywords else []))
                 doc = ('Return the native scalar value.' if scalar_result else
                        'Return the native array result; optionally use caller-owned out.' if function_result else
                        'Return ArrayResult(call status, outputs); native NaN/infinity is retained.' if entry.get('synthetic_status') else
@@ -194,6 +224,8 @@ def prepare(policy, root, py_name):
             raise ValueError('unused dimension defaults')
         if set(sources) != used_sources or set(indices) != used_indices:
             raise ValueError('unused dimension sources or zero-based index policies')
+        if set(output_dimensions) != used_output_dimensions:
+            raise ValueError('unused output dimension policies')
         if set(defaults) != used_defaults:
             raise ValueError('unused array method defaults')
         cls = group.capitalize()

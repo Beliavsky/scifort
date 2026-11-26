@@ -9,7 +9,8 @@ module scifort_c_api_generated_dirichlet
     use scifort_dirichlet, only : cg_native_2 => dirichlet_logpdf
     use scifort_dirichlet, only : cg_native_3 => dirichlet_mean
     use scifort_dirichlet, only : cg_native_4 => dirichlet_pdf
-    use scifort_dirichlet, only : cg_native_5 => dirichlet_var
+    use scifort_dirichlet, only : cg_native_5 => dirichlet_rvs_array
+    use scifort_dirichlet, only : cg_native_6 => dirichlet_var
     implicit none
     private
     public :: scifort_dirichlet_cov_f64
@@ -17,6 +18,7 @@ module scifort_c_api_generated_dirichlet
     public :: scifort_dirichlet_logpdf_f64
     public :: scifort_dirichlet_mean_f64
     public :: scifort_dirichlet_pdf_f64
+    public :: scifort_dirichlet_rvs_array_f64
     public :: scifort_dirichlet_var_f64
 contains
 
@@ -25,10 +27,10 @@ contains
         bind(c, name="scifort_dirichlet_cov_f64")
         !! Compute the Dirichlet covariance matrix.
         implicit none
-        integer(c_int), value, intent(in) :: k !! concentration count, >= 1
-        real(c_double), intent(in) :: alpha(k) !! finite positive concentration vector
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
         real(c_double), intent(inout) :: value(k,k) !! native scalar or array result; invalid parameters produce native NaN
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or length choice
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -49,10 +51,10 @@ contains
         bind(c, name="scifort_dirichlet_entropy_f64")
         !! Compute the differential entropy of a Dirichlet law.
         implicit none
-        integer(c_int), value, intent(in) :: k !! concentration count, >= 1
-        real(c_double), intent(in) :: alpha(k) !! finite positive concentration vector
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
         real(c_double), intent(inout) :: value !! native scalar or array result; invalid parameters produce native NaN
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or length choice
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -73,12 +75,12 @@ contains
         bind(c, name="scifort_dirichlet_logpdf_f64")
         !! Evaluate Dirichlet log density at a full or shortened simplex point.
         implicit none
-        integer(c_int), value, intent(in) :: k !! concentration count, >= 1
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
         integer(c_int), value, intent(in) :: m !! point length, >= 1; k or k-1
         real(c_double), intent(in) :: x(m) !! simplex point; infer final coordinate when m=k-1
-        real(c_double), intent(in) :: alpha(k) !! finite positive concentration vector
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
         real(c_double), intent(inout) :: value !! native scalar or array result; invalid parameters produce native NaN
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or length choice
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -110,10 +112,10 @@ contains
         bind(c, name="scifort_dirichlet_mean_f64")
         !! Compute the componentwise Dirichlet mean.
         implicit none
-        integer(c_int), value, intent(in) :: k !! concentration count, >= 1
-        real(c_double), intent(in) :: alpha(k) !! finite positive concentration vector
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
         real(c_double), intent(inout) :: value(k) !! native scalar or array result; invalid parameters produce native NaN
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or length choice
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -134,12 +136,12 @@ contains
         bind(c, name="scifort_dirichlet_pdf_f64")
         !! Evaluate Dirichlet density at a full or shortened simplex point.
         implicit none
-        integer(c_int), value, intent(in) :: k !! concentration count, >= 1
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
         integer(c_int), value, intent(in) :: m !! point length, >= 1; k or k-1
         real(c_double), intent(in) :: x(m) !! simplex point; infer final coordinate when m=k-1
-        real(c_double), intent(in) :: alpha(k) !! finite positive concentration vector
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
         real(c_double), intent(inout) :: value !! native scalar or array result; invalid parameters produce native NaN
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or length choice
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -166,15 +168,59 @@ contains
         status=0_c_int
     end subroutine scifort_dirichlet_pdf_f64
 
+    subroutine scifort_dirichlet_rvs_array_f64( &
+        k, n_samples, state, samples, alpha, status) &
+        bind(c, name="scifort_dirichlet_rvs_array_f64")
+        !! Draw Dirichlet vectors using caller-owned serialized RNG state.
+        use, intrinsic :: iso_c_binding, only : c_int64_t
+        use scifort_random, only : cg_type_state => rng_state
+        use scifort_rng_c_bridge, only : cg_load_state => rng_load_c_state, &
+            cg_store_state => rng_store_c_state
+        implicit none
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
+        integer(c_int), value, intent(in) :: n_samples !! draw count, >= 0; output columns
+        integer(c_int64_t), intent(inout) :: state(6) !! six caller-owned int64 recurrence components, updated in place
+        real(c_double), intent(inout) :: samples(k,n_samples) !! shape (k,n_samples); generated simplex vectors by column
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
+        integer :: cg_state_status
+        type(cg_type_state) :: cg_state_state
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (k < 0_c_int) then
+            status=2_c_int
+            return
+        end if
+        if (n_samples < 0_c_int) then
+            status=2_c_int
+            return
+        end if
+        call cg_load_state(state,cg_state_state,cg_state_status)
+        if (cg_state_status /= 0) then
+            status=3_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_5( &
+            state=cg_state_state, &
+            samples=samples, &
+            alpha=alpha, &
+            status=status)
+        call cg_store_state(cg_state_state,state)
+    end subroutine scifort_dirichlet_rvs_array_f64
+
     subroutine scifort_dirichlet_var_f64( &
         k, alpha, value, status) &
         bind(c, name="scifort_dirichlet_var_f64")
         !! Compute the componentwise Dirichlet variance.
         implicit none
-        integer(c_int), value, intent(in) :: k !! concentration count, >= 1
-        real(c_double), intent(in) :: alpha(k) !! finite positive concentration vector
+        integer(c_int), value, intent(in) :: k !! concentration count; nonempty laws require >= 1
+        real(c_double), intent(in) :: alpha(k) !! concentrations; finite positive unless the sampling batch is empty
         real(c_double), intent(inout) :: value(k) !! native scalar or array result; invalid parameters produce native NaN
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or length choice
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; otherwise see method status contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -185,7 +231,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_5( &
+        value=cg_native_6( &
             alpha=alpha)
         status=0_c_int
     end subroutine scifort_dirichlet_var_f64

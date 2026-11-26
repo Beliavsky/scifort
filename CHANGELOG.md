@@ -1,3 +1,14 @@
+## 2026-11-26 - Serialized RNG state and Dirichlet sampling
+
+- Add caller-owned six-int64 MRG32k3a state seeding and bulk-uniform C functions,
+  plus Python snapshot-capable streams with no mutable global RNG.
+- Add reviewed generator state-codec policies, optional status promotion and
+  explicit output-defined dimensions; generate the Dirichlet batch sampler.
+- Document state ranges, native stream equality, column-major samples, empty
+  batches and state/output behavior on transport versus numerical failures.
+- Test exact native/C/Python streams, seed endpoints, restoration, independent
+  state ownership, invalid buffers/state and Dirichlet sample properties.
+
 ## 2026-11-25 - Normal fitting and optional-array presence
 
 - Generate a C/Python multivariate normal fit interface for all four combinations

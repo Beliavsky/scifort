@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 64,
+    "array_adapters": 65,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 152,
+    "python": 153,
     "scalar": 88
   },
   "procedures": [
@@ -280,17 +280,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "c_manifest_exclusion": "Single-draw native convenience procedure; generated batch interface supports one column.",
       "module": "scifort_dirichlet",
       "procedure": "dirichlet_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "array_adapter": "scifort_dirichlet_rvs_array_f64",
       "module": "scifort_dirichlet",
       "procedure": "dirichlet_rvs_array",
-      "scalar_generated": false
+      "python": "dirichlet.rvs_array"
     },
     {
       "bulk_generated": false,

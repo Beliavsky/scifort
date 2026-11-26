@@ -17,12 +17,31 @@ def prepare(config, api, identifier, source_lines):
         if is_function:
             fields |= {'result_argument', 'optional_policy'}
         optional_fields = {'logical_inputs', 'shape_contract', 'length_choices',
-                           'integer_limits', 'integer_sums', 'synthetic_status', 'optional_arrays'}
+                           'integer_limits', 'integer_sums', 'synthetic_status', 'optional_arrays',
+                           'state_codecs', 'optional_status'}
         if not isinstance(policy, dict) or set(policy) - optional_fields != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         synthetic_status = policy.get('synthetic_status', False)
         if type(synthetic_status) is not bool or (is_function and 'synthetic_status' in policy):
             raise ValueError(f'{name}: synthetic_status must be boolean and subroutine-only')
+        optional_status = policy.get('optional_status', False)
+        if ('optional_status' in policy and (optional_status is not True or is_function or synthetic_status)):
+            raise ValueError(f'{name}: optional_status must be true for a native subroutine status')
+        codecs = policy.get('state_codecs', {})
+        if (not isinstance(codecs, dict) or ('state_codecs' in policy and not codecs)
+                or (is_function and codecs)):
+            raise ValueError(f'{name}: state_codecs must be a nonempty subroutine policy')
+        for arg, codec in codecs.items():
+            identifier(arg)
+            if (not isinstance(codec, dict) or set(codec) !=
+                    {'module', 'type_module', 'type', 'load', 'store', 'length', 'invalid_status'}):
+                raise ValueError(f'{name}: state codec needs module/type/load/store/length/status')
+            for field in ('module', 'type_module', 'type', 'load', 'store'):
+                identifier(codec[field])
+            if (type(codec['length']) is not int or not 1 <= codec['length'] <= 2147483647
+                    or type(codec['invalid_status']) is not int
+                    or not 1 <= codec['invalid_status'] <= 2147483647):
+                raise ValueError(f'{name}: state length and invalid status must be positive C ints')
         identifier(policy["symbol"])
         node = api[name]
         if is_function:
@@ -39,6 +58,8 @@ def prepare(config, api, identifier, source_lines):
             raise ValueError(f"{name}: expected a directly defined non-bind(c) subroutine")
         args = [identifier(str(a).lower()) for a in node.content[0].items[2].items]
         native_args = args[:]
+        if set(codecs) - set(native_args):
+            raise ValueError(f'{name}: state codecs must name native arguments')
         optional_arrays = policy.get('optional_arrays', {})
         if (not isinstance(optional_arrays, dict) or (is_function and 'optional_arrays' in policy)
                 or ('optional_arrays' in policy and not optional_arrays)
@@ -109,6 +130,8 @@ def prepare(config, api, identifier, source_lines):
         for flag in flags:
             metadata[flag] = dict(intent='in', rank=0, category='integer')
         status = policy["status_argument"]
+        if status in codecs:
+            raise ValueError(f'{name}: a status output cannot be a state codec')
         if status in logical_inputs:
             raise ValueError(f"{name}: status cannot be a logical mapping")
         if status not in args:
@@ -136,8 +159,17 @@ def prepare(config, api, identifier, source_lines):
                 raise ValueError(f"{name}: {arg} needs an explicit declaration")
             dtype, attrs, entity = declared[arg]
             if arg == status:
-                if str(dtype).lower() != "integer" or attrs != {"intent(out)"} or any(entity.items[1:]):
+                expected_attrs = {'intent(out)', 'optional'} if optional_status else {'intent(out)'}
+                if str(dtype).lower() != "integer" or attrs != expected_attrs or any(entity.items[1:]):
                     raise ValueError(f"{name}: status must be a default-integer scalar intent(out)")
+                continue
+            if arg in codecs:
+                codec = codecs[arg]
+                if (str(dtype).lower().replace(' ', '') != f"type({codec['type']})"
+                        or attrs != {'intent(inout)'} or any(entity.items[1:])
+                        or arg in optional_arrays or arg in logical_inputs):
+                    raise ValueError(f'{name}: state codec needs a required scalar derived-type intent(inout)')
+                metadata[arg] = dict(intent='inout', rank=0, category='state')
                 continue
             intent = next((value for value in ("in", "out", "inout") if f"intent({value})" in attrs), None)
             base_attrs = attrs - {"optional"} if arg in logical_inputs or is_function or arg in optional_arrays else attrs
@@ -241,6 +273,8 @@ def prepare(config, api, identifier, source_lines):
                                    else 'documented shape differs from wrapper policy'))
         entry = dict(name=name, policy=policy, args=args, metadata=metadata,
                      dimensions=dimensions, documentation_review=review)
+        if codecs:
+            entry['state_codecs'] = codecs
         if synthetic_status:
             entry.update(native_args=native_args, synthetic_status=True)
         if optional_arrays:
@@ -266,8 +300,15 @@ def emit(entry, index, config):
     lines = [f"    subroutine {symbol}( &", "        " + ", ".join([*dimensions, *args]) + ") &",
              f'        bind(c, name="{symbol}")', f"        !! {policy['description']}",
              *(["        use, intrinsic :: iso_c_binding, only : c_int64_t"]
-               if policy.get('integer_limits') or policy.get('integer_sums') else []),
+               if policy.get('integer_limits') or policy.get('integer_sums') or entry.get('state_codecs') else []),
              "        implicit none"]
+    if entry.get('state_codecs'):
+        imports = []
+        for arg, codec in entry['state_codecs'].items():
+            imports += [f"        use {codec['type_module']}, only : cg_type_{arg} => {codec['type']}",
+                        f"        use {codec['module']}, only : cg_load_{arg} => {codec['load']}, &",
+                        f"            cg_store_{arg} => {codec['store']}"]
+        lines[-1:-1] = imports
     cargs = []
     for dim in dimensions:
         lines.append(f"        integer(c_int), value, intent(in) :: {dim} !! {config['argument_docs'][dim]}")
@@ -281,7 +322,10 @@ def emit(entry, index, config):
             # Preserve output on adapter validation errors; native calls retain native intent.
             intent = "in" if info["intent"] == "in" else "inout"
             value = ", value" if info["rank"] == 0 and intent == "in" else ""
-            if info['category'] == 'logical':
+            if info['category'] == 'state':
+                declaration = 'integer(c_int64_t), intent(inout)'
+                ctype = 'int64_t *'
+            elif info['category'] == 'logical':
                 declaration = "integer(c_int), value, intent(in)"
                 ctype = "int"
             elif info['category'] == 'integer':
@@ -292,9 +336,15 @@ def emit(entry, index, config):
                 ctype = "double" if value else ("const double *" if intent == "in" else "double *")
             cargs.append(f"{ctype} arg_{arg}")
         shape = "(" + ",".join(shapes[arg]) + ")" if arg in shapes else ""
+        if arg in entry.get('state_codecs', {}):
+            shape = f"({entry['state_codecs'][arg]['length']})"
         lines.append(f"        {declaration} :: {arg}{shape} !! {config['argument_docs'][arg]}")
     for arg in policy.get('logical_inputs', {}):
         lines.append(f"        logical :: cg_logical_{arg}")
+    if entry.get('state_codecs'):
+        lines.append('        integer :: cg_state_status')
+        for arg in entry['state_codecs']:
+            lines.append(f'        type(cg_type_{arg}) :: cg_state_{arg}')
     for arg in entry.get('optional_arrays', {}):
         shape = ','.join([':']*metadata[arg]['rank'])
         lines.append(f'        real(c_double), allocatable :: cg_optional_{arg}({shape})')
@@ -330,6 +380,10 @@ def emit(entry, index, config):
     for flag in entry.get('optional_arrays', {}).values():
         lines += [f'        if ({flag} /= 0_c_int .and. {flag} /= 1_c_int) then',
                   f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
+    for arg, codec in entry.get('state_codecs', {}).items():
+        lines += [f'        call cg_load_{arg}({arg},cg_state_{arg},cg_state_status)',
+                  '        if (cg_state_status /= 0) then',
+                  f"            {status}={codec['invalid_status']}_c_int", '            return', '        end if']
     if entry.get('optional_arrays'):
         lines += ['        ! An unallocated allocatable actual makes an optional array dummy absent.']
     for arg, flag in entry.get('optional_arrays', {}).items():
@@ -344,7 +398,11 @@ def emit(entry, index, config):
         actual = f"cg_logical_{arg}" if arg in policy.get('logical_inputs', {}) else arg
         if arg in entry.get('optional_arrays', {}):
             actual = f'cg_optional_{arg}'
+        if arg in entry.get('state_codecs', {}):
+            actual = f'cg_state_{arg}'
         lines.append(f"            {arg}={actual}" + (", &" if i < len(native_args)-1 else ")"))
+    for arg in entry.get('state_codecs', {}):
+        lines.append(f'        call cg_store_{arg}(cg_state_{arg},{arg})')
     if 'result_argument' in entry or entry.get('synthetic_status'):
         lines.append(f'        {status}=0_c_int')
     lines += [f"    end subroutine {symbol}", ""]
@@ -369,6 +427,13 @@ def emit(entry, index, config):
         record['optional_arrays'] = entry['optional_arrays']
         header[-3:-3] = [' * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.',
                         ' * Buffers remain required and fully sized when absent, but are not read.']
+    if entry.get('state_codecs'):
+        record['state_codecs'] = entry['state_codecs']
+        for arg, codec in entry['state_codecs'].items():
+            header[-3:-3] = [f" * {arg}: caller-owned int64_t[{codec['length']}]; invalid state returns {codec['invalid_status']} unchanged.",
+                            ' * State is validated even for empty calls and exported after native numerical errors.']
+    if policy.get('optional_status'):
+        record['optional_status_promoted_to_required'] = True
     if policy.get('logical_inputs'):
         record['logical_inputs'] = policy['logical_inputs']
     if entry.get('shape_contract'):

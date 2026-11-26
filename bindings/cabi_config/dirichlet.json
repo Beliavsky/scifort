@@ -8,12 +8,15 @@
   "header_guard": "SCIFORT_GENERATED_DIRICHLET_H",
   "functions": {},
   "argument_docs": {
-    "k": "concentration count, >= 1",
+    "k": "concentration count; nonempty laws require >= 1",
     "m": "point length, >= 1; k or k-1",
     "x": "simplex point; infer final coordinate when m=k-1",
-    "alpha": "finite positive concentration vector",
+    "alpha": "concentrations; finite positive unless the sampling batch is empty",
     "value": "native scalar or array result; invalid parameters produce native NaN",
-    "status": "0 valid call; 1 invalid extent or length choice"
+    "status": "0 success/valid scalar call; otherwise see method status contract",
+    "n_samples": "draw count, >= 0; output columns",
+    "state": "six caller-owned int64 recurrence components, updated in place",
+    "samples": "shape (k,n_samples); generated simplex vectors by column"
   },
   "array_functions": {
     "dirichlet_logpdf": {
@@ -186,10 +189,49 @@
     "shape_documentation": "docs/dirichlet_shapes.md"
   },
   "excluded": {
-    "dirichlet_rvs": "Explicit RNG state requires a separately reviewed handle interface.",
-    "dirichlet_rvs_array": "Explicit RNG state requires a separately reviewed handle interface.",
+    "dirichlet_rvs": "Single-draw native convenience procedure; generated batch interface supports one column.",
     "dirichlet_status_success": "Native status constant, not a callable procedure.",
     "dirichlet_status_invalid_parameter": "Native status constant, not a callable procedure.",
     "dirichlet_status_invalid_shape": "Native status constant, not a callable procedure."
+  },
+  "subroutines": {
+    "dirichlet_rvs_array": {
+      "symbol": "scifort_dirichlet_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 0
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "k",
+          "n_samples"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 2,
+      "description": "Draw Dirichlet vectors using caller-owned serialized RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 3
+        }
+      }
+    }
   }
 }

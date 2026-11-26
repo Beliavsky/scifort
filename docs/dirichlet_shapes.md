@@ -17,7 +17,7 @@ Compute the Dirichlet covariance matrix.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `alpha` | `(:)` | `(k)` | finite positive concentration vector |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
 | `value` | `(size(alpha),size(alpha))` | `(k,k)` | native scalar or array result; invalid parameters produce native NaN |
 
 `value` is the adapter output for the native array-valued result.
@@ -32,7 +32,7 @@ Compute the differential entropy of a Dirichlet law.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `alpha` | `(:)` | `(k)` | finite positive concentration vector |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
 
 ## dirichlet_logpdf
 
@@ -46,7 +46,7 @@ Evaluate Dirichlet log density at a full or shortened simplex point.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `x` | `(:)` | `(m)` | simplex point; infer final coordinate when m=k-1 |
-| `alpha` | `(:)` | `(k)` | finite positive concentration vector |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
 
 Required length choice: `m in (k,k-1)`.
 
@@ -60,7 +60,7 @@ Compute the componentwise Dirichlet mean.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `alpha` | `(:)` | `(k)` | finite positive concentration vector |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
 | `value` | `(size(alpha))` | `(k)` | native scalar or array result; invalid parameters produce native NaN |
 
 `value` is the adapter output for the native array-valued result.
@@ -77,9 +77,26 @@ Evaluate Dirichlet density at a full or shortened simplex point.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `x` | `(:)` | `(m)` | simplex point; infer final coordinate when m=k-1 |
-| `alpha` | `(:)` | `(k)` | finite positive concentration vector |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
 
 Required length choice: `m in (k,k-1)`.
+
+## dirichlet_rvs_array
+
+Draw Dirichlet vectors using caller-owned serialized RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `k` | `size(alpha)` | 0 |
+| `n_samples` | `size(samples,2)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `samples` | `(:,:)` | `(k,n_samples)` | shape (k,n_samples); generated simplex vectors by column |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 3 without native execution.
 
 ## dirichlet_var
 
@@ -91,7 +108,7 @@ Compute the componentwise Dirichlet variance.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `alpha` | `(:)` | `(k)` | finite positive concentration vector |
+| `alpha` | `(:)` | `(k)` | concentrations; finite positive unless the sampling batch is empty |
 | `value` | `(size(alpha))` | `(k)` | native scalar or array result; invalid parameters produce native NaN |
 
 `value` is the adapter output for the native array-valued result.

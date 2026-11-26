@@ -211,9 +211,16 @@ contains
 
     subroutine dirichlet_rvs_array(state, samples, alpha, status)
         !! Draw simplex vectors by column using explicit RNG state.
+        !! @dimension k = size(alpha)
+        !! @dimension n_samples = size(samples,2)
+        !! @require k >= 0
+        !! @require n_samples >= 0
         !! k=size(alpha), n_samples=size(samples,2); both extents may be zero.
         !! size(samples,1)=k; empty batches succeed without parameter validation.
         !! Nonempty batches require k>=1 and finite positive concentrations.
+        !! Invalid parameters do not advance state. Numerical generation failure can
+        !! advance it; samples from the failure onward are NaN.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
         real(dp), intent(out) :: samples(:, :) !! shape (k,n_samples); samples by column
         real(dp), intent(in) :: alpha(:) !! shape (k); finite positive concentration parameters

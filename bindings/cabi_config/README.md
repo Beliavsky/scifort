@@ -485,3 +485,21 @@ Numerical error statuses and partial outputs are inherited from the native fit.
 Read the [column orientation, constraints and output contract](../python/README.md#multivariate-normal-fitting)
 and the [presence policy](../../tools/cabi_generator/README.md#presence-controlled-optional-arrays).
 No new numerical algorithm or derived-type/RNG interface is introduced.
+
+## Serialized RNG and Dirichlet batch sampler
+
+The Dirichlet manifest now also selects `dirichlet_rvs_array`. A reviewed state
+codec replaces its required native `rng_state` with caller-owned `int64_t[6]`,
+validates it before native execution and exports it after execution, including
+on native numerical error. The optional native integer status is always supplied
+in C. k and n_samples permit zero storage extents, with native empty-batch
+semantics; malformed serialized state is rejected even for an empty batch.
+Python's output-defined n_samples parameter defaults to one. The manual seed and
+bulk-uniform bridge is a dependency of this generated adapter and is therefore
+included in the generated build plan. Its C symbols are declared in
+[scifort_rng.h](../../include/scifort_rng.h), included by the public header.
+The reviewed generated coverage counts the sampler; the two manual RNG entry
+points and Python stream factory are outside those generated-method counts.
+
+See the [full stream/error contract](../python/README.md#explicit-rng-streams-and-dirichlet-sampling)
+and [codec protocol](../../tools/cabi_generator/README.md#reviewed-serialized-state-codecs).

@@ -127,6 +127,9 @@ def markdown(config, entries):
             meaning = config['argument_docs'][arg].replace('|', r'\|')
             lines.append(f"| `{arg}` | `({declared})` | `({required})` | {meaning} |")
         lines.append('')
+        for arg, codec in entry.get('state_codecs', {}).items():
+            lines += [f"`{arg}` is native `type({codec['type']})`; C uses caller-owned `int64_t[{codec['length']}]`.",
+                      f"Invalid serialized state returns status {codec['invalid_status']} without native execution.", '']
         if entry.get('synthetic_status'):
             lines += ['The adapter appends a call-level status; the native subroutine has no status argument.',
                       'Status 0 retains native numerical NaN/infinity; invalid extents preserve outputs.', '']

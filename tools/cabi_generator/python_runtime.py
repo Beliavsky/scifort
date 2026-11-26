@@ -124,6 +124,23 @@ class ArrayResult(NamedTuple):
     outputs: dict
 
 
+class StateBuffer:
+    """Library-bound, caller-owned serialized int64 state for reviewed codecs."""
+    def __init__(self, library, values):
+        array = np.asarray(values)
+        if array.ndim != 1 or array.dtype.kind not in 'iu':
+            raise TypeError('serialized state must be a rank-one integer array')
+        if array.size and (int(array.min()) < -(2**63) or int(array.max()) > 2**63-1):
+            raise ValueError('serialized state components must fit signed int64')
+        self._library = library
+        self._state = np.array(array, dtype=np.int64, copy=True)
+
+    @property
+    def state(self):
+        """Return an independent snapshot; mutations do not change the live stream."""
+        return self._state.copy()
+
+
 class ArrayGroup:
     """Typed, descriptor-free C array calls driven by reviewed shape metadata."""
     _specs = {}
@@ -146,7 +163,9 @@ class ArrayGroup:
                     types.append(C.POINTER(C.c_int))
                     continue
                 info = spec['metadata'][arg]
-                if info['rank']:
+                if info['category'] == 'state':
+                    types.append(C.c_void_p)
+                elif info['rank']:
                     types.append(C.c_void_p)
                 elif info['category'] == 'logical':
                     types.append(C.c_int)
@@ -161,6 +180,17 @@ class ArrayGroup:
         originals, values = {}, {}
         for arg in spec['inputs']:
             info, value = spec['metadata'][arg], inputs[arg]
+            if info['category'] == 'state':
+                codec = spec['state_codecs'][arg]
+                if not isinstance(value, StateBuffer) or value._library is not self._library:
+                    raise TypeError(f'{arg} must be a state object owned by this library instance')
+                array = value._state
+                if (array.dtype != np.dtype(np.int64) or array.shape != (codec['length'],)
+                        or not array.flags.c_contiguous or not array.flags.aligned or not array.flags.writeable):
+                    raise ValueError(f'{arg} has invalid serialized state storage')
+                originals[arg] = array
+                values[arg] = array.ctypes.data_as(C.c_void_p)
+                continue
             if arg in spec.get('optional_arrays', {}):
                 values[spec['optional_arrays'][arg]] = int(value is not None)
                 if value is None:
@@ -181,6 +211,15 @@ class ArrayGroup:
                 values[arg] = int(array) if info['category'] == 'integer' else float(array)
         dimensions = {}
         for dim in spec['dimensions']:
+            if dim in spec.get('output_dimensions', {}):
+                length = inputs[dim]
+                if isinstance(length, (bool, np.bool_)) or not isinstance(length, (int, np.integer)):
+                    raise TypeError(f'{dim} must be an integer extent')
+                length = int(length)
+                if not spec['minimums'][dim] <= length <= np.iinfo(np.intc).max:
+                    raise ValueError(f'{dim} is outside the supported C integer extent range')
+                dimensions[dim] = length
+                continue
             definition = spec['definitions'][dim]
             candidates = spec.get('dimension_sources', {}).get(dim, [definition])
             length = None
@@ -219,7 +258,8 @@ class ArrayGroup:
             if inputs[arg] is None:
                 originals[arg] = (np.eye(shapes[arg][0], dtype=np.float64, order='F') if fill == 'identity'
                                   else np.zeros(shapes[arg], dtype=np.float64, order='F'))
-        input_arrays = [a for arg, a in originals.items() if spec['metadata'][arg]['rank']]
+        input_arrays = [a for arg, a in originals.items()
+                        if spec['metadata'][arg]['rank'] or spec['metadata'][arg]['category'] == 'state']
         for index, array in enumerate(input_arrays):
             if any(np.may_share_memory(array, other) for other in input_arrays[:index]):
                 raise ValueError('input buffers must not overlap')

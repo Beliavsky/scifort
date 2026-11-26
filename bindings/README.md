@@ -123,3 +123,8 @@ Python marginal indices are zero-based while C/Fortran remain one-based. See the
 Multivariate normal maximum-likelihood fitting is available through C/Python,
 with optional fixed mean/covariance and caller-owned outputs. See the
 [column-oriented fitting and error contract](python/README.md#multivariate-normal-fitting).
+
+Explicit RNG streams now support native bulk uniforms and generated Dirichlet
+sampling through six caller-owned int64 state components. Python exposes
+`api.rng(seed)` and `api.dirichlet.rvs_array(stream, alpha, n_samples=...)`.
+Read the [state, shape and failure contract](python/README.md#explicit-rng-streams-and-dirichlet-sampling).

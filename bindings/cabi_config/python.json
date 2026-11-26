@@ -280,7 +280,12 @@
         "bindings/cabi_config/dirichlet.json"
       ],
       "prefix": "dirichlet_",
-      "defaults": {}
+      "defaults": {},
+      "output_dimensions": {
+        "dirichlet_rvs_array": {
+          "n_samples": 1
+        }
+      }
     },
     "multinomial": {
       "manifests": [

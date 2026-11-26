@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 64 |
+| array_adapters | 65 |
 | elementwise | 88 |
-| python | 152 |
+| python | 153 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -43,7 +43,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_dirichlet | dirichlet_mean |  |  | scifort_dirichlet_mean_f64 |  | dirichlet.mean |
 | scifort_dirichlet | dirichlet_pdf |  |  | scifort_dirichlet_pdf_f64 |  | dirichlet.pdf |
 | scifort_dirichlet | dirichlet_rvs |  |  |  |  |  |
-| scifort_dirichlet | dirichlet_rvs_array |  |  |  |  |  |
+| scifort_dirichlet | dirichlet_rvs_array |  |  | scifort_dirichlet_rvs_array_f64 |  | dirichlet.rvs_array |
 | scifort_dirichlet | dirichlet_status_invalid_parameter |  |  |  |  |  |
 | scifort_dirichlet | dirichlet_status_invalid_shape |  |  |  |  |  |
 | scifort_dirichlet | dirichlet_status_success |  |  |  |  |  |

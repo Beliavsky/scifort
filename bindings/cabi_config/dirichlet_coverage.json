@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 6,
+  "generated_symbol_count": 7,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -281,13 +281,72 @@
     },
     {
       "procedure": "dirichlet_rvs",
-      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "reason": "Single-draw native convenience procedure; generated batch interface supports one column.",
       "state": "excluded"
     },
     {
+      "arguments": [
+        "state",
+        "samples",
+        "alpha",
+        "status"
+      ],
+      "dimension_order": [
+        "k",
+        "n_samples"
+      ],
+      "dimensions": {
+        "k": 0,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
       "procedure": "dirichlet_rvs_array",
-      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "k": 0,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "samples": [
+          "k",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 3,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_rvs_array_f64"
+      ]
     },
     {
       "procedure": "dirichlet_status_invalid_parameter",
@@ -354,5 +413,5 @@
   ],
   "public_api_count": 11,
   "source": "src/stats/dirichlet.f90",
-  "source_sha256": "c65c878799d28f7e669e37ba3ade3931481b3ecd5d223ac4cb5646ba4db63566"
+  "source_sha256": "79969ce80ce0427a9b5ef21ee14b4c6e582785e7b66aafe857834785b41a3862"
 }

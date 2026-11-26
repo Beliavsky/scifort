@@ -1478,3 +1478,148 @@ is 152 Python methods and 64 array adapters in the reviewed subset. Optional
 input copies and ignored full-sized placeholders add memory overhead. Other
 platforms, compiler-specific behavior and timing baselines were not newly
 validated.
+
+## Explicit RNG streams and Dirichlet sampling
+
+**SciFort extension:** caller-owned MRG32k3a streams and snapshot/restore API.
+
+```python
+stream = api.rng(seed=12345)
+snapshot = stream.state              # independent int64[6] copy
+uniforms = stream.uniform(10)
+stream.set_state(snapshot)           # validate and restore, preserving on error
+samples = api.dirichlet.rvs_array(stream, [2., 3., 4.], n_samples=100)
+print(samples.status, samples.outputs['samples'].shape)  # 0, (3, 100)
+```
+
+`RandomState(api, seed)` is also exported. Every stream owns its six-component
+native MRG32k3a state and retains its library owner; no RNG is hidden in module
+state. Seeds span the full signed int64 range; floats and booleans are rejected.
+The serialized layout is the existing native `rng_get_state` order: first three
+components in `[0,4294967087)`, last three in `[0,4294944443)`, with neither
+triple all zero. Snapshots can be restored to reproduce the native stream.
+`set_state` checks shape, integer range and recurrence validity before replacing
+the live state. Snapshot mutations do not affect the stream. Independent stream
+objects can be interleaved; do not mutate the same stream concurrently. These
+are SciFort native streams, not NumPy/SciPy bit generators; equal seeds do not
+promise equal sequences between libraries.
+
+`stream.uniform(n, out=None)` returns a length-n float64 array in `(0,1)`.
+A caller-owned output must be native float64, aligned, writable, contiguous,
+correctly shaped and disjoint from state. n must be a nonnegative C-int extent.
+An empty call validates state and leaves a valid stream unchanged. Invalid
+states/counts raise without changing outputs or the live stream.
+
+`api.dirichlet.rvs_array(state, alpha, *, n_samples=1, out=None)` returns
+`ArrayResult(status, {'samples': array})`. For k concentrations the output shape
+is `(k,n_samples)`, with independent simplex draws **by column**. Supply
+`out={'samples': buffer}` for an aligned, writable, column-major native float64
+buffer, disjoint from inputs/state. Integer n_samples is keyword-only; booleans
+are rejected. It must fit nonnegative C int. A state from a different `Scifort`
+instance is rejected, even when that instance loads the same library path.
+
+Empty batches succeed without validating concentration values, including an
+empty alpha vector, and do not advance a valid stream. Nonempty batches require
+k >= 1 and finite positive concentrations. Invalid parameters return native
+status 1, NaN output values where the shape has elements, and unchanged state.
+A native numerical generation failure can advance state: completed columns are
+retained and the failed/remaining columns are NaN. For example, very small
+positive concentrations can underflow all inverse-Gamma draws to zero. This
+behavior is preserved, not replaced by a new sampler. Typical successful draws
+consume k native uniforms per column; numerical failures stop at the native
+failure point. Both checked and optimized builds use the same native stream.
+
+C includes [scifort_rng.h](../../include/scifort_rng.h) and calls:
+
+```c
+void scifort_rng_seed_i64(int64_t seed, int64_t values[6], int *status);
+void scifort_rng_uniform_f64(int n, int64_t values[6], double *output, int *status);
+void scifort_dirichlet_rvs_array_f64(int k, int n_samples, int64_t *state,
+                                   double *samples, const double *alpha, int *status);
+```
+
+All C buffers and scalar output pointers must be valid, aligned, contiguous,
+fully sized and disjoint, including for empty calls (use nonnull sentinels for
+empty arrays). State is always validated, even when n/n_samples is zero. Seed
+returns 0. Uniform statuses are 0 success, 1 invalid extent, 3 invalid state.
+Dirichlet statuses are 0 success, 1 native parameter/numerical failure, 2 invalid
+extent/shape, 3 invalid state. Extent/state errors preserve buffers and state;
+native numerical errors retain native partial outputs and advanced state.
+No Fortran descriptors, derived-type layout, opaque handles or mutable global
+state cross this ABI. The six-component MRG32k3a format is an ABI commitment;
+a future different RNG needs a separately documented format/interface.
+
+See the [generated sampler shapes](../../docs/dirichlet_shapes.md) and
+[reviewed codec policy](../../tools/cabi_generator/README.md#reviewed-serialized-state-codecs).
+CDF and other distribution sampler bindings remain future work.
+
+## RNG and sampling interface validation (2026-11-26)
+
+Validated on Windows with GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental),
+Python 3.13.3, NumPy 2.2.6 and fparser 0.2.5. Commands:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -p test_random.py -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python bindings\python\example.py
+```
+
+All 82 generator tests passed, including three independent two-component state
+codec/output-dimension tests. All seven new RNG/sampler integration tests passed
+in a focused run, then all 83 binding tests passed together. Integration builds
+use checked `-O0 -g -fcheck=all -fbacktrace` and optimized `-O3`, both with
+`-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+C11 clients and C++17 header checks use `-Wall -Wextra -Werror`.
+
+Native/C clients compare exact uniform draws, final recurrence components and
+Dirichlet draws against the actual native procedures, including zero, negative,
+large and signed-int64 endpoint seeds. Python checks stream splitting, snapshots,
+restoration, independent ownership, open-interval uniforms, state/buffer validation,
+empty batches and exact native uniform consumption. Dirichlet moments use analytic
+means/variances with fixed-seed, six-standard-error mean bounds; simplex columns
+sum to one. Tiny positive concentrations exercise native numerical underflow:
+state is advanced through the failing draw and exported, while remaining output
+columns become NaN. Invalid parameters do not advance state; invalid serialized
+state preserves outputs. All configured bindings ran because the Python runtime
+and generator are shared. The updated example also passed.
+
+Existing native RNG reference-sequence/variates and multivariate sampling tests
+passed using the updated Dirichlet source and cached native dependencies:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\rng-c-api-regression ^
+  src\stats\dirichlet.f90 test\test_random.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\rng-c-api-regression\random.exe
+build\rng-c-api-regression\random.exe
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\dirichlet.f90 test\test_checks.f90 test\multivariate_reference.f90 ^
+  test\test_multivariate.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\dependent.exe
+build\multivariate-parameters-regression\dependent.exe
+```
+
+These cache paths are local validation artifacts, not portable build paths.
+The full FPM suite was not run: native RNG/sampling algorithms are unchanged,
+while the bounded interface change is covered by native stream comparisons and
+all configured binding integrations. The full suite remains required before
+release or merge. Other platforms, RNG algorithms, concurrency of a shared
+stream and timing baselines were not newly validated.
+
+Final regeneration updated only generated argument comments; the sampler's
+executable-source hash (excluding comments/blank lines) matches the tested
+version. No numerical tests were repeated for those documentation-only edits.
+Previous Dirichlet C prototypes remain unchanged. Coverage is now 153 generated
+Python methods and 65 array adapters; two manual RNG C entry points and the
+Python stream factory are additional interfaces outside that generated count.
+
+The final read-only check passed for all 124 generated artifacts. Encoding/BOM,
+Fortran ASCII and 132-column limits, local Markdown links and whitespace checks
+also passed. The new manual RNG header is included by the public umbrella header;
+C/C++ integration clients exercised all three new C entry points.

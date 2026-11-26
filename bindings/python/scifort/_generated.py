@@ -976,6 +976,28 @@ class Dirichlet(ArrayGroup):
              'shapes': {'alpha': ['k'], 'x': ['m']},
              'status': 'status',
              'symbol': 'scifort_dirichlet_pdf_f64'},
+     'rvs_array': {'arguments': ['state', 'samples', 'alpha', 'status'],
+                   'definitions': {'k': {'argument': 'alpha', 'axis': None},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['k', 'n_samples'],
+                   'inputs': ['state', 'alpha'],
+                   'logical_inputs': {},
+                   'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'k': 0, 'n_samples': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'alpha': ['k'], 'samples': ['k', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 3,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_dirichlet_rvs_array_f64'},
      'var': {'arguments': ['alpha', 'value', 'status'],
              'definitions': {'k': {'argument': 'alpha', 'axis': None}},
              'dimensions': ['k'],
@@ -1009,6 +1031,10 @@ class Dirichlet(ArrayGroup):
     def pdf(self, x, alpha):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'alpha': alpha}, None)
+
+    def rvs_array(self, state, alpha, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'alpha': alpha, 'n_samples': n_samples}, out)
 
     def var(self, alpha, *, out=None):
         """Return the native array result; optionally use caller-owned out."""

@@ -1,3 +1,18 @@
+## 2026-11-26 - Serialized RNG state and Dirichlet sampling
+
+The C/Python state bridge, codec/output-dimension generator policies, reviewed
+manifest and independent fixtures are original MIT SciFort interface work.
+No upstream implementation was imported or adapted. The bridge delegates to
+existing `scifort_random` seed/get/set/fill routines; generated sampling delegates
+to `dirichlet_rvs_array`. Existing MRG32k3a and Dirichlet/gamma implementation
+provenance remains applicable. No RNG recurrence, seed mapping, uniform grid or
+sampling algorithm was changed. Native sampler edits add structured shape and
+error/advancement documentation plus explicit implicit-none only. Six component
+ranges and ordering come directly from the existing native state contract.
+Independent fixtures test generic transport rather than reproducing SciFort's
+RNG algorithm; integration compares actual native streams and analytic
+Dirichlet moments.
+
 ## 2026-11-25 - Normal fitting and optional-array presence
 
 The presence-policy validator/emitter, Python integration, reviewed manifest,

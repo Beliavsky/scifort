@@ -265,6 +265,8 @@ def generate(config, root):
               " * Buffer rules are stated per entry point. Nonempty buffers must not overlap.",
               " * Invalid individual values follow the native function's behavior.",
               " * The status pointer must always be valid. */", ""]
+    if any(entry.get('state_codecs') for entry in array_entries):
+        header.insert(5, '#include <stdint.h>')
     coverage = []
     for index, (name, args, optional, policy) in enumerate(entries):
         aliases = {arg: f"cg_arg_{i}" for i, arg in enumerate(args)}

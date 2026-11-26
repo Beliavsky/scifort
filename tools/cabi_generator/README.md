@@ -776,3 +776,42 @@ dimensions or also configure fill/default policies. The Python wrapper allocates
 full-sized uninitialized placeholders when absent; it never substitutes zeros or
 identity as a native default. These placeholders and native present-input copies
 add memory overhead. Native partial outputs and statuses remain unchanged.
+
+## Reviewed serialized state codecs
+
+A `subroutines` policy may opt into `state_codecs` for required scalar
+`type(name), intent(inout)` arguments. Each entry declares `module`,
+`type_module`, `type`, `load`, `store`, fixed positive `length`, and positive
+`invalid_status`. For example the Dirichlet policy names the native `rng_state`,
+SciFort's RNG bridge load/store procedures, six int64 components, and status 3.
+No automatic derived-type layout inference or arbitrary structure exposure is
+performed. Names and declaration type/intent are validated, while helper
+signatures/behavior require review and compiled tests.
+
+The C boundary is a caller-owned `int64_t[length]`; descriptors stay in Fortran.
+After extent/flag guards, the adapter decodes state into a local native object.
+A nonzero decoder status returns the configured invalid-state status with state
+and outputs unchanged. Valid state is required even for empty calls. After the
+native call, state is always serialized back, including on numerical failure;
+this preserves native stream advancement. Independent streams require separate
+buffers, with no shared mutation during a call. The codec helpers must preserve
+state on rejected input and export only initialized native states.
+
+Python accepts a library-bound `StateBuffer` (SciFort exposes `RandomState`),
+checks its int64 storage, extent, ownership and buffer disjointness, and passes
+that live state without copying. Snapshots are copies. States cannot have Python
+defaults. A required native integer status may opt into `optional_status: true`
+when its declaration is optional; C always supplies it. Other optional status
+forms and optional derived-state arguments remain unsupported.
+
+## Output-defined dimensions
+
+An array group's `output_dimensions` maps native procedure names to dimension
+names and nonnegative C-int defaults, for example
+`{"dirichlet_rvs_array": {"n_samples": 1}}`. The dimension must be declared
+in the native structured contract using an output array axis; all array shapes
+must still agree with the C policy. Python exposes it as a keyword-only integer
+parameter, validates it before allocation and uses it for caller-owned output
+shape checks. Boolean, negative, oversized, unknown and reserved dimensions are
+rejected. Required input-defined dimensions continue to be inferred normally.
+No dimension is inferred from an unvalidated output buffer or hidden default.

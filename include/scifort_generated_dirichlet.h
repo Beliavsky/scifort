@@ -3,6 +3,7 @@
 #ifndef SCIFORT_GENERATED_DIRICHLET_H
 #define SCIFORT_GENERATED_DIRICHLET_H
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -62,6 +63,16 @@ void scifort_dirichlet_mean_f64(int arg_k, const double * arg_alpha, double * ar
  * Status 0 means the call was valid; native numerical NaN/infinity is retained.
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_dirichlet_pdf_f64(int arg_k, int arg_m, const double * arg_x, const double * arg_alpha, double * arg_value, int *arg_status);
+
+/* Draw Dirichlet vectors using caller-owned serialized RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 2 without changing output.
+ * state: caller-owned int64_t[6]; invalid state returns 3 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_dirichlet_rvs_array_f64(int arg_k, int arg_n_samples, int64_t * arg_state, double * arg_samples, const double * arg_alpha, int *arg_status);
 
 /* Compute the componentwise Dirichlet variance.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.

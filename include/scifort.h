@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include "scifort_generated.h"
+#include "scifort_rng.h"
 
 
 #ifdef __cplusplus
