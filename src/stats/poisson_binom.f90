@@ -43,8 +43,13 @@ module scifort_poisson_binom
 contains
 
     pure function poisson_binom_logpmf_real(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial logpmf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: k !! observed success count
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, count
         real(dp), allocatable :: logp(:)
@@ -61,96 +66,156 @@ contains
     end function poisson_binom_logpmf_real
 
     pure function poisson_binom_logpmf_int(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial logpmf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         integer, intent(in) :: k !! observed success count
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=poisson_binom_logpmf_real(real(k,dp),p,loc)
     end function poisson_binom_logpmf_int
 
     pure function poisson_binom_pmf_real(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial pmf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: k !! observed success count
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=exp(poisson_binom_logpmf_real(k,p,loc))
     end function poisson_binom_pmf_real
 
     pure function poisson_binom_pmf_int(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial pmf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         integer, intent(in) :: k !! observed success count
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=poisson_binom_pmf_real(real(k,dp),p,loc)
     end function poisson_binom_pmf_int
 
     pure function poisson_binom_cdf_real(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial cdf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: k !! upper limit of P(X <= k)
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, sf, logcdf, logsf
         call tails(floor_count(k,loc),p,y,sf,logcdf,logsf)
     end function poisson_binom_cdf_real
 
     pure function poisson_binom_cdf_int(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial cdf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         integer, intent(in) :: k !! upper integer limit
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=poisson_binom_cdf_real(real(k,dp),p,loc)
     end function poisson_binom_cdf_int
 
     pure function poisson_binom_sf_real(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial sf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: k !! lower limit of P(X > k)
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, cdf, logcdf, logsf
         call tails(floor_count(k,loc),p,cdf,y,logcdf,logsf)
     end function poisson_binom_sf_real
 
     pure function poisson_binom_sf_int(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial sf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         integer, intent(in) :: k !! lower integer limit
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=poisson_binom_sf_real(real(k,dp),p,loc)
     end function poisson_binom_sf_int
 
     pure function poisson_binom_logcdf_real(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial logcdf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: k !! upper limit of log(P(X <= k))
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, cdf, sf, logsf
         call tails(floor_count(k,loc),p,cdf,sf,y,logsf)
     end function poisson_binom_logcdf_real
 
     pure function poisson_binom_logcdf_int(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial logcdf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         integer, intent(in) :: k !! upper integer limit
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=poisson_binom_logcdf_real(real(k,dp),p,loc)
     end function poisson_binom_logcdf_int
 
     pure function poisson_binom_logsf_real(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial logsf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: k !! lower limit of log(P(X > k))
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, cdf, sf, logcdf
         call tails(floor_count(k,loc),p,cdf,sf,logcdf,y)
     end function poisson_binom_logsf_real
 
     pure function poisson_binom_logsf_int(k,p,loc) result(y)
+        !! Evaluate the Poisson-binomial logsf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         integer, intent(in) :: k !! lower integer limit
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y
         y=poisson_binom_logsf_real(real(k,dp),p,loc)
     end function poisson_binom_logsf_int
 
     pure function poisson_binom_ppf(probability,p,loc) result(y)
+        !! Evaluate the Poisson-binomial ppf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: probability !! lower-tail probability in [0,1]
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, shift
         integer :: lo, hi, mid
@@ -173,8 +238,13 @@ contains
     end function poisson_binom_ppf
 
     pure function poisson_binom_isf(probability,p,loc) result(y)
+        !! Evaluate the Poisson-binomial isf for one probability vector.
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! The support is loc through loc+n; loc defaults to zero.
+        !! Each probability must be finite and in [0,1]; deterministic trials are allowed.
         real(dp), intent(in) :: probability !! upper-tail probability in [0,1]
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(in), optional :: loc !! support shift (default 0)
         real(dp) :: y, shift
         integer :: lo, hi, mid
@@ -197,10 +267,14 @@ contains
     end function poisson_binom_isf
 
     pure subroutine poisson_binom_logpmf_derivative_p(count,p,logf,dpvec)
+        !! Return log mass and its derivatives with respect to trial probabilities.
+        !! n = size(p), n >= 1; dpvec must have length n.
+        !! Invalid input yields NaNs; out-of-support counts give logf = -infinity
+        !! and NaN derivatives. Zero-probability observations have NaN derivatives.
         real(dp), intent(in) :: count !! unshifted integer observation
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(out) :: logf !! log probability mass
-        real(dp), intent(out) :: dpvec(:) !! derivatives of log mass with respect to p(:)
+        real(dp), intent(out) :: dpvec(:) !! shape (n); derivatives of log mass with respect to p
         real(dp), allocatable :: q(:), mass(:)
         real(dp) :: pk, deriv
         integer :: j, k, n
@@ -209,8 +283,11 @@ contains
             abs(count-aint(count))>0.0_dp) then
             logf=quiet_nan(count); return
         end if
+        if (count < 0.0_dp .or. count > real(n,dp)) then
+            logf=negative_infinity(count)
+            return
+        end if
         k=int(count)
-        if (k<0 .or. k>n) then; logf=negative_infinity(count); return; end if
         logf=poisson_binom_logpmf_real(count,p)
         if (.not.ieee_is_finite(logf)) return
         pk=exp(logf)
@@ -231,8 +308,10 @@ contains
     end subroutine poisson_binom_logpmf_derivative_p
 
     pure subroutine tails(k,p,cdf,sf,logcdf,logsf)
+        !! Compute both tails and log tails without subtracting probabilities.
+        !! n = size(p), n >= 1; k is an unshifted, already floored split.
         real(dp), intent(in) :: k !! unshifted integer tail split
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities in [0,1]
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(out) :: cdf !! lower-tail probability
         real(dp), intent(out) :: sf !! upper-tail probability
         real(dp), intent(out) :: logcdf !! logarithm of lower tail
@@ -258,8 +337,12 @@ contains
     end subroutine tails
 
     pure subroutine build_logpmf(p,logp)
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities
-        real(dp), allocatable, intent(out) :: logp(:) !! log PMF indexed 0:size(p)
+        !! Construct the full log probability table by Bernoulli convolution.
+        !! n = size(p), n >= 0; the caller validates probabilities.
+        !! Allocate the output with lower bound 0 and upper bound n.
+        !! For n = 0 the sole entry is log(1) = 0.
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
+        real(dp), allocatable, intent(out) :: logp(:) !! shape (n+1); allocated log PMF with bounds 0:n
         real(dp), allocatable :: cur(:), nxt(:)
         real(dp) :: lp, lq
         integer :: i, k, n
@@ -280,8 +363,12 @@ contains
     end subroutine build_logpmf
 
     pure subroutine build_pmf(p,mass)
-        real(dp), intent(in) :: p(:) !! Bernoulli success probabilities
-        real(dp), allocatable, intent(out) :: mass(:) !! PMF indexed 0:size(p)
+        !! Construct the full probability table by Bernoulli convolution.
+        !! n = size(p), n >= 0; the caller validates probabilities.
+        !! Allocate the output with lower bound 0 and upper bound n.
+        !! For n = 0 the sole entry is 1.
+        real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
+        real(dp), allocatable, intent(out) :: mass(:) !! shape (n+1); allocated PMF with bounds 0:n
         real(dp), allocatable :: cur(:), nxt(:)
         integer :: i, k, n
         n=size(p); allocate(cur(0:n),nxt(0:n),mass(0:n)); cur=0.0_dp; cur(0)=1.0_dp
@@ -297,6 +384,7 @@ contains
     end subroutine build_pmf
 
     pure elemental function logadd(a,b) result(y)
+        !! Add two nonnegative quantities represented by their logarithms.
         real(dp), intent(in) :: a !! first logarithm
         real(dp), intent(in) :: b !! second logarithm
         real(dp) :: y, hi, lo
@@ -305,6 +393,7 @@ contains
     end function logadd
 
     pure elemental function shifted_count(k,loc) result(count)
+        !! Subtract the optional support shift from an observation.
         real(dp), intent(in) :: k !! observation
         real(dp), intent(in), optional :: loc !! support shift
         real(dp) :: count
@@ -312,21 +401,29 @@ contains
     end function shifted_count
 
     pure elemental function floor_count(k,loc) result(count)
+        !! Floor a shifted real observation without converting to a default integer.
         real(dp), intent(in) :: k !! CDF/SF argument
         real(dp), intent(in), optional :: loc !! support shift
-        real(dp) :: count
+        real(dp) :: count, truncated
         count=k-optional_loc(loc)
-        if (ieee_is_finite(count)) count=floor(count)
+        if (ieee_is_finite(count)) then
+            truncated=aint(count)
+            if (truncated > count) truncated=truncated-1.0_dp
+            count=truncated
+        end if
     end function floor_count
 
     pure elemental function optional_loc(loc) result(shift)
+        !! Resolve an optional support shift; absence means zero.
         real(dp), intent(in), optional :: loc !! support shift
         real(dp) :: shift
         shift=0.0_dp; if (present(loc)) shift=loc
     end function optional_loc
 
     pure logical function valid_parameters(p)
-        real(dp), intent(in) :: p(:) !! probability vector
+        !! Check a nonempty vector of finite Bernoulli probabilities in [0,1].
+        !! Candidate lengths are unrestricted, including zero; empty input is invalid.
+        real(dp), intent(in) :: p(:) !! candidate probabilities; arbitrary length, with empty input rejected
         integer :: i
         valid_parameters=size(p)>=1
         if (.not.valid_parameters) return
@@ -338,6 +435,7 @@ contains
     end function valid_parameters
 
     pure elemental logical function valid_probability(q)
+        !! Check a finite probability candidate in [0,1].
         real(dp), intent(in) :: q !! probability candidate
         valid_probability=ieee_is_finite(q).and.q>=0.0_dp.and.q<=1.0_dp
     end function valid_probability

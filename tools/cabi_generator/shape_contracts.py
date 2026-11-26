@@ -103,6 +103,9 @@ def markdown(config, entries):
              'These declared contracts are checked against reviewed C adapter policies.',
              'They do not prove that the numerical implementation obeys the contract.', '']
     for entry in entries:
+        specific = config.get('generic_specifics', {}).get(entry['name'])
+        if specific:
+            lines += [f"Public generic `{entry['name']}`: reviewed specific `{specific}`.", '']
         contract = entry.get('shape_contract')
         if not contract:
             continue

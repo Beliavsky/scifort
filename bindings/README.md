@@ -107,3 +107,10 @@ rectangular evaluation matrices. See the [Python shape/default contract](python/
 [matrix-normal shapes](../docs/matrix_normal_shapes.md), and
 [matrix-t shapes](../docs/matrix_t_shapes.md). The Python entropy interface uses
 independent 1-by-1 identity defaults for absent row/column covariance matrices.
+
+Poisson-binomial mass, tail and quantile methods are available under
+`api.poisson_binom`. New C symbols use `_explicit_f64` and preserve the three
+existing scalar-returning symbols. See the
+[probability-vector and endpoint contract](python/README.md#poisson-binomial-distribution)
+and [shape tables](../docs/poisson_binom_shapes.md). Their manifest also exercises
+reviewed selection of specific procedures behind public Fortran generics.

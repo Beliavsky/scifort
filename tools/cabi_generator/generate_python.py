@@ -48,7 +48,7 @@ def artifacts(config_path, root):
         generate.generate(config, root)
         protected.update({manifest_path, (root / config['source']).resolve()})
         protected.update((root / p).resolve() for p in config['outputs'].values())
-        api = generate.public_api(root / config['source'], config['module'])
+        api = generate.public_api(root / config['source'], config['module'], specifics=config.get('generic_specifics'))
         if config.get('subroutines') or not config['functions']:
             raise ValueError('Python groups currently require scalar/elemental function manifests')
         functions = copy.deepcopy(config['functions'])

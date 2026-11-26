@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 50,
+    "array_adapters": 58,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 209,
-    "python": 138,
+    "exports": 218,
+    "python": 146,
     "scalar": 88
   },
   "procedures": [
@@ -1446,6 +1446,61 @@
       "python": "normal.sf",
       "scalar": "scifort_normal_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_cdf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_cdf",
+      "python": "poisson_binom.cdf"
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_isf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_isf",
+      "python": "poisson_binom.isf"
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_logcdf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_logcdf",
+      "python": "poisson_binom.logcdf"
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_logpmf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_logpmf",
+      "python": "poisson_binom.logpmf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Subroutine without native status needs a separately reviewed adapter extension.",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_logpmf_derivative_p",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_logsf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_logsf",
+      "python": "poisson_binom.logsf"
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_pmf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_pmf",
+      "python": "poisson_binom.pmf"
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_ppf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_ppf",
+      "python": "poisson_binom.ppf"
+    },
+    {
+      "array_adapter": "scifort_poisson_binom_sf_explicit_f64",
+      "module": "scifort_poisson_binom",
+      "procedure": "poisson_binom_sf",
+      "python": "poisson_binom.sf"
     },
     {
       "bulk": "scifort_t_cdf_vec_f64",

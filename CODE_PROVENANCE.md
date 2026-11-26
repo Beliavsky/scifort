@@ -1,3 +1,16 @@
+## 2026-11-25 - Poisson-binomial interface and conversion safety
+
+The generic-selection generator extension, reviewed manifests, adapters, shape
+annotations and independent interface fixtures are original MIT SciFort work.
+No upstream implementation was imported or adapted. Existing Poisson-binomial
+module provenance remains applicable. The local tail-floor fix uses real-valued
+AINT truncation with a unit correction for negative fractional values, avoiding
+default-integer conversion; derivative count bounds are checked before INT.
+Distribution formulas and convolution algorithms are unchanged. Tests use SciPy
+as an external reference, direct finite-outcome enumeration, binomial identities
+and an elementary two-trial derivative identity. Existing C symbols and their
+calling conventions remain unchanged; the new adapters have distinct symbols.
+
 ## 2026-11-25 - matrix-normal and matrix-t interface integration
 
 The reviewed manifests, C/Python adapters, shape documentation, generic explicit

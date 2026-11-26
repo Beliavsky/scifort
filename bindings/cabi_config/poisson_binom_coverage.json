@@ -1,0 +1,380 @@
+{
+  "generated_symbol_count": 8,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "k",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "native_specific": "poisson_binom_cdf_real",
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_cdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_cdf_explicit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "probability",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_isf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_isf_explicit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "k",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "native_specific": "poisson_binom_logcdf_real",
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_logcdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_logcdf_explicit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "k",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "native_specific": "poisson_binom_logpmf_real",
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_logpmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_logpmf_explicit_f64"
+      ]
+    },
+    {
+      "procedure": "poisson_binom_logpmf_derivative_p",
+      "reason": "Subroutine without native status needs a separately reviewed adapter extension.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "k",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "native_specific": "poisson_binom_logsf_real",
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_logsf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_logsf_explicit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "k",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "native_specific": "poisson_binom_pmf_real",
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_pmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_pmf_explicit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "probability",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_ppf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_ppf_explicit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "k",
+        "p",
+        "loc",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "native_specific": "poisson_binom_sf_real",
+      "optional_promoted_to_required": [
+        "loc"
+      ],
+      "procedure": "poisson_binom_sf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_sf_explicit_f64"
+      ]
+    }
+  ],
+  "public_api_count": 9,
+  "source": "src/stats/poisson_binom.f90",
+  "source_sha256": "806e69ebc683782cfc355573825c92e83c705c329550abefa2169902e9d8e100"
+}

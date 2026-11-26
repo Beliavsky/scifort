@@ -35,7 +35,7 @@ def prepare(policy, root, py_name):
             generate.generate(config, root)
             source = (root/config['source']).resolve()
             protected.update({manifest, source, *((root/p).resolve() for p in config['outputs'].values())})
-            api = generate.public_api(source, config['module'])
+            api = generate.public_api(source, config['module'], specifics=config.get('generic_specifics'))
             entries = generate.explicit_arrays.prepare(config, api, generate.identifier,
                                                        source.read_text(encoding='utf-8').splitlines())
             if not entries:

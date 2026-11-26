@@ -83,6 +83,15 @@ def main():
     print('matrix t PDF/log-PDF:', api.matrix_t.pdf(point, df=3.),
           api.matrix_t.logpdf(point, df=3.))
 
+    probabilities = [.2, .6, .8]
+    print('Poisson-binomial PMF/log-PMF:', api.poisson_binom.pmf(2, probabilities),
+          api.poisson_binom.logpmf(2, probabilities))
+    print('Poisson-binomial CDF/SF/log-CDF/log-SF:',
+          api.poisson_binom.cdf(2, probabilities), api.poisson_binom.sf(2, probabilities),
+          api.poisson_binom.logcdf(2, probabilities), api.poisson_binom.logsf(2, probabilities))
+    print('Poisson-binomial PPF/ISF:', api.poisson_binom.ppf(.95, probabilities),
+          api.poisson_binom.isf(.05, probabilities))
+
 
 if __name__ == '__main__':
     main()

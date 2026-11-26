@@ -1,0 +1,198 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/poisson_binom.f90",
+  "module": "scifort_poisson_binom",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_poisson_binom",
+  "header_guard": "SCIFORT_GENERATED_POISSON_BINOM_H",
+  "functions": {},
+  "generic_specifics": {
+    "poisson_binom_pmf": "poisson_binom_pmf_real",
+    "poisson_binom_logpmf": "poisson_binom_logpmf_real",
+    "poisson_binom_cdf": "poisson_binom_cdf_real",
+    "poisson_binom_sf": "poisson_binom_sf_real",
+    "poisson_binom_logcdf": "poisson_binom_logcdf_real",
+    "poisson_binom_logsf": "poisson_binom_logsf_real"
+  },
+  "argument_docs": {
+    "n": "trial count, >= 1",
+    "k": "real-valued observation; tail methods floor after shifting",
+    "p": "finite Bernoulli probabilities in [0,1]",
+    "probability": "tail probability in [0,1]",
+    "loc": "support shift; required at the C boundary",
+    "value": "native scalar result, retaining numerical NaN/infinity",
+    "status": "0 valid call; 1 invalid trial extent"
+  },
+  "array_functions": {
+    "poisson_binom_pmf": {
+      "symbol": "scifort_poisson_binom_pmf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial pmf.",
+      "shape_contract": true
+    },
+    "poisson_binom_logpmf": {
+      "symbol": "scifort_poisson_binom_logpmf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial logpmf.",
+      "shape_contract": true
+    },
+    "poisson_binom_cdf": {
+      "symbol": "scifort_poisson_binom_cdf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial cdf.",
+      "shape_contract": true
+    },
+    "poisson_binom_sf": {
+      "symbol": "scifort_poisson_binom_sf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial sf.",
+      "shape_contract": true
+    },
+    "poisson_binom_logcdf": {
+      "symbol": "scifort_poisson_binom_logcdf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial logcdf.",
+      "shape_contract": true
+    },
+    "poisson_binom_logsf": {
+      "symbol": "scifort_poisson_binom_logsf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial logsf.",
+      "shape_contract": true
+    },
+    "poisson_binom_ppf": {
+      "symbol": "scifort_poisson_binom_ppf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial ppf.",
+      "shape_contract": true
+    },
+    "poisson_binom_isf": {
+      "symbol": "scifort_poisson_binom_isf_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Poisson-binomial isf.",
+      "shape_contract": true
+    }
+  },
+  "excluded": {
+    "poisson_binom_logpmf_derivative_p": "Subroutine without native status needs a separately reviewed adapter extension."
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/poisson_binom_generated.f90",
+    "header": "include/scifort_generated_poisson_binom.h",
+    "coverage": "bindings/cabi_config/poisson_binom_coverage.json",
+    "shape_documentation": "docs/poisson_binom_shapes.md"
+  }
+}

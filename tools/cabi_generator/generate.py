@@ -26,7 +26,7 @@ def identifier(value):
     return value
 
 
-def public_api(path, module_name, *, tree=None):
+def public_api(path, module_name, *, tree=None, specifics=None):
     """Read an AST; never infer a procedure signature from its implementation."""
     if tree is None:
         tree = ParserFactory().create(std="f2008")(FortranFileReader(str(path)))
@@ -68,8 +68,31 @@ def public_api(path, module_name, *, tree=None):
         raise ValueError("first release requires a private-by-default module with explicit public exports")
     names = {name for name in procedures if access.get(name, default) == "public"}
     names.update(name for name, mode in access.items() if mode == "public")
-    # Public generic names and imported names remain visible, but require explicit exclusions.
-    return {name: procedures.get(name) for name in sorted(names)}
+    api = {name: procedures.get(name) for name in sorted(names)}
+    specifics = {} if specifics is None else specifics
+    if not isinstance(specifics, dict):
+        raise ValueError('generic_specifics must map public generic names to local procedures')
+    interfaces = {}
+    for block in (spec.content if spec else ()):
+        if not isinstance(block, F.Interface_Block):
+            continue
+        generic = block.content[0].items[0]
+        if not isinstance(generic, F.Name):
+            continue
+        members = set()
+        for statement in block.content[1:-1]:
+            if not isinstance(statement, F.Procedure_Stmt) or str(statement.items[1]).lower() != 'module':
+                continue
+            members.update(str(n).lower() for n in statement.items[0].items)
+        interfaces[str(generic).lower()] = members
+    for generic, specific in specifics.items():
+        identifier(generic)
+        identifier(specific)
+        if (generic not in api or generic not in interfaces or specific not in interfaces[generic]
+                or specific not in procedures):
+            raise ValueError('generic selection requires a public named interface and a declared local module procedure')
+        api[generic] = procedures[specific]
+    return api
 
 
 def signature(node, kind):
@@ -113,7 +136,7 @@ def generate(config, root):
     required = {"schema_version", "source", "module", "kind_module", "kind_name",
                 "wrapper_module", "header_guard", "functions", "excluded", "outputs",
                 "argument_docs"}
-    if (not isinstance(config, dict) or set(config) - {"subroutines", "array_functions"} != required
+    if (not isinstance(config, dict) or set(config) - {"subroutines", "array_functions", "generic_specifics"} != required
             or type(config["schema_version"]) is not int or config["schema_version"] not in (1, 2)):
         raise ValueError(f"schema versions 1/2 require these fields (plus optional subroutines): {sorted(required)}")
     default_array_style = "pointer" if config["schema_version"] == 1 else "explicit"
@@ -141,7 +164,9 @@ def generate(config, root):
     for key in ('subroutines', 'array_functions'):
         if not isinstance(config.get(key, {}), dict):
             raise ValueError(f'{key} must be an object')
-    api = public_api(source, config["module"])
+    if not isinstance(config.get("generic_specifics", {}), dict):
+        raise ValueError("generic_specifics must be an object")
+    api = public_api(source, config["module"], specifics=config.get("generic_specifics"))
     selected, excluded = config["functions"], config["excluded"]
     subroutines = config.get("subroutines", {})
     array_functions = config.get('array_functions', {})
@@ -149,6 +174,8 @@ def generate(config, root):
             or set(subroutines) & set(array_functions)):
         raise ValueError("a procedure cannot be both a function and subroutine policy")
     covered = set(selected) | set(subroutines) | set(array_functions)
+    if set(config.get("generic_specifics", {})) - covered:
+        raise ValueError("generic selections must name generated procedures")
     if covered & set(excluded):
         raise ValueError("a procedure cannot be both generated and excluded")
     if covered | set(excluded) != set(api):
@@ -343,6 +370,9 @@ def generate(config, root):
         lines += body
         header += prototypes
         coverage.append(record)
+    for record in coverage:
+        if record["procedure"] in config.get("generic_specifics", {}):
+            record["native_specific"] = config["generic_specifics"][record["procedure"]]
     for name, reason in sorted(excluded.items()):
         coverage.append({"procedure": name, "state": "excluded", "reason": reason})
     lines.append(f"end module {module}")

@@ -327,6 +327,38 @@
           "df": 1.0
         }
       }
+    },
+    "poisson_binom": {
+      "manifests": [
+        "bindings/cabi_config/poisson_binom.json"
+      ],
+      "prefix": "poisson_binom_",
+      "defaults": {
+        "poisson_binom_pmf": {
+          "loc": 0.0
+        },
+        "poisson_binom_logpmf": {
+          "loc": 0.0
+        },
+        "poisson_binom_cdf": {
+          "loc": 0.0
+        },
+        "poisson_binom_sf": {
+          "loc": 0.0
+        },
+        "poisson_binom_logcdf": {
+          "loc": 0.0
+        },
+        "poisson_binom_logsf": {
+          "loc": 0.0
+        },
+        "poisson_binom_ppf": {
+          "loc": 0.0
+        },
+        "poisson_binom_isf": {
+          "loc": 0.0
+        }
+      }
     }
   }
 }

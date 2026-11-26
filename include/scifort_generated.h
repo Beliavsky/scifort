@@ -22,6 +22,7 @@
 #include "scifort_generated_multivariate_normal.h"
 #include "scifort_generated_multivariate_t.h"
 #include "scifort_generated_normal.h"
+#include "scifort_generated_poisson_binom.h"
 #include "scifort_generated_student_t.h"
 #include "scifort_generated_weibull.h"
 #include "scifort_generated_wishart.h"

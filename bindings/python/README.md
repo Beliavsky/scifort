@@ -12,6 +12,8 @@ available under `api.multinomial` and `api.multivariate_hypergeom`.
 `api.wishart` and `api.invwishart` provide densities, entropy and matrix moments.
 `api.matrix_normal` provides PDF, log-PDF and entropy; `api.matrix_t` provides
 PDF and log-PDF for rectangular matrix variates.
+`api.poisson_binom` provides eight mass, tail and quantile methods for a vector
+of Bernoulli probabilities.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -1043,3 +1045,124 @@ integration suites. The full FPM numerical suite was not rerun because the nativ
 numerical code and overall FPM build/test process are unchanged. Sampling remains
 native-only; other platforms and extreme parameter/matrix ranges were not newly
 validated. Benchmark baselines were not refreshed.
+
+## Poisson-binomial distribution
+
+`api.poisson_binom` provides `pmf(k, p, loc=0.0)`, `logpmf`, `cdf`, `sf`,
+`logcdf`, `logsf`, `ppf(probability, p, loc=0.0)` and `isf`. Each returns one
+Python float. `p` is a rank-one vector of length `n >= 1`, containing finite
+Bernoulli success probabilities in `[0,1]`; zeros and ones are permitted.
+`loc` is a real support shift, defaulting to zero. This interface has no batching,
+broadcasting or `out=` buffer argument.
+
+Mass functions require an integer-valued `k-loc`; fractional or out-of-support
+counts give zero mass and negative-infinite log mass. Tail functions floor
+`k-loc`. Large finite observations are handled without converting them to default
+integers; infinite observations yield the corresponding tail endpoints. NaN
+observations or invalid probability vectors produce native NaNs. Quantile inputs
+must be finite and in `[0,1]`; invalid probabilities produce NaN. Quantile
+endpoints use the nominal support: PPF(0) and ISF(1) return `loc-1`, while PPF(1)
+and ISF(0) return `loc+n`, including deterministic trial vectors.
+
+Use finite `loc` for meaningful distribution calculations. Existing handling of
+nonfinite shifts is retained: mass/tail methods evaluate the resulting shifted
+observation, while quantile methods return NaN. Log tails are computed in the
+log domain and can remain finite when their probabilities underflow to zero.
+
+Python validates ranks and extents before calling C, and converts numeric inputs
+to aligned, contiguous float64 as needed. Empty vectors or wrong ranks raise;
+invalid probability values return native NaN. C adapters return status 1 for a
+nonpositive trial count, preserving the scalar result; a valid call returns
+status 0 even for numerical NaN/infinity. All C pointers must be valid, nonnull,
+aligned and disjoint. Dimensions use C int, with valid buffers and sufficient
+memory for native work arrays required.
+
+The new status-returning symbols are named
+`scifort_poisson_binom_<method>_explicit_f64`. Existing published scalar-returning
+`scifort_poisson_binom_pmf_f64`, `scifort_poisson_binom_cdf_f64` and
+`scifort_poisson_binom_ppf_f64` retain their original calling conventions.
+The development Python library uses the new explicit adapters. The six mass/tail
+public generics select the real-count native specifics; native integer overloads
+remain available to Fortran callers. PPF/ISF use their direct native procedures.
+
+See the [shape tables](../../docs/poisson_binom_shapes.md) and
+[generic selection policy](../../tools/cabi_generator/README.md#reviewed-public-generic-selections).
+Native derivative output and private allocation bounds are documented too.
+The derivative C interface remains deferred because its subroutine has no status
+argument. The native derivative now rejects out-of-range real counts before
+integer conversion. No extended-range derivative algorithm was added.
+
+Native probability tables use quadratic work in the number of trials; quantile
+searches rebuild tables for their tail evaluations. This batch adds no caching
+or bulk evaluation algorithm.
+
+```python
+p = [.2, .6, .8]
+mass = api.poisson_binom.pmf(2, p)
+log_tail = api.poisson_binom.logsf(2, p)
+quantile = api.poisson_binom.ppf(.95, p)
+```
+
+### Validation: Poisson-binomial interface batch (2026-11-25)
+
+Windows checks used GNU Fortran 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6, SciPy 1.15.3 and FPM 0.12.0 alpha. Commands:
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_generic_specifics.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python -m unittest discover -s bindings/python/tests -v
+python bindings\python\example.py
+```
+
+All 69 generator tests passed; the three generic-selection cases were rerun after
+adding the shape-table assertion. All 60 binding integration tests passed, with
+six new cases covering eight SciPy methods, an equal-probability binomial
+identity, independent outcome enumeration, quantile inequalities, endpoints,
+invalid/nonfinite parameters, large observations, log-tail underflow, layout
+conversion, shape guards, output preservation and native/C agreement.
+
+Integration uses checked `-O0 -g -fcheck=all -fbacktrace` and optimized `-O3`
+libraries, both with `-std=f2018 -fimplicit-none -Werror=implicit-interface
+-shared -fPIC`. The changed numerical module and native client were also compiled
+directly with `-ftrapv -ffpe-trap=invalid` in both configurations for the large
+finite-count regressions. Native tests check integer/real overload agreement,
+ordinary two-trial derivatives, a one-trial derivative and out-of-support large
+positive/negative derivative counts. C11 clients use `-Wall -Wextra -Werror`;
+C++17 header syntax checks also passed. The example exercised all eight methods.
+
+Dependency inspection identified likelihood, score, random-variates and the
+existing C API as native callers. The existing
+`test_wallenius_poisson_binom` program passed after recompiling the changed
+Poisson-binomial module and its test helpers and linking the cached native
+library. This exercised the existing C ABI, likelihood scores, fitting and RNG
+integration. The local cache-specific compile/run commands were:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\poisson-binom-regression ^
+  src\stats\poisson_binom.f90 test\test_checks.f90 ^
+  test\wallenius_poisson_binom_reference.f90 ^
+  test\test_wallenius_poisson_binom.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\poisson-binom-regression\dependent.exe
+build\poisson-binom-regression\dependent.exe
+```
+
+`fpm test --target test_wallenius_poisson_binom --profile debug` was started but
+stopped when it triggered a broad rebuild of unrelated library/test targets.
+The direct native check above passed; the FPM invocation did not finish and is
+not counted as a passing run. The full FPM suite was not run. Cached native
+dependencies were reused; the new-module direct tests additionally cover checked
+and optimized builds from the current source.
+
+The read-only consistency check passed for all 124 generated artifacts. All 24
+reviewed header guards are distinct. Encoding/BOM, ASCII Fortran, 132-column
+limits, Markdown links and whitespace checks passed. Coverage now records 146
+Python methods and 58 array adapters in the reviewed subset. Existing published
+C prototypes and symbols are unchanged. Native changes are limited to the two
+conversion-safety fixes and documentation. Other platforms, very large trial
+vectors and extended-range derivatives were not newly validated; benchmark
+baselines were not refreshed.

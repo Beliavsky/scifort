@@ -645,3 +645,28 @@ arrays are allocated. Another argument's size never overrides the declared
 source or its explicit fallback. Normal shape, extent and alias checks still
 apply. C callers always supply explicit dimensions and arrays; fallback policies
 exist only in the Python wrapper layer.
+
+## Reviewed public generic selections
+
+A manifest may supply `generic_specifics`, mapping a public named generic to
+one locally defined module procedure declared in its interface:
+
+```json
+"generic_specifics": {
+  "poisson_binom_pmf": "poisson_binom_pmf_real"
+}
+```
+
+The AST supplies the selected procedure's argument/result types and source shape
+annotations. The emitted Fortran imports and calls the public generic, allowing
+the compiler to resolve the reviewed specific from those argument types; private
+specific procedures are never imported by name. Per-manifest coverage records
+`native_specific`, and shape tables identify the selection. Public export
+coverage remains keyed by the generic name, not its private members.
+
+Selections must name generated public generics and actual, local module-procedure
+members. Unknown/private generic names, nonmember or unresolved imported targets,
+and selections for excluded procedures are rejected. Unconfigured generics remain
+unsupported and require explicit exclusion. This adds no automatic overload
+choice, descriptor ABI or general Fortran semantic resolver. The existing
+scalar/array signature restrictions still apply to the selected procedure.

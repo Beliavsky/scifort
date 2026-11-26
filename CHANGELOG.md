@@ -1,3 +1,17 @@
+## 2026-11-25 - Poisson-binomial interfaces and generic selection
+
+- Add eight generated Poisson-binomial C/Python mass, tail and quantile methods.
+  New status-returning C names use `_explicit_f64`; the three existing C symbols
+  and native Fortran names are retained.
+- Add explicit AST-reviewed specific selection for public generics, with emitted
+  wrappers calling the public generic and reporting the selected member.
+- Document probability-vector shapes, derivative output dimensions and private
+  allocation bounds throughout the native module.
+- Avoid default-integer FLOOR overflow for large real tail observations; reject
+  derivative counts outside support before integer conversion.
+- Test references, enumeration, endpoints, tails, quantiles, native/C agreement,
+  ordinary derivatives, and trapped large-count regressions.
+
 ## 2026-11-25 - rectangular matrix-distribution interfaces
 
 - Add generated C/Python matrix-normal PDF/log-PDF/entropy and matrix-t PDF/log-PDF.

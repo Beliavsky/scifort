@@ -21,5 +21,6 @@
   "wishart.json",
   "invwishart.json",
   "matrix_normal.json",
-  "matrix_t.json"
+  "matrix_t.json",
+  "poisson_binom.json"
 ]

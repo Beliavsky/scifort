@@ -1874,6 +1874,169 @@ class Multivariate_t(ArrayGroup):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'loc': loc, 'shape': shape, 'df': df, 'allow_singular': allow_singular}, None)
 
+class Poisson_binom(ArrayGroup):
+    _specs = {'cdf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
+             'definitions': {'n': {'argument': 'p', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['k', 'p', 'loc'],
+             'logical_inputs': {},
+             'metadata': {'k': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'loc': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+             'minimums': {'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'p': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_poisson_binom_cdf_explicit_f64'},
+     'isf': {'arguments': ['probability', 'p', 'loc', 'value', 'status'],
+             'definitions': {'n': {'argument': 'p', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['probability', 'p', 'loc'],
+             'logical_inputs': {},
+             'metadata': {'loc': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'probability': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+             'minimums': {'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'p': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_poisson_binom_isf_explicit_f64'},
+     'logcdf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
+                'definitions': {'n': {'argument': 'p', 'axis': None}},
+                'dimensions': ['n'],
+                'inputs': ['k', 'p', 'loc'],
+                'logical_inputs': {},
+                'metadata': {'k': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'loc': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 0},
+                             'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                'minimums': {'n': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'p': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_poisson_binom_logcdf_explicit_f64'},
+     'logpmf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
+                'definitions': {'n': {'argument': 'p', 'axis': None}},
+                'dimensions': ['n'],
+                'inputs': ['k', 'p', 'loc'],
+                'logical_inputs': {},
+                'metadata': {'k': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'loc': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 0},
+                             'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                'minimums': {'n': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'p': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_poisson_binom_logpmf_explicit_f64'},
+     'logsf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
+               'definitions': {'n': {'argument': 'p', 'axis': None}},
+               'dimensions': ['n'],
+               'inputs': ['k', 'p', 'loc'],
+               'logical_inputs': {},
+               'metadata': {'k': {'category': 'real', 'intent': 'in', 'rank': 0},
+                            'loc': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                            'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                            'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+               'minimums': {'n': 1},
+               'outputs': ['value'],
+               'result_argument': 'value',
+               'shapes': {'p': ['n']},
+               'status': 'status',
+               'symbol': 'scifort_poisson_binom_logsf_explicit_f64'},
+     'pmf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
+             'definitions': {'n': {'argument': 'p', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['k', 'p', 'loc'],
+             'logical_inputs': {},
+             'metadata': {'k': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'loc': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+             'minimums': {'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'p': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_poisson_binom_pmf_explicit_f64'},
+     'ppf': {'arguments': ['probability', 'p', 'loc', 'value', 'status'],
+             'definitions': {'n': {'argument': 'p', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['probability', 'p', 'loc'],
+             'logical_inputs': {},
+             'metadata': {'loc': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'probability': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+             'minimums': {'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'p': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_poisson_binom_ppf_explicit_f64'},
+     'sf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
+            'definitions': {'n': {'argument': 'p', 'axis': None}},
+            'dimensions': ['n'],
+            'inputs': ['k', 'p', 'loc'],
+            'logical_inputs': {},
+            'metadata': {'k': {'category': 'real', 'intent': 'in', 'rank': 0},
+                         'loc': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                         'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                         'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+            'minimums': {'n': 1},
+            'outputs': ['value'],
+            'result_argument': 'value',
+            'shapes': {'p': ['n']},
+            'status': 'status',
+            'symbol': 'scifort_poisson_binom_sf_explicit_f64'}}
+
+    def cdf(self, k, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('cdf', {'k': k, 'p': p, 'loc': loc}, None)
+
+    def isf(self, probability, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('isf', {'probability': probability, 'p': p, 'loc': loc}, None)
+
+    def logcdf(self, k, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('logcdf', {'k': k, 'p': p, 'loc': loc}, None)
+
+    def logpmf(self, k, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('logpmf', {'k': k, 'p': p, 'loc': loc}, None)
+
+    def logsf(self, k, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('logsf', {'k': k, 'p': p, 'loc': loc}, None)
+
+    def pmf(self, k, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('pmf', {'k': k, 'p': p, 'loc': loc}, None)
+
+    def ppf(self, probability, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('ppf', {'probability': probability, 'p': p, 'loc': loc}, None)
+
+    def sf(self, k, p, loc=0.0):
+        """Return the native scalar value."""
+        return self._invoke('sf', {'k': k, 'p': p, 'loc': loc}, None)
+
 class Wishart(ArrayGroup):
     _specs = {'entropy': {'arguments': ['df', 'scale', 'value', 'status'],
                  'definitions': {'p': {'argument': 'scale', 'axis': 1}},
@@ -2011,6 +2174,7 @@ class API(Library):
         self.multivariate_hypergeom = Multivariate_hypergeom(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)
         self.multivariate_t = Multivariate_t(self._library)
+        self.poisson_binom = Poisson_binom(self._library)
         self.wishart = Wishart(self._library)
 
 __all__ = ["API"]
