@@ -83,6 +83,27 @@ Adapter widened sum bound: `sum(abs(x)) <= 2147483646`.
 
 Adapter widened sum bound: `sum(abs(m)) <= 2147483646`.
 
+## multivariate_hypergeom_rvs_array
+
+Draw multivariate_hypergeom count vectors with explicit RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `k` | `size(m)` | 1 |
+| `n_samples` | `size(samples,2)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `m` | `(:)` | `(k)` | integer population counts by category |
+| `samples` | `(:,:)` | `(k,n_samples)` | integer category-count columns |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 3 without native execution.
+
+Adapter integer bounds: `-2147483648 <= n <= 2147483646`.
+
+Adapter widened sum bound: `sum(abs(m)) <= 2147483646`.
+
 ## multivariate_hypergeom_var
 
 Evaluate multivariate_hypergeom var.

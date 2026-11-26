@@ -1658,7 +1658,31 @@ class Multinomial(ArrayGroup):
              'result_argument': 'value',
              'shapes': {'p': ['k'], 'x': ['k']},
              'status': 'status',
-             'symbol': 'scifort_multinomial_pmf_f64'}}
+             'symbol': 'scifort_multinomial_pmf_f64'},
+     'rvs_array': {'arguments': ['state', 'samples', 'n', 'p', 'status'],
+                   'definitions': {'k': {'argument': 'p', 'axis': None},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['k', 'n_samples'],
+                   'inputs': ['state', 'n', 'p'],
+                   'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+                   'logical_inputs': {},
+                   'metadata': {'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'p': {'category': 'real', 'intent': 'in', 'rank': 1},
+                                'samples': {'category': 'integer', 'intent': 'out', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'k': 0, 'n_samples': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'p': ['k'], 'samples': ['k', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 3,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_multinomial_rvs_array_i32'}}
 
     def cov(self, n, p, *, out=None):
         """Return the native array result; optionally use caller-owned out."""
@@ -1679,6 +1703,10 @@ class Multinomial(ArrayGroup):
     def pmf(self, x, n, p):
         """Return the native scalar value."""
         return self._invoke('pmf', {'x': x, 'n': n, 'p': p}, None)
+
+    def rvs_array(self, state, n, p, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'n': n, 'p': p, 'n_samples': n_samples}, out)
 
 class Multivariate_hypergeom(ArrayGroup):
     _specs = {'cov': {'arguments': ['m', 'n', 'value', 'status'],
@@ -1747,6 +1775,31 @@ class Multivariate_hypergeom(ArrayGroup):
              'shapes': {'m': ['k'], 'x': ['k']},
              'status': 'status',
              'symbol': 'scifort_multivariate_hypergeom_pmf_f64'},
+     'rvs_array': {'arguments': ['state', 'm', 'n', 'samples', 'status'],
+                   'definitions': {'k': {'argument': 'm', 'axis': None},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['k', 'n_samples'],
+                   'inputs': ['state', 'm', 'n'],
+                   'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+                   'integer_sums': {'m': 2147483646},
+                   'logical_inputs': {},
+                   'metadata': {'m': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                                'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'samples': {'category': 'integer', 'intent': 'out', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'k': 1, 'n_samples': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'m': ['k'], 'samples': ['k', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 3,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_multivariate_hypergeom_rvs_array_i32'},
      'var': {'arguments': ['m', 'n', 'value', 'status'],
              'definitions': {'k': {'argument': 'm', 'axis': None}},
              'dimensions': ['k'],
@@ -1779,6 +1832,10 @@ class Multivariate_hypergeom(ArrayGroup):
     def pmf(self, x, m, n):
         """Return the native scalar value."""
         return self._invoke('pmf', {'x': x, 'm': m, 'n': n}, None)
+
+    def rvs_array(self, state, m, n, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'm': m, 'n': n, 'n_samples': n_samples}, out)
 
     def var(self, m, n, *, out=None):
         """Return the native array result; optionally use caller-owned out."""

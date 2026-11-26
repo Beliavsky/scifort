@@ -488,14 +488,16 @@ Dimension definitions must reference input arrays so dimensions can be determine
 before allocating outputs. Exact array shapes and minimum sizes come from those
 checked contracts. All selected subroutines in the supplied manifests are exposed;
 names/defaults and group collisions are validated. Native scalar real inputs,
-scalar logical inputs with explicit C mappings, and scalar real/integer outputs
-are supported. Native `intent(inout)` arguments and optional array inputs are not
-supported in Python array groups yet. Methods return `ArrayResult(status, outputs)`;
+scalar logical inputs with explicit C mappings, and real/integer scalar and
+rank-one/two array outputs are supported. Native `intent(inout)` arguments need
+a reviewed state codec; optional real input arrays need a presence policy.
+Methods return `ArrayResult(status, outputs)`;
 numerical statuses and partial outputs are retained.
 
 The runtime validates shapes, C integer extent limits, real numeric dtypes,
 column-major storage and buffer overlap. Inputs can be converted; caller-provided
-outputs must already satisfy the exact native-endian binary64 Fortran layout.
+outputs must already satisfy the exact native-endian float64 or `np.intc`
+Fortran layout declared by the native output category.
 Input/input, input/output and output/output overlap are conservatively rejected
 against original arrays. It supplies valid disjoint buffers for zero-size arrays
 and keeps all inputs/outputs and the shared-library owner alive through each call.
@@ -584,8 +586,12 @@ See the [reviewed Dirichlet manifest](../../bindings/cabi_config/dirichlet.json)
 
 Default-integer native `intent(in)` scalars map to by-value C int; rank-one/two
 integer inputs map to const C-int buffers with reviewed explicit shapes. Integer
-kinds other than the native default, integer array outputs and integer inout
-arguments remain unsupported. Existing scalar integer outputs are unchanged.
+kinds other than the native default and integer inout arguments remain unsupported.
+Default-integer scalar and rank-one/two array outputs map to caller-owned C-int
+buffers with explicit shapes. Python allocates `np.intc` arrays initialized to zero
+or accepts exact native-endian, aligned, writable, Fortran-contiguous `np.intc`
+outputs. Empty outputs use correctly typed nonnull scratch buffers. Existing
+scalar integer outputs are unchanged.
 Direct association requires native default integer kind to match `c_int`.
 Real-valued function results may depend on integer input sizes.
 

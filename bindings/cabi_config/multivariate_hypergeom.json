@@ -11,9 +11,12 @@
     "k": "category count, >= 1",
     "n": "trial or draw count; ABI maximum 2147483646",
     "value": "native scalar or array result; numerical errors retain native values",
-    "status": "0 valid call; 1 invalid extent or configured integer bound",
+    "status": "0 success; other codes follow the method-specific error contract",
     "x": "observed integer category counts",
-    "m": "integer population counts by category"
+    "m": "integer population counts by category",
+    "n_samples": "number of sample columns, >= 0",
+    "state": "six caller-owned int64 RNG components",
+    "samples": "integer category-count columns"
   },
   "array_functions": {
     "multivariate_hypergeom_pmf": {
@@ -187,10 +190,58 @@
     "shape_documentation": "docs/multivariate_hypergeom_shapes.md"
   },
   "excluded": {
-    "multivariate_hypergeom_rvs": "Explicit RNG state needs a separately reviewed handle interface.",
-    "multivariate_hypergeom_rvs_array": "Explicit RNG state needs a separately reviewed handle interface.",
+    "multivariate_hypergeom_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "multivariate_hypergeom_status_success": "Native status constant, not a callable procedure.",
     "multivariate_hypergeom_status_invalid_parameter": "Native status constant, not a callable procedure.",
     "multivariate_hypergeom_status_invalid_shape": "Native status constant, not a callable procedure."
+  },
+  "subroutines": {
+    "multivariate_hypergeom_rvs_array": {
+      "symbol": "scifort_multivariate_hypergeom_rvs_array_i32",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "k",
+          "n_samples"
+        ],
+        "m": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 2,
+      "description": "Draw multivariate_hypergeom count vectors with explicit RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 3
+        }
+      },
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      },
+      "integer_sums": {
+        "m": 2147483646
+      }
+    }
   }
 }

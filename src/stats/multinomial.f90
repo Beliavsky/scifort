@@ -199,9 +199,14 @@ contains
 
     subroutine multinomial_rvs_array(state, samples, n, p, status)
         !! Draw category-count vectors by column using explicit RNG state.
+        !! @dimension k = size(p)
+        !! @dimension n_samples = size(samples,2)
+        !! @require k >= 0
+        !! @require n_samples >= 0
         !! k=size(p), n_samples=size(samples,2), both >=0; size(samples,1)=k.
         !! Empty batches succeed without validating n or probability values.
         !! Nonempty batches require a valid distribution with k>=1.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
         integer, intent(out) :: samples(:, :) !! shape (k,n_samples); samples by column
         integer, intent(in) :: n !! total number of trials, >= 0

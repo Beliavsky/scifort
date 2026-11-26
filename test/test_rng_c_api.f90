@@ -8,6 +8,11 @@ program test_rng_c_api
     use scifort_rng_c_bridge, only : scifort_rng_seed_i64, scifort_rng_uniform_f64
     use scifort_dirichlet, only : dirichlet_rvs_array
     use scifort_c_api_generated_dirichlet, only : scifort_dirichlet_rvs_array_f64
+    use scifort_multinomial, only : multinomial_rvs_array
+    use scifort_multivariate_hypergeom, only : multivariate_hypergeom_rvs_array
+    use scifort_c_api_generated_multinomial, only : scifort_multinomial_rvs_array_i32
+    use scifort_c_api_generated_multivariate_hypergeom, only : &
+        scifort_multivariate_hypergeom_rvs_array_i32
     implicit none
     type(rng_state) :: native
     integer(c_int64_t) :: serialized(6), saved(6)
@@ -15,6 +20,8 @@ program test_rng_c_api
     real(c_double) :: actual(12), expected(12), alpha(3), draws(3,4), reference(3,4)
     integer(c_int) :: status
     integer :: i, info
+    integer(c_int) :: counts(3,4), population(3)
+    integer :: native_counts(3,4)
     seeds=[0_int64,1_int64,-1_int64,2_int64**40,huge(0_int64),-huge(0_int64)-1_int64]
     do i=1,size(seeds)
         call rng_seed(native,seeds(i))
@@ -53,5 +60,23 @@ program test_rng_c_api
     actual=77.0_c_double
     call scifort_rng_uniform_f64(12_c_int,serialized,actual,status)
     if (status/=3 .or. any(actual/=77.0_c_double) .or. any(serialized/=0_c_int64_t)) stop 11
-    print '(a)', 'RNG and Dirichlet native/C stream checks passed.'
+    do i=1,size(seeds)
+        call rng_seed(native,seeds(i))
+        call scifort_rng_seed_i64(int(seeds(i),c_int64_t),serialized,status)
+        alpha=[0.2_c_double,0.3_c_double,0.5_c_double]
+        call multinomial_rvs_array(native,native_counts,12,alpha,info)
+        call scifort_multinomial_rvs_array_i32(3_c_int,4_c_int,serialized,counts, &
+            12_c_int,alpha,status)
+        if (status/=info .or. status/=0 .or. any(counts/=native_counts)) stop 12
+        call rng_get_state(native,native_values)
+        if (any(serialized/=native_values)) stop 13
+        population=[10_c_int,20_c_int,30_c_int]
+        call multivariate_hypergeom_rvs_array(native,int(population),12,native_counts,info)
+        call scifort_multivariate_hypergeom_rvs_array_i32(3_c_int,4_c_int,serialized, &
+            population,12_c_int,counts,status)
+        if (status/=info .or. status/=0 .or. any(counts/=native_counts)) stop 14
+        call rng_get_state(native,native_values)
+        if (any(serialized/=native_values)) stop 15
+    end do
+    print '(a)', 'RNG and continuous/discrete sampling native/C stream checks passed.'
 end program test_rng_c_api

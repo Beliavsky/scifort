@@ -213,9 +213,14 @@ contains
 
     subroutine multivariate_hypergeom_rvs_array(state, m, n, samples, status)
         !! Draw count vectors by column using explicit RNG state.
+        !! @dimension k = size(m)
+        !! @dimension n_samples = size(samples,2)
+        !! @require k >= 1
+        !! @require n_samples >= 0
         !! k=size(m), n_samples=size(samples,2); k>=1 and n_samples>=0 for valid calls.
         !! size(samples,1)=k; empty batches still validate population and sample size.
         !! Population sums must fit the native default integer.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
         integer, intent(in) :: m(:) !! shape (k); nonnegative population counts by category
         integer, intent(in) :: n !! number of objects sampled without replacement

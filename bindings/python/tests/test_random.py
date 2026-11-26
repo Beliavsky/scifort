@@ -152,6 +152,95 @@ class RandomTests(unittest.TestCase):
             raw_uniform(0,ptr(state),ptr(out),C.byref(status))
             self.assertEqual(status.value,3);np.testing.assert_array_equal(out,np.full((2,2),77.))
 
+    def test_discrete_sampling_streams_moments_and_counts(self):
+        count=4096
+        for _,_,api in self.builds:
+            for group,params,n,mean,var in (
+                (api.multinomial,[.2,.3,.5],12,np.array([2.4,3.6,6.]),12*np.array([.16,.21,.25])),
+                (api.multivariate_hypergeom,[10,20,30],12,np.array([2.,4.,6.]),
+                 12*np.array([1/6,1/3,1/2])*np.array([5/6,2/3,1/2])*48/59)):
+                state=api.rng(471);reference=api.rng(471)
+                def draw(rng,size,out=None):
+                    if group is api.multinomial:
+                        return group.rvs_array(rng,n,params,n_samples=size,out=out)
+                    return group.rvs_array(rng,params,n,n_samples=size,out=out)
+                out=np.empty((3,count),dtype=np.intc,order='F')
+                result=draw(state,count,{'samples':out})
+                self.assertEqual(result.status,0);self.assertIs(result.outputs['samples'],out)
+                first=draw(reference,17).outputs['samples']
+                rest=draw(reference,count-17).outputs['samples']
+                np.testing.assert_array_equal(out,np.concatenate([first,rest],axis=1))
+                np.testing.assert_array_equal(state.state,reference.state)
+                self.assertTrue(np.all(out>=0));np.testing.assert_array_equal(out.sum(axis=0),n)
+                if group is api.multivariate_hypergeom:self.assertTrue(np.all(out<=np.array(params)[:,None]))
+                np.testing.assert_array_less(abs(out.mean(axis=1)-mean),6*np.sqrt(var/count))
+                np.testing.assert_allclose(out.var(axis=1),var,rtol=.15)
+                self.assertEqual(draw(state,1).outputs['samples'].shape,(3,1))
+                saved=state.state;self.assertEqual(draw(state,0).status,0)
+                np.testing.assert_array_equal(state.state,saved)
+                readonly=np.empty((3,2),dtype=np.intc,order='F');readonly.flags.writeable=False
+                for bad in (np.empty((3,2)),np.empty((3,2),dtype=np.int64,order='F'),
+                            np.empty((3,2),dtype=np.intc),readonly,np.empty((2,2),dtype=np.intc,order='F')):
+                    with self.assertRaises((TypeError,ValueError)):draw(state,2,{'samples':bad})
+                np.testing.assert_array_equal(state.state,saved)
+
+    def test_discrete_parameters_empty_batches_and_overflow(self):
+        for _,_,api in self.builds:
+            state=api.rng(15);saved=state.state
+            for p in ([],[np.nan,-1.]):
+                self.assertEqual(api.multinomial.rvs_array(state,-1,p,n_samples=0).status,0)
+            for p in ([],[np.nan,1.],[-1.,2.],[np.inf,0.]):
+                r=api.multinomial.rvs_array(state,5,p,n_samples=2)
+                self.assertEqual(r.status,1);self.assertTrue(np.all(r.outputs['samples']==0))
+            self.assertEqual(api.multinomial.rvs_array(state,-1,[.5,.5]).status,1)
+            for m,n in (([-1,2],1),([1,2],4),([1,2],-1)):
+                for count in (0,2):
+                    r=api.multivariate_hypergeom.rvs_array(state,m,n,n_samples=count)
+                    self.assertEqual(r.status,1);self.assertTrue(np.all(r.outputs['samples']==0))
+            for m in ([],[2**30,2**30],np.array([2**64-1],dtype=np.uint64),[1.,2.]):
+                with self.assertRaises((ValueError,TypeError)):
+                    api.multivariate_hypergeom.rvs_array(state,m,1)
+            for group in (api.multinomial,api.multivariate_hypergeom):
+                args=(state,2**31-1,[.5,.5]) if group is api.multinomial else (state,[1,2],2**31-1)
+                with self.assertRaises(ValueError):group.rvs_array(*args)
+            np.testing.assert_array_equal(state.state,saved)
+            np.testing.assert_array_equal(api.multinomial.rvs_array(state,5,[9.],n_samples=3).outputs['samples'],5)
+            np.testing.assert_array_equal(api.multivariate_hypergeom.rvs_array(state,[5],5,n_samples=3).outputs['samples'],5)
+            np.testing.assert_array_equal(state.state,saved)
+            # Degenerate zero draws do not consume uniforms.
+            self.assertTrue(np.all(api.multinomial.rvs_array(state,0,[.5,.5]).outputs['samples']==0))
+            self.assertTrue(np.all(api.multivariate_hypergeom.rvs_array(state,[0,0],0).outputs['samples']==0))
+            np.testing.assert_array_equal(state.state,saved)
+
+    def test_discrete_raw_c_guards_and_python_agreement(self):
+        ptr=lambda a:a.ctypes.data_as(C.c_void_p)
+        for _,_,api in self.builds:
+            for group in (api.multinomial,api.multivariate_hypergeom):
+                rng=api.rng(123);raw_state=rng.state.copy();saved=raw_state.copy()
+                output=np.full((2,3),77,dtype=np.intc,order='F');status=C.c_int(-1)
+                param=np.array([.4,.6]) if group is api.multinomial else np.array([4,6],dtype=np.intc)
+                raw=group._functions['rvs_array']
+                def call(k=2,columns=3,n=4):
+                    if group is api.multinomial:raw(k,columns,ptr(raw_state),ptr(output),n,ptr(param),C.byref(status))
+                    else:raw(k,columns,ptr(raw_state),ptr(param),n,ptr(output),C.byref(status))
+                call()
+                expected=(group.rvs_array(rng,4,param,n_samples=3) if group is api.multinomial
+                          else group.rvs_array(rng,param,4,n_samples=3))
+                self.assertEqual(status.value,0);np.testing.assert_array_equal(output,expected.outputs['samples'])
+                np.testing.assert_array_equal(raw_state,rng.state)
+                saved=raw_state.copy();output[:]=77
+                for k,columns,n in ((-1,3,4),(2,-1,4),(2,3,2**31-1)):
+                    call(k,columns,n);self.assertEqual(status.value,2)
+                    np.testing.assert_array_equal(output,77);np.testing.assert_array_equal(raw_state,saved)
+                if group is api.multivariate_hypergeom:
+                    param[:]=2**30;call();self.assertEqual(status.value,2)
+                    np.testing.assert_array_equal(output,77);np.testing.assert_array_equal(raw_state,saved)
+                raw_state[:]=0
+                for columns in (0,3):
+                    if group is api.multivariate_hypergeom:param[:]=[4,6]
+                    call(columns=columns);self.assertEqual(status.value,3)
+                    np.testing.assert_array_equal(output,77);np.testing.assert_array_equal(raw_state,0)
+
     def test_native_and_c_clients(self):
         for path,metadata,_ in self.builds:
             with tempfile.TemporaryDirectory() as temp:
@@ -164,6 +253,7 @@ class RandomTests(unittest.TestCase):
                     client.write_text('''#include "scifort.h"
 #include <math.h>
 int main(void) {
+ int counts[4],m[2]={4,6};
  int64_t state[6],saved[6]; double u[6],alpha[2]={2,3},samples[4]; int status;
  scifort_rng_seed_i64(INT64_MIN,state,&status); if(status) return 1;
  for(int i=0;i<6;i++) saved[i]=state[i];
@@ -172,6 +262,11 @@ int main(void) {
  scifort_dirichlet_rvs_array_f64(2,2,state,samples,alpha,&status);
  if(status || fabs(samples[0]+samples[1]-1)>1e-14 || fabs(samples[2]+samples[3]-1)>1e-14) return 4;
  scifort_rng_seed_i64(INT64_C(1099511627776),state,&status); if(status) return 5;
+ scifort_multinomial_rvs_array_i32(2,2,state,counts,4,alpha,&status);
+ /* alpha={2,3} is invalid after final-entry adjustment. */
+ if(status!=1) return 6;
+ scifort_multivariate_hypergeom_rvs_array_i32(2,2,state,m,4,counts,&status);
+ if(status || counts[0]+counts[1]!=4 || counts[2]+counts[3]!=4) return 7;
  for(int i=0;i<6;i++) state[i]=0;
  scifort_rng_uniform_f64(0,state,u,&status);
  return status!=3 || saved[0]<=0;

@@ -292,14 +292,24 @@
         "bindings/cabi_config/multinomial.json"
       ],
       "prefix": "multinomial_",
-      "defaults": {}
+      "defaults": {},
+      "output_dimensions": {
+        "multinomial_rvs_array": {
+          "n_samples": 1
+        }
+      }
     },
     "multivariate_hypergeom": {
       "manifests": [
         "bindings/cabi_config/multivariate_hypergeom.json"
       ],
       "prefix": "multivariate_hypergeom_",
-      "defaults": {}
+      "defaults": {},
+      "output_dimensions": {
+        "multivariate_hypergeom_rvs_array": {
+          "n_samples": 1
+        }
+      }
     },
     "dirichlet_multinomial": {
       "manifests": [

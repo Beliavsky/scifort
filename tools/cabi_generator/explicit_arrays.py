@@ -196,8 +196,8 @@ def prepare(config, api, identifier, source_lines):
             rank = len(shape.items) if shape else 0
             if rank > 2:
                 raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
-            if category == 'integer' and (intent == 'inout' or (intent == 'out' and rank)):
-                raise ValueError(f'{name}: integer arrays are input-only; integer outputs must be scalar')
+            if category == 'integer' and intent == 'inout':
+                raise ValueError(f'{name}: integer intent(inout) arguments are unsupported')
             if arg in optional_arrays and (category != 'real' or not rank or intent != 'in'
                                           or 'optional' not in attrs):
                 raise ValueError(f'{name}: optional arrays must be real rank-one/two optional intent(in)')

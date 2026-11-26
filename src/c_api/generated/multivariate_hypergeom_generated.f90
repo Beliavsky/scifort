@@ -8,13 +8,15 @@ module scifort_c_api_generated_multivariate_hypergeom
     use scifort_multivariate_hypergeom, only : cg_native_1 => multivariate_hypergeom_logpmf
     use scifort_multivariate_hypergeom, only : cg_native_2 => multivariate_hypergeom_mean
     use scifort_multivariate_hypergeom, only : cg_native_3 => multivariate_hypergeom_pmf
-    use scifort_multivariate_hypergeom, only : cg_native_4 => multivariate_hypergeom_var
+    use scifort_multivariate_hypergeom, only : cg_native_4 => multivariate_hypergeom_rvs_array
+    use scifort_multivariate_hypergeom, only : cg_native_5 => multivariate_hypergeom_var
     implicit none
     private
     public :: scifort_multivariate_hypergeom_cov_f64
     public :: scifort_multivariate_hypergeom_logpmf_f64
     public :: scifort_multivariate_hypergeom_mean_f64
     public :: scifort_multivariate_hypergeom_pmf_f64
+    public :: scifort_multivariate_hypergeom_rvs_array_i32
     public :: scifort_multivariate_hypergeom_var_f64
 contains
 
@@ -28,7 +30,7 @@ contains
         integer(c_int), intent(in) :: m(k) !! integer population counts by category
         integer(c_int), value, intent(in) :: n !! trial or draw count; ABI maximum 2147483646
         real(c_double), intent(inout) :: value(k,k) !! native scalar or array result; numerical errors retain native values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or configured integer bound
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -65,7 +67,7 @@ contains
         integer(c_int), intent(in) :: m(k) !! integer population counts by category
         integer(c_int), value, intent(in) :: n !! trial or draw count; ABI maximum 2147483646
         real(c_double), intent(inout) :: value !! native scalar or array result; numerical errors retain native values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or configured integer bound
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -106,7 +108,7 @@ contains
         integer(c_int), intent(in) :: m(k) !! integer population counts by category
         integer(c_int), value, intent(in) :: n !! trial or draw count; ABI maximum 2147483646
         real(c_double), intent(inout) :: value(k) !! native scalar or array result; numerical errors retain native values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or configured integer bound
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -143,7 +145,7 @@ contains
         integer(c_int), intent(in) :: m(k) !! integer population counts by category
         integer(c_int), value, intent(in) :: n !! trial or draw count; ABI maximum 2147483646
         real(c_double), intent(inout) :: value !! native scalar or array result; numerical errors retain native values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or configured integer bound
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -174,6 +176,61 @@ contains
         status=0_c_int
     end subroutine scifort_multivariate_hypergeom_pmf_f64
 
+    subroutine scifort_multivariate_hypergeom_rvs_array_i32( &
+        k, n_samples, state, m, n, samples, status) &
+        bind(c, name="scifort_multivariate_hypergeom_rvs_array_i32")
+        !! Draw multivariate_hypergeom count vectors with explicit RNG state.
+        use, intrinsic :: iso_c_binding, only : c_int64_t
+        use scifort_random, only : cg_type_state => rng_state
+        use scifort_rng_c_bridge, only : cg_load_state => rng_load_c_state, &
+            cg_store_state => rng_store_c_state
+        implicit none
+        integer(c_int), value, intent(in) :: k !! category count, >= 1
+        integer(c_int), value, intent(in) :: n_samples !! number of sample columns, >= 0
+        integer(c_int64_t), intent(inout) :: state(6) !! six caller-owned int64 RNG components
+        integer(c_int), intent(in) :: m(k) !! integer population counts by category
+        integer(c_int), value, intent(in) :: n !! trial or draw count; ABI maximum 2147483646
+        integer(c_int), intent(inout) :: samples(k,n_samples) !! integer category-count columns
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
+        integer :: cg_state_status
+        type(cg_type_state) :: cg_state_state
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (k < 1_c_int) then
+            status=2_c_int
+            return
+        end if
+        if (n_samples < 0_c_int) then
+            status=2_c_int
+            return
+        end if
+        if (n < -2147483648_c_int64_t .or. &
+                n > 2147483646_c_int64_t) then
+            status=2_c_int
+            return
+        end if
+        if (sum(abs(int(m,c_int64_t))) > 2147483646_c_int64_t) then
+            status=2_c_int
+            return
+        end if
+        call cg_load_state(state,cg_state_state,cg_state_status)
+        if (cg_state_status /= 0) then
+            status=3_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_4( &
+            state=cg_state_state, &
+            m=m, &
+            n=n, &
+            samples=samples, &
+            status=status)
+        call cg_store_state(cg_state_state,state)
+    end subroutine scifort_multivariate_hypergeom_rvs_array_i32
+
     subroutine scifort_multivariate_hypergeom_var_f64( &
         k, m, n, value, status) &
         bind(c, name="scifort_multivariate_hypergeom_var_f64")
@@ -184,7 +241,7 @@ contains
         integer(c_int), intent(in) :: m(k) !! integer population counts by category
         integer(c_int), value, intent(in) :: n !! trial or draw count; ABI maximum 2147483646
         real(c_double), intent(inout) :: value(k) !! native scalar or array result; numerical errors retain native values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or configured integer bound
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -204,7 +261,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_4( &
+        value=cg_native_5( &
             m=m, &
             n=n)
         status=0_c_int

@@ -279,8 +279,8 @@ status 0 retains native numerical values, including NaN. All C buffers must be
 valid, aligned, contiguous, non-NULL and disjoint. These are call-level statuses,
 not native `dirichlet_status_*` error values. Native numerical implementations
 and their limitations are unchanged. Rebuild the development library for these
-six symbols. RNG procedures remain native Fortran APIs; their array shapes and
-empty-batch behavior are documented in the source.
+six symbols. The later [explicit RNG and Dirichlet sampling section](#explicit-rng-streams-and-dirichlet-sampling)
+describes the added batch sampler and stream bridge.
 
 ## Multinomial and multivariate hypergeometric distributions
 
@@ -339,7 +339,9 @@ native numerical results, including NaN. Numerical failures can write NaN into
 caller buffers; Python validation failures leave them untouched. These call
 statuses are separate from native sampling status constants. Rebuild the
 development library for the ten new symbols. Native numerical limitations remain
-unchanged; the source now documents sampling and private-helper shape contracts.
+unchanged; the source documents sampling and private-helper shape contracts.
+The later [integer-count batch sampling section](#integer-count-batch-sampling)
+describes the added samplers and their distinct status and integer-output contracts.
 
 ## Generation and shared-library boundary
 
@@ -1623,3 +1625,112 @@ The final read-only check passed for all 124 generated artifacts. Encoding/BOM,
 Fortran ASCII and 132-column limits, local Markdown links and whitespace checks
 also passed. The new manual RNG header is included by the public umbrella header;
 C/C++ integration clients exercised all three new C entry points.
+
+## Integer-count batch sampling
+
+```python
+state = api.rng(123)
+counts = api.multinomial.rvs_array(state, 12, [0.2, 0.3, 0.5], n_samples=100)
+draws = api.multivariate_hypergeom.rvs_array(state, [10, 20, 30], 12, n_samples=100)
+assert counts.status == draws.status == 0
+assert counts.outputs['samples'].shape == (3, 100)
+```
+
+Both methods return `ArrayResult(status, {'samples': array})`. Each column is
+one count vector and sums to n on success. Counts are nonnegative; hypergeometric
+counts also cannot exceed the corresponding population entry. Output arrays
+have native-endian `np.intc` dtype (C int), shape `(k,n_samples)` and Fortran
+column-major layout. Supply `out={'samples': buffer}` to reuse aligned, writable,
+exactly shaped `np.intc` storage disjoint from all inputs and state. Float64 and
+int64 output buffers are rejected when they do not match native C int.
+`n_samples` defaults to 1, is keyword-only, and must be a nonnegative C integer;
+booleans are rejected. Integer population inputs accept signed/unsigned integer
+arrays after range checks; floats and booleans are rejected.
+
+Both use the [explicit RNG stream](#explicit-rng-streams-and-dirichlet-sampling)
+and preserve the native algorithm and sample order. Splitting a batch preserves
+the stream. Uniform consumption depends on remaining counts and parameters;
+do not assume a fixed number of uniforms per column. NumPy/SciPy seed streams
+are not promised to match. Snapshot/restore, library ownership and alias rules
+are the same as for Dirichlet. No state is hidden or shared globally.
+
+For multinomial, k=size(p) may be zero for storage, but nonempty batches require
+k>=1, n>=0 and valid adjusted probabilities. The native final-entry probability
+adjustment is preserved. Empty batches succeed without validating n or p values.
+Hypergeometric requires k=size(m)>=1, m>=0, and 0<=n<=sum(m), even when the batch
+is empty. Valid empty batches and rejected parameters do not advance state.
+A single category or zero draws also consumes no uniforms. Parameter failures
+return status 1 and zero all sample entries. Empty multinomial p with a nonempty
+batch returns status 1.
+
+Additional ABI safety limits always apply, including empty batches: n must be
+in [-2147483648,2147483646]; hypergeometric requires sum(abs(m))<=2147483646,
+computed in widened arithmetic before native default-integer sums. Python rejects
+violations before calling C. C returns status 2, preserving sample buffers and
+state. Invalid extents also return 2; invalid state returns 3 unchanged. State is
+validated even for empty calls, after extent/integer guards. Successful calls
+return 0. Every native call exports its resulting state, including on failure.
+
+```c
+void scifort_multinomial_rvs_array_i32(int k, int n_samples, int64_t *state,
+                                     int *samples, int n, const double *p, int *status);
+void scifort_multivariate_hypergeom_rvs_array_i32(int k, int n_samples, int64_t *state,
+                                               const int *m, int n, int *samples, int *status);
+```
+
+The `_i32` names identify the reviewed integer-count ABI. Buffers use C int and
+require the native default integer kind to match `c_int`. All C pointers must be
+valid, aligned, disjoint, nonnull and fully sized; empty arrays need nonnull
+sentinels. C callers supply column-major storage. See the generated
+[multinomial shapes](../../docs/multinomial_shapes.md#multinomial_rvs_array) and
+[hypergeometric shapes](../../docs/multivariate_hypergeom_shapes.md#multivariate_hypergeom_rvs_array).
+
+## Integer-output sampler validation (2026-11-26)
+
+Validation uses GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -p test_random.py -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The independent integer-output fixture compiles rank-one and rank-two outputs
+for C11/Python clients, including empty arrays, preserved guard outputs and
+invalid NumPy storage. Production integration checks exact native/C/Python
+samples and final state, split-batch equivalence, signed seed endpoints,
+nonnegative counts and totals, population bounds, analytic moments, invalid
+parameters and output/state preservation. Checked builds use
+`-O0 -g -fcheck=all -fbacktrace`; optimized builds use `-O3`. Both use
+`-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+C11 and C++17 checks use `-Wall -Wextra -Werror`.
+
+The dependent native multivariate regression was compiled against the existing
+local FPM archive, with the two edited native modules compiled directly:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\multinomial.f90 src\stats\multivariate_hypergeom.f90 ^
+  test\test_checks.f90 test\multivariate_reference.f90 test\test_multivariate.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\dependent.exe
+build\multivariate-parameters-regression\dependent.exe
+```
+
+These cache paths are local artifacts. The full FPM suite was not run: numerical
+algorithms are unchanged, while the bounded generator/runtime change is checked
+against every configured binding and independent compiled fixtures. The full
+suite remains required before merge or release. Other platforms were not newly
+validated. Existing C symbols are unchanged; generated coverage now includes
+155 Python methods and 67 array adapters.
+
+All 84 generator tests and all 86 binding integration tests passed, including
+ten RNG/sampler checks and the updated density/moment C-guard regression. The
+native multivariate regression passed. The final read-only pipeline check passed
+for all 124 artifacts; encoding/BOM, Fortran ASCII/line limits, added local links
+and whitespace checks passed. No numerical tests were repeated for the final
+documentation-only edits.

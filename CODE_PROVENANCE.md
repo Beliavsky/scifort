@@ -1,3 +1,14 @@
+## 2026-11-26 - Integer-output discrete sampling interfaces
+
+The integer-output generator/runtime extension, manifests, contracts and tests
+are original MIT SciFort interface work. No upstream implementation was imported
+or adapted. Generated samplers delegate to the existing multinomial and
+multivariate-hypergeometric native algorithms, retaining their provenance and
+MRG32k3a stream. Native source changes add structured dimension annotations and
+explicit implicit-none declarations only. Tests compare native/C/Python streams,
+count identities and analytic multinomial/hypergeometric moments. Independent
+integer-output fixtures exercise transport without reproducing a sampler.
+
 ## 2026-11-26 - Serialized RNG state and Dirichlet sampling
 
 The C/Python state bridge, codec/output-dimension generator policies, reviewed

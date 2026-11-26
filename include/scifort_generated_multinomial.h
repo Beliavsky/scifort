@@ -3,6 +3,7 @@
 #ifndef SCIFORT_GENERATED_MULTINOMIAL_H
 #define SCIFORT_GENERATED_MULTINOMIAL_H
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,6 +71,18 @@ void scifort_multinomial_mean_f64(int arg_k, int arg_n, const double * arg_p, do
  * Status 0 means the call was valid; native numerical NaN/infinity is retained.
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_multinomial_pmf_f64(int arg_k, const double * arg_x, int arg_n, const double * arg_p, double * arg_value, int *arg_status);
+
+/* Draw multinomial count vectors with explicit RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 2 without changing output.
+ * state: caller-owned int64_t[6]; invalid state returns 3 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Required integer range: -2147483648 <= n <= 2147483646.
+ * Rejected integer guards return status 2 with output unchanged.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_multinomial_rvs_array_i32(int arg_k, int arg_n_samples, int64_t * arg_state, int * arg_samples, int arg_n, const double * arg_p, int *arg_status);
 
 #ifdef __cplusplus
 }

@@ -3,6 +3,7 @@
 #ifndef SCIFORT_GENERATED_MULTIVARIATE_HYPERGEOM_H
 #define SCIFORT_GENERATED_MULTIVARIATE_HYPERGEOM_H
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -65,6 +66,19 @@ void scifort_multivariate_hypergeom_mean_f64(int arg_k, const int * arg_m, int a
  * Status 0 means the call was valid; native numerical NaN/infinity is retained.
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_multivariate_hypergeom_pmf_f64(int arg_k, const int * arg_x, const int * arg_m, int arg_n, double * arg_value, int *arg_status);
+
+/* Draw multivariate_hypergeom count vectors with explicit RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 2 without changing output.
+ * state: caller-owned int64_t[6]; invalid state returns 3 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Required integer range: -2147483648 <= n <= 2147483646.
+ * Required widened bound: sum(abs(m)) <= 2147483646.
+ * Rejected integer guards return status 2 with output unchanged.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_multivariate_hypergeom_rvs_array_i32(int arg_k, int arg_n_samples, int64_t * arg_state, const int * arg_m, int arg_n, int * arg_samples, int *arg_status);
 
 /* Evaluate multivariate_hypergeom var.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.

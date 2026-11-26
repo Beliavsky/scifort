@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 65 |
+| array_adapters | 67 |
 | elementwise | 88 |
-| python | 153 |
+| python | 155 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -148,7 +148,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multinomial | multinomial_mean |  |  | scifort_multinomial_mean_f64 |  | multinomial.mean |
 | scifort_multinomial | multinomial_pmf |  |  | scifort_multinomial_pmf_f64 |  | multinomial.pmf |
 | scifort_multinomial | multinomial_rvs |  |  |  |  |  |
-| scifort_multinomial | multinomial_rvs_array |  |  |  |  |  |
+| scifort_multinomial | multinomial_rvs_array |  |  | scifort_multinomial_rvs_array_i32 |  | multinomial.rvs_array |
 | scifort_multinomial | multinomial_status_invalid_parameter |  |  |  |  |  |
 | scifort_multinomial | multinomial_status_invalid_shape |  |  |  |  |  |
 | scifort_multinomial | multinomial_status_success |  |  |  |  |  |
@@ -157,7 +157,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_hypergeom | multivariate_hypergeom_mean |  |  | scifort_multivariate_hypergeom_mean_f64 |  | multivariate_hypergeom.mean |
 | scifort_multivariate_hypergeom | multivariate_hypergeom_pmf |  |  | scifort_multivariate_hypergeom_pmf_f64 |  | multivariate_hypergeom.pmf |
 | scifort_multivariate_hypergeom | multivariate_hypergeom_rvs |  |  |  |  |  |
-| scifort_multivariate_hypergeom | multivariate_hypergeom_rvs_array |  |  |  |  |  |
+| scifort_multivariate_hypergeom | multivariate_hypergeom_rvs_array |  |  | scifort_multivariate_hypergeom_rvs_array_i32 |  | multivariate_hypergeom.rvs_array |
 | scifort_multivariate_hypergeom | multivariate_hypergeom_status_invalid_parameter |  |  |  |  |  |
 | scifort_multivariate_hypergeom | multivariate_hypergeom_status_invalid_shape |  |  |  |  |  |
 | scifort_multivariate_hypergeom | multivariate_hypergeom_status_success |  |  |  |  |  |

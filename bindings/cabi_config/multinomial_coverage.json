@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 5,
+  "generated_symbol_count": 6,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -266,13 +266,79 @@
     },
     {
       "procedure": "multinomial_rvs",
-      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "reason": "Single draws are available through the batch sampler with n_samples=1.",
       "state": "excluded"
     },
     {
+      "arguments": [
+        "state",
+        "samples",
+        "n",
+        "p",
+        "status"
+      ],
+      "dimension_order": [
+        "k",
+        "n_samples"
+      ],
+      "dimensions": {
+        "k": 0,
+        "n_samples": 0
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
       "procedure": "multinomial_rvs_array",
-      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "p",
+            "axis": null
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "k": 0,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "p": [
+          "k"
+        ],
+        "samples": [
+          "k",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 3,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multinomial_rvs_array_i32"
+      ]
     },
     {
       "procedure": "multinomial_status_invalid_parameter",
@@ -292,5 +358,5 @@
   ],
   "public_api_count": 10,
   "source": "src/stats/multinomial.f90",
-  "source_sha256": "03b8d4d3b9b30d4b0712f121fd2439772428ece048f037873e5fcfb82a469675"
+  "source_sha256": "c55c7c35b0c7f3b2e9c8796b5e74a3db6d3221b7eb3e53481059be1febca5731"
 }

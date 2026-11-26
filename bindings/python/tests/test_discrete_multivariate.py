@@ -145,7 +145,9 @@ class DiscreteMultivariateTests(unittest.TestCase):
                 x=np.array([1,3],dtype=np.intc) if hyper else np.array([1.,3.])
                 params=np.array([3,5],dtype=np.intc) if hyper else np.array([.2,.8])
                 xp=x.ctypes.data_as(C.c_void_p);pp=params.ctypes.data_as(C.c_void_p)
-                for method,fn in group._functions.items():
+                for method in (('pmf','logpmf','mean','var','cov') if hyper
+                               else ('pmf','logpmf','entropy','mean','cov')):
+                    fn=group._functions[method]
                     out=np.full(4,99.);op=out.ctypes.data_as(C.POINTER(C.c_double));status=C.c_int(-1)
                     def call(n):
                         args=([2,xp,pp,n] if hyper else [2,xp,n,pp]) if method in ('pmf','logpmf') else ([2,pp,n] if hyper else [2,n,pp])

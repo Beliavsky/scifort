@@ -84,3 +84,22 @@ Evaluate multinomial pmf.
 | `p` | `(:)` | `(k)` | probabilities with native final-entry adjustment |
 
 Adapter integer bounds: `-2147483648 <= n <= 2147483646`.
+
+## multinomial_rvs_array
+
+Draw multinomial count vectors with explicit RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `k` | `size(p)` | 0 |
+| `n_samples` | `size(samples,2)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `samples` | `(:,:)` | `(k,n_samples)` | integer category-count columns |
+| `p` | `(:)` | `(k)` | probabilities with native final-entry adjustment |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 3 without native execution.
+
+Adapter integer bounds: `-2147483648 <= n <= 2147483646`.

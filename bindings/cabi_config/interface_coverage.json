@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 65,
+    "array_adapters": 67,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 153,
+    "python": 155,
     "scalar": 88
   },
   "procedures": [
@@ -1104,17 +1104,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "c_manifest_exclusion": "Single draws are available through the batch sampler with n_samples=1.",
       "module": "scifort_multinomial",
       "procedure": "multinomial_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "array_adapter": "scifort_multinomial_rvs_array_i32",
       "module": "scifort_multinomial",
       "procedure": "multinomial_rvs_array",
-      "scalar_generated": false
+      "python": "multinomial.rvs_array"
     },
     {
       "bulk_generated": false,
@@ -1163,17 +1162,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "c_manifest_exclusion": "Single draws are available through the batch sampler with n_samples=1.",
       "module": "scifort_multivariate_hypergeom",
       "procedure": "multivariate_hypergeom_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "array_adapter": "scifort_multivariate_hypergeom_rvs_array_i32",
       "module": "scifort_multivariate_hypergeom",
       "procedure": "multivariate_hypergeom_rvs_array",
-      "scalar_generated": false
+      "python": "multivariate_hypergeom.rvs_array"
     },
     {
       "bulk_generated": false,

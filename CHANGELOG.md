@@ -1,3 +1,12 @@
+## 2026-11-26 - Integer-output discrete sampling interfaces
+
+- Support rank-one/two default-integer array outputs in generated C/Python
+  adapters, with caller-owned C-int and NumPy intc buffers.
+- Bind multinomial and multivariate hypergeometric batch samplers through the
+  existing serialized RNG bridge; document shapes and differing empty batches.
+- Guard native integer arithmetic and test exact stream agreement, buffer
+  validation, count constraints, moments and error/state behavior.
+
 ## 2026-11-26 - Serialized RNG state and Dirichlet sampling
 
 - Add caller-owned six-int64 MRG32k3a state seeding and bulk-uniform C functions,

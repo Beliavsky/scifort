@@ -417,8 +417,8 @@ and limitations are unchanged.
 See [generated native shape tables](../../docs/dirichlet_shapes.md) and
 [Python return/buffer contracts](../python/README.md#dirichlet-distributions).
 All assumed-shape procedures in the native module, including sampling and private
-validation, now document their dimensions. Sampling remains outside this C batch
-because explicit RNG state needs a separately reviewed handle design.
+validation, now document their dimensions. The later serialized-state sampler
+section describes the added batch sampling interface.
 
 ## Multinomial and multivariate hypergeometric adapters
 
@@ -447,8 +447,9 @@ final-entry adjustment before adjusted-range validation. See the detailed
 [Python input/buffer contract](../python/README.md#multinomial-and-multivariate-hypergeometric-distributions),
 [multinomial shape tables](../../docs/multinomial_shapes.md), and
 [hypergeometric shape tables](../../docs/multivariate_hypergeom_shapes.md).
-Sampling remains native-only pending explicit RNG handle design. Both modules'
-private and sampling array arguments now have readable shape documentation.
+Both modules' private and sampling array arguments have readable shape
+documentation. Their batch samplers now use the serialized-state bridge described
+below, with integer output buffers and method-specific sampling statuses.
 
 ## Multivariate entropy and marginal adapters
 
@@ -503,3 +504,21 @@ points and Python stream factory are outside those generated-method counts.
 
 See the [full stream/error contract](../python/README.md#explicit-rng-streams-and-dirichlet-sampling)
 and [codec protocol](../../tools/cabi_generator/README.md#reviewed-serialized-state-codecs).
+
+## Integer-output batch sampling
+
+The multinomial and multivariate hypergeometric manifests also select their
+`rvs_array` procedures. Symbols end in `_rvs_array_i32`, with caller-owned C-int
+sample matrices `(k,n_samples)` and six int64 state components. Native default
+integer must match `c_int`, as checked during compilation. Output dimensions are
+explicit; Python exposes keyword-only `n_samples=1` and native-endian `np.intc`
+outputs. These wrappers reuse the same reviewed state codec as Dirichlet.
+
+Sampling status codes differ from the scalar density/moment adapters above:
+0 success, 1 native invalid distribution, 2 invalid extent or safety bound,
+3 invalid serialized state. Transport errors preserve outputs and state. Native
+parameter failures zero the samples without advancing state. Multinomial allows
+k=0 storage and skips distribution validation for empty batches; hypergeometric
+requires k>=1 and validates even empty batches. Both always validate state.
+The n bound and widened hypergeometric population-sum bound apply even for empty
+batches. See the [Python sampling contract](../python/README.md#integer-count-batch-sampling).

@@ -128,3 +128,7 @@ Explicit RNG streams now support native bulk uniforms and generated Dirichlet
 sampling through six caller-owned int64 state components. Python exposes
 `api.rng(seed)` and `api.dirichlet.rvs_array(stream, alpha, n_samples=...)`.
 Read the [state, shape and failure contract](python/README.md#explicit-rng-streams-and-dirichlet-sampling).
+
+Generated integer-output batch samplers now cover multinomial and multivariate
+hypergeometric distributions using the same caller-owned RNG stream as Dirichlet.
+See the [sampling and integer buffer contract](python/README.md#integer-count-batch-sampling).

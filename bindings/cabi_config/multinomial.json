@@ -8,12 +8,15 @@
   "header_guard": "SCIFORT_GENERATED_MULTINOMIAL_H",
   "functions": {},
   "argument_docs": {
-    "k": "category count, >= 1",
+    "k": "category count; nonempty distributions require >= 1",
     "n": "trial or draw count; ABI maximum 2147483646",
     "value": "native scalar or array result; numerical errors retain native values",
-    "status": "0 valid call; 1 invalid extent or configured integer bound",
+    "status": "0 success; other codes follow the method-specific error contract",
     "x": "observed category counts",
-    "p": "probabilities with native final-entry adjustment"
+    "p": "probabilities with native final-entry adjustment",
+    "n_samples": "number of sample columns, >= 0",
+    "state": "six caller-owned int64 RNG components",
+    "samples": "integer category-count columns"
   },
   "array_functions": {
     "multinomial_pmf": {
@@ -167,10 +170,55 @@
     "shape_documentation": "docs/multinomial_shapes.md"
   },
   "excluded": {
-    "multinomial_rvs": "Explicit RNG state needs a separately reviewed handle interface.",
-    "multinomial_rvs_array": "Explicit RNG state needs a separately reviewed handle interface.",
+    "multinomial_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "multinomial_status_success": "Native status constant, not a callable procedure.",
     "multinomial_status_invalid_parameter": "Native status constant, not a callable procedure.",
     "multinomial_status_invalid_shape": "Native status constant, not a callable procedure."
+  },
+  "subroutines": {
+    "multinomial_rvs_array": {
+      "symbol": "scifort_multinomial_rvs_array_i32",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 0
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "k",
+          "n_samples"
+        ],
+        "p": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 2,
+      "description": "Draw multinomial count vectors with explicit RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 3
+        }
+      },
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      }
+    }
   }
 }

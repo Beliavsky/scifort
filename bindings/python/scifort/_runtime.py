@@ -286,10 +286,11 @@ class ArrayGroup:
                 scalars[arg] = cls(0 if cls is C.c_int else float('nan'))
                 values[arg] = C.byref(scalars[arg])
                 continue
+            dtype = np.dtype(np.intc if info['category'] == 'integer' else np.float64)
             if arg in out:
                 array = out[arg]
-                if not isinstance(array, np.ndarray) or array.dtype != np.dtype(np.float64):
-                    raise TypeError(f'out[{arg!r}] must be a native-endian float64 ndarray')
+                if not isinstance(array, np.ndarray) or array.dtype != dtype:
+                    raise TypeError(f'out[{arg!r}] must be a native-endian {dtype.name} ndarray')
                 if (array.shape != shapes[arg] or not array.flags.f_contiguous
                         or not array.flags.aligned or not array.flags.writeable):
                     raise ValueError(f'out[{arg!r}] must match shape and be Fortran-contiguous, aligned and writable')
@@ -298,7 +299,8 @@ class ArrayGroup:
                 if any(np.may_share_memory(array, other) for other in outputs.values()):
                     raise ValueError('output buffers must not overlap each other')
             else:
-                array = np.full(shapes[arg], np.nan, dtype=np.float64, order='F')
+                array = np.full(shapes[arg], 0 if info['category'] == 'integer' else np.nan,
+                                dtype=dtype, order='F')
             outputs[arg] = array
         # Prepare C memory only after all Python validation. Keep every buffer alive.
         for arg in spec.get('optional_arrays', {}):
@@ -318,7 +320,7 @@ class ArrayGroup:
                                 if original.size else np.empty(1, dtype=dtype))
                 values[arg] = buffers[arg].ctypes.data_as(C.c_void_p)
         for arg, array in outputs.items():
-            buffers[arg] = array if array.size else np.empty(1, dtype=np.float64)
+            buffers[arg] = array if array.size else np.empty(1, dtype=array.dtype)
             values[arg] = buffers[arg].ctypes.data_as(C.c_void_p)
         status = C.c_int(-1)
         values[spec['status']] = C.byref(status)
