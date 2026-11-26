@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 163 |
+| exports | 168 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 28 |
+| array_adapters | 33 |
 | elementwise | 88 |
-| python | 116 |
+| python | 121 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -48,6 +48,11 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_dirichlet | dirichlet_status_invalid_shape |  |  |  |  |  |
 | scifort_dirichlet | dirichlet_status_success |  |  |  |  |  |
 | scifort_dirichlet | dirichlet_var |  |  | scifort_dirichlet_var_f64 |  | dirichlet.var |
+| scifort_dirichlet_multinomial | dirichlet_multinomial_cov |  |  | scifort_dirichlet_multinomial_cov_f64 |  | dirichlet_multinomial.cov |
+| scifort_dirichlet_multinomial | dirichlet_multinomial_logpmf |  |  | scifort_dirichlet_multinomial_logpmf_f64 |  | dirichlet_multinomial.logpmf |
+| scifort_dirichlet_multinomial | dirichlet_multinomial_mean |  |  | scifort_dirichlet_multinomial_mean_f64 |  | dirichlet_multinomial.mean |
+| scifort_dirichlet_multinomial | dirichlet_multinomial_pmf |  |  | scifort_dirichlet_multinomial_pmf_f64 |  | dirichlet_multinomial.pmf |
+| scifort_dirichlet_multinomial | dirichlet_multinomial_var |  |  | scifort_dirichlet_multinomial_var_f64 |  | dirichlet_multinomial.var |
 | scifort_exponential | exponential_cdf | scifort_exponential_cdf_f64 | scifort_exponential_cdf_vec_f64 |  | scifort_exponential_cdf_elementwise_f64 | exponential.cdf |
 | scifort_exponential | exponential_isf | scifort_exponential_isf_f64 | scifort_exponential_isf_vec_f64 |  | scifort_exponential_isf_elementwise_f64 | exponential.isf |
 | scifort_exponential | exponential_logcdf | scifort_exponential_logcdf_f64 | scifort_exponential_logcdf_vec_f64 |  | scifort_exponential_logcdf_elementwise_f64 | exponential.logcdf |

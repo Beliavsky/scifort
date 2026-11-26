@@ -89,3 +89,8 @@ and moments under `api.multinomial` and `api.multivariate_hypergeom`. Their
 includes explicit overflow guards; see the
 [multinomial](../docs/multinomial_shapes.md) and
 [hypergeometric](../docs/multivariate_hypergeom_shapes.md) shape tables.
+
+Dirichlet-multinomial PMF, log-PMF and moments are available through five generated
+C adapters and `api.dirichlet_multinomial`. See the
+[Python/error contract](python/README.md#dirichlet-multinomial-distribution) and
+[shape tables](../docs/dirichlet_multinomial_shapes.md).

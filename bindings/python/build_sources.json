@@ -1,6 +1,7 @@
 {
   "array_groups": [
     "dirichlet",
+    "dirichlet_multinomial",
     "linalg",
     "multinomial",
     "multivariate_hypergeom",
@@ -67,6 +68,10 @@
     "src/c_api/generated/dirichlet_generated.f90": [
       "src/kinds.f90",
       "src/stats/dirichlet.f90"
+    ],
+    "src/c_api/generated/dirichlet_multinomial_generated.f90": [
+      "src/kinds.f90",
+      "src/stats/dirichlet_multinomial.f90"
     ],
     "src/c_api/generated/exponential_generated.f90": [
       "src/kinds.f90",
@@ -197,6 +202,11 @@
       "src/special/elementary.f90",
       "src/stats/gamma.f90"
     ],
+    "src/stats/dirichlet_multinomial.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/elementary.f90"
+    ],
     "src/stats/exponential.f90": [
       "src/kinds.f90",
       "src/math.f90"
@@ -321,6 +331,7 @@
     "scifort_c_api_generated_cauchy": "src/c_api/generated/cauchy_generated.f90",
     "scifort_c_api_generated_chi2": "src/c_api/generated/chi2_generated.f90",
     "scifort_c_api_generated_dirichlet": "src/c_api/generated/dirichlet_generated.f90",
+    "scifort_c_api_generated_dirichlet_multinomial": "src/c_api/generated/dirichlet_multinomial_generated.f90",
     "scifort_c_api_generated_exponential": "src/c_api/generated/exponential_generated.f90",
     "scifort_c_api_generated_gamma": "src/c_api/generated/gamma_generated.f90",
     "scifort_c_api_generated_laplace": "src/c_api/generated/laplace_generated.f90",
@@ -340,6 +351,7 @@
     "scifort_constants": "src/constants.f90",
     "scifort_digamma": "src/special/digamma.f90",
     "scifort_dirichlet": "src/stats/dirichlet.f90",
+    "scifort_dirichlet_multinomial": "src/stats/dirichlet_multinomial.f90",
     "scifort_exponential": "src/stats/exponential.f90",
     "scifort_gamma": "src/stats/gamma.f90",
     "scifort_hypergeom": "src/stats/hypergeom.f90",
@@ -382,6 +394,7 @@
     "src/c_api/generated/cauchy_generated.f90": "9dab382df6b53913e18e182c8662f85f83ff3c475fc448cf93fbb6ae43143f6c",
     "src/c_api/generated/chi2_generated.f90": "02fa558595d2479e319e7f812b5199f6aed767627bd92798fcc6abb89365eba9",
     "src/c_api/generated/dirichlet_generated.f90": "b387ea83f110ac19fda0033cd2ac9df74ecab779f7fc443e06bbbee3f43c73fb",
+    "src/c_api/generated/dirichlet_multinomial_generated.f90": "0d7e4449f2a145dac54aeaaa7ec8f79b70403b6f1dff62bde3687b22190fd381",
     "src/c_api/generated/exponential_generated.f90": "0b573e7ae16b89708854e4893b9aa8c96a245331ccaab1edf47e33f9c69d7e53",
     "src/c_api/generated/gamma_generated.f90": "52dc2431ea06a1b38f6faa5fa4d8ef4230c8a9d30dff73775e1d2ef12585c280",
     "src/c_api/generated/laplace_generated.f90": "8c2dfd393a9d25ef918d738ab4647b965b2f9553c97e5b45d505aacfbc5ca99b",
@@ -411,6 +424,7 @@
     "src/stats/cauchy.f90": "7e81a0df65c90822656d49d68bdee6e3ec6f6fcdc930049be71ab4a0d70315b5",
     "src/stats/chi2.f90": "ef5df36747c813c99caa1b9a78bd38225ebf64618c0ae503b52416d5522152f8",
     "src/stats/dirichlet.f90": "c65c878799d28f7e669e37ba3ade3931481b3ecd5d223ac4cb5646ba4db63566",
+    "src/stats/dirichlet_multinomial.f90": "c5650f002d1b8d2c7bef8fb3e6d6e7d5a6539cbc2f5ebcbdcc5c982a976654bd",
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
     "src/stats/hypergeom.f90": "f1667ae722f1af2262936c5110e26f71cfb715868c861c92b6196b5a2a53740a",
@@ -464,6 +478,8 @@
     "src/special/elementary.f90",
     "src/stats/dirichlet.f90",
     "src/c_api/generated/dirichlet_generated.f90",
+    "src/stats/dirichlet_multinomial.f90",
+    "src/c_api/generated/dirichlet_multinomial_generated.f90",
     "src/c_api/generated/exponential_generated.f90",
     "src/c_api/generated/gamma_generated.f90",
     "src/c_api/generated/laplace_generated.f90",

@@ -18,8 +18,13 @@ module scifort_dirichlet_multinomial
 contains
 
     function dirichlet_multinomial_logpmf(x, alpha, n) result(y)
-        real(dp), intent(in) :: x(:) !! category counts; each value must be a nonnegative integer
-        real(dp), intent(in) :: alpha(:) !! positive concentration parameters
+        !! Evaluate the log probability mass at one category-count vector.
+        !! @dimension k = size(alpha)
+        !! @require k >= 1
+        !! Invalid counts return NaN; a finite integer count sum unequal to n gives zero mass.
+        !! The concentration sum and intermediate moment products must remain finite.
+        real(dp), intent(in) :: x(:) !! shape (k); finite nonnegative integer counts, summing to n
+        real(dp), intent(in) :: alpha(:) !! shape (k); finite positive concentration parameters
         integer, intent(in) :: n !! total number of trials, >= 0
         real(dp) :: y
 
@@ -39,14 +44,19 @@ contains
         end if
 
         alpha0 = sum(alpha)
-        y = gammaln(alpha0) + gammaln(real(n + 1, dp)) - &
+        y = gammaln(alpha0) + gammaln(real(n, dp) + 1.0_dp) - &
             gammaln(real(n, dp) + alpha0) + &
             sum(gammaln(x + alpha) - gammaln(alpha) - gammaln(x + 1.0_dp))
     end function dirichlet_multinomial_logpmf
 
     function dirichlet_multinomial_pmf(x, alpha, n) result(y)
-        real(dp), intent(in) :: x(:) !! category counts; each value must be a nonnegative integer
-        real(dp), intent(in) :: alpha(:) !! positive concentration parameters
+        !! Evaluate the probability mass at one category-count vector.
+        !! @dimension k = size(alpha)
+        !! @require k >= 1
+        !! Invalid counts return NaN; a finite integer count sum unequal to n gives zero mass.
+        !! The concentration sum and intermediate moment products must remain finite.
+        real(dp), intent(in) :: x(:) !! shape (k); finite nonnegative integer counts, summing to n
+        real(dp), intent(in) :: alpha(:) !! shape (k); finite positive concentration parameters
         integer, intent(in) :: n !! total number of trials, >= 0
         real(dp) :: y
 
@@ -54,9 +64,13 @@ contains
     end function dirichlet_multinomial_pmf
 
     function dirichlet_multinomial_mean(alpha, n) result(mu)
-        real(dp), intent(in) :: alpha(:) !! positive concentration parameters
+        !! Return the expected category counts.
+        !! @dimension k = size(alpha)
+        !! @require k >= 1
+        !! The concentration sum and intermediate moment products must remain finite.
+        real(dp), intent(in) :: alpha(:) !! shape (k); finite positive concentration parameters
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp) :: mu(size(alpha))
+        real(dp) :: mu(size(alpha)) !! shape (k); expected category counts
 
         if (.not. valid_alpha(alpha) .or. n < 0) then
             mu = quiet_nan(0.0_dp)
@@ -66,9 +80,13 @@ contains
     end function dirichlet_multinomial_mean
 
     function dirichlet_multinomial_var(alpha, n) result(v)
-        real(dp), intent(in) :: alpha(:) !! positive concentration parameters
+        !! Return the marginal category-count variances.
+        !! @dimension k = size(alpha)
+        !! @require k >= 1
+        !! The concentration sum and intermediate moment products must remain finite.
+        real(dp), intent(in) :: alpha(:) !! shape (k); finite positive concentration parameters
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp) :: v(size(alpha))
+        real(dp) :: v(size(alpha)) !! shape (k); marginal count variances
 
         real(dp) :: alpha0
         real(dp) :: nn
@@ -84,15 +102,19 @@ contains
     end function dirichlet_multinomial_var
 
     function dirichlet_multinomial_cov(alpha, n) result(cov)
-        real(dp), intent(in) :: alpha(:) !! positive concentration parameters
+        !! Return the category-count covariance matrix.
+        !! @dimension k = size(alpha)
+        !! @require k >= 1
+        !! The concentration sum and intermediate moment products must remain finite.
+        real(dp), intent(in) :: alpha(:) !! shape (k); finite positive concentration parameters
         integer, intent(in) :: n !! total number of trials, >= 0
-        real(dp) :: cov(size(alpha), size(alpha))
+        real(dp) :: cov(size(alpha), size(alpha)) !! shape (k,k); category-count covariance
 
         integer :: i
         integer :: j
         real(dp) :: alpha0
         real(dp) :: nn
-        real(dp) :: v(size(alpha))
+        real(dp) :: v(size(alpha)) !! shape (k); marginal count variances
 
         if (.not. valid_alpha(alpha) .or. n < 0) then
             cov = quiet_nan(0.0_dp)
@@ -111,15 +133,20 @@ contains
     end function dirichlet_multinomial_cov
 
     pure logical function valid_alpha(alpha) result(valid)
-        real(dp), intent(in) :: alpha(:) !! candidate concentration vector
+        !! Check concentrations; k = size(alpha), with empty vectors rejected.
+        real(dp), intent(in) :: alpha(:) !! shape (k); candidate concentrations; k >= 0
 
         valid = size(alpha) >= 1 .and. all(ieee_is_finite(alpha)) .and. all(alpha > 0.0_dp)
     end function valid_alpha
 
     pure logical function valid_counts(x) result(valid)
+        !! Check finite nonnegative integer-valued counts without integer conversion.
+        !! The length is unrestricted; an empty vector passes this local check.
         real(dp), intent(in) :: x(:) !! candidate category counts
 
-        valid = all(ieee_is_finite(x)) .and. all(x >= 0.0_dp) .and. all(x == floor(x))
+        valid = .false.
+        if (.not. all(ieee_is_finite(x))) return
+        valid = all(x >= 0.0_dp) .and. all(x == aint(x))
     end function valid_counts
 
 end module scifort_dirichlet_multinomial

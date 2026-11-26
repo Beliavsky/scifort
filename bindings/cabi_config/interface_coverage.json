@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 28,
+    "array_adapters": 33,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 163,
-    "python": 116,
+    "exports": 168,
+    "python": 121,
     "scalar": 88
   },
   "procedures": [
@@ -318,6 +318,36 @@
       "module": "scifort_dirichlet",
       "procedure": "dirichlet_var",
       "python": "dirichlet.var"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_multinomial_cov_f64",
+      "module": "scifort_dirichlet_multinomial",
+      "procedure": "dirichlet_multinomial_cov",
+      "python": "dirichlet_multinomial.cov"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_multinomial_logpmf_f64",
+      "module": "scifort_dirichlet_multinomial",
+      "procedure": "dirichlet_multinomial_logpmf",
+      "python": "dirichlet_multinomial.logpmf"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_multinomial_mean_f64",
+      "module": "scifort_dirichlet_multinomial",
+      "procedure": "dirichlet_multinomial_mean",
+      "python": "dirichlet_multinomial.mean"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_multinomial_pmf_f64",
+      "module": "scifort_dirichlet_multinomial",
+      "procedure": "dirichlet_multinomial_pmf",
+      "python": "dirichlet_multinomial.pmf"
+    },
+    {
+      "array_adapter": "scifort_dirichlet_multinomial_var_f64",
+      "module": "scifort_dirichlet_multinomial",
+      "procedure": "dirichlet_multinomial_var",
+      "python": "dirichlet_multinomial.var"
     },
     {
       "bulk": "scifort_exponential_cdf_vec_f64",

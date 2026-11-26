@@ -1,0 +1,173 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/dirichlet_multinomial.f90",
+  "module": "scifort_dirichlet_multinomial",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_dirichlet_multinomial",
+  "header_guard": "SCIFORT_GENERATED_DIRICHLET_MULTINOMIAL_H",
+  "functions": {},
+  "argument_docs": {
+    "k": "category count, >= 1",
+    "n": "trial or draw count; ABI maximum 2147483646",
+    "value": "native scalar or array result; numerical errors retain native values",
+    "status": "0 valid call; 1 invalid extent or configured integer bound",
+    "x": "observed category counts",
+    "alpha": "finite positive concentration parameters"
+  },
+  "array_functions": {
+    "dirichlet_multinomial_pmf": {
+      "symbol": "scifort_dirichlet_multinomial_pmf_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "k"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate dirichlet_multinomial pmf.",
+      "shape_contract": true,
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      }
+    },
+    "dirichlet_multinomial_logpmf": {
+      "symbol": "scifort_dirichlet_multinomial_logpmf_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "k"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate dirichlet_multinomial logpmf.",
+      "shape_contract": true,
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      }
+    },
+    "dirichlet_multinomial_mean": {
+      "symbol": "scifort_dirichlet_multinomial_mean_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "value": [
+          "k"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate dirichlet_multinomial mean.",
+      "shape_contract": true,
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      }
+    },
+    "dirichlet_multinomial_cov": {
+      "symbol": "scifort_dirichlet_multinomial_cov_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "value": [
+          "k",
+          "k"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate dirichlet_multinomial cov.",
+      "shape_contract": true,
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      }
+    },
+    "dirichlet_multinomial_var": {
+      "symbol": "scifort_dirichlet_multinomial_var_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "value": [
+          "k"
+        ],
+        "alpha": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate Dirichlet-multinomial variance.",
+      "shape_contract": true,
+      "integer_limits": {
+        "n": {
+          "minimum": -2147483648,
+          "maximum": 2147483646
+        }
+      }
+    }
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/dirichlet_multinomial_generated.f90",
+    "header": "include/scifort_generated_dirichlet_multinomial.h",
+    "coverage": "bindings/cabi_config/dirichlet_multinomial_coverage.json",
+    "shape_documentation": "docs/dirichlet_multinomial_shapes.md"
+  },
+  "excluded": {}
+}

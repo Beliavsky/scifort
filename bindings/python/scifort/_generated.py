@@ -1014,6 +1014,105 @@ class Dirichlet(ArrayGroup):
         """Return the native array result; optionally use caller-owned out."""
         return self._invoke('var', {'alpha': alpha}, out)
 
+class Dirichlet_multinomial(ArrayGroup):
+    _specs = {'cov': {'arguments': ['alpha', 'n', 'value', 'status'],
+             'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['alpha', 'n'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'logical_inputs': {},
+             'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'alpha': ['k'], 'value': ['k', 'k']},
+             'status': 'status',
+             'symbol': 'scifort_dirichlet_multinomial_cov_f64'},
+     'logpmf': {'arguments': ['x', 'alpha', 'n', 'value', 'status'],
+                'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+                'dimensions': ['k'],
+                'inputs': ['x', 'alpha', 'n'],
+                'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+                'logical_inputs': {},
+                'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'k': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'alpha': ['k'], 'x': ['k']},
+                'status': 'status',
+                'symbol': 'scifort_dirichlet_multinomial_logpmf_f64'},
+     'mean': {'arguments': ['alpha', 'n', 'value', 'status'],
+              'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+              'dimensions': ['k'],
+              'inputs': ['alpha', 'n'],
+              'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+              'logical_inputs': {},
+              'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                           'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+              'minimums': {'k': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'alpha': ['k'], 'value': ['k']},
+              'status': 'status',
+              'symbol': 'scifort_dirichlet_multinomial_mean_f64'},
+     'pmf': {'arguments': ['x', 'alpha', 'n', 'value', 'status'],
+             'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['x', 'alpha', 'n'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'logical_inputs': {},
+             'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'alpha': ['k'], 'x': ['k']},
+             'status': 'status',
+             'symbol': 'scifort_dirichlet_multinomial_pmf_f64'},
+     'var': {'arguments': ['alpha', 'n', 'value', 'status'],
+             'definitions': {'k': {'argument': 'alpha', 'axis': None}},
+             'dimensions': ['k'],
+             'inputs': ['alpha', 'n'],
+             'integer_limits': {'n': {'maximum': 2147483646, 'minimum': -2147483648}},
+             'logical_inputs': {},
+             'metadata': {'alpha': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'n': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 1}},
+             'minimums': {'k': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'alpha': ['k'], 'value': ['k']},
+             'status': 'status',
+             'symbol': 'scifort_dirichlet_multinomial_var_f64'}}
+
+    def cov(self, alpha, n, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('cov', {'alpha': alpha, 'n': n}, out)
+
+    def logpmf(self, x, alpha, n):
+        """Return the native scalar value."""
+        return self._invoke('logpmf', {'x': x, 'alpha': alpha, 'n': n}, None)
+
+    def mean(self, alpha, n, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'alpha': alpha, 'n': n}, out)
+
+    def pmf(self, x, alpha, n):
+        """Return the native scalar value."""
+        return self._invoke('pmf', {'x': x, 'alpha': alpha, 'n': n}, None)
+
+    def var(self, alpha, n, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('var', {'alpha': alpha, 'n': n}, out)
+
 class Linalg(ArrayGroup):
     _specs = {'cholesky_lower': {'arguments': ['a', 'l', 'status'],
                         'definitions': {'n': {'argument': 'a', 'axis': 1}},
@@ -1511,6 +1610,7 @@ class API(Library):
         self.t = T(self._library)
         self.weibull = Weibull(self._library)
         self.dirichlet = Dirichlet(self._library)
+        self.dirichlet_multinomial = Dirichlet_multinomial(self._library)
         self.linalg = Linalg(self._library)
         self.multinomial = Multinomial(self._library)
         self.multivariate_hypergeom = Multivariate_hypergeom(self._library)

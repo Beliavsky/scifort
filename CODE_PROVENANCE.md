@@ -1,3 +1,13 @@
+## 2026-11-25 - Dirichlet-multinomial interfaces and validation
+
+The reviewed manifests, annotations, adapters and integration tests are original
+MIT SciFort interface work. Adapters call the native module; no numerical
+implementation or external source was imported. Existing module provenance
+applies. The local validation fix replaces an overflowing default-integer FLOOR
+conversion with real-valued AINT after a finite-value check, and forms n+1 in
+working real precision. Distribution formulas are unchanged. SciPy is an external
+reference for ordinary numerical tests only; native support behavior is retained.
+
 ## 2026-11-25 - integer-input distribution interfaces
 
 The integer scalar/array adapter extension, explicit safety-bound policies,

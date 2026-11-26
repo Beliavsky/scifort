@@ -230,6 +230,13 @@
       ],
       "prefix": "multivariate_hypergeom_",
       "defaults": {}
+    },
+    "dirichlet_multinomial": {
+      "manifests": [
+        "bindings/cabi_config/dirichlet_multinomial.json"
+      ],
+      "prefix": "dirichlet_multinomial_",
+      "defaults": {}
     }
   }
 }

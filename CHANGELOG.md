@@ -1,3 +1,12 @@
+## 2026-11-25 - Dirichlet-multinomial interfaces and count safety
+
+- Add generated explicit-shape C and Python PMF, log-PMF, mean, variance and
+  covariance adapters with reviewed shape contracts and caller-owned outputs.
+- Document shapes and purposes throughout the public and private native module.
+- Validate real-valued counts without conversion to default integers, rejecting
+  nonfinite inputs before truncation; avoid integer overflow in the n+1 term.
+- Add focused numerical, native/C/Python, buffer and integer-bound regressions.
+
 ## 2026-11-25 - multinomial and multivariate hypergeometric interfaces
 
 - Generate five C/Python methods for each family, including scalar masses,

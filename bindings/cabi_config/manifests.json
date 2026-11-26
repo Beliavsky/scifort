@@ -16,5 +16,6 @@
   "multivariate_t.json",
   "dirichlet.json",
   "multinomial.json",
-  "multivariate_hypergeom.json"
+  "multivariate_hypergeom.json",
+  "dirichlet_multinomial.json"
 ]

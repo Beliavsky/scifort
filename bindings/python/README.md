@@ -8,6 +8,7 @@ and multivariate normal/Student-t PDF/log-PDF under `api.multivariate_normal`
 and `api.multivariate_t`. `api.dirichlet` provides PDF, log-PDF, entropy, mean,
 variance and covariance. Multinomial and multivariate hypergeometric methods are
 available under `api.multinomial` and `api.multivariate_hypergeom`.
+`api.dirichlet_multinomial` provides PMF, log-PMF, mean, variance and covariance.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -774,3 +775,73 @@ within the reviewed subset. No new dependency or numerical algorithm was added.
 The full FPM numerical suite was not rerun: focused checks cover the changed
 optional generator/runtime, C integration and dependency build plan. Timing
 baselines were not refreshed.
+
+## Dirichlet-multinomial distribution
+
+`api.dirichlet_multinomial.pmf(x, alpha, n)` and `logpmf(x, alpha, n)`
+return a Python float. `mean(alpha, n)`, `var(alpha, n)` and `cov(alpha, n)`
+return NumPy arrays and accept an optional `out=` array. `alpha` and `x` have
+shape `(k,)`, with `k >= 1`; covariance has shape `(k,k)`. Matrices and caller
+buffers follow the existing column-major float64 contract. These are single
+observations without broadcasting or batching. See the generated
+[shape tables](../../docs/dirichlet_multinomial_shapes.md).
+
+`alpha` must be finite and positive. Counts are real-valued inputs constrained
+to finite nonnegative integers. Native invalid counts return NaN; finite integer
+counts whose sum differs from `n` return zero mass and negative-infinite log mass.
+This retains SciFort behavior, including NaN for negative or fractional counts,
+which can differ from SciPy support handling. Invalid concentrations or negative
+`n` produce native NaNs. Zero trials are supported, whereas the SciPy 1.15.3
+reference used here requires positive `n`. Concentration sums and
+intermediate moment products must remain finite; this batch adds no extended
+range algorithm for extreme concentrations.
+
+Python validates shapes, types, aliases, output buffers and the signed C integer
+range before calling Fortran. The reviewed ABI caps `n` at 2147483646, consistently
+with the other discrete multivariate adapters. Call-level errors raise in Python;
+direct C calls return status 1 and preserve the output buffer. Valid calls return
+status 0 even when the numerical result is NaN or infinity. The native Fortran
+API retains its default-integer range, including `huge(0)` after the count-increment
+fix. All C buffers must be valid, nonnull, aligned and nonoverlapping.
+
+```python
+mass = api.dirichlet_multinomial.pmf([1, 3], [2., 3.], 4)
+mean = api.dirichlet_multinomial.mean([2., 3.], 4)
+cov = api.dirichlet_multinomial.cov([2., 3.], 4)
+```
+
+### Validation: Dirichlet-multinomial batch (2026-11-25)
+
+Windows validation used Python 3.13.3, NumPy 2.2.6, SciPy 1.15.3 and GNU
+Fortran/GCC/G++ 17.0.0 20260510 (experimental). Commands from the repository root:
+
+```text
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python -m unittest discover -s bindings/python/tests -v
+python bindings\python\example.py
+```
+
+All 42 Python binding integration tests passed on the final code/header state.
+The five new cases cover reference masses and moments, zero trials, invalid
+concentrations/counts, nonfinite/large counts, caller buffers, integer bounds,
+output preservation and native/C agreement for all five methods. Each runs
+against checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries;
+both use `-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+The numerical module and count regression program are also compiled directly
+with `-ftrapv -ffpe-trap=invalid` in the checked case, and `-ffpe-trap=invalid`
+in the optimized case. C clients use `-std=c11 -Wall -Wextra -Werror`; C++17
+header syntax checks also passed. The example demonstrates all five methods. The read-only pipeline check passed
+for all 104 artifacts. Encoding/BOM, Fortran ASCII/line lengths, Markdown local
+links and whitespace checks passed.
+
+An initial comparison incorrectly asked SciPy to accept zero trials; this is now
+a native-behavior check. The broader integration run also caught and corrected
+a duplicate header guard in the new manifest. No generator/runtime implementation
+changed. All 19 reviewed header guards are distinct. Coverage now records 121
+Python methods and 33 array adapters in the reviewed subset.
+
+The full FPM suite was not rerun: executable changes are confined to this
+numerical module and its optional interfaces, covered by direct native tests and
+the binding integration suite. Other platforms and extreme concentration ranges
+remain unverified; benchmarks were not refreshed.

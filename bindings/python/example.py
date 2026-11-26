@@ -59,6 +59,14 @@ def main():
     print('multivariate hypergeometric covariance:',
           api.multivariate_hypergeom.cov([3, 5], 4))
 
+    print('Dirichlet-multinomial PMF/log-PMF:',
+          api.dirichlet_multinomial.pmf([1, 3], [2., 3.], 4),
+          api.dirichlet_multinomial.logpmf([1, 3], [2., 3.], 4))
+    print('Dirichlet-multinomial mean/variance/covariance:',
+          api.dirichlet_multinomial.mean([2., 3.], 4),
+          api.dirichlet_multinomial.var([2., 3.], 4),
+          api.dirichlet_multinomial.cov([2., 3.], 4))
+
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,277 @@
+{
+  "generated_symbol_count": 5,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "alpha",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(alpha)",
+        "size(alpha)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_multinomial_cov",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k",
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_multinomial_cov_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "alpha",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_multinomial_logpmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "x": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_multinomial_logpmf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "alpha",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(alpha)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_multinomial_mean",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_multinomial_mean_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "alpha",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_multinomial_pmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "x": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_multinomial_pmf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "alpha",
+        "n",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "integer_limits": {
+        "n": {
+          "maximum": 2147483646,
+          "minimum": -2147483648
+        }
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(alpha)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "dirichlet_multinomial_var",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "alpha",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "alpha": [
+          "k"
+        ],
+        "value": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_dirichlet_multinomial_var_f64"
+      ]
+    }
+  ],
+  "public_api_count": 5,
+  "source": "src/stats/dirichlet_multinomial.f90",
+  "source_sha256": "c5650f002d1b8d2c7bef8fb3e6d6e7d5a6539cbc2f5ebcbdcc5c982a976654bd"
+}
