@@ -25,10 +25,17 @@ module scifort_matrix_normal
 contains
 
     function matrix_normal_logpdf(x, mean, rowcov, colcov) result(y)
-        real(dp), intent(in) :: x(:, :) !! matrix variate
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix; zero when absent
-        real(dp), intent(in), optional :: rowcov(:, :) !! row covariance; identity when absent
-        real(dp), intent(in), optional :: colcov(:, :) !! column covariance; identity when absent
+        !! Evaluate the log density at one rectangular matrix.
+        !! @dimension m = size(x,1)
+        !! @dimension n = size(x,2)
+        !! @require m >= 1
+        !! @require n >= 1
+        !! Mean defaults to zero; row and column matrices default to identities.
+        !! All entries must be finite; covariance/spread factors use lower triangles.
+        real(dp), intent(in) :: x(:, :) !! shape (m,n); finite evaluation matrix
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
+        real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
         real(dp) :: y
 
         integer :: info
@@ -86,18 +93,32 @@ contains
     end function matrix_normal_logpdf
 
     function matrix_normal_pdf(x, mean, rowcov, colcov) result(y)
-        real(dp), intent(in) :: x(:, :) !! matrix variate
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix; zero when absent
-        real(dp), intent(in), optional :: rowcov(:, :) !! row covariance; identity when absent
-        real(dp), intent(in), optional :: colcov(:, :) !! column covariance; identity when absent
+        !! Evaluate the density at one rectangular matrix.
+        !! @dimension m = size(x,1)
+        !! @dimension n = size(x,2)
+        !! @require m >= 1
+        !! @require n >= 1
+        !! Mean defaults to zero; row and column matrices default to identities.
+        !! All entries must be finite; covariance/spread factors use lower triangles.
+        real(dp), intent(in) :: x(:, :) !! shape (m,n); finite evaluation matrix
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
+        real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
         real(dp) :: y
 
         y = exp(matrix_normal_logpdf(x, mean, rowcov, colcov))
     end function matrix_normal_pdf
 
     function matrix_normal_entropy(rowcov, colcov) result(y)
-        real(dp), intent(in), optional :: rowcov(:, :) !! row covariance; identity 1x1 when absent
-        real(dp), intent(in), optional :: colcov(:, :) !! column covariance; identity 1x1 when absent
+        !! Return the matrix-normal differential entropy.
+        !! @dimension m = size(rowcov,1)
+        !! @dimension n = size(colcov,1)
+        !! @require m >= 1
+        !! @require n >= 1
+        !! When rowcov is absent m = 1; when colcov is absent n = 1.
+        !! Each absent covariance independently defaults to a 1-by-1 identity.
+        real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
+        real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
         real(dp) :: y
 
         integer :: info
@@ -144,11 +165,13 @@ contains
     end function matrix_normal_entropy
 
     subroutine matrix_normal_rvs(state, sample, mean, rowcov, colcov, status)
+        !! Draw one matrix using explicit RNG state.
+        !! m = size(sample,1), n = size(sample,2); m >= 1 and n >= 1.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(out) :: sample(:, :) !! output matrix variate; dimensions define defaults
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix; zero when absent
-        real(dp), intent(in), optional :: rowcov(:, :) !! row covariance; identity when absent
-        real(dp), intent(in), optional :: colcov(:, :) !! column covariance; identity when absent
+        real(dp), intent(out) :: sample(:, :) !! shape (m,n); output matrix variate
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
+        real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
         integer, intent(out), optional :: status !! matrix_normal_status_* result
 
         integer :: i
@@ -199,11 +222,16 @@ contains
     end subroutine matrix_normal_rvs
 
     subroutine matrix_normal_rvs_array(state, samples, mean, rowcov, colcov, status)
+        !! Draw matrices into the third dimension.
+        !! m = size(samples,1), n = size(samples,2), b = size(samples,3).
+        !! For b > 0, m >= 1 and n >= 1; b may be zero.
+        !! With b = 0 all shape and parameter validation is skipped, including
+        !! leading extents, optional arrays and degrees of freedom.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(out) :: samples(:, :, :) !! samples with third dimension indexing draws
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix; zero when absent
-        real(dp), intent(in), optional :: rowcov(:, :) !! row covariance; identity when absent
-        real(dp), intent(in), optional :: colcov(:, :) !! column covariance; identity when absent
+        real(dp), intent(out) :: samples(:, :, :) !! shape (m,n,b); draws indexed by the third dimension
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
+        real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
         integer, intent(out), optional :: status !! matrix_normal_status_* result
 
         integer :: info
@@ -220,14 +248,17 @@ contains
     end subroutine matrix_normal_rvs_array
 
     pure subroutine process_parameters(m, n, mean, rowcov, colcov, mu, rm, cm, status)
+        !! Resolve mean and row/column matrices without testing positive-definiteness.
+        !! m >= 1 and n >= 1; omitted inputs become zero mean or identities.
+        !! Output shapes are checked before use; mismatches return invalid-shape status.
         integer, intent(in) :: m !! matrix row dimension
         integer, intent(in) :: n !! matrix column dimension
-        real(dp), intent(in), optional :: mean(:, :) !! optional mean matrix
-        real(dp), intent(in), optional :: rowcov(:, :) !! optional row covariance
-        real(dp), intent(in), optional :: colcov(:, :) !! optional column covariance
-        real(dp), intent(out) :: mu(:, :) !! resolved mean matrix
-        real(dp), intent(out) :: rm(:, :) !! resolved row covariance
-        real(dp), intent(out) :: cm(:, :) !! resolved column covariance
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
+        real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
+        real(dp), intent(out) :: mu(:, :) !! shape (m,n); resolved finite mean
+        real(dp), intent(out) :: rm(:, :) !! shape (m,m); resolved row covariance
+        real(dp), intent(out) :: cm(:, :) !! shape (n,n); resolved column covariance
         integer, intent(out) :: status !! matrix_normal_status_* result
 
         if (m < 1 .or. n < 1 .or. size(mu,1) /= m .or. size(mu,2) /= n .or. &
@@ -250,9 +281,12 @@ contains
     end subroutine process_parameters
 
     pure subroutine covariance_or_identity(cov, n, out, status)
-        real(dp), intent(in), optional :: cov(:, :) !! optional covariance matrix
+        !! Copy a finite covariance or construct an identity without SPD validation.
+        !! n >= 0; shape (n,n) is required for out and any present cov.
+        !! Zero extents are permitted by this helper; the caller enforces n >= 1.
+        real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); finite covariance; identity when absent
         integer, intent(in) :: n !! required dimension
-        real(dp), intent(out) :: out(:, :) !! resolved covariance
+        real(dp), intent(out) :: out(:, :) !! shape (n,n); resolved covariance
         integer, intent(out) :: status !! matrix_normal_status_* result
 
         integer :: i

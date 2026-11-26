@@ -536,9 +536,10 @@ default policies remain keyed by full native names. Scalar-result methods return
 Python float and expose no `out` argument. Explicit defaults for optional real
 arrays may be `{"fill": "zeros"}` or `{"fill": "identity"}` (square matrices only).
 They generate `None` defaults and materialize native binary64 arrays after input
-rank/dimension validation. Dimension definitions must use required inputs, never
-a defaulted array. Defaults are configured explicitly, not inferred from source
-comments, procedure names or executable branches. Existing subroutine methods
+rank/dimension validation. Dimension definitions normally use required inputs.
+A defaulted dimension source requires explicit `dimension_defaults` as described
+below. Defaults are configured explicitly, not inferred from source comments,
+procedure names or executable branches. Existing subroutine methods
 retain `ArrayResult(status, outputs)` and their caller-buffer behavior.
 
 ## Explicit array-valued results and dimension choices
@@ -618,3 +619,29 @@ API. Numerical parameter errors inside these bounds retain native NaN/zero
 semantics and valid-call status 0. See the reviewed
 [multinomial](../../bindings/cabi_config/multinomial.json) and
 [hypergeometric](../../bindings/cabi_config/multivariate_hypergeom.json) policies.
+
+## Optional-array dimension defaults
+
+An array group may opt into fallback extents when a dimension-defining optional
+array is omitted. Configure `dimension_defaults` by full native procedure name,
+for example:
+
+```json
+"dimension_defaults": {
+  "matrix_normal_entropy": {"m": 1, "n": 1}
+}
+```
+
+The procedure must also configure identity/zero fills for its optional arrays.
+The fallback keys must cover exactly the dimensions whose declared sources are
+defaulted arrays. Values must be integers (not booleans), satisfy the declared
+minimum, and fit a signed C int. Unknown procedures/dimensions, missing fallbacks
+and fallbacks for required input sources are rejected. Existing policies without
+defaulted dimension sources need no change.
+
+Python uses the provided source array's extent when present, otherwise the
+configured fallback. Each dimension resolves independently, before default
+arrays are allocated. Another argument's size never overrides the declared
+source or its explicit fallback. Normal shape, extent and alias checks still
+apply. C callers always supply explicit dimensions and arrays; fallback policies
+exist only in the Python wrapper layer.

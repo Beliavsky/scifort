@@ -16,7 +16,7 @@ def prepare(policy, root, py_name):
         py_name(group)
         if group in policy['groups'] or group in {'api', 'library', 'distribution', 'path', 'arraygroup'}:
             raise ValueError(f'{group}: reserved or duplicate array group')
-        if not isinstance(settings, dict) or set(settings) - {'prefix'} != {'manifests', 'defaults'}:
+        if not isinstance(settings, dict) or set(settings) - {'prefix', 'dimension_defaults'} != {'manifests', 'defaults'}:
             raise ValueError('array groups need manifests and defaults')
         prefix = settings.get('prefix', '')
         if not isinstance(prefix, str):
@@ -25,7 +25,10 @@ def prepare(policy, root, py_name):
         if (not isinstance(paths, list) or not paths or not all(isinstance(p, str) for p in paths)
                 or len(set(paths)) != len(paths) or not isinstance(defaults, dict)):
             raise ValueError('array manifests must be a unique nonempty list; defaults must be an object')
-        specs, methods, used_defaults = {}, [], set()
+        dimension_defaults = settings.get('dimension_defaults', {})
+        if not isinstance(dimension_defaults, dict):
+            raise ValueError('dimension_defaults must map native procedures to dimension values')
+        specs, methods, used_defaults, used_dimension_defaults = {}, [], set(), set()
         for path in paths:
             manifest = (root/path).resolve()
             config = json.loads(manifest.read_text(encoding='utf-8'))
@@ -98,9 +101,18 @@ def prepare(policy, root, py_name):
                             logical_inputs=entry['policy'].get('logical_inputs', {}))
                 array_defaults = {a: v['fill'] for a, v in values.items() if metadata[a]['rank']}
                 if array_defaults:
-                    if any(d['argument'] in array_defaults for d in contract['definitions'].values()):
-                        raise ValueError('dimension definitions cannot depend on defaulted arrays')
                     spec['array_defaults'] = array_defaults
+                fallback = dimension_defaults.get(native_name, {})
+                if native_name in dimension_defaults:
+                    used_dimension_defaults.add(native_name)
+                expected_fallback = {dim for dim, definition in contract['definitions'].items()
+                                     if definition['argument'] in array_defaults}
+                if (not isinstance(fallback, dict) or set(fallback) != expected_fallback
+                        or any(type(value) is not int or not contract['minimums'][dim] <= value <= 2147483647
+                               for dim, value in fallback.items())):
+                    raise ValueError('dimension defaults must cover exactly defaulted dimension sources with valid C extents')
+                if fallback:
+                    spec['dimension_defaults'] = fallback
                 if 'result_argument' in entry:
                     spec['result_argument'] = entry['result_argument']
                 if entry.get('length_choices'):
@@ -120,6 +132,8 @@ def prepare(policy, root, py_name):
                 methods += [f'    def {name}({signature}):',
                             f'        """{doc}"""',
                             f'        return self._invoke({name!r}, {{{actuals}}}, {output})', '']
+        if set(dimension_defaults) != used_dimension_defaults:
+            raise ValueError('unused dimension defaults')
         if set(defaults) != used_defaults:
             raise ValueError('unused array method defaults')
         cls = group.capitalize()

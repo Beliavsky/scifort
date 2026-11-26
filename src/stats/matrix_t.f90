@@ -31,11 +31,18 @@ module scifort_matrix_t
 contains
 
     function matrix_t_logpdf(x, mean, row_spread, col_spread, df) result(y)
-        real(dp), intent(in) :: x(:, :) !! matrix variate
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix; zero when absent
-        real(dp), intent(in), optional :: row_spread(:, :) !! SPD row spread; identity when absent
-        real(dp), intent(in), optional :: col_spread(:, :) !! SPD column spread; identity when absent
-        real(dp), intent(in), optional :: df !! positive degrees of freedom; default 1
+        !! Evaluate the log density at one rectangular matrix.
+        !! @dimension m = size(x,1)
+        !! @dimension n = size(x,2)
+        !! @require m >= 1
+        !! @require n >= 1
+        !! Mean defaults to zero; row and column matrices default to identities.
+        !! All entries must be finite; covariance/spread factors use lower triangles.
+        real(dp), intent(in) :: x(:, :) !! shape (m,n); finite evaluation matrix
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: row_spread(:, :) !! shape (m,m); finite SPD row spread; identity when absent
+        real(dp), intent(in), optional :: col_spread(:, :) !! shape (n,n); finite SPD column spread; identity when absent
+        real(dp), intent(in), optional :: df !! finite positive degrees of freedom; default 1
         real(dp) :: y
 
         integer :: i
@@ -119,23 +126,32 @@ contains
     end function matrix_t_logpdf
 
     function matrix_t_pdf(x, mean, row_spread, col_spread, df) result(y)
-        real(dp), intent(in) :: x(:, :) !! matrix variate
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix
-        real(dp), intent(in), optional :: row_spread(:, :) !! row spread matrix
-        real(dp), intent(in), optional :: col_spread(:, :) !! column spread matrix
-        real(dp), intent(in), optional :: df !! degrees of freedom
+        !! Evaluate the density at one rectangular matrix.
+        !! @dimension m = size(x,1)
+        !! @dimension n = size(x,2)
+        !! @require m >= 1
+        !! @require n >= 1
+        !! Mean defaults to zero; row and column matrices default to identities.
+        !! All entries must be finite; covariance/spread factors use lower triangles.
+        real(dp), intent(in) :: x(:, :) !! shape (m,n); finite evaluation matrix
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: row_spread(:, :) !! shape (m,m); finite SPD row spread; identity when absent
+        real(dp), intent(in), optional :: col_spread(:, :) !! shape (n,n); finite SPD column spread; identity when absent
+        real(dp), intent(in), optional :: df !! finite positive degrees of freedom; default 1
         real(dp) :: y
 
         y = exp(matrix_t_logpdf(x, mean, row_spread, col_spread, df))
     end function matrix_t_pdf
 
     subroutine matrix_t_rvs(state, sample, mean, row_spread, col_spread, df, status)
+        !! Draw one matrix using explicit RNG state.
+        !! m = size(sample,1), n = size(sample,2); m >= 1 and n >= 1.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(out) :: sample(:, :) !! random matrix variate
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix; zero when absent
-        real(dp), intent(in), optional :: row_spread(:, :) !! SPD row spread; identity when absent
-        real(dp), intent(in), optional :: col_spread(:, :) !! SPD column spread; identity when absent
-        real(dp), intent(in), optional :: df !! positive degrees of freedom; default 1
+        real(dp), intent(out) :: sample(:, :) !! shape (m,n); output matrix variate
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: row_spread(:, :) !! shape (m,m); finite SPD row spread; identity when absent
+        real(dp), intent(in), optional :: col_spread(:, :) !! shape (n,n); finite SPD column spread; identity when absent
+        real(dp), intent(in), optional :: df !! finite positive degrees of freedom; default 1
         integer, intent(out), optional :: status !! matrix_t_status_* result
 
         integer :: i
@@ -204,12 +220,17 @@ contains
     end subroutine matrix_t_rvs
 
     subroutine matrix_t_rvs_array(state, samples, mean, row_spread, col_spread, df, status)
+        !! Draw matrices into the third dimension.
+        !! m = size(samples,1), n = size(samples,2), b = size(samples,3).
+        !! For b > 0, m >= 1 and n >= 1; b may be zero.
+        !! With b = 0 all shape and parameter validation is skipped, including
+        !! leading extents, optional arrays and degrees of freedom.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(out) :: samples(:, :, :) !! samples indexed by third dimension
-        real(dp), intent(in), optional :: mean(:, :) !! mean matrix
-        real(dp), intent(in), optional :: row_spread(:, :) !! row spread matrix
-        real(dp), intent(in), optional :: col_spread(:, :) !! column spread matrix
-        real(dp), intent(in), optional :: df !! degrees of freedom
+        real(dp), intent(out) :: samples(:, :, :) !! shape (m,n,b); draws indexed by the third dimension
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: row_spread(:, :) !! shape (m,m); finite SPD row spread; identity when absent
+        real(dp), intent(in), optional :: col_spread(:, :) !! shape (n,n); finite SPD column spread; identity when absent
+        real(dp), intent(in), optional :: df !! finite positive degrees of freedom; default 1
         integer, intent(out), optional :: status !! matrix_t_status_* result
 
         integer :: info
@@ -226,14 +247,17 @@ contains
     end subroutine matrix_t_rvs_array
 
     pure subroutine process_parameters(m, n, mean, row_spread, col_spread, mean0, row, col, status)
+        !! Resolve mean and row/column matrices without testing positive-definiteness.
+        !! m >= 1 and n >= 1; omitted inputs become zero mean or identities.
+        !! Output shapes are checked before use; mismatches return invalid-shape status.
         integer, intent(in) :: m !! matrix row dimension
         integer, intent(in) :: n !! matrix column dimension
-        real(dp), intent(in), optional :: mean(:, :) !! optional mean matrix
-        real(dp), intent(in), optional :: row_spread(:, :) !! optional row spread matrix
-        real(dp), intent(in), optional :: col_spread(:, :) !! optional column spread matrix
-        real(dp), intent(out) :: mean0(:, :) !! resolved mean
-        real(dp), intent(out) :: row(:, :) !! resolved row spread
-        real(dp), intent(out) :: col(:, :) !! resolved column spread
+        real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
+        real(dp), intent(in), optional :: row_spread(:, :) !! shape (m,m); finite SPD row spread; identity when absent
+        real(dp), intent(in), optional :: col_spread(:, :) !! shape (n,n); finite SPD column spread; identity when absent
+        real(dp), intent(out) :: mean0(:, :) !! shape (m,n); resolved finite mean
+        real(dp), intent(out) :: row(:, :) !! shape (m,m); resolved row spread
+        real(dp), intent(out) :: col(:, :) !! shape (n,n); resolved column spread
         integer, intent(out) :: status !! matrix_t_status_* result
 
         integer :: i

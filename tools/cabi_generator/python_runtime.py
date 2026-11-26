@@ -178,9 +178,10 @@ class ArrayGroup:
         dimensions = {}
         for dim in spec['dimensions']:
             definition = spec['definitions'][dim]
-            array = originals[definition['argument']]
+            array = originals.get(definition['argument'])
             axis = definition['axis']
-            length = array.shape[axis-1] if axis else array.size
+            length = (spec['dimension_defaults'][dim] if array is None else
+                      array.shape[axis-1] if axis else array.size)
             if not spec['minimums'][dim] <= length <= np.iinfo(np.intc).max:
                 raise ValueError(f'{dim} is outside the supported C integer extent range')
             dimensions[dim] = length
