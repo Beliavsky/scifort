@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 45,
+    "array_adapters": 50,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 192,
-    "python": 133,
+    "exports": 209,
+    "python": 138,
     "scalar": 88
   },
   "procedures": [
@@ -958,6 +958,120 @@
       "module": "scifort_matrix_distribution_helpers",
       "procedure": "spd_factor",
       "python": "linalg.spd_factor"
+    },
+    {
+      "array_adapter": "scifort_matrix_normal_entropy_f64",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_entropy",
+      "python": "matrix_normal.entropy"
+    },
+    {
+      "array_adapter": "scifort_matrix_normal_logpdf_f64",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_logpdf",
+      "python": "matrix_normal.logpdf"
+    },
+    {
+      "array_adapter": "scifort_matrix_normal_pdf_f64",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_pdf",
+      "python": "matrix_normal.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_status_linalg_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_normal",
+      "procedure": "matrix_normal_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_matrix_t_logpdf_f64",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_logpdf",
+      "python": "matrix_t.logpdf"
+    },
+    {
+      "array_adapter": "scifort_matrix_t_pdf_f64",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_pdf",
+      "python": "matrix_t.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state requires a separately reviewed handle interface.",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_status_linalg_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_matrix_t",
+      "procedure": "matrix_t_status_success",
+      "scalar_generated": false
     },
     {
       "array_adapter": "scifort_multinomial_cov_f64",

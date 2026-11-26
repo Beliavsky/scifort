@@ -117,7 +117,8 @@ It provides distribution entry points using interoperable types, explicit
 lengths, caller-owned output memory, and integer status codes. Its coverage
 is smaller than the native Fortran API. A generated Python interface covers eleven
 univariate distribution families, multivariate normal/Student-t densities,
-Dirichlet, Wishart/inverse-Wishart and discrete multivariate distributions,
+Dirichlet, Wishart/inverse-Wishart, matrix-normal/matrix-t and discrete
+multivariate distributions,
 and eight matrix procedures. R, MATLAB, and Octave wrappers are planned; see
 [language bindings](bindings/README.md).
 

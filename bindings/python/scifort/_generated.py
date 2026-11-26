@@ -1387,6 +1387,174 @@ class Linalg(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('spd_factor', {'a': a}, out)
 
+class Matrix_normal(ArrayGroup):
+    _specs = {'entropy': {'arguments': ['rowcov', 'colcov', 'value', 'status'],
+                 'array_defaults': {'colcov': 'identity', 'rowcov': 'identity'},
+                 'definitions': {'m': {'argument': 'rowcov', 'axis': 1},
+                                 'n': {'argument': 'colcov', 'axis': 1}},
+                 'dimension_defaults': {'m': 1, 'n': 1},
+                 'dimensions': ['m', 'n'],
+                 'inputs': ['rowcov', 'colcov'],
+                 'logical_inputs': {},
+                 'metadata': {'colcov': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 2},
+                              'rowcov': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 2},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'m': 1, 'n': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'colcov': ['n', 'n'], 'rowcov': ['m', 'm']},
+                 'status': 'status',
+                 'symbol': 'scifort_matrix_normal_entropy_f64'},
+     'logpdf': {'arguments': ['x', 'mean', 'rowcov', 'colcov', 'value', 'status'],
+                'array_defaults': {'colcov': 'identity', 'mean': 'zeros', 'rowcov': 'identity'},
+                'definitions': {'m': {'argument': 'x', 'axis': 1},
+                                'n': {'argument': 'x', 'axis': 2}},
+                'dimensions': ['m', 'n'],
+                'inputs': ['x', 'mean', 'rowcov', 'colcov'],
+                'logical_inputs': {},
+                'metadata': {'colcov': {'category': 'real',
+                                        'intent': 'in',
+                                        'optional': True,
+                                        'rank': 2},
+                             'mean': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 2},
+                             'rowcov': {'category': 'real',
+                                        'intent': 'in',
+                                        'optional': True,
+                                        'rank': 2},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+                'minimums': {'m': 1, 'n': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'colcov': ['n', 'n'],
+                           'mean': ['m', 'n'],
+                           'rowcov': ['m', 'm'],
+                           'x': ['m', 'n']},
+                'status': 'status',
+                'symbol': 'scifort_matrix_normal_logpdf_f64'},
+     'pdf': {'arguments': ['x', 'mean', 'rowcov', 'colcov', 'value', 'status'],
+             'array_defaults': {'colcov': 'identity', 'mean': 'zeros', 'rowcov': 'identity'},
+             'definitions': {'m': {'argument': 'x', 'axis': 1}, 'n': {'argument': 'x', 'axis': 2}},
+             'dimensions': ['m', 'n'],
+             'inputs': ['x', 'mean', 'rowcov', 'colcov'],
+             'logical_inputs': {},
+             'metadata': {'colcov': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 2},
+                          'mean': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 2},
+                          'rowcov': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+             'minimums': {'m': 1, 'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'colcov': ['n', 'n'],
+                        'mean': ['m', 'n'],
+                        'rowcov': ['m', 'm'],
+                        'x': ['m', 'n']},
+             'status': 'status',
+             'symbol': 'scifort_matrix_normal_pdf_f64'}}
+
+    def entropy(self, rowcov=None, colcov=None):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'rowcov': rowcov, 'colcov': colcov}, None)
+
+    def logpdf(self, x, mean=None, rowcov=None, colcov=None):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'mean': mean, 'rowcov': rowcov, 'colcov': colcov}, None)
+
+    def pdf(self, x, mean=None, rowcov=None, colcov=None):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'mean': mean, 'rowcov': rowcov, 'colcov': colcov}, None)
+
+class Matrix_t(ArrayGroup):
+    _specs = {'logpdf': {'arguments': ['x', 'mean', 'row_spread', 'col_spread', 'df', 'value', 'status'],
+                'array_defaults': {'col_spread': 'identity',
+                                   'mean': 'zeros',
+                                   'row_spread': 'identity'},
+                'definitions': {'m': {'argument': 'x', 'axis': 1},
+                                'n': {'argument': 'x', 'axis': 2}},
+                'dimensions': ['m', 'n'],
+                'inputs': ['x', 'mean', 'row_spread', 'col_spread', 'df'],
+                'logical_inputs': {},
+                'metadata': {'col_spread': {'category': 'real',
+                                            'intent': 'in',
+                                            'optional': True,
+                                            'rank': 2},
+                             'df': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                             'mean': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 2},
+                             'row_spread': {'category': 'real',
+                                            'intent': 'in',
+                                            'optional': True,
+                                            'rank': 2},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+                'minimums': {'m': 1, 'n': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'col_spread': ['n', 'n'],
+                           'mean': ['m', 'n'],
+                           'row_spread': ['m', 'm'],
+                           'x': ['m', 'n']},
+                'status': 'status',
+                'symbol': 'scifort_matrix_t_logpdf_f64'},
+     'pdf': {'arguments': ['x', 'mean', 'row_spread', 'col_spread', 'df', 'value', 'status'],
+             'array_defaults': {'col_spread': 'identity',
+                                'mean': 'zeros',
+                                'row_spread': 'identity'},
+             'definitions': {'m': {'argument': 'x', 'axis': 1}, 'n': {'argument': 'x', 'axis': 2}},
+             'dimensions': ['m', 'n'],
+             'inputs': ['x', 'mean', 'row_spread', 'col_spread', 'df'],
+             'logical_inputs': {},
+             'metadata': {'col_spread': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 2},
+                          'df': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'mean': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 2},
+                          'row_spread': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+             'minimums': {'m': 1, 'n': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'col_spread': ['n', 'n'],
+                        'mean': ['m', 'n'],
+                        'row_spread': ['m', 'm'],
+                        'x': ['m', 'n']},
+             'status': 'status',
+             'symbol': 'scifort_matrix_t_pdf_f64'}}
+
+    def logpdf(self, x, mean=None, row_spread=None, col_spread=None, df=1.0):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'mean': mean, 'row_spread': row_spread, 'col_spread': col_spread, 'df': df}, None)
+
+    def pdf(self, x, mean=None, row_spread=None, col_spread=None, df=1.0):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'mean': mean, 'row_spread': row_spread, 'col_spread': col_spread, 'df': df}, None)
+
 class Multinomial(ArrayGroup):
     _specs = {'cov': {'arguments': ['n', 'p', 'value', 'status'],
              'definitions': {'k': {'argument': 'p', 'axis': None}},
@@ -1837,6 +2005,8 @@ class API(Library):
         self.dirichlet_multinomial = Dirichlet_multinomial(self._library)
         self.invwishart = Invwishart(self._library)
         self.linalg = Linalg(self._library)
+        self.matrix_normal = Matrix_normal(self._library)
+        self.matrix_t = Matrix_t(self._library)
         self.multinomial = Multinomial(self._library)
         self.multivariate_hypergeom = Multivariate_hypergeom(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)

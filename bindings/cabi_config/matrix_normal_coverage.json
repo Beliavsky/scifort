@@ -1,0 +1,232 @@
+{
+  "generated_symbol_count": 3,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "rowcov",
+        "colcov",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "m",
+        "n"
+      ],
+      "dimensions": {
+        "m": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "rowcov",
+        "colcov"
+      ],
+      "procedure": "matrix_normal_entropy",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "m": {
+            "argument": "rowcov",
+            "axis": 1
+          },
+          "n": {
+            "argument": "colcov",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "m": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "colcov": [
+          "n",
+          "n"
+        ],
+        "rowcov": [
+          "m",
+          "m"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_matrix_normal_entropy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "mean",
+        "rowcov",
+        "colcov",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "m",
+        "n"
+      ],
+      "dimensions": {
+        "m": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mean",
+        "rowcov",
+        "colcov"
+      ],
+      "procedure": "matrix_normal_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "m": {
+            "argument": "x",
+            "axis": 1
+          },
+          "n": {
+            "argument": "x",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "m": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "colcov": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "rowcov": [
+          "m",
+          "m"
+        ],
+        "x": [
+          "m",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_matrix_normal_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "mean",
+        "rowcov",
+        "colcov",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "m",
+        "n"
+      ],
+      "dimensions": {
+        "m": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mean",
+        "rowcov",
+        "colcov"
+      ],
+      "procedure": "matrix_normal_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "m": {
+            "argument": "x",
+            "axis": 1
+          },
+          "n": {
+            "argument": "x",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "m": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "colcov": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "rowcov": [
+          "m",
+          "m"
+        ],
+        "x": [
+          "m",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_matrix_normal_pdf_f64"
+      ]
+    },
+    {
+      "procedure": "matrix_normal_rvs",
+      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_normal_rvs_array",
+      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_normal_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_normal_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_normal_status_linalg_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_normal_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 9,
+  "source": "src/stats/matrix_normal.f90",
+  "source_sha256": "63fd0493872295d9d5df7a53ae73bff7c39e1f0a0d6f866f17839e8e11d7fbd5"
+}

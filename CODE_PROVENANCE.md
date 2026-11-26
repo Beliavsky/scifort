@@ -1,3 +1,16 @@
+## 2026-11-25 - matrix-normal and matrix-t interface integration
+
+The reviewed manifests, C/Python adapters, shape documentation, generic explicit
+dimension-fallback policies and independent generator fixture are original MIT
+SciFort interface work. Numerical implementations are unchanged; no upstream
+implementation or numerical constants were imported. Existing native module
+provenance and notices apply, including the matrix-t sampler's retained SciPy
+BSD-3-Clause attribution. The new tests reuse the repository's existing SciPy
+1.17 saved references and compare matrix-normal/Student-t reductions with the
+installed SciPy. No claim of a live SciPy matrix-t comparison is made when that
+method is unavailable. Fallback dimensions are reviewed API policy, not inferred
+from function names, executable branches or model memory.
+
 ## 2026-11-25 - Wishart and inverse-Wishart interfaces
 
 The reviewed C/Python manifests, explicit-shape adapters, shape annotations,

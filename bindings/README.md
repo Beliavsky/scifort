@@ -101,3 +101,9 @@ log-PDF, entropy, mean, mode and entrywise variance. Read the
 and the [Wishart](../docs/wishart_shapes.md) and
 [inverse-Wishart](../docs/invwishart_shapes.md) shape tables. Sampling continues
 to use the native explicit RNG-state API.
+
+Matrix-normal PDF/log-PDF/entropy and matrix-t PDF/log-PDF are generated for
+rectangular evaluation matrices. See the [Python shape/default contract](python/README.md#matrix-normal-and-matrix-t-distributions),
+[matrix-normal shapes](../docs/matrix_normal_shapes.md), and
+[matrix-t shapes](../docs/matrix_t_shapes.md). The Python entropy interface uses
+independent 1-by-1 identity defaults for absent row/column covariance matrices.

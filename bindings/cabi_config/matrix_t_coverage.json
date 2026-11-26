@@ -1,0 +1,179 @@
+{
+  "generated_symbol_count": 2,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "mean",
+        "row_spread",
+        "col_spread",
+        "df",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "m",
+        "n"
+      ],
+      "dimensions": {
+        "m": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mean",
+        "row_spread",
+        "col_spread",
+        "df"
+      ],
+      "procedure": "matrix_t_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "m": {
+            "argument": "x",
+            "axis": 1
+          },
+          "n": {
+            "argument": "x",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "m": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col_spread": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "row_spread": [
+          "m",
+          "m"
+        ],
+        "x": [
+          "m",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_matrix_t_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "mean",
+        "row_spread",
+        "col_spread",
+        "df",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "m",
+        "n"
+      ],
+      "dimensions": {
+        "m": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mean",
+        "row_spread",
+        "col_spread",
+        "df"
+      ],
+      "procedure": "matrix_t_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "m": {
+            "argument": "x",
+            "axis": 1
+          },
+          "n": {
+            "argument": "x",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "m": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col_spread": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "row_spread": [
+          "m",
+          "m"
+        ],
+        "x": [
+          "m",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_matrix_t_pdf_f64"
+      ]
+    },
+    {
+      "procedure": "matrix_t_rvs",
+      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_t_rvs_array",
+      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_t_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_t_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_t_status_linalg_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "matrix_t_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 8,
+  "source": "src/stats/matrix_t.f90",
+  "source_sha256": "e6094ac2ce34ddd8b84db2098f8abb18f0e2e031276168c28b695881c9c41fda"
+}

@@ -19,5 +19,7 @@
   "multivariate_hypergeom.json",
   "dirichlet_multinomial.json",
   "wishart.json",
-  "invwishart.json"
+  "invwishart.json",
+  "matrix_normal.json",
+  "matrix_t.json"
 ]

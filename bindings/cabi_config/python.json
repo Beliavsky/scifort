@@ -251,6 +251,82 @@
       ],
       "prefix": "invwishart_",
       "defaults": {}
+    },
+    "matrix_normal": {
+      "manifests": [
+        "bindings/cabi_config/matrix_normal.json"
+      ],
+      "prefix": "matrix_normal_",
+      "defaults": {
+        "matrix_normal_pdf": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "rowcov": {
+            "fill": "identity"
+          },
+          "colcov": {
+            "fill": "identity"
+          }
+        },
+        "matrix_normal_logpdf": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "rowcov": {
+            "fill": "identity"
+          },
+          "colcov": {
+            "fill": "identity"
+          }
+        },
+        "matrix_normal_entropy": {
+          "rowcov": {
+            "fill": "identity"
+          },
+          "colcov": {
+            "fill": "identity"
+          }
+        }
+      },
+      "dimension_defaults": {
+        "matrix_normal_entropy": {
+          "m": 1,
+          "n": 1
+        }
+      }
+    },
+    "matrix_t": {
+      "manifests": [
+        "bindings/cabi_config/matrix_t.json"
+      ],
+      "prefix": "matrix_t_",
+      "defaults": {
+        "matrix_t_pdf": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "row_spread": {
+            "fill": "identity"
+          },
+          "col_spread": {
+            "fill": "identity"
+          },
+          "df": 1.0
+        },
+        "matrix_t_logpdf": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "row_spread": {
+            "fill": "identity"
+          },
+          "col_spread": {
+            "fill": "identity"
+          },
+          "df": 1.0
+        }
+      }
     }
   }
 }

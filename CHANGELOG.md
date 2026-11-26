@@ -1,3 +1,15 @@
+## 2026-11-25 - rectangular matrix-distribution interfaces
+
+- Add generated C/Python matrix-normal PDF/log-PDF/entropy and matrix-t PDF/log-PDF.
+- Preserve optional means, identity covariance/spread defaults and matrix-t df=1
+  in Python; C receives explicit arrays, dimensions and scalar parameters.
+- Add reviewed, generic Python dimension fallbacks for optional array sources,
+  preserving independent 1-by-1 entropy defaults without numerical code changes.
+- Document all constrained array declarations and procedure purposes throughout
+  both native modules, including private helpers and empty sampling batches.
+- Test generator policy validation, rectangular inputs, defaults, error statuses,
+  saved references, distribution identities, and native/C/Python agreement.
+
 ## 2026-11-25 - Wishart and inverse-Wishart interfaces
 
 - Add twelve generated explicit-shape C/Python adapters for densities, entropy,

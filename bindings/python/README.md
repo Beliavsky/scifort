@@ -10,6 +10,8 @@ variance and covariance. Multinomial and multivariate hypergeometric methods are
 available under `api.multinomial` and `api.multivariate_hypergeom`.
 `api.dirichlet_multinomial` provides PMF, log-PMF, mean, variance and covariance.
 `api.wishart` and `api.invwishart` provide densities, entropy and matrix moments.
+`api.matrix_normal` provides PDF, log-PDF and entropy; `api.matrix_t` provides
+PDF and log-PDF for rectangular matrix variates.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -942,3 +944,102 @@ dependency build plan, aggregate header and output contracts; the full FPM
 numerical suite was not rerun. Sampling remains native-only. Other platforms,
 singular distribution extensions and extreme matrix/parameter ranges were not
 newly validated; benchmark baselines were not refreshed.
+
+## Matrix-normal and matrix-t distributions
+
+| Python call | Result |
+| --- | --- |
+| `api.matrix_normal.pdf(x, mean=None, rowcov=None, colcov=None)` | Python float |
+| `api.matrix_normal.logpdf(x, mean=None, rowcov=None, colcov=None)` | Python float |
+| `api.matrix_normal.entropy(rowcov=None, colcov=None)` | Python float |
+| `api.matrix_t.pdf(x, mean=None, row_spread=None, col_spread=None, df=1.0)` | Python float |
+| `api.matrix_t.logpdf(x, mean=None, row_spread=None, col_spread=None, df=1.0)` | Python float |
+
+For density calls, `m,n = x.shape`, with `m >= 1`, `n >= 1`. Evaluation and
+mean matrices have shape `(m,n)`, the row covariance/spread `(m,m)`, and the column
+covariance/spread `(n,n)`. Rectangular evaluation matrices are supported; there
+is no batching or broadcasting. Missing mean becomes zero, and missing row or
+column matrices become identities of the corresponding dimensions.
+
+Entropy has no evaluation matrix: `m` comes from the supplied row covariance's
+first extent, or is 1 when absent; `n` comes independently from the supplied
+column covariance's first extent, or is 1 when absent. Thus `entropy()` is the
+entropy of a 1-by-1 standard normal matrix. `entropy(colcov=np.eye(3))` uses a
+1-by-3 matrix, while `entropy(np.eye(2), np.eye(3))` uses a 2-by-3 matrix.
+These are explicit reviewed fallback dimensions in Python, matching native
+Fortran defaults.
+
+Every input entry must be finite. Covariance/spread matrices must be positive
+definite; their lower triangles define the factorizations. Full upper triangles
+must still contain finite values. Matrix-t `df` is finite and strictly positive;
+its default is 1. Its spread matrices are not covariance matrices. For a 1-by-1
+matrix with row spread `r` and column spread `c`, the ordinary Student-t scale is
+`sqrt(r*c/df)`, preserving the native/SciPy matrix-t parameterization.
+
+Numerical parameter errors retain native NaNs. Python rejects wrong ranks/shapes,
+complex inputs and overlapping input buffers before the native call. Numeric
+inputs are converted to aligned, column-major float64 storage when needed.
+These scalar-result methods have no `out=` argument. Direct C adapters require
+explicit dimensions and all arrays/scalars, including the promoted native
+optional arguments. All pointers must be valid, nonnull, aligned and disjoint;
+arrays use contiguous column-major storage. C status 1 rejects nonpositive
+extents and preserves the scalar result. Status 0 retains numerical NaN/infinity
+results. RNG-based sampling remains available through native Fortran only.
+
+See the [matrix-normal shapes](../../docs/matrix_normal_shapes.md),
+[matrix-t shapes](../../docs/matrix_t_shapes.md), and the generator's
+[dimension-fallback policy](../../tools/cabi_generator/README.md#optional-array-dimension-defaults).
+Shape comments also cover sampling and private helpers, including empty batches
+and the covariance helper's permitted zero extent. The matrix-t sampler's existing
+BSD-3-Clause notices and provenance are retained.
+
+```python
+x = [[.1, .2, .3], [.4, .5, .6]]
+normal_logpdf = api.matrix_normal.logpdf(x)
+t_logpdf = api.matrix_t.logpdf(x, df=3.)
+entropy = api.matrix_normal.entropy(np.eye(2), np.eye(3))
+```
+
+### Validation: matrix-normal and matrix-t interface batch (2026-11-25)
+
+Windows checks used GNU Fortran 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6 and SciPy 1.15.3. Commands from the repository root:
+
+```text
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python -m unittest discover -s bindings/python/tests -v
+python bindings\python\example.py
+```
+
+All 66 generator tests and 54 binding integration tests passed. The two new
+independent generator tests validate fallback policy errors and compile/run an
+unrelated numerical fixture with omitted/supplied dimension sources. The six
+new integration cases cover rectangular matrix-normal references, the repository's
+saved SciPy 1.17 matrix-t references, Student-t reductions, transpose identities,
+optional arrays, independently omitted entropy covariances, invalid inputs,
+layout conversion, aliases, scalar-output preservation, and native/C agreement
+for all five methods. The native client also compares absent-argument entropy
+calls directly with the corresponding explicit C inputs. Installed SciPy 1.15.3
+has no `matrix_t`; a live comparison with that method was not run.
+
+Integration tests use both checked `-O0 -g -fcheck=all -fbacktrace` and optimized
+`-O3` libraries; both use `-std=f2018 -fimplicit-none -Werror=implicit-interface
+-shared -fPIC`. Native clients use the corresponding checked/optimized flags.
+C clients use `-std=c11 -Wall -Wextra -Werror`, with C++17 header syntax checks.
+The independent fallback fixture also runs at `-O0 -g -fcheck=all` and `-O3`.
+
+The example exercised all five new methods and entropy with absent covariances.
+The read-only check passed for all 120 generated artifacts. All 23 reviewed
+header guards are distinct. Encoding/BOM, ASCII Fortran, 132-column limits,
+Markdown local links and whitespace checks passed. Reviewed coverage now records
+138 Python methods and 50 array adapters.
+
+Both native numerical implementations match the previous commit after stripping
+comments; the matrix-t sampler's license notices are retained. The changes to
+shared Python interface tooling are covered by its complete generator and binding
+integration suites. The full FPM numerical suite was not rerun because the native
+numerical code and overall FPM build/test process are unchanged. Sampling remains
+native-only; other platforms and extreme parameter/matrix ranges were not newly
+validated. Benchmark baselines were not refreshed.

@@ -76,6 +76,13 @@ def main():
         print(name, 'mean/mode/variance:', distribution.mean(7., scale),
               distribution.mode(7., scale), distribution.var(7., scale))
 
+    point = [[.1, .2, .3], [.4, .5, .6]]
+    print('matrix normal PDF/log-PDF/entropy:', api.matrix_normal.pdf(point),
+          api.matrix_normal.logpdf(point), api.matrix_normal.entropy(np.eye(2), np.eye(3)))
+    print('matrix normal entropy with defaults:', api.matrix_normal.entropy())
+    print('matrix t PDF/log-PDF:', api.matrix_t.pdf(point, df=3.),
+          api.matrix_t.logpdf(point, df=3.))
+
 
 if __name__ == '__main__':
     main()

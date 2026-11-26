@@ -1,0 +1,111 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/matrix_t.f90",
+  "module": "scifort_matrix_t",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_matrix_t",
+  "header_guard": "SCIFORT_GENERATED_MATRIX_T_H",
+  "functions": {},
+  "argument_docs": {
+    "m": "row count, >= 1",
+    "n": "column count, >= 1",
+    "x": "finite evaluation matrix",
+    "mean": "finite mean matrix; required at C boundary",
+    "row_spread": "finite SPD row matrix; lower triangle defines symmetry",
+    "col_spread": "finite SPD column matrix; lower triangle defines symmetry",
+    "df": "finite positive degrees of freedom",
+    "value": "native scalar result, including NaN for numerical errors",
+    "status": "0 valid call; 1 invalid extent"
+  },
+  "array_functions": {
+    "matrix_t_pdf": {
+      "symbol": "scifort_matrix_t_pdf_f64",
+      "dimensions": [
+        {
+          "name": "m",
+          "minimum": 1
+        },
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "m",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "row_spread": [
+          "m",
+          "m"
+        ],
+        "col_spread": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate matrix t pdf.",
+      "shape_contract": true
+    },
+    "matrix_t_logpdf": {
+      "symbol": "scifort_matrix_t_logpdf_f64",
+      "dimensions": [
+        {
+          "name": "m",
+          "minimum": 1
+        },
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "m",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "row_spread": [
+          "m",
+          "m"
+        ],
+        "col_spread": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate matrix t logpdf.",
+      "shape_contract": true
+    }
+  },
+  "excluded": {
+    "matrix_t_rvs": "Explicit RNG state requires a separately reviewed handle interface.",
+    "matrix_t_rvs_array": "Explicit RNG state requires a separately reviewed handle interface.",
+    "matrix_t_status_success": "Native status constant, not a callable procedure.",
+    "matrix_t_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "matrix_t_status_invalid_parameter": "Native status constant, not a callable procedure.",
+    "matrix_t_status_linalg_failure": "Native status constant, not a callable procedure."
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/matrix_t_generated.f90",
+    "header": "include/scifort_generated_matrix_t.h",
+    "coverage": "bindings/cabi_config/matrix_t_coverage.json",
+    "shape_documentation": "docs/matrix_t_shapes.md"
+  }
+}

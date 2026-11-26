@@ -130,7 +130,8 @@ Never trade away correctness or provenance merely to add more functions.
   Structured `@dimension`, `@require`, and `@when` annotations are currently an
   opt-in prototype for reviewed linalg/matrix helpers, multivariate normal/Student t
   densities, Dirichlet, multinomial, multivariate hypergeometric and Dirichlet-multinomial
-  functions, plus Wishart and inverse-Wishart methods. Keep readable shape comments
+  functions, plus Wishart, inverse-Wishart, matrix-normal and matrix-t methods.
+  Keep readable shape comments
   and follow `tools/cabi_generator/README.md`. Do not apply the prototype broadly or treat
   conditional prose as verified assertions.
 - Use `newunit=` for file I/O and `i0` for unrestricted integer output.

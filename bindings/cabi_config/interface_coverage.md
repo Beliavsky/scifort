@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 192 |
+| exports | 209 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 45 |
+| array_adapters | 50 |
 | elementwise | 88 |
-| python | 133 |
+| python | 138 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -125,6 +125,23 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_matrix_distribution_helpers | solve_lower_matrix |  |  | scifort_solve_lower_matrix_f64 |  | linalg.solve_lower_matrix |
 | scifort_matrix_distribution_helpers | solve_spd_matrix |  |  | scifort_solve_spd_matrix_f64 |  | linalg.solve_spd_matrix |
 | scifort_matrix_distribution_helpers | spd_factor |  |  | scifort_spd_factor_f64 |  | linalg.spd_factor |
+| scifort_matrix_normal | matrix_normal_entropy |  |  | scifort_matrix_normal_entropy_f64 |  | matrix_normal.entropy |
+| scifort_matrix_normal | matrix_normal_logpdf |  |  | scifort_matrix_normal_logpdf_f64 |  | matrix_normal.logpdf |
+| scifort_matrix_normal | matrix_normal_pdf |  |  | scifort_matrix_normal_pdf_f64 |  | matrix_normal.pdf |
+| scifort_matrix_normal | matrix_normal_rvs |  |  |  |  |  |
+| scifort_matrix_normal | matrix_normal_rvs_array |  |  |  |  |  |
+| scifort_matrix_normal | matrix_normal_status_invalid_parameter |  |  |  |  |  |
+| scifort_matrix_normal | matrix_normal_status_invalid_shape |  |  |  |  |  |
+| scifort_matrix_normal | matrix_normal_status_linalg_failure |  |  |  |  |  |
+| scifort_matrix_normal | matrix_normal_status_success |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_logpdf |  |  | scifort_matrix_t_logpdf_f64 |  | matrix_t.logpdf |
+| scifort_matrix_t | matrix_t_pdf |  |  | scifort_matrix_t_pdf_f64 |  | matrix_t.pdf |
+| scifort_matrix_t | matrix_t_rvs |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_rvs_array |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_status_invalid_parameter |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_status_invalid_shape |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_status_linalg_failure |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_status_success |  |  |  |  |  |
 | scifort_multinomial | multinomial_cov |  |  | scifort_multinomial_cov_f64 |  | multinomial.cov |
 | scifort_multinomial | multinomial_entropy |  |  | scifort_multinomial_entropy_f64 |  | multinomial.entropy |
 | scifort_multinomial | multinomial_logpmf |  |  | scifort_multinomial_logpmf_f64 |  | multinomial.logpmf |
