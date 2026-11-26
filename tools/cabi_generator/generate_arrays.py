@@ -59,16 +59,19 @@ def prepare(policy, root, py_name):
                     raise ValueError(f'{name}: Python arrays require a reviewed structured shape contract')
                 status = entry['policy']['status_argument']
                 metadata = entry['metadata']
-                inputs = [a for a in entry['args'] if a != status and metadata[a]['intent'] == 'in']
+                optional_arrays = entry.get('optional_arrays', {})
+                flags = set(optional_arrays.values())
+                inputs = [a for a in entry['args'] if a != status and a not in flags
+                          and metadata[a]['intent'] == 'in']
                 outputs = [a for a in entry['args'] if a != status and metadata[a]['intent'] == 'out']
-                if set(inputs + outputs + [status]) != set(entry['args']):
+                if set(inputs + outputs + [status]) | flags != set(entry['args']):
                     raise ValueError('Python array adapters do not yet support native intent(inout)')
                 for arg in entry['args']:
                     py_name(arg)
                     if arg in {'self', 'out'}:
                         raise ValueError(f'{arg}: reserved Python argument')
                 for dim, definition in contract['definitions'].items():
-                    if definition['argument'] not in inputs:
+                    if definition['argument'] not in inputs or definition['argument'] in optional_arrays:
                         raise ValueError(f'{name}: dimension {dim} must be determined by an input array')
                 values = defaults.get(native_name, {})
                 if native_name in defaults:
@@ -76,6 +79,8 @@ def prepare(policy, root, py_name):
                 if not isinstance(values, dict) or set(values) - set(inputs):
                     raise ValueError(f'{name}: defaults must name scalar inputs')
                 for arg, value in values.items():
+                    if arg in optional_arrays:
+                        raise ValueError('presence-controlled arrays use None, not configured fills/defaults')
                     info = metadata[arg]
                     if info['rank']:
                         fill = value.get('fill') if isinstance(value, dict) else None
@@ -93,7 +98,10 @@ def prepare(policy, root, py_name):
                         raise ValueError(f'{name}: defaults must match scalar input types')
                 parameters, seen_default = [], False
                 for arg in inputs:
-                    if arg in values:
+                    if arg in optional_arrays:
+                        parameters.append(f'{arg}=None')
+                        seen_default = True
+                    elif arg in values:
                         default = None if metadata[arg]['rank'] else values[arg]
                         parameters.append(f'{arg}={default!r}')
                         seen_default = True
@@ -106,6 +114,8 @@ def prepare(policy, root, py_name):
                             dimensions=list(entry['dimensions']), shapes=entry['policy']['shapes'],
                             definitions=contract['definitions'], minimums=contract['minimums'],
                             logical_inputs=entry['policy'].get('logical_inputs', {}))
+                if optional_arrays:
+                    spec['optional_arrays'] = optional_arrays
                 array_defaults = {a: v['fill'] for a, v in values.items() if metadata[a]['rank']}
                 if array_defaults:
                     spec['array_defaults'] = array_defaults

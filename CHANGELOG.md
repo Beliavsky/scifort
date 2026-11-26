@@ -1,3 +1,14 @@
+## 2026-11-25 - Normal fitting and optional-array presence
+
+- Generate a C/Python multivariate normal fit interface for all four combinations
+  of fixed/estimated mean and covariance, with caller-owned output buffers.
+- Add opt-in presence-controlled real input arrays for native subroutines;
+  C uses explicit 0/1 flags and Python uses None without substituting defaults.
+- Document data orientation, shape constraints, covariance normalization,
+  singular fixed covariance and native partial outputs on numerical failure.
+- Test policy validation, genuine native absence, SciPy/independent fit values,
+  invalid flags/shapes, single observations and native/C/Python agreement.
+
 ## 2026-11-25 - Multivariate entropy and marginal interfaces
 
 - Add four generated C/Python entropy and marginal-parameter methods for

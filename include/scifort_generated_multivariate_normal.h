@@ -25,6 +25,16 @@ extern "C" {
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_multivariate_normal_entropy_f64(int arg_n, const double * arg_mean, const double * arg_cov, double * arg_value, int *arg_status);
 
+/* Fit normal mean/covariance, preserving optional fixed parameters.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.
+ * Buffers remain required and fully sized when absent, but are not read.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_multivariate_normal_fit_f64(int arg_n, int arg_k, const double * arg_data, double * arg_mean, double * arg_cov, int *arg_status, int arg_has_fixed_mean, const double * arg_fixed_mean, int arg_has_fixed_cov, const double * arg_fixed_cov);
+
 /* Evaluate multivariate normal log density.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.

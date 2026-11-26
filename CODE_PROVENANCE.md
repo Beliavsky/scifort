@@ -1,3 +1,16 @@
+## 2026-11-25 - Normal fitting and optional-array presence
+
+The presence-policy validator/emitter, Python integration, reviewed manifest,
+shape annotations and independent fixtures are original MIT SciFort interface
+work. No upstream numerical implementation was imported or adapted. Generated
+adapters delegate to the existing `multivariate_normal_fit`; its numerical
+formulas and prior provenance are unchanged. Native edits add purpose/shape/error
+comments and an explicit implicit-none declaration only. SciPy is used as an
+external numerical test reference; centered cross-products provide independent
+expected covariance values. Present optional arrays are copied locally, while
+unallocated allocatable actuals preserve native optional-array absence without
+exposing descriptors or Fortran derived types to C.
+
 ## 2026-11-25 - Multivariate entropy and marginal interfaces
 
 The reviewed manifests, generated interfaces, ordered dimension-source and

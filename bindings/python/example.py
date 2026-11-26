@@ -42,6 +42,8 @@ def main():
     for distribution in (api.multivariate_normal, api.multivariate_t):
         marginal = distribution.marginal([2, 0], [1., 2., 3.], np.eye(3))
         print('multivariate marginal:', marginal.status, marginal.outputs)
+    fitted = api.multivariate_normal.fit([[1., 3., 5.], [2., 6., 4.]], fixed_mean=[2., 3.])
+    print('multivariate normal fit:', fitted.status, fitted.outputs)
     print('Dirichlet log-PDF, inferred coordinate:', api.dirichlet.logpdf([.2, .3], [2., 3., 4.]))
     print('Dirichlet PDF:', api.dirichlet.pdf([.2, .3, .5], [2., 3., 4.]))
     print('Dirichlet entropy:', api.dirichlet.entropy([2., 3., 4.]))

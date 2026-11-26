@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 4,
+  "generated_symbol_count": 5,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -57,9 +57,75 @@
       ]
     },
     {
+      "arguments": [
+        "data",
+        "mean",
+        "cov",
+        "status",
+        "has_fixed_mean",
+        "fixed_mean",
+        "has_fixed_cov",
+        "fixed_cov"
+      ],
+      "dimension_order": [
+        "n",
+        "k"
+      ],
+      "dimensions": {
+        "k": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_arrays": {
+        "fixed_cov": "has_fixed_cov",
+        "fixed_mean": "has_fixed_mean"
+      },
+      "optional_promoted_to_required": [],
       "procedure": "multivariate_normal_fit",
-      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "data",
+            "axis": 2
+          },
+          "n": {
+            "argument": "data",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "k": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "cov": [
+          "n",
+          "n"
+        ],
+        "data": [
+          "n",
+          "k"
+        ],
+        "fixed_cov": [
+          "n",
+          "n"
+        ],
+        "fixed_mean": [
+          "n"
+        ],
+        "mean": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_normal_fit_f64"
+      ]
     },
     {
       "procedure": "multivariate_normal_logcdf",
@@ -285,5 +351,5 @@
   ],
   "public_api_count": 13,
   "source": "src/stats/multivariate_normal.f90",
-  "source_sha256": "c9611f234fee21f616458188fa69c8a4e9d3e8f40b62c21ec42f37b06143650f"
+  "source_sha256": "9dcb0018b58e84007b3c0390daf2c7a3e8724de7247d414c55d3bca8932b8627"
 }

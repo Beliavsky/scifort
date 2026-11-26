@@ -564,7 +564,18 @@ contains
     end subroutine multivariate_normal_rvs_array
 
     subroutine multivariate_normal_fit(data, mean, cov, status, fixed_mean, fixed_cov)
+        !! Fit a normal mean and maximum-likelihood covariance to column observations.
+        !! @dimension n = size(data,1)
+        !! @dimension k = size(data,2)
+        !! @require n >= 1
+        !! @require k >= 1
+        !! Optional fixed parameters are held constant; absent parameters are estimated.
+        !! Covariance uses divisor k, including when the mean is fixed; k=1 is allowed.
+        !! Fixed covariance is PSD and lower-triangle authoritative; all entries must be finite.
+        !! Invalid data/fixed mean gives NaNs in both outputs; invalid fixed covariance
+        !! retains the computed/fixed mean and gives a NaN covariance (status 2).
         !! n = size(data,1), k = size(data,2); n >= 1, k >= 1.
+        implicit none
         real(dp), intent(in) :: data(:, :) !! shape (n,k); observations by column
         real(dp), intent(out) :: mean(:) !! shape (n); fitted or fixed mean vector
         real(dp), intent(out) :: cov(:, :) !! shape (n,n); fitted or fixed maximum-likelihood covariance matrix

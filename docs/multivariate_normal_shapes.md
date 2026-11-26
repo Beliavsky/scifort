@@ -20,6 +20,29 @@ Evaluate multivariate normal entropy using the native PSD convention.
 | `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
+## multivariate_normal_fit
+
+Fit normal mean/covariance, preserving optional fixed parameters.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(data,1)` | 1 |
+| `k` | `size(data,2)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `data` | `(:,:)` | `(n,k)` | shape (n,k); finite observations by column |
+| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+| `fixed_mean` | `(:)` | `(n)` | shape (n); optional finite fixed mean vector |
+| `fixed_cov` | `(:,:)` | `(n,n)` | shape (n,n); optional finite PSD covariance, lower triangle used |
+
+`fixed_mean` is optional natively: C flag `has_fixed_mean` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`fixed_cov` is optional natively: C flag `has_fixed_cov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
 ## multivariate_normal_logpdf
 
 Evaluate multivariate normal log density.

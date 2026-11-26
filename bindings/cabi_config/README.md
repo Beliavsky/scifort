@@ -347,7 +347,7 @@ Their reviewed annotations generate [native shape tables](../../docs/multivariat
 Python adds zero-mean/identity-covariance defaults through explicit policy and
 returns scalar floats; see the [Python contract](../python/README.md#multivariate-normal-densities).
 Entropy and marginalization are now also generated; see the contract below.
-CDF, fitting and random sampling remain outside the reviewed interfaces.
+Normal fitting is now also generated; CDF and random sampling remain outside the reviewed interfaces.
 
 ## Multivariate Student t density adapters
 
@@ -472,3 +472,16 @@ Python separately resolves optional entropy dimensions and converts zero-based
 indices. Read the [full interface contract](../python/README.md#multivariate-entropy-and-marginal-parameters)
 and the generator's [dimension-source](../../tools/cabi_generator/README.md#ordered-optional-dimension-sources)
 and [index policies](../../tools/cabi_generator/README.md#python-zero-based-index-inputs).
+
+## Multivariate normal fitting adapter
+
+[multivariate_normal.json](multivariate_normal.json) selects native fitting with
+explicit n,k, data(n,k), output mean(n)/cov(n,n), and optional fixed arrays of
+the same parameter shapes. Per-array by-value C-int presence flags preserve
+native absence (0) or presence (1); buffers remain required and fully sized
+when absent. Invalid flags/extents return status 1 without changing outputs.
+Numerical error statuses and partial outputs are inherited from the native fit.
+
+Read the [column orientation, constraints and output contract](../python/README.md#multivariate-normal-fitting)
+and the [presence policy](../../tools/cabi_generator/README.md#presence-controlled-optional-arrays).
+No new numerical algorithm or derived-type/RNG interface is introduced.

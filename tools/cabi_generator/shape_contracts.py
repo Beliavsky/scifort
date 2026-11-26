@@ -130,6 +130,10 @@ def markdown(config, entries):
         if entry.get('synthetic_status'):
             lines += ['The adapter appends a call-level status; the native subroutine has no status argument.',
                       'Status 0 retains native numerical NaN/infinity; invalid extents preserve outputs.', '']
+        if entry.get('optional_arrays'):
+            for arg, flag in entry['optional_arrays'].items():
+                lines += [f'`{arg}` is optional natively: C flag `{flag}` is 0 absent or 1 present.',
+                          'The C buffer remains required/full-sized when absent, but its values are ignored.', '']
         if entry.get('result_extents'):
             lines += [f"`{entry['result_argument']}` is the adapter output for the native array-valued result.", '']
         for dim, rule in contract.get('length_choices', {}).items():

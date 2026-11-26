@@ -18,7 +18,13 @@
     "m": "retained dimension, >= 1; unique indices imply m <= n",
     "dimensions": "shape (m); unique one-based indices in [1,n], in requested order",
     "marginal_mean": "shape (m); selected location vector, in requested order",
-    "marginal_cov": "shape (m,m); selected symmetric matrix from the lower input triangle"
+    "marginal_cov": "shape (m,m); selected symmetric matrix from the lower input triangle",
+    "k": "observation count, >= 1",
+    "data": "shape (n,k); finite observations by column",
+    "fixed_mean": "shape (n); optional finite fixed mean vector",
+    "fixed_cov": "shape (n,n); optional finite PSD covariance, lower triangle used",
+    "has_fixed_mean": "0 omit fixed mean; 1 use supplied fixed mean",
+    "has_fixed_cov": "0 omit fixed covariance; 1 use supplied fixed covariance"
   },
   "array_functions": {
     "multivariate_normal_pdf": {
@@ -121,7 +127,6 @@
   "excluded": {
     "multivariate_normal_cdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_logcdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-    "multivariate_normal_fit": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_rvs": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_rvs_array": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_status_success": "Native status constant, not a callable procedure.",
@@ -165,6 +170,47 @@
       "invalid_status": 1,
       "description": "Select multivariate normal marginal parameters using one-based indices.",
       "shape_contract": true
+    },
+    "multivariate_normal_fit": {
+      "symbol": "scifort_multivariate_normal_fit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        },
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "data": [
+          "n",
+          "k"
+        ],
+        "mean": [
+          "n"
+        ],
+        "cov": [
+          "n",
+          "n"
+        ],
+        "fixed_mean": [
+          "n"
+        ],
+        "fixed_cov": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Fit normal mean/covariance, preserving optional fixed parameters.",
+      "shape_contract": true,
+      "optional_arrays": {
+        "fixed_mean": "has_fixed_mean",
+        "fixed_cov": "has_fixed_cov"
+      }
     }
   }
 }

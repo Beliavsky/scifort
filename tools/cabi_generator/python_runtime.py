@@ -161,6 +161,10 @@ class ArrayGroup:
         originals, values = {}, {}
         for arg in spec['inputs']:
             info, value = spec['metadata'][arg], inputs[arg]
+            if arg in spec.get('optional_arrays', {}):
+                values[spec['optional_arrays'][arg]] = int(value is not None)
+                if value is None:
+                    continue
             if value is None and arg in spec.get('array_defaults', {}):
                 continue
             if info['category'] == 'logical':
@@ -257,6 +261,13 @@ class ArrayGroup:
                 array = np.full(shapes[arg], np.nan, dtype=np.float64, order='F')
             outputs[arg] = array
         # Prepare C memory only after all Python validation. Keep every buffer alive.
+        for arg in spec.get('optional_arrays', {}):
+            if inputs[arg] is None:
+                # Explicit-shape C buffers remain valid/full-sized even when ignored.
+                buffers[arg] = np.empty(shapes[arg], dtype=np.float64, order='F')
+                if not buffers[arg].size:
+                    buffers[arg] = np.empty(1, dtype=np.float64)
+                values[arg] = buffers[arg].ctypes.data_as(C.c_void_p)
         for arg, original in originals.items():
             if spec['metadata'][arg]['rank']:
                 dtype = np.intc if spec['metadata'][arg]['category'] == 'integer' else np.float64

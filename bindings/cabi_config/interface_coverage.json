@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 63,
+    "array_adapters": 64,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 151,
+    "python": 152,
     "scalar": 88
   },
   "procedures": [
@@ -1217,11 +1217,10 @@
       "python": "multivariate_normal.entropy"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_normal_fit_f64",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_fit",
-      "scalar_generated": false
+      "python": "multivariate_normal.fit"
     },
     {
       "bulk_generated": false,

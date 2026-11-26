@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 63 |
+| array_adapters | 64 |
 | elementwise | 88 |
-| python | 151 |
+| python | 152 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -164,7 +164,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_hypergeom | multivariate_hypergeom_var |  |  | scifort_multivariate_hypergeom_var_f64 |  | multivariate_hypergeom.var |
 | scifort_multivariate_normal | multivariate_normal_cdf |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_entropy |  |  | scifort_multivariate_normal_entropy_f64 |  | multivariate_normal.entropy |
-| scifort_multivariate_normal | multivariate_normal_fit |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_fit |  |  | scifort_multivariate_normal_fit_f64 |  | multivariate_normal.fit |
 | scifort_multivariate_normal | multivariate_normal_logcdf |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_logpdf |  |  | scifort_multivariate_normal_logpdf_f64 |  | multivariate_normal.logpdf |
 | scifort_multivariate_normal | multivariate_normal_marginal |  |  | scifort_multivariate_normal_marginal_f64 |  | multivariate_normal.marginal |

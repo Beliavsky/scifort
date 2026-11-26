@@ -1366,4 +1366,115 @@ All 124 generated artifacts passed the read-only check. Previous published C
 prototypes are unchanged. Encoding/BOM, ASCII Fortran, 132-column source limits,
 Markdown links and whitespace were checked. Reviewed coverage is now 151 Python
 methods and 63 array adapters. Other platforms and timing baselines were not
-newly validated. CDF, fit and RNG-state interfaces remain outside this batch.
+newly validated. CDF and RNG-state interfaces remain outside the reviewed bindings; normal fitting is described below.
+
+## Multivariate normal fitting
+
+`api.multivariate_normal.fit(data, fixed_mean=None, fixed_cov=None, *, out=None)`
+returns `ArrayResult(status, outputs)` with `outputs['mean']` and `outputs['cov']`.
+The input has shape `(n,k)`: n variables and k **observations by column**, both
+positive. Outputs have shapes `(n,)` and `(n,n)`. This preserves native Fortran
+orientation; SciPy fitting takes observations by row, so compare with `data.T`.
+The native names `fixed_mean`/`fixed_cov` are retained in Python; SciPy calls
+these parameters `fix_mean`/`fix_cov`.
+
+With no constraints, the result is the sample mean and maximum-likelihood
+covariance, divided by k rather than k-1. A supplied fixed mean is returned and
+used for centering if covariance is estimated. A supplied fixed covariance is
+returned after symmetrizing its lower triangle; an absent mean is still estimated
+from the data. Either, both or neither parameter can be fixed. A single
+observation is supported, yielding zero unconstrained covariance. Fixed
+covariance may be PSD/singular; its lower triangle is authoritative, but every
+entry must be finite. None remains genuinely absent in the native call, including
+when the other fixed parameter is supplied.
+
+Optional arrays must have the matching shapes when supplied. Python converts
+numeric arrays to aligned column-major float64 as needed; complex inputs, shape
+mismatches and empty extents raise. `out={'mean': mean_buffer, 'cov': cov_buffer}`
+uses caller-owned, writable, aligned native float64 buffers with the exact shapes.
+They must not overlap each other or any provided input, including fixed arrays.
+The input data/fixed arrays remain unchanged. The wrapper allocates full-sized
+ignored placeholders for absent arrays; present optional inputs are copied inside
+the C adapter. Numerical fitting formulas and their arithmetic limits are unchanged.
+
+```python
+data = np.array([[1., 3., 5.], [2., 6., 4.]])
+mean = np.empty(2)
+cov = np.empty((2, 2), order='F')
+result = api.multivariate_normal.fit(
+    data, fixed_mean=[2., 3.], out={'mean': mean, 'cov': cov})
+print(result.status, mean, cov)
+```
+
+C calls `scifort_multivariate_normal_fit_f64` with arguments in this order:
+`(n, k, data, mean, cov, status, has_fixed_mean, fixed_mean, has_fixed_cov, fixed_cov)`.
+Lengths and presence flags are by-value C int; status is an int pointer. Arrays
+are double pointers to contiguous column-major storage; n,k must be positive.
+Both fixed-array buffers must be valid, aligned, nonnull, disjoint and fully
+sized even when their flags are 0. Flags are 0 absent or 1 present; other values
+return status 1 with mean/cov unchanged. Invalid C extents likewise preserve
+outputs. All flags are checked before any optional-array copy/native call.
+
+Native numerical failures retain native outputs rather than promising
+preservation: nonfinite data returns status 1 and NaNs in both outputs;
+invalid fixed mean returns status 2 and NaNs in both; invalid fixed covariance
+returns status 2, retains the computed/fixed mean, and writes NaN covariance.
+Success returns status 0. Python exposes these statuses and partial outputs.
+See the [native shape table](../../docs/multivariate_normal_shapes.md),
+[manifest](../cabi_config/multivariate_normal.json) and
+[optional-array generator policy](../../tools/cabi_generator/README.md#presence-controlled-optional-arrays).
+
+## Normal-fitting interface validation (2026-11-25)
+
+Validated on Windows with GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental),
+Python 3.13.3, NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. Commands:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python bindings\python\example.py
+```
+
+All 79 generator tests and all 76 binding integration tests passed. Three new
+independent generator tests validate policies, C/Python signatures and true
+native presence/absence for all four combinations, including ignored NaN
+placeholders. Six new fit integration cases compare SciPy and independently
+computed centered cross-products, plus single observations, PSD/singular fixed
+covariance, lower-triangle conventions, invalid/nonfinite inputs, optional shape
+checks, layout conversion, input/output alias rejection, output ownership,
+invalid flags/extents and native partial-output behavior.
+
+Integration used checked `-O0 -g -fcheck=all -fbacktrace` and optimized `-O3`
+libraries, both with `-std=f2018 -fimplicit-none -Werror=implicit-interface
+-shared -fPIC`. Native and C11 clients exercise all four fitting combinations;
+C11/C++17 checks use `-Wall -Wextra -Werror`. The updated example passed.
+All existing binding tests ran because the validator, emitter and Python array
+runtime are shared by configured interfaces. No native numerical algorithm was
+changed.
+
+The existing `test_multivariate` program passed with the final native source
+and cached dependent modules/library, using:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\multivariate_normal.f90 src\stats\multivariate_t.f90 ^
+  test\test_checks.f90 test\multivariate_reference.f90 test\test_multivariate.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\dependent.exe
+build\multivariate-parameters-regression\dependent.exe
+```
+
+Those cache paths are local validation artifacts. The full FPM suite was not
+run; the native edits are documentation and explicit implicit-none only, while
+focused tests cover fitting and the generated interface/runtime changes. The
+full suite remains required before release or merge under repository policy.
+
+All 124 generated artifacts passed the read-only consistency check. All previous
+multivariate-normal C prototypes are preserved. Encoding/BOM, Fortran ASCII and
+132-column limits, local Markdown links and whitespace checks passed. Coverage
+is 152 Python methods and 64 array adapters in the reviewed subset. Optional
+input copies and ignored full-sized placeholders add memory overhead. Other
+platforms, compiler-specific behavior and timing baselines were not newly
+validated.

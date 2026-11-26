@@ -737,3 +737,42 @@ indices to C. Caller arrays remain unchanged. Invalid ranges raise `ValueError`;
 floats and booleans raise `TypeError`. Empty arrays still obey normal minimum
 shape rules. The C ABI, native annotations and Fortran procedures remain
 one-based; uniqueness and other native constraints remain native validations.
+
+## Presence-controlled optional arrays
+
+A `subroutines` policy may explicitly map native optional array inputs to new
+C presence flags with `optional_arrays`:
+
+```json
+"optional_arrays": {
+  "fixed_mean": "has_fixed_mean",
+  "fixed_cov": "has_fixed_cov"
+}
+```
+
+Only real rank-one/two `optional, intent(in)` arrays are supported. Functions,
+optional scalar/output arrays, unknown arguments, flag-name collisions and
+non-identifier flags are rejected. The mapping must be nonempty when supplied.
+Each by-value C-int flag precedes its corresponding explicit-shape array in the
+C signature: 0 means absent, 1 means present. Other values return the configured
+invalid status before native calls or optional-input copies, preserving outputs.
+Dimension guards run first. Every C buffer remains required, nonnull, fully
+sized, aligned and disjoint, including absent-array placeholders. Placeholder
+values are ignored, not inspected for numerical validity.
+
+After validating all flags, the adapter copies present optional inputs into
+local allocatable arrays. It leaves absent ones unallocated and forwards those
+to nonallocatable optional native dummies, preserving Fortran 2008+ absence
+semantics. Descriptors remain inside Fortran; no descriptors or allocatables
+cross the C boundary. This avoids generating exponentially many call branches,
+at the cost of copies for present optional inputs. No numerical routine is
+rewritten, and no synthetic numerical success is inferred from native status.
+
+Coverage records `optional_arrays` separately from optional arguments promoted
+to required. Shape tables retain each array's shape and name its presence flag.
+Python hides these flags and exposes `None` defaults, passing None as absent
+and validating supplied arrays normally. Optional arrays cannot define Python
+dimensions or also configure fill/default policies. The Python wrapper allocates
+full-sized uninitialized placeholders when absent; it never substitutes zeros or
+identity as a native default. These placeholders and native present-input copies
+add memory overhead. Native partial outputs and statuses remain unchanged.

@@ -1783,6 +1783,42 @@ class Multivariate_normal(ArrayGroup):
                  'shapes': {'cov': ['n', 'n'], 'mean': ['n']},
                  'status': 'status',
                  'symbol': 'scifort_multivariate_normal_entropy_f64'},
+     'fit': {'arguments': ['data',
+                           'mean',
+                           'cov',
+                           'status',
+                           'has_fixed_mean',
+                           'fixed_mean',
+                           'has_fixed_cov',
+                           'fixed_cov'],
+             'definitions': {'k': {'argument': 'data', 'axis': 2},
+                             'n': {'argument': 'data', 'axis': 1}},
+             'dimensions': ['n', 'k'],
+             'inputs': ['data', 'fixed_mean', 'fixed_cov'],
+             'logical_inputs': {},
+             'metadata': {'cov': {'category': 'real', 'intent': 'out', 'rank': 2},
+                          'data': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'fixed_cov': {'category': 'real',
+                                        'intent': 'in',
+                                        'optional': True,
+                                        'rank': 2},
+                          'fixed_mean': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 1},
+                          'has_fixed_cov': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'has_fixed_mean': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                          'mean': {'category': 'real', 'intent': 'out', 'rank': 1}},
+             'minimums': {'k': 1, 'n': 1},
+             'optional_arrays': {'fixed_cov': 'has_fixed_cov', 'fixed_mean': 'has_fixed_mean'},
+             'outputs': ['mean', 'cov'],
+             'shapes': {'cov': ['n', 'n'],
+                        'data': ['n', 'k'],
+                        'fixed_cov': ['n', 'n'],
+                        'fixed_mean': ['n'],
+                        'mean': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_multivariate_normal_fit_f64'},
      'logpdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
                 'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
                 'definitions': {'n': {'argument': 'x', 'axis': None}},
@@ -1859,6 +1895,10 @@ class Multivariate_normal(ArrayGroup):
     def entropy(self, mean=None, cov=None):
         """Return the native scalar value."""
         return self._invoke('entropy', {'mean': mean, 'cov': cov}, None)
+
+    def fit(self, data, fixed_mean=None, fixed_cov=None, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('fit', {'data': data, 'fixed_mean': fixed_mean, 'fixed_cov': fixed_cov}, out)
 
     def logpdf(self, x, mean=None, cov=None, allow_singular=False):
         """Return the native scalar value."""

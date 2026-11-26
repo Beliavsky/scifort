@@ -17,7 +17,7 @@ def prepare(config, api, identifier, source_lines):
         if is_function:
             fields |= {'result_argument', 'optional_policy'}
         optional_fields = {'logical_inputs', 'shape_contract', 'length_choices',
-                           'integer_limits', 'integer_sums', 'synthetic_status'}
+                           'integer_limits', 'integer_sums', 'synthetic_status', 'optional_arrays'}
         if not isinstance(policy, dict) or set(policy) - optional_fields != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         synthetic_status = policy.get('synthetic_status', False)
@@ -39,6 +39,19 @@ def prepare(config, api, identifier, source_lines):
             raise ValueError(f"{name}: expected a directly defined non-bind(c) subroutine")
         args = [identifier(str(a).lower()) for a in node.content[0].items[2].items]
         native_args = args[:]
+        optional_arrays = policy.get('optional_arrays', {})
+        if (not isinstance(optional_arrays, dict) or (is_function and 'optional_arrays' in policy)
+                or ('optional_arrays' in policy and not optional_arrays)
+                or set(optional_arrays) - set(native_args)):
+            raise ValueError(f'{name}: optional_arrays must map native subroutine inputs to presence flags')
+        flags = []
+        for arg, flag in optional_arrays.items():
+            identifier(flag)
+            if flag in args or flag in flags or flag.startswith('cg_'):
+                raise ValueError(f'{name}: optional presence flags must be distinct new argument names')
+            flags.append(flag)
+        args = [item for arg in args for item in
+                ([optional_arrays[arg], arg] if arg in optional_arrays else [arg])]
         if synthetic_status:
             status = identifier(policy['status_argument'])
             if status in args:
@@ -93,6 +106,8 @@ def prepare(config, api, identifier, source_lines):
                            for v in mapping.values()) or mapping['false'] == mapping['true']):
                 raise ValueError(f"{name}: logical mapping needs distinct C int false/true values")
         metadata = {}
+        for flag in flags:
+            metadata[flag] = dict(intent='in', rank=0, category='integer')
         status = policy["status_argument"]
         if status in logical_inputs:
             raise ValueError(f"{name}: status cannot be a logical mapping")
@@ -113,6 +128,8 @@ def prepare(config, api, identifier, source_lines):
                                     category='real')
             declarations[result] = declarations[native_result]
         for arg in args:
+            if arg in flags:
+                continue
             if (is_function and arg in (result, status)) or (synthetic_status and arg == status):
                 continue
             if arg not in declared:
@@ -123,7 +140,7 @@ def prepare(config, api, identifier, source_lines):
                     raise ValueError(f"{name}: status must be a default-integer scalar intent(out)")
                 continue
             intent = next((value for value in ("in", "out", "inout") if f"intent({value})" in attrs), None)
-            base_attrs = attrs - {"optional"} if arg in logical_inputs or is_function else attrs
+            base_attrs = attrs - {"optional"} if arg in logical_inputs or is_function or arg in optional_arrays else attrs
             if intent is None or base_attrs != {f"intent({intent})"}:
                 raise ValueError(f"{name}: {arg} requires intent and no unconfigured optional attributes")
             if is_function and intent != 'in':
@@ -149,9 +166,17 @@ def prepare(config, api, identifier, source_lines):
                 raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
             if category == 'integer' and (intent == 'inout' or (intent == 'out' and rank)):
                 raise ValueError(f'{name}: integer arrays are input-only; integer outputs must be scalar')
+            if arg in optional_arrays and (category != 'real' or not rank or intent != 'in'
+                                          or 'optional' not in attrs):
+                raise ValueError(f'{name}: optional arrays must be real rank-one/two optional intent(in)')
             metadata[arg] = dict(intent=intent, rank=rank, category=category)
-            if is_function and 'optional' in attrs:
+            if (is_function or arg in optional_arrays) and 'optional' in attrs:
                 metadata[arg]['optional'] = True
+        for arg in optional_arrays:
+            info = metadata.get(arg, {})
+            if (info.get('category') != 'real' or not info.get('rank')
+                    or info.get('intent') != 'in' or not info.get('optional')):
+                raise ValueError(f'{name}: optional arrays must be real rank-one/two optional intent(in)')
         shapes = policy["shapes"]
         array_names = {a for a, value in metadata.items() if value["rank"]}
         if not isinstance(shapes, dict) or set(shapes) != array_names or not array_names:
@@ -218,6 +243,8 @@ def prepare(config, api, identifier, source_lines):
                      dimensions=dimensions, documentation_review=review)
         if synthetic_status:
             entry.update(native_args=native_args, synthetic_status=True)
+        if optional_arrays:
+            entry.update(native_args=native_args, optional_arrays=optional_arrays)
         if is_function:
             entry.update(native_args=native_args, result_argument=result)
             if result_extents:
@@ -268,6 +295,9 @@ def emit(entry, index, config):
         lines.append(f"        {declaration} :: {arg}{shape} !! {config['argument_docs'][arg]}")
     for arg in policy.get('logical_inputs', {}):
         lines.append(f"        logical :: cg_logical_{arg}")
+    for arg in entry.get('optional_arrays', {}):
+        shape = ','.join([':']*metadata[arg]['rank'])
+        lines.append(f'        real(c_double), allocatable :: cg_optional_{arg}({shape})')
     lines += ["        ! Direct array association requires matching native and C kinds.",
               "        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)",
               "        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)", "",
@@ -297,6 +327,14 @@ def emit(entry, index, config):
     for arg, ceiling in policy.get('integer_sums', {}).items():
         lines += [f'        if (sum(abs(int({arg},c_int64_t))) > {ceiling}_c_int64_t) then',
                   f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
+    for flag in entry.get('optional_arrays', {}).values():
+        lines += [f'        if ({flag} /= 0_c_int .and. {flag} /= 1_c_int) then',
+                  f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
+    if entry.get('optional_arrays'):
+        lines += ['        ! An unallocated allocatable actual makes an optional array dummy absent.']
+    for arg, flag in entry.get('optional_arrays', {}).items():
+        lines += [f'        if ({flag} == 1_c_int) then',
+                  f'            allocate(cg_optional_{arg}, source={arg})', '        end if']
     native_args = entry.get('native_args', args)
     call = (f"{entry['result_argument']}=cg_native_{index}" if 'result_argument' in entry
             else f'call cg_native_{index}')
@@ -304,6 +342,8 @@ def emit(entry, index, config):
               f"        {call}( &"]
     for i, arg in enumerate(native_args):
         actual = f"cg_logical_{arg}" if arg in policy.get('logical_inputs', {}) else arg
+        if arg in entry.get('optional_arrays', {}):
+            actual = f'cg_optional_{arg}'
         lines.append(f"            {arg}={actual}" + (", &" if i < len(native_args)-1 else ")"))
     if 'result_argument' in entry or entry.get('synthetic_status'):
         lines.append(f'        {status}=0_c_int')
@@ -321,9 +361,14 @@ def emit(entry, index, config):
         header[-3:-3] = [" * Other flag values return invalid status with all outputs unchanged."]
     record = dict(procedure=name, state="generated", symbols=[symbol], interface="explicit_shape_subroutine",
                   dimensions=dimensions, dimension_order=list(dimensions), shapes=shapes, status_argument=status,
-                  optional_promoted_to_required=[a for a in args if metadata.get(a, {}).get('optional')],
+                  optional_promoted_to_required=[a for a in args if metadata.get(a, {}).get('optional')
+                                                and a not in entry.get('optional_arrays', {})],
                   arguments=args,
                   native_shape_documentation_review=entry["documentation_review"])
+    if entry.get('optional_arrays'):
+        record['optional_arrays'] = entry['optional_arrays']
+        header[-3:-3] = [' * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.',
+                        ' * Buffers remain required and fully sized when absent, but are not read.']
     if policy.get('logical_inputs'):
         record['logical_inputs'] = policy['logical_inputs']
     if entry.get('shape_contract'):

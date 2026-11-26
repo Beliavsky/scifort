@@ -5,12 +5,14 @@ module scifort_c_api_generated_multivariate_normal
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : cg_kind => dp
     use scifort_multivariate_normal, only : cg_native_0 => multivariate_normal_entropy
-    use scifort_multivariate_normal, only : cg_native_1 => multivariate_normal_logpdf
-    use scifort_multivariate_normal, only : cg_native_2 => multivariate_normal_marginal
-    use scifort_multivariate_normal, only : cg_native_3 => multivariate_normal_pdf
+    use scifort_multivariate_normal, only : cg_native_1 => multivariate_normal_fit
+    use scifort_multivariate_normal, only : cg_native_2 => multivariate_normal_logpdf
+    use scifort_multivariate_normal, only : cg_native_3 => multivariate_normal_marginal
+    use scifort_multivariate_normal, only : cg_native_4 => multivariate_normal_pdf
     implicit none
     private
     public :: scifort_multivariate_normal_entropy_f64
+    public :: scifort_multivariate_normal_fit_f64
     public :: scifort_multivariate_normal_logpdf_f64
     public :: scifort_multivariate_normal_marginal_f64
     public :: scifort_multivariate_normal_pdf_f64
@@ -42,6 +44,61 @@ contains
         status=0_c_int
     end subroutine scifort_multivariate_normal_entropy_f64
 
+    subroutine scifort_multivariate_normal_fit_f64( &
+        n, k, data, mean, cov, status, has_fixed_mean, fixed_mean, has_fixed_cov, fixed_cov) &
+        bind(c, name="scifort_multivariate_normal_fit_f64")
+        !! Fit normal mean/covariance, preserving optional fixed parameters.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! dimension, >= 1
+        integer(c_int), value, intent(in) :: k !! observation count, >= 1
+        real(c_double), intent(in) :: data(n,k) !! shape (n,k); finite observations by column
+        real(c_double), intent(inout) :: mean(n) !! mean vector; required at the C boundary
+        real(c_double), intent(inout) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        integer(c_int), value, intent(in) :: has_fixed_mean !! 0 omit fixed mean; 1 use supplied fixed mean
+        real(c_double), intent(in) :: fixed_mean(n) !! shape (n); optional finite fixed mean vector
+        integer(c_int), value, intent(in) :: has_fixed_cov !! 0 omit fixed covariance; 1 use supplied fixed covariance
+        real(c_double), intent(in) :: fixed_cov(n,n) !! shape (n,n); optional finite PSD covariance, lower triangle used
+        real(c_double), allocatable :: cg_optional_fixed_mean(:)
+        real(c_double), allocatable :: cg_optional_fixed_cov(:,:)
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (k < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_fixed_mean /= 0_c_int .and. has_fixed_mean /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_fixed_cov /= 0_c_int .and. has_fixed_cov /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! An unallocated allocatable actual makes an optional array dummy absent.
+        if (has_fixed_mean == 1_c_int) then
+            allocate(cg_optional_fixed_mean, source=fixed_mean)
+        end if
+        if (has_fixed_cov == 1_c_int) then
+            allocate(cg_optional_fixed_cov, source=fixed_cov)
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_1( &
+            data=data, &
+            mean=mean, &
+            cov=cov, &
+            status=status, &
+            fixed_mean=cg_optional_fixed_mean, &
+            fixed_cov=cg_optional_fixed_cov)
+    end subroutine scifort_multivariate_normal_fit_f64
+
     subroutine scifort_multivariate_normal_logpdf_f64( &
         n, x, mean, cov, allow_singular, value, status) &
         bind(c, name="scifort_multivariate_normal_logpdf_f64")
@@ -71,7 +128,7 @@ contains
         end if
         cg_logical_allow_singular=(allow_singular == 1_c_int)
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_1( &
+        value=cg_native_2( &
             x=x, &
             mean=mean, &
             cov=cov, &
@@ -106,7 +163,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_2( &
+        call cg_native_3( &
             dimensions=dimensions, &
             mean=mean, &
             cov=cov, &
@@ -144,7 +201,7 @@ contains
         end if
         cg_logical_allow_singular=(allow_singular == 1_c_int)
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_3( &
+        value=cg_native_4( &
             x=x, &
             mean=mean, &
             cov=cov, &
