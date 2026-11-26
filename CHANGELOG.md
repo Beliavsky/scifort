@@ -1,3 +1,13 @@
+## 2026-11-25 - Wishart and inverse-Wishart interfaces
+
+- Add twelve generated explicit-shape C/Python adapters for densities, entropy,
+  mean, mode and entrywise variance, with caller-owned matrix output buffers.
+- Document shapes and purposes in all public and private native procedures,
+  including sampling routines and their empty-batch behavior.
+- Document matrix-triangle conventions, positive-definiteness and moment
+  existence thresholds while retaining native numerical behavior.
+- Add focused reference, boundary, buffer and native/C/Python integration tests.
+
 ## 2026-11-25 - Dirichlet-multinomial interfaces and count safety
 
 - Add generated explicit-shape C and Python PMF, log-PMF, mean, variance and

@@ -17,5 +17,7 @@
   "dirichlet.json",
   "multinomial.json",
   "multivariate_hypergeom.json",
-  "dirichlet_multinomial.json"
+  "dirichlet_multinomial.json",
+  "wishart.json",
+  "invwishart.json"
 ]

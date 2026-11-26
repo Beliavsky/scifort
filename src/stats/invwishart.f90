@@ -29,9 +29,13 @@ module scifort_invwishart
 contains
 
     function invwishart_logpdf(x, df, scale) result(y)
-        real(dp), intent(in) :: x(:, :) !! SPD matrix quantile
-        real(dp), intent(in) :: df !! degrees of freedom; must exceed dimension-1
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix; lower triangle defines symmetry
+        !! Evaluate the log density at one positive-definite matrix.
+        !! @dimension p = size(scale,1)
+        !! @require p >= 1
+        !! Finite symmetric inputs are required; factorization uses lower triangles.
+        real(dp), intent(in) :: x(:, :) !! shape (p,p); finite symmetric positive-definite evaluation matrix
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite symmetric positive-definite scale matrix
         real(dp) :: y
 
         integer :: info
@@ -73,18 +77,27 @@ contains
     end function invwishart_logpdf
 
     function invwishart_pdf(x, df, scale) result(y)
-        real(dp), intent(in) :: x(:, :) !! SPD matrix quantile
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
+        !! Evaluate the density at one positive-definite matrix.
+        !! @dimension p = size(scale,1)
+        !! @require p >= 1
+        !! Finite symmetric inputs are required; factorization uses lower triangles.
+        real(dp), intent(in) :: x(:, :) !! shape (p,p); finite symmetric positive-definite evaluation matrix
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite symmetric positive-definite scale matrix
         real(dp) :: y
 
         y = exp(invwishart_logpdf(x, df, scale))
     end function invwishart_pdf
 
     function invwishart_mean(df, scale) result(mu)
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
-        real(dp) :: mu(size(scale,1), size(scale,2))
+        !! Return the entrywise mean matrix.
+        !! @dimension p = size(scale,1)
+        !! @require p >= 1
+        !! Undefined mean returns NaN; requires df > p+1.
+        !! Scale validation factors its lower triangle; the formula reads all entries.
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1; mean requires df > p+1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite symmetric positive-definite scale matrix
+        real(dp) :: mu(size(scale,1), size(scale,2)) !! shape (p,p); entrywise means
 
         integer :: p
 
@@ -97,9 +110,13 @@ contains
     end function invwishart_mean
 
     function invwishart_mode(df, scale) result(mode)
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
-        real(dp) :: mode(size(scale,1), size(scale,2))
+        !! Return the mode matrix.
+        !! @dimension p = size(scale,1)
+        !! @require p >= 1
+        !! Scale validation factors its lower triangle; the formula reads all entries.
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite symmetric positive-definite scale matrix
+        real(dp) :: mode(size(scale,1), size(scale,2)) !! shape (p,p); mode matrix
 
         integer :: p
 
@@ -112,9 +129,14 @@ contains
     end function invwishart_mode
 
     function invwishart_var(df, scale) result(v)
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
-        real(dp) :: v(size(scale,1), size(scale,2))
+        !! Return the entrywise variances, not a covariance tensor.
+        !! @dimension p = size(scale,1)
+        !! @require p >= 1
+        !! Undefined var returns NaN; requires df > p+3.
+        !! Scale validation factors its lower triangle; the formula reads all entries.
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1; variance requires df > p+3
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite symmetric positive-definite scale matrix
+        real(dp) :: v(size(scale,1), size(scale,2)) !! shape (p,p); entrywise variances
 
         integer :: i
         integer :: j
@@ -138,8 +160,11 @@ contains
     end function invwishart_var
 
     function invwishart_entropy(df, scale) result(y)
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
+        !! Return the differential entropy.
+        !! @dimension p = size(scale,1)
+        !! @require p >= 1
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite symmetric positive-definite scale matrix
         real(dp) :: y
 
         integer :: info
@@ -165,10 +190,12 @@ contains
     end function invwishart_entropy
 
     subroutine invwishart_rvs(state, df, scale, sample, status)
+        !! Draw one random positive-definite matrix.
+        !! p = size(scale,1), p >= 1; scale and each draw have shape (p,p).
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
-        real(dp), intent(out) :: sample(:, :) !! random SPD matrix
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite SPD scale; lower triangle defines symmetry
+        real(dp), intent(out) :: sample(:, :) !! shape (p,p); random SPD matrix
         integer, intent(out), optional :: status !! invwishart_status_* result
 
         integer :: i
@@ -231,10 +258,15 @@ contains
     end subroutine invwishart_rvs
 
     subroutine invwishart_rvs_array(state, df, scale, samples, status)
+        !! Draw random matrices into the third dimension.
+        !! p = size(scale,1), p >= 1; scale and each draw have shape (p,p).
+        !! b = size(samples,3), b >= 0; empty batches are permitted.
+        !! With b = 0 only the leading sample extents are checked; df and scale
+        !! squareness, finiteness and positive-definiteness are not validated.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(in) :: df !! degrees of freedom
-        real(dp), intent(in) :: scale(:, :) !! SPD scale matrix
-        real(dp), intent(out) :: samples(:, :, :) !! random matrices indexed by third dimension
+        real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
+        real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite SPD scale; lower triangle defines symmetry
+        real(dp), intent(out) :: samples(:, :, :) !! shape (p,p,b); random SPD matrices; b may be zero
         integer, intent(out), optional :: status !! invwishart_status_* result
 
         integer :: info
@@ -256,8 +288,10 @@ contains
     end subroutine invwishart_rvs_array
 
     pure logical function valid_shapes(x, scale) result(valid)
-        real(dp), intent(in) :: x(:, :) !! matrix quantile
-        real(dp), intent(in) :: scale(:, :) !! scale matrix
+        !! Check finite equal nonempty square shapes; invalid inputs return false.
+        !! Candidate matrix extents are unrestricted, including zero extents.
+        real(dp), intent(in) :: x(:, :) !! candidate matrix; arbitrary extents to be checked
+        real(dp), intent(in) :: scale(:, :) !! candidate scale; arbitrary extents to be checked
 
         valid = size(scale,1) >= 1 .and. size(scale,2) == size(scale,1) .and. &
             size(x,1) == size(scale,1) .and. size(x,2) == size(scale,1) .and. &
@@ -265,6 +299,7 @@ contains
     end function valid_shapes
 
     pure logical function valid_df(df, p) result(valid)
+        !! Check finite degrees of freedom for a positive matrix dimension.
         real(dp), intent(in) :: df !! degrees of freedom
         integer, intent(in) :: p !! matrix dimension
 
@@ -272,7 +307,9 @@ contains
     end function valid_df
 
     pure logical function valid_scale_and_df(scale, df) result(valid)
-        real(dp), intent(in) :: scale(:, :) !! scale matrix
+        !! Check a finite nonempty square scale, degrees of freedom and SPD factor.
+        !! Candidate scale extents are unrestricted; invalid inputs return false.
+        real(dp), intent(in) :: scale(:, :) !! candidate scale; arbitrary extents to be checked
         real(dp), intent(in) :: df !! degrees of freedom
 
         integer :: info

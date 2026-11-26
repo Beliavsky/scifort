@@ -94,3 +94,10 @@ Dirichlet-multinomial PMF, log-PMF and moments are available through five genera
 C adapters and `api.dirichlet_multinomial`. See the
 [Python/error contract](python/README.md#dirichlet-multinomial-distribution) and
 [shape tables](../docs/dirichlet_multinomial_shapes.md).
+
+Wishart and inverse-Wishart each provide six generated C/Python methods: PDF,
+log-PDF, entropy, mean, mode and entrywise variance. Read the
+[matrix and moment contract](python/README.md#wishart-and-inverse-wishart-distributions)
+and the [Wishart](../docs/wishart_shapes.md) and
+[inverse-Wishart](../docs/invwishart_shapes.md) shape tables. Sampling continues
+to use the native explicit RNG-state API.

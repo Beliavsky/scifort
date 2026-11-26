@@ -67,6 +67,15 @@ def main():
           api.dirichlet_multinomial.var([2., 3.], 4),
           api.dirichlet_multinomial.cov([2., 3.], 4))
 
+    scale = [[2., .4], [.4, 1.]]
+    point = [[1.5, .2], [.2, 1.1]]
+    for name in ('wishart', 'invwishart'):
+        distribution = getattr(api, name)
+        print(name, 'PDF/log-PDF/entropy:', distribution.pdf(point, 7., scale),
+              distribution.logpdf(point, 7., scale), distribution.entropy(7., scale))
+        print(name, 'mean/mode/variance:', distribution.mean(7., scale),
+              distribution.mode(7., scale), distribution.var(7., scale))
+
 
 if __name__ == '__main__':
     main()

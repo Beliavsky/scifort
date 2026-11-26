@@ -9,6 +9,7 @@
 #include "scifort_generated_dirichlet_multinomial.h"
 #include "scifort_generated_exponential.h"
 #include "scifort_generated_gamma.h"
+#include "scifort_generated_invwishart.h"
 #include "scifort_generated_laplace.h"
 #include "scifort_generated_linalg.h"
 #include "scifort_generated_logistic.h"
@@ -21,4 +22,5 @@
 #include "scifort_generated_normal.h"
 #include "scifort_generated_student_t.h"
 #include "scifort_generated_weibull.h"
+#include "scifort_generated_wishart.h"
 #endif /* SCIFORT_GENERATED_H */

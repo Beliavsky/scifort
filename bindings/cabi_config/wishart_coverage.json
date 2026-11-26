@@ -1,0 +1,331 @@
+{
+  "generated_symbol_count": 6,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "df",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "p"
+      ],
+      "dimensions": {
+        "p": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "wishart_entropy",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "p": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_wishart_entropy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "p"
+      ],
+      "dimensions": {
+        "p": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "wishart_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "p": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "x": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_wishart_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "df",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "p"
+      ],
+      "dimensions": {
+        "p": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(scale,1)",
+        "size(scale,2)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "wishart_mean",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "p": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "value": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_wishart_mean_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "df",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "p"
+      ],
+      "dimensions": {
+        "p": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(scale,1)",
+        "size(scale,2)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "wishart_mode",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "p": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "value": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_wishart_mode_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "df",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "p"
+      ],
+      "dimensions": {
+        "p": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "wishart_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "p": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "x": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_wishart_pdf_f64"
+      ]
+    },
+    {
+      "procedure": "wishart_rvs",
+      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "wishart_rvs_array",
+      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "wishart_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "wishart_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "wishart_status_linalg_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "wishart_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "arguments": [
+        "df",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "p"
+      ],
+      "dimensions": {
+        "p": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(scale,1)",
+        "size(scale,2)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "wishart_var",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "p": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "value": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_wishart_var_f64"
+      ]
+    }
+  ],
+  "public_api_count": 12,
+  "source": "src/stats/wishart.f90",
+  "source_sha256": "8f9ccdd13f86cc623e69e5a1fa05a0b4b741cf300d3c67be2b2e2ec42878a6e2"
+}

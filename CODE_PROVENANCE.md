@@ -1,3 +1,14 @@
+## 2026-11-25 - Wishart and inverse-Wishart interfaces
+
+The reviewed C/Python manifests, explicit-shape adapters, shape annotations,
+documentation and integration tests are original MIT SciFort interface work.
+They call the existing native Wishart and inverse-Wishart procedures without
+changing numerical implementations or importing external source. Existing native
+module provenance and notices remain applicable. SciPy is an external numerical
+test reference only. Native matrix-triangle, NaN and undefined-moment behavior is
+preserved and documented; shape policies are reviewed declarations, not inferred
+proofs of the executable implementation.
+
 ## 2026-11-25 - Dirichlet-multinomial interfaces and validation
 
 The reviewed manifests, annotations, adapters and integration tests are original

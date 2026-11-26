@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 168 |
+| exports | 192 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 33 |
+| array_adapters | 45 |
 | elementwise | 88 |
-| python | 121 |
+| python | 133 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -69,6 +69,18 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_gamma | gamma_pdf | scifort_gamma_pdf_f64 | scifort_gamma_pdf_vec_f64 |  | scifort_gamma_pdf_elementwise_f64 | gamma.pdf |
 | scifort_gamma | gamma_ppf | scifort_gamma_ppf_f64 | scifort_gamma_ppf_vec_f64 |  | scifort_gamma_ppf_elementwise_f64 | gamma.ppf |
 | scifort_gamma | gamma_sf | scifort_gamma_sf_f64 | scifort_gamma_sf_vec_f64 |  | scifort_gamma_sf_elementwise_f64 | gamma.sf |
+| scifort_invwishart | invwishart_entropy |  |  | scifort_invwishart_entropy_f64 |  | invwishart.entropy |
+| scifort_invwishart | invwishart_logpdf |  |  | scifort_invwishart_logpdf_f64 |  | invwishart.logpdf |
+| scifort_invwishart | invwishart_mean |  |  | scifort_invwishart_mean_f64 |  | invwishart.mean |
+| scifort_invwishart | invwishart_mode |  |  | scifort_invwishart_mode_f64 |  | invwishart.mode |
+| scifort_invwishart | invwishart_pdf |  |  | scifort_invwishart_pdf_f64 |  | invwishart.pdf |
+| scifort_invwishart | invwishart_rvs |  |  |  |  |  |
+| scifort_invwishart | invwishart_rvs_array |  |  |  |  |  |
+| scifort_invwishart | invwishart_status_invalid_parameter |  |  |  |  |  |
+| scifort_invwishart | invwishart_status_invalid_shape |  |  |  |  |  |
+| scifort_invwishart | invwishart_status_linalg_failure |  |  |  |  |  |
+| scifort_invwishart | invwishart_status_success |  |  |  |  |  |
+| scifort_invwishart | invwishart_var |  |  | scifort_invwishart_var_f64 |  | invwishart.var |
 | scifort_laplace | laplace_cdf | scifort_laplace_cdf_f64 | scifort_laplace_cdf_vec_f64 |  | scifort_laplace_cdf_elementwise_f64 | laplace.cdf |
 | scifort_laplace | laplace_isf | scifort_laplace_isf_f64 | scifort_laplace_isf_vec_f64 |  | scifort_laplace_isf_elementwise_f64 | laplace.isf |
 | scifort_laplace | laplace_logcdf | scifort_laplace_logcdf_f64 | scifort_laplace_logcdf_vec_f64 |  | scifort_laplace_logcdf_elementwise_f64 | laplace.logcdf |
@@ -181,5 +193,17 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_weibull | weibull_pdf | scifort_weibull_pdf_f64 | scifort_weibull_pdf_vec_f64 |  | scifort_weibull_pdf_elementwise_f64 | weibull.pdf |
 | scifort_weibull | weibull_ppf | scifort_weibull_ppf_f64 | scifort_weibull_ppf_vec_f64 |  | scifort_weibull_ppf_elementwise_f64 | weibull.ppf |
 | scifort_weibull | weibull_sf | scifort_weibull_sf_f64 | scifort_weibull_sf_vec_f64 |  | scifort_weibull_sf_elementwise_f64 | weibull.sf |
+| scifort_wishart | wishart_entropy |  |  | scifort_wishart_entropy_f64 |  | wishart.entropy |
+| scifort_wishart | wishart_logpdf |  |  | scifort_wishart_logpdf_f64 |  | wishart.logpdf |
+| scifort_wishart | wishart_mean |  |  | scifort_wishart_mean_f64 |  | wishart.mean |
+| scifort_wishart | wishart_mode |  |  | scifort_wishart_mode_f64 |  | wishart.mode |
+| scifort_wishart | wishart_pdf |  |  | scifort_wishart_pdf_f64 |  | wishart.pdf |
+| scifort_wishart | wishart_rvs |  |  |  |  |  |
+| scifort_wishart | wishart_rvs_array |  |  |  |  |  |
+| scifort_wishart | wishart_status_invalid_parameter |  |  |  |  |  |
+| scifort_wishart | wishart_status_invalid_shape |  |  |  |  |  |
+| scifort_wishart | wishart_status_linalg_failure |  |  |  |  |  |
+| scifort_wishart | wishart_status_success |  |  |  |  |  |
+| scifort_wishart | wishart_var |  |  | scifort_wishart_var_f64 |  | wishart.var |
 
 C-manifest exclusion reasons and generated/existing symbol distinctions are in the JSON.

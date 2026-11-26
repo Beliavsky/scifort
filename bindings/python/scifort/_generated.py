@@ -1113,6 +1113,118 @@ class Dirichlet_multinomial(ArrayGroup):
         """Return the native array result; optionally use caller-owned out."""
         return self._invoke('var', {'alpha': alpha, 'n': n}, out)
 
+class Invwishart(ArrayGroup):
+    _specs = {'entropy': {'arguments': ['df', 'scale', 'value', 'status'],
+                 'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+                 'dimensions': ['p'],
+                 'inputs': ['df', 'scale'],
+                 'logical_inputs': {},
+                 'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                              'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'p': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'scale': ['p', 'p']},
+                 'status': 'status',
+                 'symbol': 'scifort_invwishart_entropy_f64'},
+     'logpdf': {'arguments': ['x', 'df', 'scale', 'value', 'status'],
+                'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+                'dimensions': ['p'],
+                'inputs': ['x', 'df', 'scale'],
+                'logical_inputs': {},
+                'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+                'minimums': {'p': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'scale': ['p', 'p'], 'x': ['p', 'p']},
+                'status': 'status',
+                'symbol': 'scifort_invwishart_logpdf_f64'},
+     'mean': {'arguments': ['df', 'scale', 'value', 'status'],
+              'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+              'dimensions': ['p'],
+              'inputs': ['df', 'scale'],
+              'logical_inputs': {},
+              'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                           'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+              'minimums': {'p': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'scale': ['p', 'p'], 'value': ['p', 'p']},
+              'status': 'status',
+              'symbol': 'scifort_invwishart_mean_f64'},
+     'mode': {'arguments': ['df', 'scale', 'value', 'status'],
+              'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+              'dimensions': ['p'],
+              'inputs': ['df', 'scale'],
+              'logical_inputs': {},
+              'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                           'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+              'minimums': {'p': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'scale': ['p', 'p'], 'value': ['p', 'p']},
+              'status': 'status',
+              'symbol': 'scifort_invwishart_mode_f64'},
+     'pdf': {'arguments': ['x', 'df', 'scale', 'value', 'status'],
+             'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+             'dimensions': ['p'],
+             'inputs': ['x', 'df', 'scale'],
+             'logical_inputs': {},
+             'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+             'minimums': {'p': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'scale': ['p', 'p'], 'x': ['p', 'p']},
+             'status': 'status',
+             'symbol': 'scifort_invwishart_pdf_f64'},
+     'var': {'arguments': ['df', 'scale', 'value', 'status'],
+             'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+             'dimensions': ['p'],
+             'inputs': ['df', 'scale'],
+             'logical_inputs': {},
+             'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+             'minimums': {'p': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'scale': ['p', 'p'], 'value': ['p', 'p']},
+             'status': 'status',
+             'symbol': 'scifort_invwishart_var_f64'}}
+
+    def entropy(self, df, scale):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'df': df, 'scale': scale}, None)
+
+    def logpdf(self, x, df, scale):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'df': df, 'scale': scale}, None)
+
+    def mean(self, df, scale, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'df': df, 'scale': scale}, out)
+
+    def mode(self, df, scale, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mode', {'df': df, 'scale': scale}, out)
+
+    def pdf(self, x, df, scale):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'df': df, 'scale': scale}, None)
+
+    def var(self, df, scale, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('var', {'df': df, 'scale': scale}, out)
+
 class Linalg(ArrayGroup):
     _specs = {'cholesky_lower': {'arguments': ['a', 'l', 'status'],
                         'definitions': {'n': {'argument': 'a', 'axis': 1}},
@@ -1594,6 +1706,118 @@ class Multivariate_t(ArrayGroup):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'loc': loc, 'shape': shape, 'df': df, 'allow_singular': allow_singular}, None)
 
+class Wishart(ArrayGroup):
+    _specs = {'entropy': {'arguments': ['df', 'scale', 'value', 'status'],
+                 'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+                 'dimensions': ['p'],
+                 'inputs': ['df', 'scale'],
+                 'logical_inputs': {},
+                 'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                              'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'p': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'scale': ['p', 'p']},
+                 'status': 'status',
+                 'symbol': 'scifort_wishart_entropy_f64'},
+     'logpdf': {'arguments': ['x', 'df', 'scale', 'value', 'status'],
+                'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+                'dimensions': ['p'],
+                'inputs': ['x', 'df', 'scale'],
+                'logical_inputs': {},
+                'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+                'minimums': {'p': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'scale': ['p', 'p'], 'x': ['p', 'p']},
+                'status': 'status',
+                'symbol': 'scifort_wishart_logpdf_f64'},
+     'mean': {'arguments': ['df', 'scale', 'value', 'status'],
+              'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+              'dimensions': ['p'],
+              'inputs': ['df', 'scale'],
+              'logical_inputs': {},
+              'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                           'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+              'minimums': {'p': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'scale': ['p', 'p'], 'value': ['p', 'p']},
+              'status': 'status',
+              'symbol': 'scifort_wishart_mean_f64'},
+     'mode': {'arguments': ['df', 'scale', 'value', 'status'],
+              'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+              'dimensions': ['p'],
+              'inputs': ['df', 'scale'],
+              'logical_inputs': {},
+              'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                           'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+              'minimums': {'p': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'scale': ['p', 'p'], 'value': ['p', 'p']},
+              'status': 'status',
+              'symbol': 'scifort_wishart_mode_f64'},
+     'pdf': {'arguments': ['x', 'df', 'scale', 'value', 'status'],
+             'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+             'dimensions': ['p'],
+             'inputs': ['x', 'df', 'scale'],
+             'logical_inputs': {},
+             'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 2}},
+             'minimums': {'p': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'scale': ['p', 'p'], 'x': ['p', 'p']},
+             'status': 'status',
+             'symbol': 'scifort_wishart_pdf_f64'},
+     'var': {'arguments': ['df', 'scale', 'value', 'status'],
+             'definitions': {'p': {'argument': 'scale', 'axis': 1}},
+             'dimensions': ['p'],
+             'inputs': ['df', 'scale'],
+             'logical_inputs': {},
+             'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+             'minimums': {'p': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'scale': ['p', 'p'], 'value': ['p', 'p']},
+             'status': 'status',
+             'symbol': 'scifort_wishart_var_f64'}}
+
+    def entropy(self, df, scale):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'df': df, 'scale': scale}, None)
+
+    def logpdf(self, x, df, scale):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'df': df, 'scale': scale}, None)
+
+    def mean(self, df, scale, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'df': df, 'scale': scale}, out)
+
+    def mode(self, df, scale, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mode', {'df': df, 'scale': scale}, out)
+
+    def pdf(self, x, df, scale):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'df': df, 'scale': scale}, None)
+
+    def var(self, df, scale, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('var', {'df': df, 'scale': scale}, out)
+
 class API(Library):
     """Explicit shared-library owner exposing the configured distribution and array groups."""
     def __init__(self, path, *, dll_directories=()):
@@ -1611,10 +1835,12 @@ class API(Library):
         self.weibull = Weibull(self._library)
         self.dirichlet = Dirichlet(self._library)
         self.dirichlet_multinomial = Dirichlet_multinomial(self._library)
+        self.invwishart = Invwishart(self._library)
         self.linalg = Linalg(self._library)
         self.multinomial = Multinomial(self._library)
         self.multivariate_hypergeom = Multivariate_hypergeom(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)
         self.multivariate_t = Multivariate_t(self._library)
+        self.wishart = Wishart(self._library)
 
 __all__ = ["API"]

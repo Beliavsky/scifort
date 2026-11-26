@@ -1,0 +1,180 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/wishart.f90",
+  "module": "scifort_wishart",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_wishart",
+  "header_guard": "SCIFORT_GENERATED_WISHART_H",
+  "functions": {},
+  "argument_docs": {
+    "p": "matrix dimension, >= 1",
+    "df": "finite degrees of freedom, > p-1; native moment thresholds apply",
+    "scale": "finite symmetric positive-definite scale matrix",
+    "x": "finite symmetric positive-definite evaluation matrix",
+    "value": "native scalar or matrix result; numerical errors retain native NaN values",
+    "status": "0 valid call; 1 invalid matrix extent"
+  },
+  "array_functions": {
+    "wishart_logpdf": {
+      "symbol": "scifort_wishart_logpdf_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "p",
+          "p"
+        ],
+        "scale": [
+          "p",
+          "p"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate the log density at one positive-definite matrix.",
+      "shape_contract": true
+    },
+    "wishart_pdf": {
+      "symbol": "scifort_wishart_pdf_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "p",
+          "p"
+        ],
+        "scale": [
+          "p",
+          "p"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate the density at one positive-definite matrix.",
+      "shape_contract": true
+    },
+    "wishart_entropy": {
+      "symbol": "scifort_wishart_entropy_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Return the differential entropy.",
+      "shape_contract": true
+    },
+    "wishart_mean": {
+      "symbol": "scifort_wishart_mean_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "value": [
+          "p",
+          "p"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Return the entrywise mean matrix.",
+      "shape_contract": true
+    },
+    "wishart_mode": {
+      "symbol": "scifort_wishart_mode_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "value": [
+          "p",
+          "p"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Return the mode matrix.",
+      "shape_contract": true
+    },
+    "wishart_var": {
+      "symbol": "scifort_wishart_var_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "value": [
+          "p",
+          "p"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Return the entrywise variances, not a covariance tensor.",
+      "shape_contract": true
+    }
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/wishart_generated.f90",
+    "header": "include/scifort_generated_wishart.h",
+    "coverage": "bindings/cabi_config/wishart_coverage.json",
+    "shape_documentation": "docs/wishart_shapes.md"
+  },
+  "excluded": {
+    "wishart_rvs": "Explicit RNG state needs a separately reviewed handle interface.",
+    "wishart_rvs_array": "Explicit RNG state needs a separately reviewed handle interface.",
+    "wishart_status_success": "Native status constant, not a callable procedure.",
+    "wishart_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "wishart_status_invalid_parameter": "Native status constant, not a callable procedure.",
+    "wishart_status_linalg_failure": "Native status constant, not a callable procedure."
+  }
+}

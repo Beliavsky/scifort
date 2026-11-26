@@ -9,6 +9,7 @@ and `api.multivariate_t`. `api.dirichlet` provides PDF, log-PDF, entropy, mean,
 variance and covariance. Multinomial and multivariate hypergeometric methods are
 available under `api.multinomial` and `api.multivariate_hypergeom`.
 `api.dirichlet_multinomial` provides PMF, log-PMF, mean, variance and covariance.
+`api.wishart` and `api.invwishart` provide densities, entropy and matrix moments.
 Its numerical calculations run in Fortran. Python 3.10+ and NumPy 1.24+ are
 required; SciPy is needed only for comparisons/tests. The generated package does
 not depend on fparser at runtime.
@@ -845,3 +846,99 @@ The full FPM suite was not rerun: executable changes are confined to this
 numerical module and its optional interfaces, covered by direct native tests and
 the binding integration suite. Other platforms and extreme concentration ranges
 remain unverified; benchmarks were not refreshed.
+
+## Wishart and inverse-Wishart distributions
+
+Both `api.wishart` and `api.invwishart` expose these methods:
+
+| Python call | Result |
+| --- | --- |
+| `pdf(x, df, scale)` | Python float |
+| `logpdf(x, df, scale)` | Python float |
+| `entropy(df, scale)` | Python float |
+| `mean(df, scale, out=None)` | float64 matrix of entrywise means |
+| `mode(df, scale, out=None)` | float64 mode matrix |
+| `var(df, scale, out=None)` | float64 matrix of entrywise variances, not a covariance tensor |
+
+`p = scale.shape[0]`, with `p >= 1`; `scale`, `x` and matrix outputs have shape
+`(p,p)`. Supply full, finite, symmetric positive-definite matrices. Degrees of
+freedom are real and finite, with `df > p-1`. Inputs have no default scale or
+batch/broadcast axis. Python accepts numeric matrix inputs in C or Fortran order
+and converts them to aligned, column-major float64 storage when necessary.
+`out=` must already be writable, aligned, Fortran-contiguous float64 of the exact
+shape. It is returned by identity. Buffers may not overlap any input.
+
+| Method | Additional existence condition | Native behavior when undefined |
+| --- | --- | --- |
+| Wishart mode | `df >= p+1` | matrix of NaNs; zero matrix at equality |
+| Inverse-Wishart mean | `df > p+1` | matrix of NaNs |
+| Inverse-Wishart variance | `df > p+3` | matrix of NaNs |
+
+Invalid numerical parameters, singular/non-positive-definite matrices, and
+nonfinite matrix entries produce native NaNs. In particular, singular evaluation
+matrices produce NaN rather than a support-boundary density. This batch preserves
+native behavior and does not add singular Wishart distributions. These choices
+may differ from SciPy exceptions, zero densities or `None` for undefined moments.
+A density may underflow to zero while `logpdf` remains finite.
+
+Factorization uses lower triangles, but every matrix entry must be finite.
+Densities and entropy use the scale's lower-triangle interpretation. The moment
+formulas read the full scale entries; the Wishart density also reads the full
+`x` matrix in its trace solve. Inverse-Wishart density factorization uses only
+`x`'s lower triangle. No symmetry check or automatic symmetrization is performed:
+supply symmetric, fully populated inputs for consistent results. These are
+existing native conventions, retained by the adapters.
+
+Python raises for invalid shapes, dtypes, aliasing and output buffers before
+writing output. C uses explicit dimensions, column-major contiguous arrays and
+caller-owned result buffers. All pointers must be valid, nonnull, aligned and
+nonoverlapping. C status 1 means an invalid dimension and preserves the result
+buffer. Status 0 means the call was valid, including numerical NaN/infinity
+results. Sampling remains native-only pending an explicit RNG-state handle ABI.
+
+See the generated [Wishart shapes](../../docs/wishart_shapes.md) and
+[inverse-Wishart shapes](../../docs/invwishart_shapes.md). Native sampling and
+private helper declarations also document dimensions and permitted empty batches.
+
+```python
+scale = [[2., .4], [.4, 1.]]
+value = api.wishart.logpdf([[1.5, .2], [.2, 1.1]], 7., scale)
+mean = api.invwishart.mean(7., scale)
+variance = api.invwishart.var(7., scale)
+```
+
+### Validation: Wishart interface batch (2026-11-25)
+
+Windows checks used GNU Fortran 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6 and SciPy 1.15.3. Commands from the repository root:
+
+```text
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python -m unittest discover -s bindings/python/tests -v
+python bindings\python\example.py
+```
+
+All 48 binding integration tests passed, including six new cases exercising
+all twelve methods against SciPy, degrees-of-freedom thresholds, undefined
+moments, finite log densities when PDFs underflow, matrix-triangle conventions,
+invalid matrices, layout conversion, aliases, caller buffers, status/output
+preservation, and native/C agreement. Tests use both checked
+`-O0 -g -fcheck=all -fbacktrace` and optimized `-O3` libraries, with
+`-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC` in both.
+Native clients use the corresponding optimization/runtime-check flags; C clients
+use `-std=c11 -Wall -Wextra -Werror`, with C++17 header syntax checks too.
+
+The read-only consistency check passed for 112 generated artifacts, and the
+example exercised all twelve new methods. All 21 reviewed header guards are
+distinct. Encoding/BOM, ASCII Fortran, 132-column limits, Markdown local links
+and whitespace checks passed. Reviewed coverage now includes 133 Python methods
+and 45 array adapters.
+
+After stripping comments, both native modules' executable code matches the
+previous commit. The generator/runtime implementation is unchanged. Focused
+native and complete binding integration checks cover the new manifests,
+dependency build plan, aggregate header and output contracts; the full FPM
+numerical suite was not rerun. Sampling remains native-only. Other platforms,
+singular distribution extensions and extreme matrix/parameter ranges were not
+newly validated; benchmark baselines were not refreshed.

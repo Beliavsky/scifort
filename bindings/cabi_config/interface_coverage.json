@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 33,
+    "array_adapters": 45,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 168,
-    "python": 121,
+    "exports": 192,
+    "python": 133,
     "scalar": 88
   },
   "procedures": [
@@ -508,6 +508,84 @@
       "python": "gamma.sf",
       "scalar": "scifort_gamma_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_invwishart_entropy_f64",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_entropy",
+      "python": "invwishart.entropy"
+    },
+    {
+      "array_adapter": "scifort_invwishart_logpdf_f64",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_logpdf",
+      "python": "invwishart.logpdf"
+    },
+    {
+      "array_adapter": "scifort_invwishart_mean_f64",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_mean",
+      "python": "invwishart.mean"
+    },
+    {
+      "array_adapter": "scifort_invwishart_mode_f64",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_mode",
+      "python": "invwishart.mode"
+    },
+    {
+      "array_adapter": "scifort_invwishart_pdf_f64",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_pdf",
+      "python": "invwishart.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_status_linalg_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_invwishart_var_f64",
+      "module": "scifort_invwishart",
+      "procedure": "invwishart_var",
+      "python": "invwishart.var"
     },
     {
       "bulk": "scifort_laplace_cdf_vec_f64",
@@ -1414,6 +1492,84 @@
       "python": "weibull.sf",
       "scalar": "scifort_weibull_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_wishart_entropy_f64",
+      "module": "scifort_wishart",
+      "procedure": "wishart_entropy",
+      "python": "wishart.entropy"
+    },
+    {
+      "array_adapter": "scifort_wishart_logpdf_f64",
+      "module": "scifort_wishart",
+      "procedure": "wishart_logpdf",
+      "python": "wishart.logpdf"
+    },
+    {
+      "array_adapter": "scifort_wishart_mean_f64",
+      "module": "scifort_wishart",
+      "procedure": "wishart_mean",
+      "python": "wishart.mean"
+    },
+    {
+      "array_adapter": "scifort_wishart_mode_f64",
+      "module": "scifort_wishart",
+      "procedure": "wishart_mode",
+      "python": "wishart.mode"
+    },
+    {
+      "array_adapter": "scifort_wishart_pdf_f64",
+      "module": "scifort_wishart",
+      "procedure": "wishart_pdf",
+      "python": "wishart.pdf"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_wishart",
+      "procedure": "wishart_rvs",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "module": "scifort_wishart",
+      "procedure": "wishart_rvs_array",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_wishart",
+      "procedure": "wishart_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_wishart",
+      "procedure": "wishart_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_wishart",
+      "procedure": "wishart_status_linalg_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_wishart",
+      "procedure": "wishart_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_wishart_var_f64",
+      "module": "scifort_wishart",
+      "procedure": "wishart_var",
+      "python": "wishart.var"
     }
   ],
   "schema_version": 1,

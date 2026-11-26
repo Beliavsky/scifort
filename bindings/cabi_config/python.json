@@ -237,6 +237,20 @@
       ],
       "prefix": "dirichlet_multinomial_",
       "defaults": {}
+    },
+    "wishart": {
+      "manifests": [
+        "bindings/cabi_config/wishart.json"
+      ],
+      "prefix": "wishart_",
+      "defaults": {}
+    },
+    "invwishart": {
+      "manifests": [
+        "bindings/cabi_config/invwishart.json"
+      ],
+      "prefix": "invwishart_",
+      "defaults": {}
     }
   }
 }
