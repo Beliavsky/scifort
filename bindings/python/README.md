@@ -900,7 +900,8 @@ writing output. C uses explicit dimensions, column-major contiguous arrays and
 caller-owned result buffers. All pointers must be valid, nonnull, aligned and
 nonoverlapping. C status 1 means an invalid dimension and preserves the result
 buffer. Status 0 means the call was valid, including numerical NaN/infinity
-results. Sampling remains native-only pending an explicit RNG-state handle ABI.
+results. The later [batch sampling section](#wishart-and-inverse-wishart-batch-sampling)
+describes the added samplers and their distinct status contracts.
 
 See the generated [Wishart shapes](../../docs/wishart_shapes.md) and
 [inverse-Wishart shapes](../../docs/invwishart_shapes.md). Native sampling and
@@ -1873,3 +1874,132 @@ remains exact. The native dependent multivariate regression also passed.
 The final read-only check passed for all 124 generated artifacts. Encoding/BOM,
 Fortran ASCII/line limits, added local links and whitespace checks passed.
 No numerical tests were repeated for the final documentation-only edits.
+
+## Wishart and inverse-Wishart batch sampling
+
+```python
+state = api.rng(123)
+scale = [[2., .4], [.4, 1.]]
+w = api.wishart.rvs_array(state, 7., scale, n_samples=100)
+iw = api.invwishart.rvs_array(state, 7., scale, n_samples=100)
+assert w.status == iw.status == 0
+assert w.outputs['samples'].shape == (2, 2, 100)
+```
+
+Both signatures are `rvs_array(state, df, scale, *, n_samples=1, out=None)`.
+They return `ArrayResult(status, {'samples': array})`. p is inferred from square
+scale; sample shape is `(p,p,n_samples)`. Each matrix occupies one slice along
+the third axis, with native-endian float64 Fortran layout. C storage places all
+p*p entries of one matrix before the next. NumPy/SciPy commonly place the sample
+axis first; use `np.moveaxis(samples,2,0)` when that orientation is needed.
+`out={'samples': buffer}` requires exact shape/dtype, alignment, writeability,
+Fortran contiguity and disjointness from scale/state. n_samples must be a
+nonnegative C integer; floats and booleans are rejected. Inputs may be converted,
+while caller outputs must already meet the storage contract.
+
+Successful nonempty draws require p>=1, finite df>p-1 and finite SPD scale.
+The lower scale triangle is authoritative; all entries, including the ignored
+upper triangle, must be finite. Singular scale is rejected. The native Bartlett
+Wishart and Wishart-inversion inverse-Wishart algorithms remain in use. They
+share the [explicit RNG bridge](#explicit-rng-streams-and-dirichlet-sampling),
+consume p*(p+1)/2 uniforms per successful matrix and preserve stream order when
+splitting batches. Native/C/Python samples and final state agree exactly for
+the same sampler, parameters and starting state. NumPy/SciPy seeded streams do
+not match by contract. Snapshot/restore and library ownership rules are unchanged.
+
+Empty batches skip native distribution validation, so invalid df or scale values
+can return success without advancing a valid stream. Native code only checks
+leading output extents on this path; C/Python additionally require square scale
+and matching tensor shapes even when empty. Zero-dimensional `(0,0)` scale is
+accepted for an empty batch; it returns native shape status 1 for a nonempty
+batch, with no sample elements. All state/extent/buffer rules still apply.
+
+| Status | Meaning | Output/state behavior |
+| ---: | --- | --- |
+| 0 | Native success | Generated matrices and advanced state |
+| 1 | Invalid extent or shape | Transport rejection preserves caller output/state |
+| 2 | Invalid native df or scale values | Failed matrix and all later matrices NaN; no draws consumed |
+| 3 | Native SPD/solve failure | Completed matrices retained; failed and later matrices NaN; consumed state exported |
+| 4 | Invalid serialized RNG state | Output/state unchanged |
+
+Both native batch routines now explicitly fill the previously unwritten
+remainder with NaN when a scalar draw fails. Successful sample generation is
+unchanged. Native parameter validation failures occur before RNG consumption.
+Inverse-Wishart may fail after drawing its internal Wishart matrix; state then
+includes those uniforms. Existing extreme-df limitations remain: for p=1 and a
+tiny positive df, chi-square inversion can produce a nonfinite draw. At df=1e-300
+the checked and optimized tests observe NaN Wishart output with native status 0,
+while inverse-Wishart reports status 3 when the subsequent factorization fails. These interfaces preserve
+that numerical behavior; status 0 is not a universal finite/SPD guarantee for
+extreme parameters. Ordinary-parameter tests check SPD, symmetry and moments.
+
+```c
+void scifort_wishart_rvs_array_f64(int p, int n_samples, int64_t *state,
+                                 double df, const double *scale, double *samples, int *status);
+void scifort_invwishart_rvs_array_f64(int p, int n_samples, int64_t *state,
+                                    double df, const double *scale, double *samples, int *status);
+```
+
+All pointers must be valid, aligned, disjoint, nonnull and fully sized, including
+empty calls; use nonnull scratch storage for zero-size arrays. State uses six
+int64 components. Fortran descriptors stay inside the adapter. See the generated
+[Wishart shapes](../../docs/wishart_shapes.md#wishart_rvs_array) and
+[inverse-Wishart shapes](../../docs/invwishart_shapes.md#invwishart_rvs_array).
+
+## Wishart sampler validation (2026-11-26)
+
+Validation uses GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_rank_three_outputs.py -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -p test_wishart_sampling.py -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The independent rank-three fixture checks third-axis extent parsing, tensor
+layout, C/Python buffer ownership, zero extents and rejection of unsupported
+rank/type/intent policies. Sampler integration compares exact native/C/Python
+samples and final state, split and one-matrix batches, lower-triangle use,
+symmetry/SPD, analytic mean/entrywise variance, empty and invalid parameters,
+state/buffer guards and defined failure remainders. A deterministic later
+inverse-Wishart failure checks retained completed matrices and advanced state:
+seed 2**40+123, ten initial uniforms, df=0.0001, unit one-dimensional scale.
+The first matrix succeeds and the second fails. A separate tiny-df check records
+the existing Wishart NaN/status-0 limitation rather than assuming a zero draw.
+
+Checked builds use `-O0 -g -fcheck=all -fbacktrace`; optimized builds use `-O3`.
+Both use `-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+Native/C clients are compiled and run for both builds. C11 and C++17 header
+checks use `-Wall -Wextra -Werror`. The native matrix-distribution regression
+also compiled the edited modules directly, reusing local FPM dependencies:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\wishart.f90 src\stats\invwishart.f90 test\test_checks.f90 ^
+  test\test_matrix_distributions_reference.f90 test\test_matrix_distributions.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\matrix.exe
+build\multivariate-parameters-regression\matrix.exe
+```
+
+These cache paths are local artifacts. The full FPM suite was not run: the native
+change affects only previously unwritten batch-error remainders, while compiled
+generator fixtures, all configured bindings and the native matrix-distribution
+regression cover the affected interfaces and dependencies. The full suite
+remains required before merge or release. Other platforms were not newly
+validated. Existing C prototypes and successful sampler algorithms are unchanged;
+coverage now includes 159 Python methods and 71 array adapters. Matrix-normal
+and matrix-t batch samplers remain future work.
+
+All 88 generator tests and all 98 binding tests passed. A subsequent focused run
+of all six sampler tests passed with the additional deterministic late-failure
+native/C/Python checks, in checked and optimized builds. The native dependent
+matrix-distribution regression passed. All 124 generated artifacts passed the
+read-only consistency check. Encoding/BOM, Fortran ASCII/line limits, added local
+links, preserved existing C prototypes and whitespace checks passed. No numerical
+tests were repeated for final documentation-only edits.

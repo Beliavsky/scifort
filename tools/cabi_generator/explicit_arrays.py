@@ -201,8 +201,8 @@ def prepare(config, api, identifier, source_lines):
                                                   or any(str(item) != ":" for item in shape.items))):
                 raise ValueError(f"{name}: {arg} must be scalar or assumed-shape with ':' bounds")
             rank = len(shape.items) if shape else 0
-            if rank > 2:
-                raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
+            if rank > 2 and not (rank == 3 and category == 'real' and intent == 'out'):
+                raise ValueError(f"{name}: rank-three arrays require real intent(out); higher ranks are unsupported")
             if category == 'integer' and intent == 'inout':
                 raise ValueError(f'{name}: integer intent(inout) arguments are unsupported')
             if arg in promoted and (rank or intent != 'in' or 'optional' not in attrs):

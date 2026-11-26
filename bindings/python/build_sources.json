@@ -89,7 +89,9 @@
       "src/stats/gamma.f90"
     ],
     "src/c_api/generated/invwishart_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/invwishart.f90"
     ],
     "src/c_api/generated/laplace_generated.f90": [
@@ -161,7 +163,9 @@
       "src/stats/weibull.f90"
     ],
     "src/c_api/generated/wishart_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/wishart.f90"
     ],
     "src/c_api/rng_bridge.f90": [
@@ -480,7 +484,7 @@
     "src/c_api/generated/dirichlet_multinomial_generated.f90": "0d7e4449f2a145dac54aeaaa7ec8f79b70403b6f1dff62bde3687b22190fd381",
     "src/c_api/generated/exponential_generated.f90": "0b573e7ae16b89708854e4893b9aa8c96a245331ccaab1edf47e33f9c69d7e53",
     "src/c_api/generated/gamma_generated.f90": "52dc2431ea06a1b38f6faa5fa4d8ef4230c8a9d30dff73775e1d2ef12585c280",
-    "src/c_api/generated/invwishart_generated.f90": "a44b759dca7f101bb34cc6b8b3c3a5fd32308f504ff30b9f2d6408876bad577e",
+    "src/c_api/generated/invwishart_generated.f90": "3f86737b1260218c6dc2851a90110a313e5c71463be398f7d83c7db9f3527ac2",
     "src/c_api/generated/laplace_generated.f90": "8c2dfd393a9d25ef918d738ab4647b965b2f9553c97e5b45d505aacfbc5ca99b",
     "src/c_api/generated/linalg_generated.f90": "c8fad13d537a112351984c444bb7417ef0360b1506c3f2166c7eed054d6866bd",
     "src/c_api/generated/logistic_generated.f90": "55c171ea93a4c34a385ddba7e096758d07c4c8626d4ca07c8c5c7d925f30bfe0",
@@ -496,7 +500,7 @@
     "src/c_api/generated/poisson_binom_generated.f90": "19da18819b5d8578b476088416385a381c5feb04ca38922662c892797a08f88a",
     "src/c_api/generated/student_t_generated.f90": "dc1c5f9e57a68f3448d9eafa22bd975f5eeadead0709aa48ec0e6e8381c7bd77",
     "src/c_api/generated/weibull_generated.f90": "90da7ffd10659ecae33b9757c4f8c851138cba04f13b233cdc465262f3a83581",
-    "src/c_api/generated/wishart_generated.f90": "53f2e565b29d955c0bacfbf33ef035c750cf466e6710e17c3083ace9bc0f4b4d",
+    "src/c_api/generated/wishart_generated.f90": "a5b1d5b3b871da9d3b1853bc75715f29905e3db7fa5e9fd2b271f2f2b74b9d65",
     "src/c_api/rng_bridge.f90": "964d64258685671cb15562c4bd10b48b7cb21d04f3936f1dd10f14753d799565",
     "src/constants.f90": "c49598c1f413384af26a4468b2ff442a68d5f015a983c404bd3150e6cdde874e",
     "src/kinds.f90": "afbca1b088e17f5c0ff7930c693e9ae9e0b699b31a826cb25bc139597fe66f46",
@@ -517,7 +521,7 @@
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
     "src/stats/hypergeom.f90": "f1667ae722f1af2262936c5110e26f71cfb715868c861c92b6196b5a2a53740a",
-    "src/stats/invwishart.f90": "9349d4d61fafb297616089fae4fb9c5ab891687accd495ab9476988c2aec6f06",
+    "src/stats/invwishart.f90": "6cc9c5eabe6e3bd457a4215ee5b9a9e5e180bee05dd762ef9db0ed830c0bcade",
     "src/stats/laplace.f90": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57",
     "src/stats/logistic.f90": "ee5488b4d39aacd4a2e1b3f4d364836e234a13d412bf327585d96e01518795a5",
     "src/stats/lognormal.f90": "14ba6ae77569d7d4c0711cb9d66e73183d187407e3c06300c09a9488de8b9274",
@@ -533,7 +537,7 @@
     "src/stats/poisson_binom.f90": "0872d1301897add8d98c8cfcb6cf64f4a77b7c92ed84b80b526e6f5fb7a50863",
     "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",
     "src/stats/weibull.f90": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585",
-    "src/stats/wishart.f90": "8f9ccdd13f86cc623e69e5a1fa05a0b4b741cf300d3c67be2b2e2ec42878a6e2"
+    "src/stats/wishart.f90": "06a6d3a5fee8ffd4aef455e64d0499e34d52522697f211769d9e1b512ae32b42"
   },
   "sources": [
     "src/kinds.f90",

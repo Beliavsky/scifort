@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 6,
+  "generated_symbol_count": 7,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -245,13 +245,81 @@
     },
     {
       "procedure": "invwishart_rvs",
-      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
+      "reason": "Single draws are available through the batch sampler with n_samples=1.",
       "state": "excluded"
     },
     {
+      "arguments": [
+        "state",
+        "df",
+        "scale",
+        "samples",
+        "status"
+      ],
+      "dimension_order": [
+        "p",
+        "n_samples"
+      ],
+      "dimensions": {
+        "n_samples": 0,
+        "p": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
       "procedure": "invwishart_rvs_array",
-      "reason": "Explicit RNG state needs a separately reviewed handle interface.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "Only leading sample extents are checked; parameters are not validated.",
+            "dimension": "n_samples",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "n_samples": {
+            "argument": "samples",
+            "axis": 3
+          },
+          "p": {
+            "argument": "scale",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n_samples": 0,
+          "p": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "samples": [
+          "p",
+          "p",
+          "n_samples"
+        ],
+        "scale": [
+          "p",
+          "p"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_invwishart_rvs_array_f64"
+      ]
     },
     {
       "procedure": "invwishart_status_invalid_parameter",
@@ -327,5 +395,5 @@
   ],
   "public_api_count": 12,
   "source": "src/stats/invwishart.f90",
-  "source_sha256": "9349d4d61fafb297616089fae4fb9c5ab891687accd495ab9476988c2aec6f06"
+  "source_sha256": "6cc9c5eabe6e3bd457a4215ee5b9a9e5e180bee05dd762ef9db0ed830c0bcade"
 }

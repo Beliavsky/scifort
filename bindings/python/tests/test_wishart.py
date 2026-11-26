@@ -144,7 +144,8 @@ class WishartTests(unittest.TestCase):
             x=np.eye(2,order='F');scale=np.array([[2.,.4],[.4,1.]],order='F')
             xp=x.ctypes.data_as(C.c_void_p);sp=scale.ctypes.data_as(C.c_void_p)
             for name in ('wishart','invwishart'):
-                for method,fn in getattr(api,name)._functions.items():
+                for method in ('pdf','logpdf','mean','mode','var','entropy'):
+                    fn=getattr(api,name)._functions[method]
                     out=np.full(4,99.);op=out.ctypes.data_as(C.POINTER(C.c_double));status=C.c_int(-1)
                     def call(p,df):
                         args=[p,xp,df,sp] if method in ('pdf','logpdf') else [p,df,sp]

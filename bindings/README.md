@@ -136,3 +136,7 @@ See the [sampling and integer buffer contract](python/README.md#integer-count-ba
 Multivariate normal and Student t batch samplers are also available through the
 state bridge, with optional location/matrix parameters and explicit output
 extents. See [vector sampling](python/README.md#multivariate-vector-batch-sampling).
+
+Wishart and inverse-Wishart batch samplers expose rank-three matrix outputs
+through the same caller-owned stream bridge. See
+[matrix batch sampling](python/README.md#wishart-and-inverse-wishart-batch-sampling).

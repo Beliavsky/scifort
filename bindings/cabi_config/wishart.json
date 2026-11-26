@@ -8,12 +8,15 @@
   "header_guard": "SCIFORT_GENERATED_WISHART_H",
   "functions": {},
   "argument_docs": {
-    "p": "matrix dimension, >= 1",
+    "p": "matrix dimension; nonempty sampling requires >= 1",
     "df": "finite degrees of freedom, > p-1; native moment thresholds apply",
     "scale": "finite symmetric positive-definite scale matrix",
     "x": "finite symmetric positive-definite evaluation matrix",
     "value": "native scalar or matrix result; numerical errors retain native NaN values",
-    "status": "0 valid call; 1 invalid matrix extent"
+    "status": "0 success; other codes follow the method-specific error contract",
+    "n_samples": "number of sample matrices, >= 0",
+    "samples": "shape (p,p,n_samples); matrix draws along the third axis",
+    "state": "six caller-owned int64 RNG components"
   },
   "array_functions": {
     "wishart_logpdf": {
@@ -170,11 +173,52 @@
     "shape_documentation": "docs/wishart_shapes.md"
   },
   "excluded": {
-    "wishart_rvs": "Explicit RNG state needs a separately reviewed handle interface.",
-    "wishart_rvs_array": "Explicit RNG state needs a separately reviewed handle interface.",
+    "wishart_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "wishart_status_success": "Native status constant, not a callable procedure.",
     "wishart_status_invalid_shape": "Native status constant, not a callable procedure.",
     "wishart_status_invalid_parameter": "Native status constant, not a callable procedure.",
     "wishart_status_linalg_failure": "Native status constant, not a callable procedure."
+  },
+  "subroutines": {
+    "wishart_rvs_array": {
+      "symbol": "scifort_wishart_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "p",
+          "minimum": 0
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "scale": [
+          "p",
+          "p"
+        ],
+        "samples": [
+          "p",
+          "p",
+          "n_samples"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw wishart matrices using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    }
   }
 }

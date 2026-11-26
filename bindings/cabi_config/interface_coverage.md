@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 69 |
+| array_adapters | 71 |
 | elementwise | 88 |
-| python | 157 |
+| python | 159 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -75,7 +75,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_invwishart | invwishart_mode |  |  | scifort_invwishart_mode_f64 |  | invwishart.mode |
 | scifort_invwishart | invwishart_pdf |  |  | scifort_invwishart_pdf_f64 |  | invwishart.pdf |
 | scifort_invwishart | invwishart_rvs |  |  |  |  |  |
-| scifort_invwishart | invwishart_rvs_array |  |  |  |  |  |
+| scifort_invwishart | invwishart_rvs_array |  |  | scifort_invwishart_rvs_array_f64 |  | invwishart.rvs_array |
 | scifort_invwishart | invwishart_status_invalid_parameter |  |  |  |  |  |
 | scifort_invwishart | invwishart_status_invalid_shape |  |  |  |  |  |
 | scifort_invwishart | invwishart_status_linalg_failure |  |  |  |  |  |
@@ -225,7 +225,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_wishart | wishart_mode |  |  | scifort_wishart_mode_f64 |  | wishart.mode |
 | scifort_wishart | wishart_pdf |  |  | scifort_wishart_pdf_f64 |  | wishart.pdf |
 | scifort_wishart | wishart_rvs |  |  |  |  |  |
-| scifort_wishart | wishart_rvs_array |  |  |  |  |  |
+| scifort_wishart | wishart_rvs_array |  |  | scifort_wishart_rvs_array_f64 |  | wishart.rvs_array |
 | scifort_wishart | wishart_status_invalid_parameter |  |  |  |  |  |
 | scifort_wishart | wishart_status_invalid_shape |  |  |  |  |  |
 | scifort_wishart | wishart_status_linalg_failure |  |  |  |  |  |

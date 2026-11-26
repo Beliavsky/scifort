@@ -9,7 +9,8 @@ module scifort_c_api_generated_invwishart
     use scifort_invwishart, only : cg_native_2 => invwishart_mean
     use scifort_invwishart, only : cg_native_3 => invwishart_mode
     use scifort_invwishart, only : cg_native_4 => invwishart_pdf
-    use scifort_invwishart, only : cg_native_5 => invwishart_var
+    use scifort_invwishart, only : cg_native_5 => invwishart_rvs_array
+    use scifort_invwishart, only : cg_native_6 => invwishart_var
     implicit none
     private
     public :: scifort_invwishart_entropy_f64
@@ -17,6 +18,7 @@ module scifort_c_api_generated_invwishart
     public :: scifort_invwishart_mean_f64
     public :: scifort_invwishart_mode_f64
     public :: scifort_invwishart_pdf_f64
+    public :: scifort_invwishart_rvs_array_f64
     public :: scifort_invwishart_var_f64
 contains
 
@@ -25,11 +27,11 @@ contains
         bind(c, name="scifort_invwishart_entropy_f64")
         !! Return the differential entropy.
         implicit none
-        integer(c_int), value, intent(in) :: p !! matrix dimension, >= 1
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
         real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
         real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
         real(c_double), intent(inout) :: value !! native scalar or matrix result; numerical errors retain native NaN values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid matrix extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -51,12 +53,12 @@ contains
         bind(c, name="scifort_invwishart_logpdf_f64")
         !! Evaluate the log density at one positive-definite matrix.
         implicit none
-        integer(c_int), value, intent(in) :: p !! matrix dimension, >= 1
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
         real(c_double), intent(in) :: x(p,p) !! finite symmetric positive-definite evaluation matrix
         real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
         real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
         real(c_double), intent(inout) :: value !! native scalar or matrix result; numerical errors retain native NaN values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid matrix extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -79,11 +81,11 @@ contains
         bind(c, name="scifort_invwishart_mean_f64")
         !! Return the entrywise mean matrix.
         implicit none
-        integer(c_int), value, intent(in) :: p !! matrix dimension, >= 1
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
         real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
         real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
         real(c_double), intent(inout) :: value(p,p) !! native scalar or matrix result; numerical errors retain native NaN values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid matrix extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -105,11 +107,11 @@ contains
         bind(c, name="scifort_invwishart_mode_f64")
         !! Return the mode matrix.
         implicit none
-        integer(c_int), value, intent(in) :: p !! matrix dimension, >= 1
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
         real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
         real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
         real(c_double), intent(inout) :: value(p,p) !! native scalar or matrix result; numerical errors retain native NaN values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid matrix extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -131,12 +133,12 @@ contains
         bind(c, name="scifort_invwishart_pdf_f64")
         !! Evaluate the density at one positive-definite matrix.
         implicit none
-        integer(c_int), value, intent(in) :: p !! matrix dimension, >= 1
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
         real(c_double), intent(in) :: x(p,p) !! finite symmetric positive-definite evaluation matrix
         real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
         real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
         real(c_double), intent(inout) :: value !! native scalar or matrix result; numerical errors retain native NaN values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid matrix extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -154,16 +156,62 @@ contains
         status=0_c_int
     end subroutine scifort_invwishart_pdf_f64
 
+    subroutine scifort_invwishart_rvs_array_f64( &
+        p, n_samples, state, df, scale, samples, status) &
+        bind(c, name="scifort_invwishart_rvs_array_f64")
+        !! Draw invwishart matrices using caller-owned RNG state.
+        use, intrinsic :: iso_c_binding, only : c_int64_t
+        use scifort_random, only : cg_type_state => rng_state
+        use scifort_rng_c_bridge, only : cg_load_state => rng_load_c_state, &
+            cg_store_state => rng_store_c_state
+        implicit none
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
+        integer(c_int), value, intent(in) :: n_samples !! number of sample matrices, >= 0
+        integer(c_int64_t), intent(inout) :: state(6) !! six caller-owned int64 RNG components
+        real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
+        real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
+        real(c_double), intent(inout) :: samples(p,p,n_samples) !! shape (p,p,n_samples); matrix draws along the third axis
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
+        integer :: cg_state_status
+        type(cg_type_state) :: cg_state_state
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (p < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (n_samples < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        call cg_load_state(state,cg_state_state,cg_state_status)
+        if (cg_state_status /= 0) then
+            status=4_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_5( &
+            state=cg_state_state, &
+            df=df, &
+            scale=scale, &
+            samples=samples, &
+            status=status)
+        call cg_store_state(cg_state_state,state)
+    end subroutine scifort_invwishart_rvs_array_f64
+
     subroutine scifort_invwishart_var_f64( &
         p, df, scale, value, status) &
         bind(c, name="scifort_invwishart_var_f64")
         !! Return the entrywise variances, not a covariance tensor.
         implicit none
-        integer(c_int), value, intent(in) :: p !! matrix dimension, >= 1
+        integer(c_int), value, intent(in) :: p !! matrix dimension; nonempty sampling requires >= 1
         real(c_double), value, intent(in) :: df !! finite degrees of freedom, > p-1; native moment thresholds apply
         real(c_double), intent(in) :: scale(p,p) !! finite symmetric positive-definite scale matrix
         real(c_double), intent(inout) :: value(p,p) !! native scalar or matrix result; numerical errors retain native NaN values
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid matrix extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -174,7 +222,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_5( &
+        value=cg_native_6( &
             df=df, &
             scale=scale)
         status=0_c_int

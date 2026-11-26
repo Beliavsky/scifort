@@ -544,3 +544,26 @@ and transport shapes/flags are always validated. See the detailed
 [Python and C contract](../python/README.md#multivariate-vector-batch-sampling),
 [normal shape tables](../../docs/multivariate_normal_shapes.md#multivariate_normal_rvs_array)
 and [Student t shape tables](../../docs/multivariate_t_shapes.md#multivariate_t_rvs_array).
+
+## Wishart and inverse-Wishart batch samplers
+
+Both manifests now select `rvs_array`, producing
+`scifort_wishart_rvs_array_f64` and `scifort_invwishart_rvs_array_f64`. Each takes
+p, n_samples, serialized state, df, scale, samples and status, with column-major
+`(p,p,n_samples)` output and `(p,p)` scale. p is inferred from scale in Python;
+n_samples is keyword-only with default 1. p and n_samples may be zero for storage,
+but a successful nonempty batch requires positive p and valid parameters.
+
+Native empty batches skip df/scale-value validation. The C/Python shape policy
+requires square scale even for an empty batch, unlike the more permissive native
+empty path. State and transport dimensions are always validated. New sampling
+statuses are 0 success, 1 invalid extent/shape, 2 invalid native parameters,
+3 native linear-algebra failure and 4 invalid serialized RNG state. Transport
+errors preserve output and state. After native failure, completed matrices are
+retained, the failing matrix has its native result, and the unwritten remainder
+is now explicitly NaN in both native and foreign-language APIs. Native consumed
+state is exported even on failure.
+
+See [Python/C sampling contracts](../python/README.md#wishart-and-inverse-wishart-batch-sampling),
+[Wishart shapes](../../docs/wishart_shapes.md#wishart_rvs_array) and
+[inverse-Wishart shapes](../../docs/invwishart_shapes.md#invwishart_rvs_array).

@@ -1,3 +1,14 @@
+## 2026-11-26 - Rank-three outputs and Wishart sampling interfaces
+
+- Support rank-three real subroutine outputs and third-axis shape annotations
+  in the C ABI generator; keep rank-three inputs and integer outputs unsupported.
+- Add Wishart and inverse-Wishart C/Python batch samplers with caller-owned RNG
+  streams, explicit sample counts and column-major `(p,p,n_samples)` outputs.
+- Define previously unwritten native batch remainders as NaN after failure,
+  retaining completed matrices and consumed state; valid sampling is unchanged.
+- Document empty batches and numerical limitations; test native/C/Python streams,
+  matrix properties, moments, integer extents, buffers and failure outputs.
+
 ## 2026-11-26 - Multivariate normal and Student t sampling interfaces
 
 - Bind both native batch samplers through the generated C ABI and Python API,

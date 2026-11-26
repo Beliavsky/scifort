@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 69,
+    "array_adapters": 71,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 157,
+    "python": 159,
     "scalar": 88
   },
   "procedures": [
@@ -540,17 +540,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "c_manifest_exclusion": "Single draws are available through the batch sampler with n_samples=1.",
       "module": "scifort_invwishart",
       "procedure": "invwishart_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "array_adapter": "scifort_invwishart_rvs_array_f64",
       "module": "scifort_invwishart",
       "procedure": "invwishart_rvs_array",
-      "scalar_generated": false
+      "python": "invwishart.rvs_array"
     },
     {
       "bulk_generated": false,
@@ -1683,17 +1682,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "c_manifest_exclusion": "Single draws are available through the batch sampler with n_samples=1.",
       "module": "scifort_wishart",
       "procedure": "wishart_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Explicit RNG state needs a separately reviewed handle interface.",
+      "array_adapter": "scifort_wishart_rvs_array_f64",
       "module": "scifort_wishart",
       "procedure": "wishart_rvs_array",
-      "scalar_generated": false
+      "python": "wishart.rvs_array"
     },
     {
       "bulk_generated": false,

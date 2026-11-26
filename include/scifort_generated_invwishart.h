@@ -3,6 +3,7 @@
 #ifndef SCIFORT_GENERATED_INVWISHART_H
 #define SCIFORT_GENERATED_INVWISHART_H
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,6 +61,16 @@ void scifort_invwishart_mode_f64(int arg_p, double arg_df, const double * arg_sc
  * Status 0 means the call was valid; native numerical NaN/infinity is retained.
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_invwishart_pdf_f64(int arg_p, const double * arg_x, double arg_df, const double * arg_scale, double * arg_value, int *arg_status);
+
+/* Draw invwishart matrices using caller-owned RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * state: caller-owned int64_t[6]; invalid state returns 4 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_invwishart_rvs_array_f64(int arg_p, int arg_n_samples, int64_t * arg_state, double arg_df, const double * arg_scale, double * arg_samples, int *arg_status);
 
 /* Return the entrywise variances, not a covariance tensor.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.

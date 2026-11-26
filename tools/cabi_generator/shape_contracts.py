@@ -37,7 +37,7 @@ def prepare(node, source_lines, entry):
         if not text.startswith('!! @'):
             continue
         text = text[3:].strip()
-        match = re.fullmatch(r'@dimension\s+(\w+)\s*=\s*size\(\s*(\w+)\s*(?:,\s*([12]))?\s*\)',
+        match = re.fullmatch(r'@dimension\s+(\w+)\s*=\s*size\(\s*(\w+)\s*(?:,\s*([123]))?\s*\)',
                              text, re.I)
         if match:
             dim, arg = match[1].lower(), match[2].lower()

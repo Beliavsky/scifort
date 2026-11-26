@@ -1,3 +1,16 @@
+## 2026-11-26 - Rank-three outputs and Wishart sampling interfaces
+
+The rank-three generator/shape-parser extension, reviewed manifests, interface
+contracts and independent fixtures are original MIT SciFort work. No upstream
+implementation was imported or adapted. Samplers delegate to the existing
+Wishart Bartlett and inverse-Wishart inversion implementations; their original
+provenance and MRG32k3a RNG remain applicable. Native batch changes initialize
+only the previously unwritten remainder to NaN after failure and add purpose/
+shape/error documentation and explicit implicit-none. Successful numerical
+formulas and stream order are unchanged. Tests compare native/C/Python streams,
+analytic moments and matrix identities; the independent matrix-stack fixture
+checks layout and output contracts without reproducing a sampling algorithm.
+
 ## 2026-11-26 - Multivariate normal and Student t sampling interfaces
 
 The scalar-promotion generator policy, reviewed manifests, shape contracts and

@@ -258,15 +258,24 @@ contains
     end subroutine invwishart_rvs
 
     subroutine invwishart_rvs_array(state, df, scale, samples, status)
-        !! Draw random matrices into the third dimension.
-        !! p = size(scale,1), p >= 1; scale and each draw have shape (p,p).
-        !! b = size(samples,3), b >= 0; empty batches are permitted.
-        !! With b = 0 only the leading sample extents are checked; df and scale
-        !! squareness, finiteness and positive-definiteness are not validated.
+        !! Draw matrix samples along the third axis using explicit RNG state.
+        !! @dimension p = size(scale,1)
+        !! @dimension n_samples = size(samples,3)
+        !! @require p >= 0
+        !! @require n_samples >= 0
+        !! @when n_samples == 0: Only leading sample extents are checked; parameters are not validated.
+        !! p=size(scale,1), n_samples=size(samples,3); both extents may be zero.
+        !! size(samples,1)=size(samples,2)=p. Nonempty valid draws require p>=1,
+        !! square finite SPD scale and finite df>p-1; the lower scale triangle is used.
+        !! Empty batches skip df and scale squareness/finiteness/SPD validation.
+        !! On generation failure, completed matrices are retained and all matrices
+        !! after the failing matrix are NaN. The failing matrix retains its native
+        !! scalar result. State includes all draws consumed before failure.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
         real(dp), intent(in) :: df !! finite degrees of freedom, > p-1
         real(dp), intent(in) :: scale(:, :) !! shape (p,p); finite SPD scale; lower triangle defines symmetry
-        real(dp), intent(out) :: samples(:, :, :) !! shape (p,p,b); random SPD matrices; b may be zero
+        real(dp), intent(out) :: samples(:, :, :) !! shape (p,p,n_samples); generated matrices along the third axis
         integer, intent(out), optional :: status !! invwishart_status_* result
 
         integer :: info
@@ -280,6 +289,7 @@ contains
         do k = 1, size(samples,3)
             call invwishart_rvs(state, df, scale, samples(:,:,k), info)
             if (info /= invwishart_status_success) then
+                if (k < size(samples,3)) samples(:,:,k+1:) = quiet_nan(0.0_dp)
                 if (present(status)) status = info
                 return
             end if

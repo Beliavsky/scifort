@@ -338,14 +338,24 @@
         "bindings/cabi_config/wishart.json"
       ],
       "prefix": "wishart_",
-      "defaults": {}
+      "defaults": {},
+      "output_dimensions": {
+        "wishart_rvs_array": {
+          "n_samples": 1
+        }
+      }
     },
     "invwishart": {
       "manifests": [
         "bindings/cabi_config/invwishart.json"
       ],
       "prefix": "invwishart_",
-      "defaults": {}
+      "defaults": {},
+      "output_dimensions": {
+        "invwishart_rvs_array": {
+          "n_samples": 1
+        }
+      }
     },
     "matrix_normal": {
       "manifests": [

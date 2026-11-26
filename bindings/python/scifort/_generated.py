@@ -1212,6 +1212,29 @@ class Invwishart(ArrayGroup):
              'shapes': {'scale': ['p', 'p'], 'x': ['p', 'p']},
              'status': 'status',
              'symbol': 'scifort_invwishart_pdf_f64'},
+     'rvs_array': {'arguments': ['state', 'df', 'scale', 'samples', 'status'],
+                   'definitions': {'n_samples': {'argument': 'samples', 'axis': 3},
+                                   'p': {'argument': 'scale', 'axis': 1}},
+                   'dimensions': ['p', 'n_samples'],
+                   'inputs': ['state', 'df', 'scale'],
+                   'logical_inputs': {},
+                   'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 3},
+                                'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n_samples': 0, 'p': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'samples': ['p', 'p', 'n_samples'], 'scale': ['p', 'p']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_invwishart_rvs_array_f64'},
      'var': {'arguments': ['df', 'scale', 'value', 'status'],
              'definitions': {'p': {'argument': 'scale', 'axis': 1}},
              'dimensions': ['p'],
@@ -1246,6 +1269,10 @@ class Invwishart(ArrayGroup):
     def pdf(self, x, df, scale):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'df': df, 'scale': scale}, None)
+
+    def rvs_array(self, state, df, scale, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'df': df, 'scale': scale, 'n_samples': n_samples}, out)
 
     def var(self, df, scale, *, out=None):
         """Return the native array result; optionally use caller-owned out."""
@@ -2461,6 +2488,29 @@ class Wishart(ArrayGroup):
              'shapes': {'scale': ['p', 'p'], 'x': ['p', 'p']},
              'status': 'status',
              'symbol': 'scifort_wishart_pdf_f64'},
+     'rvs_array': {'arguments': ['state', 'df', 'scale', 'samples', 'status'],
+                   'definitions': {'n_samples': {'argument': 'samples', 'axis': 3},
+                                   'p': {'argument': 'scale', 'axis': 1}},
+                   'dimensions': ['p', 'n_samples'],
+                   'inputs': ['state', 'df', 'scale'],
+                   'logical_inputs': {},
+                   'metadata': {'df': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 3},
+                                'scale': {'category': 'real', 'intent': 'in', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n_samples': 0, 'p': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'samples': ['p', 'p', 'n_samples'], 'scale': ['p', 'p']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_wishart_rvs_array_f64'},
      'var': {'arguments': ['df', 'scale', 'value', 'status'],
              'definitions': {'p': {'argument': 'scale', 'axis': 1}},
              'dimensions': ['p'],
@@ -2495,6 +2545,10 @@ class Wishart(ArrayGroup):
     def pdf(self, x, df, scale):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'df': df, 'scale': scale}, None)
+
+    def rvs_array(self, state, df, scale, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'df': df, 'scale': scale, 'n_samples': n_samples}, out)
 
     def var(self, df, scale, *, out=None):
         """Return the native array result; optionally use caller-owned out."""

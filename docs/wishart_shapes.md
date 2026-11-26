@@ -75,6 +75,25 @@ Evaluate the density at one positive-definite matrix.
 | `x` | `(:,:)` | `(p,p)` | finite symmetric positive-definite evaluation matrix |
 | `scale` | `(:,:)` | `(p,p)` | finite symmetric positive-definite scale matrix |
 
+## wishart_rvs_array
+
+Draw wishart matrices using caller-owned RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `p` | `size(scale,1)` | 0 |
+| `n_samples` | `size(samples,3)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `scale` | `(:,:)` | `(p,p)` | finite symmetric positive-definite scale matrix |
+| `samples` | `(:,:,:)` | `(p,p,n_samples)` | shape (p,p,n_samples); matrix draws along the third axis |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 4 without native execution.
+
+When `n_samples == 0`: Only leading sample extents are checked; parameters are not validated.
+
 ## wishart_var
 
 Return the entrywise variances, not a covariance tensor.

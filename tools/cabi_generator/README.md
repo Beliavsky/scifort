@@ -12,7 +12,7 @@ argument/result declarations, and `intent(in)` inputs. Elemental functions can
 also receive a bulk wrapper with one varying input and uniform scalar parameters.
 The native real kind and its module are configured; conversion to/from
 `c_double` is explicit. SciFort's initial integration uses binary64 throughout.
-Rank-one/rank-two assumed-shape array subroutines can now receive explicit-shape
+Rank-one/rank-two arrays and rank-three real output arrays can receive explicit-shape
 `bind(c)` adapters, with a native integer status output or an explicitly
 configured synthetic call status. Their native
 implementations are unchanged; no C implementation or pointer conversion is needed.
@@ -489,7 +489,7 @@ before allocating outputs. Exact array shapes and minimum sizes come from those
 checked contracts. All selected subroutines in the supplied manifests are exposed;
 names/defaults and group collisions are validated. Native scalar real inputs,
 scalar logical inputs with explicit C mappings, and real/integer scalar and
-rank-one/two array outputs are supported. Native `intent(inout)` arguments need
+rank-one/two array outputs are supported, plus rank-three real subroutine outputs. Native `intent(inout)` arguments need
 a reviewed state codec; optional real input arrays need a presence policy.
 Methods return `ArrayResult(status, outputs)`;
 numerical statuses and partial outputs are retained.
@@ -837,3 +837,19 @@ repeated names, nonoptional dummies, arrays, logicals, derived types, status
 outputs, other intents and function policies are rejected. Existing scalar
 function promotion and other interfaces retain their behavior. See the
 [multivariate sampler contract](../../bindings/python/README.md#multivariate-vector-batch-sampling).
+
+## Rank-three real outputs
+
+Reviewed subroutines may expose `real(kind), intent(out) :: array(:,:,:)` using
+three declared extent names and caller-owned C double storage. Native structured
+annotations accept `size(array,3)` for an output-defined batch extent. Python
+allocates native-endian float64 Fortran-contiguous tensors, or accepts exact
+shape/dtype/alignment/writeability through the existing out mapping. The first
+axis varies fastest in C storage; a matrix batch `(p,p,n_samples)` stores each
+matrix contiguously. Empty extents use valid nonnull scratch buffers.
+
+Rank-three inputs, integer tensors, real intent(inout) tensors, higher ranks and
+rank-three function results remain unsupported. Optional real inputs remain
+rank one/two. Shape annotations still validate the referenced axis against the
+actual rank and configured extent. See the independent rank-three fixture and
+[Wishart sampling contract](../../bindings/python/README.md#wishart-and-inverse-wishart-batch-sampling).
