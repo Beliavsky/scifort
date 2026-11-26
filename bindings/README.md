@@ -132,3 +132,7 @@ Read the [state, shape and failure contract](python/README.md#explicit-rng-strea
 Generated integer-output batch samplers now cover multinomial and multivariate
 hypergeometric distributions using the same caller-owned RNG stream as Dirichlet.
 See the [sampling and integer buffer contract](python/README.md#integer-count-batch-sampling).
+
+Multivariate normal and Student t batch samplers are also available through the
+state bridge, with optional location/matrix parameters and explicit output
+extents. See [vector sampling](python/README.md#multivariate-vector-batch-sampling).

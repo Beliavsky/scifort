@@ -133,11 +133,15 @@
       "src/stats/multivariate_hypergeom.f90"
     ],
     "src/c_api/generated/multivariate_normal_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/multivariate_normal.f90"
     ],
     "src/c_api/generated/multivariate_t_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/multivariate_t.f90"
     ],
     "src/c_api/generated/normal_generated.f90": [
@@ -486,8 +490,8 @@
     "src/c_api/generated/matrix_t_generated.f90": "59490510b1964701bed098b6b7f5b8f7b1fb6fa8ed0696cd400bf763c4d6158f",
     "src/c_api/generated/multinomial_generated.f90": "f024492af4721ee82360e53707754ee64140edfbe6223b8b1ed24b3ae954625f",
     "src/c_api/generated/multivariate_hypergeom_generated.f90": "58a3cd9b273ffe2711394d8c64437f7d4c07c292d305311d35c905f425020665",
-    "src/c_api/generated/multivariate_normal_generated.f90": "3d15d93c238bb1ef47c2e65093ef48066785579c7e6703d4fc8fdb451d54a41d",
-    "src/c_api/generated/multivariate_t_generated.f90": "8374885e5a1cf138cdc7d677880b23aaf62d4146cd1a9fc8feced9784d2a589c",
+    "src/c_api/generated/multivariate_normal_generated.f90": "8dde911f9128474475b1fa2abaf72baf946ac0616681c0001118101b6add3058",
+    "src/c_api/generated/multivariate_t_generated.f90": "fae7cc3025a28d2db14cc593d385f9b4e13b4677addfdc3024a29f3df343d54d",
     "src/c_api/generated/normal_generated.f90": "0724a9f4d76b161ebbfcb2691dd496e6cea8ef089b5d7547101d630d6d1c575c",
     "src/c_api/generated/poisson_binom_generated.f90": "19da18819b5d8578b476088416385a381c5feb04ca38922662c892797a08f88a",
     "src/c_api/generated/student_t_generated.f90": "dc1c5f9e57a68f3448d9eafa22bd975f5eeadead0709aa48ec0e6e8381c7bd77",
@@ -523,8 +527,8 @@
     "src/stats/multinomial.f90": "c55c7c35b0c7f3b2e9c8796b5e74a3db6d3221b7eb3e53481059be1febca5731",
     "src/stats/multivariate_hypergeom.f90": "cc702417844ba7ce6b400d6a5106f7eb20b2aa428c1bba274e96981acd3c2e9e",
     "src/stats/multivariate_integration.f90": "c9aeb7ff1c9bfd2a1ff9c39cc65a2e4419c24899453f88371a569b1c9ade97d9",
-    "src/stats/multivariate_normal.f90": "9dcb0018b58e84007b3c0390daf2c7a3e8724de7247d414c55d3bca8932b8627",
-    "src/stats/multivariate_t.f90": "40a51c2b7fbd2f2fa41878a45c103dfb44416028f6b966a5e336984725470d97",
+    "src/stats/multivariate_normal.f90": "76962c6ffdcecebfefc4a15914df47b81e93ad50b735b0a0982c6211a65e814a",
+    "src/stats/multivariate_t.f90": "9eed6752af1b9ac3f66a11fd991ffbd9ac957f4b936014483734849dcadbea8d",
     "src/stats/normal.f90": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb",
     "src/stats/poisson_binom.f90": "0872d1301897add8d98c8cfcb6cf64f4a77b7c92ed84b80b526e6f5fb7a50863",
     "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",

@@ -213,6 +213,12 @@
         "multivariate_normal_marginal": {
           "dimensions": "n"
         }
+      },
+      "output_dimensions": {
+        "multivariate_normal_rvs_array": {
+          "n": 1,
+          "n_samples": 1
+        }
       }
     },
     "multivariate_t": {
@@ -248,6 +254,9 @@
             "fill": "identity"
           },
           "df": 1.0
+        },
+        "multivariate_t_rvs_array": {
+          "df": 1.0
         }
       },
       "dimension_defaults": {
@@ -272,6 +281,12 @@
       "zero_based_indices": {
         "multivariate_t_marginal": {
           "dimensions": "n"
+        }
+      },
+      "output_dimensions": {
+        "multivariate_t_rvs_array": {
+          "n": 1,
+          "n_samples": 1
         }
       }
     },

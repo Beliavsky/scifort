@@ -17,7 +17,7 @@ Evaluate multivariate t entropy using the native PSD convention.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
+| `loc` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
 
 ## multivariate_t_logpdf
@@ -31,7 +31,7 @@ Evaluate multivariate Student t log density; singular shape is permitted.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `x` | `(:)` | `(n)` | evaluation point |
-| `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
+| `loc` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
 
 ## multivariate_t_marginal
@@ -46,7 +46,7 @@ Select multivariate t marginal parameters using one-based indices.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `dimensions` | `(:)` | `(m)` | shape (m); unique one-based indices in [1,n], in requested order |
-| `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
+| `loc` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
 | `marginal_loc` | `(:)` | `(m)` | shape (m); selected location vector, in requested order |
 | `marginal_shape` | `(:,:)` | `(m,m)` | shape (m,m); selected symmetric matrix from the lower input triangle |
@@ -62,5 +62,31 @@ Evaluate multivariate Student t density; singular shape requires opt-in.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `x` | `(:)` | `(n)` | evaluation point |
-| `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
+| `loc` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
+
+## multivariate_t_rvs_array
+
+Draw multivariate_t vectors using caller-owned RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(samples,1)` | 0 |
+| `n_samples` | `size(samples,2)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `samples` | `(:,:)` | `(n,n_samples)` | shape (n,n_samples); sample vectors by column |
+| `loc` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 4 without native execution.
+
+`loc` is optional natively: C flag `has_loc` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`shape` is optional natively: C flag `has_shape` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+When `n_samples == 0`: Distribution parameters are not validated; state is unchanged.

@@ -1734,3 +1734,142 @@ native multivariate regression passed. The final read-only pipeline check passed
 for all 124 artifacts; encoding/BOM, Fortran ASCII/line limits, added local links
 and whitespace checks passed. No numerical tests were repeated for the final
 documentation-only edits.
+
+## Multivariate vector batch sampling
+
+```python
+state = api.rng(123)
+normal = api.multivariate_normal.rvs_array(
+    state, mean=[1., 2.], cov=[[4., 1.], [1., 3.]], n=2, n_samples=100)
+student = api.multivariate_t.rvs_array(
+    state, loc=[1., 2.], shape=[[4., 1.], [1., 3.]], df=5, n=2, n_samples=100)
+assert normal.status == student.status == 0
+```
+
+The signatures are:
+
+```python
+api.multivariate_normal.rvs_array(state, mean=None, cov=None, *, n=1, n_samples=1, out=None)
+api.multivariate_t.rvs_array(state, loc=None, shape=None, df=1.0, *, n=1, n_samples=1, out=None)
+```
+
+Both return `ArrayResult(status, {'samples': array})`. Outputs are native-endian
+float64, shape `(n,n_samples)`, with one vector per column. Explicit n defines
+the dimension even when parameters are absent; it is not inferred from supplied
+parameters or out buffers. Pass `n=2` for two-dimensional parameters. Both extent
+keywords require nonnegative C integers and reject booleans; normal requires
+positive n even for empty batches. Nonempty Student t batches require positive
+n; empty Student t batches permit n=0. `out={'samples': buffer}` requires an
+exactly shaped, aligned, writable, Fortran-contiguous float64 buffer disjoint
+from inputs and state. Invalid Python storage raises before native execution.
+
+Absent mean/loc selects native zeros, and absent cov/shape selects native
+identity. None preserves native optional-array absence through presence flags;
+it does not create an explicit default parameter array. Present vectors require
+shape `(n)` and matrices `(n,n)`. All present array entries must be finite,
+including the unused upper matrix triangle. The lower triangle is authoritative;
+no symmetry check is performed. Singular positive-semidefinite matrices,
+including all-zero matrices, are allowed using the existing native PSD cutoff.
+Student t shape is not covariance: covariance is `df/(df-2)*shape` when df>2;
+the mean exists for df>1. df must be positive or positive infinity. Python uses
+the native default 1; C always supplies df explicitly. df=None is rejected.
+
+These use the [explicit stream API](#explicit-rng-streams-and-dirichlet-sampling).
+Successful normal sampling consumes n uniforms per column even for rank-zero
+covariance. Student t consumes n+1 for finite df, n for infinite df. The
+infinite-df samples agree with normal sampling up to rounding, and final state
+matches exactly with the same native parameters and initial state. Native normal
+and Student t add location at different stages. Splitting successful batches preserves stream
+order. NumPy/SciPy seed sequences are not promised to match.
+
+| Status | Meaning | Output and state behavior |
+| ---: | --- | --- |
+| 0 | Success | Sample columns and advanced native state |
+| 1 | Invalid extent, shape or presence flag | Transport rejection preserves caller outputs and state |
+| 2 | Invalid native parameters or Student t scale generation failure | Entire batch NaN; state retained at the native failure point |
+| 3 | Native PSD decomposition failure | Entire batch NaN; state unchanged |
+| 4 | Invalid serialized RNG state | Output and state unchanged |
+
+Normal validates parameters and PSD covariance even for zero columns. Student t
+returns success without distribution validation for zero columns, including
+invalid df or matrix values. Both always validate state, extents, supplied array
+shapes and C presence flags. Valid empty calls do not advance state. Native
+parameter rejection occurs before sampling. Student t can fail after consuming
+uniforms, for example when a tiny positive df underflows the chi-square scale;
+then it fills the **entire** batch with NaN and exports the advanced state.
+Thus completed columns are also discarded on a later native generation failure.
+Student t n=0 with nonzero columns returns native status 1 with no output elements.
+These existing numerical behaviors are preserved.
+
+```c
+void scifort_multivariate_normal_rvs_array_f64(
+    int n, int n_samples, int64_t *state, double *samples,
+    int has_mean, const double *mean, int has_cov, const double *cov, int *status);
+void scifort_multivariate_t_rvs_array_f64(
+    int n, int n_samples, int64_t *state, double *samples,
+    int has_loc, const double *loc, int has_shape, const double *shape, double df, int *status);
+```
+
+Flags must be 0 absent or 1 present. All pointers remain required, nonnull,
+aligned, disjoint and fully sized, even when a flag is zero or a batch is empty.
+Absent parameters' buffer values are ignored. Use nonnull scratch buffers for
+zero-size arrays. Arrays use column-major storage; no Fortran descriptors or
+RNG object layout crosses C. State belongs to the loaded library instance and
+must not be mutated concurrently. See the generated
+[normal shapes](../../docs/multivariate_normal_shapes.md#multivariate_normal_rvs_array)
+and [Student t shapes](../../docs/multivariate_t_shapes.md#multivariate_t_rvs_array).
+
+## Vector sampler validation (2026-11-26)
+
+Validation uses GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -p test_vector_sampling.py -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The independent counter-state fixture combines state codecs, optional-array
+presence and promoted scalar inputs. Production clients compare exact native/C/
+Python sample columns and final state for all four optional-array combinations,
+finite/infinite df and native omitted df. Integration also checks split batches,
+normal limits, analytic moments, singular/zero matrices, lower-triangle use,
+empty-batch differences, tiny-df underflow, guard preservation and output buffers.
+Checked builds use `-O0 -g -fcheck=all -fbacktrace`; optimized builds use `-O3`.
+Both use `-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+Strict C11 clients and C++17 header checks use `-Wall -Wextra -Werror`.
+
+The dependent native multivariate regression compiled both edited native modules
+directly and reused the existing local FPM dependency archive:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\multivariate_normal.f90 src\stats\multivariate_t.f90 ^
+  test\test_checks.f90 test\multivariate_reference.f90 test\test_multivariate.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\dependent.exe
+build\multivariate-parameters-regression\dependent.exe
+```
+
+These cache paths are local artifacts. The full FPM suite was not run: numerical
+algorithms are unchanged, and the generator/interface effects are bounded by
+compiled fixtures, all configured binding integrations and the native dependent
+test. The full suite remains required before merge or release. Other platforms
+were not newly validated. Existing C symbols are unchanged; generated coverage
+now includes 157 Python methods and 69 array adapters. Optional present arrays
+are copied by the existing bridge, and native Student t still factors the shape
+for each column; this change does not optimize either implementation.
+
+All 86 generator tests and all 92 binding tests passed, including the six new
+sampler tests in checked and optimized builds and strict native/C/C++ clients.
+The first focused run exposed an overly strict cross-family infinite-df sample
+comparison (maximum difference 8.9e-16); the corrected test allows rounding while
+requiring exact final state. Each method's native/C/Python stream comparison
+remains exact. The native dependent multivariate regression also passed.
+The final read-only check passed for all 124 generated artifacts. Encoding/BOM,
+Fortran ASCII/line limits, added local links and whitespace checks passed.
+No numerical tests were repeated for the final documentation-only edits.

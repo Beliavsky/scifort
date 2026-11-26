@@ -9,6 +9,7 @@ module scifort_c_api_generated_multivariate_normal
     use scifort_multivariate_normal, only : cg_native_2 => multivariate_normal_logpdf
     use scifort_multivariate_normal, only : cg_native_3 => multivariate_normal_marginal
     use scifort_multivariate_normal, only : cg_native_4 => multivariate_normal_pdf
+    use scifort_multivariate_normal, only : cg_native_5 => multivariate_normal_rvs_array
     implicit none
     private
     public :: scifort_multivariate_normal_entropy_f64
@@ -16,6 +17,7 @@ module scifort_c_api_generated_multivariate_normal
     public :: scifort_multivariate_normal_logpdf_f64
     public :: scifort_multivariate_normal_marginal_f64
     public :: scifort_multivariate_normal_pdf_f64
+    public :: scifort_multivariate_normal_rvs_array_f64
 contains
 
     subroutine scifort_multivariate_normal_entropy_f64( &
@@ -24,10 +26,10 @@ contains
         !! Evaluate multivariate normal entropy using the native PSD convention.
         implicit none
         integer(c_int), value, intent(in) :: n !! dimension, >= 1
-        real(c_double), intent(in) :: mean(n) !! mean vector; required at the C boundary
+        real(c_double), intent(in) :: mean(n) !! finite location vector; sampler presence flag selects optional default
         real(c_double), intent(in) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
         real(c_double), intent(inout) :: value !! native scalar density, log density or entropy; numerical NaN/infinity retained
-        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -52,9 +54,9 @@ contains
         integer(c_int), value, intent(in) :: n !! dimension, >= 1
         integer(c_int), value, intent(in) :: k !! observation count, >= 1
         real(c_double), intent(in) :: data(n,k) !! shape (n,k); finite observations by column
-        real(c_double), intent(inout) :: mean(n) !! mean vector; required at the C boundary
+        real(c_double), intent(inout) :: mean(n) !! finite location vector; sampler presence flag selects optional default
         real(c_double), intent(inout) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
-        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         integer(c_int), value, intent(in) :: has_fixed_mean !! 0 omit fixed mean; 1 use supplied fixed mean
         real(c_double), intent(in) :: fixed_mean(n) !! shape (n); optional finite fixed mean vector
         integer(c_int), value, intent(in) :: has_fixed_cov !! 0 omit fixed covariance; 1 use supplied fixed covariance
@@ -106,11 +108,11 @@ contains
         implicit none
         integer(c_int), value, intent(in) :: n !! dimension, >= 1
         real(c_double), intent(in) :: x(n) !! evaluation point
-        real(c_double), intent(in) :: mean(n) !! mean vector; required at the C boundary
+        real(c_double), intent(in) :: mean(n) !! finite location vector; sampler presence flag selects optional default
         real(c_double), intent(in) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
         integer(c_int), value, intent(in) :: allow_singular !! 0 reject singular covariance; 1 permit singular covariance
         real(c_double), intent(inout) :: value !! native scalar density, log density or entropy; numerical NaN/infinity retained
-        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         logical :: cg_logical_allow_singular
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
@@ -144,11 +146,11 @@ contains
         integer(c_int), value, intent(in) :: n !! dimension, >= 1
         integer(c_int), value, intent(in) :: m !! retained dimension, >= 1; unique indices imply m <= n
         integer(c_int), intent(in) :: dimensions(m) !! shape (m); unique one-based indices in [1,n], in requested order
-        real(c_double), intent(in) :: mean(n) !! mean vector; required at the C boundary
+        real(c_double), intent(in) :: mean(n) !! finite location vector; sampler presence flag selects optional default
         real(c_double), intent(in) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
         real(c_double), intent(inout) :: marginal_mean(m) !! shape (m); selected location vector, in requested order
         real(c_double), intent(inout) :: marginal_cov(m,m) !! shape (m,m); selected symmetric matrix from the lower input triangle
-        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -179,11 +181,11 @@ contains
         implicit none
         integer(c_int), value, intent(in) :: n !! dimension, >= 1
         real(c_double), intent(in) :: x(n) !! evaluation point
-        real(c_double), intent(in) :: mean(n) !! mean vector; required at the C boundary
+        real(c_double), intent(in) :: mean(n) !! finite location vector; sampler presence flag selects optional default
         real(c_double), intent(in) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
         integer(c_int), value, intent(in) :: allow_singular !! 0 reject singular covariance; 1 permit singular covariance
         real(c_double), intent(inout) :: value !! native scalar density, log density or entropy; numerical NaN/infinity retained
-        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         logical :: cg_logical_allow_singular
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
@@ -208,5 +210,70 @@ contains
             allow_singular=cg_logical_allow_singular)
         status=0_c_int
     end subroutine scifort_multivariate_normal_pdf_f64
+
+    subroutine scifort_multivariate_normal_rvs_array_f64( &
+        n, n_samples, state, samples, has_mean, mean, has_cov, cov, status) &
+        bind(c, name="scifort_multivariate_normal_rvs_array_f64")
+        !! Draw multivariate_normal vectors using caller-owned RNG state.
+        use, intrinsic :: iso_c_binding, only : c_int64_t
+        use scifort_random, only : cg_type_state => rng_state
+        use scifort_rng_c_bridge, only : cg_load_state => rng_load_c_state, &
+            cg_store_state => rng_store_c_state
+        implicit none
+        integer(c_int), value, intent(in) :: n !! dimension, >= 1
+        integer(c_int), value, intent(in) :: n_samples !! number of sample columns, >= 0
+        integer(c_int64_t), intent(inout) :: state(6) !! six caller-owned int64 RNG components
+        real(c_double), intent(inout) :: samples(n,n_samples) !! shape (n,n_samples); sample vectors by column
+        integer(c_int), value, intent(in) :: has_mean !! 0 omit location; 1 use supplied vector
+        real(c_double), intent(in) :: mean(n) !! finite location vector; sampler presence flag selects optional default
+        integer(c_int), value, intent(in) :: has_cov !! 0 omit matrix; 1 use supplied matrix
+        real(c_double), intent(in) :: cov(n,n) !! covariance; lower triangle authoritative, all entries must be finite
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
+        integer :: cg_state_status
+        type(cg_type_state) :: cg_state_state
+        real(c_double), allocatable :: cg_optional_mean(:)
+        real(c_double), allocatable :: cg_optional_cov(:,:)
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (n_samples < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_mean /= 0_c_int .and. has_mean /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_cov /= 0_c_int .and. has_cov /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        call cg_load_state(state,cg_state_state,cg_state_status)
+        if (cg_state_status /= 0) then
+            status=4_c_int
+            return
+        end if
+        ! An unallocated allocatable actual makes an optional array dummy absent.
+        if (has_mean == 1_c_int) then
+            allocate(cg_optional_mean, source=mean)
+        end if
+        if (has_cov == 1_c_int) then
+            allocate(cg_optional_cov, source=cov)
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_5( &
+            state=cg_state_state, &
+            samples=samples, &
+            mean=cg_optional_mean, &
+            cov=cg_optional_cov, &
+            status=status)
+        call cg_store_state(cg_state_state,state)
+    end subroutine scifort_multivariate_normal_rvs_array_f64
 
 end module scifort_c_api_generated_multivariate_normal

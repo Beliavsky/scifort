@@ -1,3 +1,14 @@
+## 2026-11-26 - Multivariate normal and Student t sampling interfaces
+
+- Bind both native batch samplers through the generated C ABI and Python API,
+  with explicit output dimensions, caller-owned streams and optional parameters.
+- Add opt-in promotion of optional real/integer scalar inputs to required C
+  inputs; Student t df defaults to 1 in Python.
+- Document shape constraints, singular PSD matrices, empty-batch differences,
+  parameter errors and state advancement on generation failure.
+- Test native/C/Python streams, all optional-array combinations, normal limits,
+  moments, singular matrices, invalid buffers and error contracts.
+
 ## 2026-11-26 - Integer-output discrete sampling interfaces
 
 - Support rank-one/two default-integer array outputs in generated C/Python

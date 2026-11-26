@@ -181,3 +181,62 @@ for bad in ([1,2],StateBuffer(lib,[1]),StateBuffer(C.CDLL(sys.argv[2]),[1,2])):
             run([exe],folder);run(['python',script,self.root/'python',lib],folder)
         if shutil.which('g++'):
             run(['g++','-std=c++17','-Wall','-Wextra','-Werror','-I',self.root,'-fsyntax-only',client],self.root)
+
+    def test_promoted_optional_scalar_validation(self):
+        self.source.write_text(SOURCE.replace('scale,status)', 'scale,factor,status)').replace(
+            '    integer,intent(out),optional :: status',
+            '    real(c_double),intent(in),optional :: factor !! scale factor\n    integer,intent(out),optional :: status'),encoding='ascii')
+        policy=self.config['subroutines']['draw']
+        policy['required_optional_scalars']=['factor']
+        self.config['argument_docs']['factor']='scale factor'
+        outputs=generate.generate(self.config,self.root)
+        row=json.loads(outputs[self.root/'coverage.json'])['procedures'][0]
+        self.assertEqual(row['optional_promoted_to_required'],['factor'])
+        for bad in ([],None,{},['unknown'],['factor','factor'],['scale'],['status'],['state'],['factor',1]):
+            policy['required_optional_scalars']=bad
+            with self.assertRaises(ValueError):generate.generate(self.config,self.root)
+
+    @unittest.skipUnless(shutil.which('gfortran') and shutil.which('python'),'compiler and Python required')
+    def test_compiled_state_presence_and_promoted_scalar(self):
+        source=SOURCE.replace('scale,status)', 'scale,factor,shift,status)').replace(
+            '    integer,intent(out),optional :: status',
+            '    real(c_double),intent(in),optional :: factor !! scale factor\n'
+            '    real(c_double),intent(in),optional :: shift(:) !! shape (k); offsets\n'
+            '    integer,intent(out),optional :: status')
+        source=source.replace('    if(any(scale==99)) then',
+            '    if(present(factor)) samples=samples*factor\n'
+            '    if(present(shift)) then\n'
+            '        do j=1,size(samples,2)\n'
+            '            samples(:,j)=samples(:,j)+shift\n'
+            '        end do\n'
+            '    end if\n'
+            '    if(any(scale==99)) then')
+        self.source.write_text(source,encoding='ascii')
+        policy=self.config['subroutines']['draw'];policy['required_optional_scalars']=['factor']
+        policy['optional_arrays']={'shift':'has_shift'};policy['shapes']['shift']=['k']
+        self.config['argument_docs'].update(factor='scale factor',shift='offset',has_shift='presence')
+        self.policy['array_groups']['optional']['defaults']={'draw':{'factor':1.}}
+        outputs=self.python_outputs();outputs.update(generate.generate(self.config,self.root))
+        for path,text in outputs.items():
+            path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text,encoding='utf-8')
+        script=self.root/'check.py'
+        script.write_text("""import ctypes as C
+import sys
+import numpy as np
+sys.path.insert(0,sys.argv[1])
+from example._generated import Optional
+from example._runtime import StateBuffer
+lib=C.CDLL(sys.argv[2]);api=Optional(lib)
+for shift in (None,[10.,20.]):
+ state=StateBuffer(lib,[1,2]);r=api.draw(state,[1.,2.],factor=2.,shift=shift,n=2)
+ assert r.status==0
+ expected=np.array([[6.,10.],[10.,14.]])
+ if shift is not None:expected+=np.array(shift)[:,None]
+ np.testing.assert_array_equal(r.outputs['samples'],expected)
+ assert state.state[0]==5
+""",encoding='ascii')
+        for index,flags in enumerate((['-O0','-g','-fcheck=all','-fbacktrace'],['-O3'])):
+            folder=self.root/str(index);folder.mkdir()
+            lib=folder/('example.dll' if __import__('os').name=='nt' else 'example.so')
+            run(['gfortran',*flags,'-std=f2018','-shared','-fPIC',self.source,self.root/'adapter.f90','-o',lib],folder)
+            run(['python',script,self.root/'python',lib],folder)

@@ -1,3 +1,16 @@
+## 2026-11-26 - Multivariate normal and Student t sampling interfaces
+
+The scalar-promotion generator policy, reviewed manifests, shape contracts and
+interface tests are original MIT SciFort interface work. No upstream numerical
+implementation was imported or adapted. Generated samplers call the existing
+multivariate normal/Student t batch procedures and preserve their RNG streams,
+PSD decomposition, inverse normal and chi-square behavior and prior provenance.
+Native edits add purpose/shape/error documentation and explicit implicit-none
+only. Tests compare actual native/C/Python samples and state, analytic moments,
+singular support, and the infinite-df normal identity. The independent counter
+fixture checks state/optional-array/scalar transport without reproducing a
+sampling algorithm. No seed mapping or numerical formula was changed.
+
 ## 2026-11-26 - Integer-output discrete sampling interfaces
 
 The integer-output generator/runtime extension, manifests, contracts and tests

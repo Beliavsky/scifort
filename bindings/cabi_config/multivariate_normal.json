@@ -10,11 +10,11 @@
   "argument_docs": {
     "n": "dimension, >= 1",
     "x": "evaluation point",
-    "mean": "mean vector; required at the C boundary",
+    "mean": "finite location vector; sampler presence flag selects optional default",
     "cov": "covariance; lower triangle authoritative, all entries must be finite",
     "allow_singular": "0 reject singular covariance; 1 permit singular covariance",
     "value": "native scalar density, log density or entropy; numerical NaN/infinity retained",
-    "status": "0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2",
+    "status": "0 success; other codes follow the method-specific error contract",
     "m": "retained dimension, >= 1; unique indices imply m <= n",
     "dimensions": "shape (m); unique one-based indices in [1,n], in requested order",
     "marginal_mean": "shape (m); selected location vector, in requested order",
@@ -24,7 +24,12 @@
     "fixed_mean": "shape (n); optional finite fixed mean vector",
     "fixed_cov": "shape (n,n); optional finite PSD covariance, lower triangle used",
     "has_fixed_mean": "0 omit fixed mean; 1 use supplied fixed mean",
-    "has_fixed_cov": "0 omit fixed covariance; 1 use supplied fixed covariance"
+    "has_fixed_cov": "0 omit fixed covariance; 1 use supplied fixed covariance",
+    "state": "six caller-owned int64 RNG components",
+    "samples": "shape (n,n_samples); sample vectors by column",
+    "n_samples": "number of sample columns, >= 0",
+    "has_mean": "0 omit location; 1 use supplied vector",
+    "has_cov": "0 omit matrix; 1 use supplied matrix"
   },
   "array_functions": {
     "multivariate_normal_pdf": {
@@ -127,8 +132,7 @@
   "excluded": {
     "multivariate_normal_cdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_logcdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-    "multivariate_normal_rvs": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-    "multivariate_normal_rvs_array": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+    "multivariate_normal_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "multivariate_status_success": "Native status constant, not a callable procedure.",
     "multivariate_status_invalid_shape": "Native status constant, not a callable procedure.",
     "multivariate_status_invalid_parameter": "Native status constant, not a callable procedure.",
@@ -210,6 +214,52 @@
       "optional_arrays": {
         "fixed_mean": "has_fixed_mean",
         "fixed_cov": "has_fixed_cov"
+      }
+    },
+    "multivariate_normal_rvs_array": {
+      "symbol": "scifort_multivariate_normal_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "n",
+          "n_samples"
+        ],
+        "mean": [
+          "n"
+        ],
+        "cov": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw multivariate_normal vectors using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      },
+      "optional_arrays": {
+        "mean": "has_mean",
+        "cov": "has_cov"
       }
     }
   }

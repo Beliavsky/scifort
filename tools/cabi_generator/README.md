@@ -821,3 +821,19 @@ parameter, validates it before allocation and uses it for caller-owned output
 shape checks. Boolean, negative, oversized, unknown and reserved dimensions are
 rejected. Required input-defined dimensions continue to be inferred normally.
 No dimension is inferred from an unvalidated output buffer or hidden default.
+
+## Required optional scalar inputs
+
+A subroutine policy can explicitly list `required_optional_scalars`, for example
+`["df"]` for multivariate Student t sampling. Each name must identify a native
+optional real or default-integer scalar `intent(in)`. C always supplies the
+by-value argument; the native procedure always sees it as present. This policy
+is distinct from presence-controlled optional arrays. It does not infer a
+native default, generate a scalar presence flag, or allow None. Python defaults
+must be reviewed and configured separately (Student t uses `df=1.0`).
+
+Coverage lists these arguments in `optional_promoted_to_required`. Unknown or
+repeated names, nonoptional dummies, arrays, logicals, derived types, status
+outputs, other intents and function policies are rejected. Existing scalar
+function promotion and other interfaces retain their behavior. See the
+[multivariate sampler contract](../../bindings/python/README.md#multivariate-vector-batch-sampling).

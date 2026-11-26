@@ -307,6 +307,7 @@ contains
     end function multivariate_t_entropy
 
     subroutine multivariate_t_rvs(state, sample, loc, shape, df, status)
+        !! Draw one Student t vector from a possibly singular PSD matrix.
         !! n = size(sample), n >= 1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the draw
         real(dp), intent(out) :: sample(:) !! shape (n); generated vector; length defines dimension
@@ -359,10 +360,21 @@ contains
     end subroutine multivariate_t_rvs
 
     subroutine multivariate_t_rvs_array(state, samples, loc, shape, df, status)
-        !! n = size(samples,1), k = size(samples,2); k >= 0. n >= 1 when k > 0.
-        !! With k = 0 there are no draws and parameters are not validated.
+        !! Draw vector samples by column using an explicit, caller-owned stream.
+        !! @dimension n = size(samples,1)
+        !! @dimension n_samples = size(samples,2)
+        !! @require n >= 0
+        !! @require n_samples >= 0
+        !! @when n_samples == 0: Distribution parameters are not validated; state is unchanged.
+        !! n=size(samples,1), n_samples=size(samples,2); samples have shape (n,n_samples).
+        !! Nonempty batches require positive n; empty batches permit n=0.
+        !! Optional location vectors and square matrices must match n when present.
+        !! All present array entries must be finite; the lower matrix triangle is used.
+        !! Singular positive-semidefinite matrices are allowed. Invalid parameters do not
+        !! advance state. Generation failure can advance state and fills the entire batch with NaN.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :) !! shape (n,k); samples by column
+        real(dp), intent(out) :: samples(:, :) !! shape (n,n_samples); samples by column
         real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
         real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal

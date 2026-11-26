@@ -522,3 +522,25 @@ k=0 storage and skips distribution validation for empty batches; hypergeometric
 requires k>=1 and validates even empty batches. Both always validate state.
 The n bound and widened hypergeometric population-sum bound apply even for empty
 batches. See the [Python sampling contract](../python/README.md#integer-count-batch-sampling).
+
+## Multivariate normal and Student t batch samplers
+
+The two multivariate manifests now also select `rvs_array`, with symbols
+`scifort_multivariate_normal_rvs_array_f64` and
+`scifort_multivariate_t_rvs_array_f64`. Both use caller-owned six-int64 RNG state,
+explicit n/n_samples and column-major `(n,n_samples)` double output buffers.
+Location and matrix presence flags preserve genuine native optional-array
+absence. Student t df is explicitly promoted to a required C scalar and has the
+reviewed Python default 1. Native default array parameters are not substituted
+in the wrapper. Python requires `n` to match supplied parameters; its default is
+1 and does not infer dimension from arrays. `n_samples` also defaults to 1.
+
+Statuses are 0 success, 1 invalid shape/extent/flag, 2 invalid native parameters
+or Student t generation underflow, 3 PSD decomposition failure, 4 invalid
+serialized RNG state. Transport errors preserve output/state. Native failures
+retain native output/state behavior. Normal validates PSD covariance even for
+empty batches; Student t skips distribution validation on empty batches. State
+and transport shapes/flags are always validated. See the detailed
+[Python and C contract](../python/README.md#multivariate-vector-batch-sampling),
+[normal shape tables](../../docs/multivariate_normal_shapes.md#multivariate_normal_rvs_array)
+and [Student t shape tables](../../docs/multivariate_t_shapes.md#multivariate_t_rvs_array).

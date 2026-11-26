@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 67,
+    "array_adapters": 69,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 155,
+    "python": 157,
     "scalar": 88
   },
   "procedures": [
@@ -1246,17 +1246,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "c_manifest_exclusion": "Single draws are available through the batch sampler with n_samples=1.",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_normal_rvs_array_f64",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_rvs_array",
-      "scalar_generated": false
+      "python": "multivariate_normal.rvs_array"
     },
     {
       "bulk_generated": false,
@@ -1319,17 +1318,16 @@
     },
     {
       "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "c_manifest_exclusion": "Single draws are available through the batch sampler with n_samples=1.",
       "module": "scifort_multivariate_t",
       "procedure": "multivariate_t_rvs",
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_t_rvs_array_f64",
       "module": "scifort_multivariate_t",
       "procedure": "multivariate_t_rvs_array",
-      "scalar_generated": false
+      "python": "multivariate_t.rvs_array"
     },
     {
       "bulk_generated": false,

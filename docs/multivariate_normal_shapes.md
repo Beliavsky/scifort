@@ -17,7 +17,7 @@ Evaluate multivariate normal entropy using the native PSD convention.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
 ## multivariate_normal_fit
@@ -32,7 +32,7 @@ Fit normal mean/covariance, preserving optional fixed parameters.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `data` | `(:,:)` | `(n,k)` | shape (n,k); finite observations by column |
-| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 | `fixed_mean` | `(:)` | `(n)` | shape (n); optional finite fixed mean vector |
 | `fixed_cov` | `(:,:)` | `(n,n)` | shape (n,n); optional finite PSD covariance, lower triangle used |
@@ -54,7 +54,7 @@ Evaluate multivariate normal log density.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `x` | `(:)` | `(n)` | evaluation point |
-| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
 ## multivariate_normal_marginal
@@ -69,7 +69,7 @@ Select multivariate normal marginal parameters using one-based indices.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `dimensions` | `(:)` | `(m)` | shape (m); unique one-based indices in [1,n], in requested order |
-| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 | `marginal_mean` | `(:)` | `(m)` | shape (m); selected location vector, in requested order |
 | `marginal_cov` | `(:,:)` | `(m,m)` | shape (m,m); selected symmetric matrix from the lower input triangle |
@@ -85,5 +85,31 @@ Evaluate multivariate normal density.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `x` | `(:)` | `(n)` | evaluation point |
-| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+
+## multivariate_normal_rvs_array
+
+Draw multivariate_normal vectors using caller-owned RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(samples,1)` | 1 |
+| `n_samples` | `size(samples,2)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `samples` | `(:,:)` | `(n,n_samples)` | shape (n,n_samples); sample vectors by column |
+| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 4 without native execution.
+
+`mean` is optional natively: C flag `has_mean` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`cov` is optional natively: C flag `has_cov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+When `n_samples == 0`: Parameters and PSD covariance are still validated; state is unchanged.

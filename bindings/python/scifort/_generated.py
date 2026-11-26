@@ -1973,7 +1973,45 @@ class Multivariate_normal(ArrayGroup):
              'result_argument': 'value',
              'shapes': {'cov': ['n', 'n'], 'mean': ['n'], 'x': ['n']},
              'status': 'status',
-             'symbol': 'scifort_multivariate_normal_pdf_f64'}}
+             'symbol': 'scifort_multivariate_normal_pdf_f64'},
+     'rvs_array': {'arguments': ['state',
+                                 'samples',
+                                 'has_mean',
+                                 'mean',
+                                 'has_cov',
+                                 'cov',
+                                 'status'],
+                   'definitions': {'n': {'argument': 'samples', 'axis': 1},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state', 'mean', 'cov'],
+                   'logical_inputs': {},
+                   'metadata': {'cov': {'category': 'real',
+                                        'intent': 'in',
+                                        'optional': True,
+                                        'rank': 2},
+                                'has_cov': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'has_mean': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'mean': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 1},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 1, 'n_samples': 0},
+                   'optional_arrays': {'cov': 'has_cov', 'mean': 'has_mean'},
+                   'output_dimensions': {'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'cov': ['n', 'n'], 'mean': ['n'], 'samples': ['n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_multivariate_normal_rvs_array_f64'}}
 
     def entropy(self, mean=None, cov=None):
         """Return the native scalar value."""
@@ -1994,6 +2032,10 @@ class Multivariate_normal(ArrayGroup):
     def pdf(self, x, mean=None, cov=None, allow_singular=False):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'mean': mean, 'cov': cov, 'allow_singular': allow_singular}, None)
+
+    def rvs_array(self, state, mean=None, cov=None, *, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'mean': mean, 'cov': cov, 'n': n, 'n_samples': n_samples}, out)
 
 class Multivariate_t(ArrayGroup):
     _specs = {'entropy': {'arguments': ['loc', 'shape', 'df', 'value', 'status'],
@@ -2099,7 +2141,50 @@ class Multivariate_t(ArrayGroup):
              'result_argument': 'value',
              'shapes': {'loc': ['n'], 'shape': ['n', 'n'], 'x': ['n']},
              'status': 'status',
-             'symbol': 'scifort_multivariate_t_pdf_f64'}}
+             'symbol': 'scifort_multivariate_t_pdf_f64'},
+     'rvs_array': {'arguments': ['state',
+                                 'samples',
+                                 'has_loc',
+                                 'loc',
+                                 'has_shape',
+                                 'shape',
+                                 'df',
+                                 'status'],
+                   'definitions': {'n': {'argument': 'samples', 'axis': 1},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state', 'loc', 'shape', 'df'],
+                   'logical_inputs': {},
+                   'metadata': {'df': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 0},
+                                'has_loc': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'has_shape': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'loc': {'category': 'real',
+                                        'intent': 'in',
+                                        'optional': True,
+                                        'rank': 1},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 2},
+                                'shape': {'category': 'real',
+                                          'intent': 'in',
+                                          'optional': True,
+                                          'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 0, 'n_samples': 0},
+                   'optional_arrays': {'loc': 'has_loc', 'shape': 'has_shape'},
+                   'output_dimensions': {'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'loc': ['n'], 'samples': ['n', 'n_samples'], 'shape': ['n', 'n']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_multivariate_t_rvs_array_f64'}}
 
     def entropy(self, loc=None, shape=None, df=1.0):
         """Return the native scalar value."""
@@ -2116,6 +2201,10 @@ class Multivariate_t(ArrayGroup):
     def pdf(self, x, loc=None, shape=None, df=1.0, allow_singular=False):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'loc': loc, 'shape': shape, 'df': df, 'allow_singular': allow_singular}, None)
+
+    def rvs_array(self, state, loc=None, shape=None, df=1.0, *, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'loc': loc, 'shape': shape, 'df': df, 'n': n, 'n_samples': n_samples}, out)
 
 class Poisson_binom(ArrayGroup):
     _specs = {'cdf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],

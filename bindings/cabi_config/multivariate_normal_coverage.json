@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 5,
+  "generated_symbol_count": 6,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -320,13 +320,89 @@
     },
     {
       "procedure": "multivariate_normal_rvs",
-      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "reason": "Single draws are available through the batch sampler with n_samples=1.",
       "state": "excluded"
     },
     {
+      "arguments": [
+        "state",
+        "samples",
+        "has_mean",
+        "mean",
+        "has_cov",
+        "cov",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "n_samples"
+      ],
+      "dimensions": {
+        "n": 1,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_arrays": {
+        "cov": "has_cov",
+        "mean": "has_mean"
+      },
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
       "procedure": "multivariate_normal_rvs_array",
-      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "Parameters and PSD covariance are still validated; state is unchanged.",
+            "dimension": "n_samples",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "n": {
+            "argument": "samples",
+            "axis": 1
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "n": 1,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "cov": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "n"
+        ],
+        "samples": [
+          "n",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_normal_rvs_array_f64"
+      ]
     },
     {
       "procedure": "multivariate_status_invalid_parameter",
@@ -351,5 +427,5 @@
   ],
   "public_api_count": 13,
   "source": "src/stats/multivariate_normal.f90",
-  "source_sha256": "9dcb0018b58e84007b3c0390daf2c7a3e8724de7247d414c55d3bca8932b8627"
+  "source_sha256": "76962c6ffdcecebfefc4a15914df47b81e93ad50b735b0a0982c6211a65e814a"
 }

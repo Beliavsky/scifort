@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 67 |
+| array_adapters | 69 |
 | elementwise | 88 |
-| python | 155 |
+| python | 157 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -170,7 +170,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_normal | multivariate_normal_marginal |  |  | scifort_multivariate_normal_marginal_f64 |  | multivariate_normal.marginal |
 | scifort_multivariate_normal | multivariate_normal_pdf |  |  | scifort_multivariate_normal_pdf_f64 |  | multivariate_normal.pdf |
 | scifort_multivariate_normal | multivariate_normal_rvs |  |  |  |  |  |
-| scifort_multivariate_normal | multivariate_normal_rvs_array |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_rvs_array |  |  | scifort_multivariate_normal_rvs_array_f64 |  | multivariate_normal.rvs_array |
 | scifort_multivariate_normal | multivariate_status_invalid_parameter |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_status_invalid_shape |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_status_linalg_failure |  |  |  |  |  |
@@ -181,7 +181,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_t | multivariate_t_marginal |  |  | scifort_multivariate_t_marginal_f64 |  | multivariate_t.marginal |
 | scifort_multivariate_t | multivariate_t_pdf |  |  | scifort_multivariate_t_pdf_f64 |  | multivariate_t.pdf |
 | scifort_multivariate_t | multivariate_t_rvs |  |  |  |  |  |
-| scifort_multivariate_t | multivariate_t_rvs_array |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_rvs_array |  |  | scifort_multivariate_t_rvs_array_f64 |  | multivariate_t.rvs_array |
 | scifort_multivariate_t | multivariate_t_status_invalid_parameter |  |  |  |  |  |
 | scifort_multivariate_t | multivariate_t_status_invalid_shape |  |  |  |  |  |
 | scifort_multivariate_t | multivariate_t_status_linalg_failure |  |  |  |  |  |

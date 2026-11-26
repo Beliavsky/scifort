@@ -18,7 +18,7 @@ def prepare(config, api, identifier, source_lines):
             fields |= {'result_argument', 'optional_policy'}
         optional_fields = {'logical_inputs', 'shape_contract', 'length_choices',
                            'integer_limits', 'integer_sums', 'synthetic_status', 'optional_arrays',
-                           'state_codecs', 'optional_status'}
+                           'state_codecs', 'optional_status', 'required_optional_scalars'}
         if not isinstance(policy, dict) or set(policy) - optional_fields != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         synthetic_status = policy.get('synthetic_status', False)
@@ -65,6 +65,11 @@ def prepare(config, api, identifier, source_lines):
                 or ('optional_arrays' in policy and not optional_arrays)
                 or set(optional_arrays) - set(native_args)):
             raise ValueError(f'{name}: optional_arrays must map native subroutine inputs to presence flags')
+        promoted = policy.get('required_optional_scalars', [])
+        if (not isinstance(promoted, list) or ('required_optional_scalars' in policy and not promoted)
+                or any(not isinstance(a, str) or a not in native_args for a in promoted)
+                or len(set(promoted)) != len(promoted) or is_function and promoted):
+            raise ValueError(f'{name}: required_optional_scalars needs distinct native subroutine inputs')
         flags = []
         for arg, flag in optional_arrays.items():
             identifier(flag)
@@ -172,7 +177,9 @@ def prepare(config, api, identifier, source_lines):
                 metadata[arg] = dict(intent='inout', rank=0, category='state')
                 continue
             intent = next((value for value in ("in", "out", "inout") if f"intent({value})" in attrs), None)
-            base_attrs = attrs - {"optional"} if arg in logical_inputs or is_function or arg in optional_arrays else attrs
+            optional_policy = (arg in logical_inputs or is_function or arg in optional_arrays
+                               or arg in promoted)
+            base_attrs = attrs - {"optional"} if optional_policy else attrs
             if intent is None or base_attrs != {f"intent({intent})"}:
                 raise ValueError(f"{name}: {arg} requires intent and no unconfigured optional attributes")
             if is_function and intent != 'in':
@@ -198,12 +205,19 @@ def prepare(config, api, identifier, source_lines):
                 raise ValueError(f"{name}: only rank-one and rank-two arrays are supported")
             if category == 'integer' and intent == 'inout':
                 raise ValueError(f'{name}: integer intent(inout) arguments are unsupported')
+            if arg in promoted and (rank or intent != 'in' or 'optional' not in attrs):
+                raise ValueError(f'{name}: promoted optional inputs must be real/integer scalars')
             if arg in optional_arrays and (category != 'real' or not rank or intent != 'in'
                                           or 'optional' not in attrs):
                 raise ValueError(f'{name}: optional arrays must be real rank-one/two optional intent(in)')
             metadata[arg] = dict(intent=intent, rank=rank, category=category)
-            if (is_function or arg in optional_arrays) and 'optional' in attrs:
+            if (is_function or arg in optional_arrays or arg in promoted) and 'optional' in attrs:
                 metadata[arg]['optional'] = True
+        for arg in promoted:
+            info = metadata.get(arg, {})
+            if (info.get('category') not in ('real', 'integer') or info.get('rank') != 0
+                    or info.get('intent') != 'in' or not info.get('optional')):
+                raise ValueError(f'{name}: promoted optional inputs must be real/integer scalars')
         for arg in optional_arrays:
             info = metadata.get(arg, {})
             if (info.get('category') != 'real' or not info.get('rank')

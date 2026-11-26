@@ -453,6 +453,7 @@ contains
     end function multivariate_normal_entropy
 
     subroutine multivariate_normal_rvs(state, sample, mean, cov, status)
+        !! Draw one normal vector from a possibly singular PSD matrix.
         !! n = size(sample), n >= 1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the draw
         real(dp), intent(out) :: sample(:) !! shape (n); generated vector; its length defines the dimension
@@ -508,9 +509,21 @@ contains
     end subroutine multivariate_normal_rvs
 
     subroutine multivariate_normal_rvs_array(state, samples, mean, cov, status)
-        !! n = size(samples,1), k = size(samples,2); k >= 0. n >= 1.
+        !! Draw vector samples by column using an explicit, caller-owned stream.
+        !! @dimension n = size(samples,1)
+        !! @dimension n_samples = size(samples,2)
+        !! @require n >= 1
+        !! @require n_samples >= 0
+        !! @when n_samples == 0: Parameters and PSD covariance are still validated; state is unchanged.
+        !! n=size(samples,1), n_samples=size(samples,2); samples have shape (n,n_samples).
+        !! n must be positive, including empty batches.
+        !! Optional location vectors and square matrices must match n when present.
+        !! All present array entries must be finite; the lower matrix triangle is used.
+        !! Singular positive-semidefinite matrices are allowed. Invalid parameters do not
+        !! advance state. Native failure fills the batch with NaN.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :) !! shape (n,k); samples by column
+        real(dp), intent(out) :: samples(:, :) !! shape (n,n_samples); samples by column
         real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
         real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid covariance or shape
