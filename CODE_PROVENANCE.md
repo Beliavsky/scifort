@@ -1,3 +1,23 @@
+## 2026-11-25 - Poisson-binomial log-domain score
+
+The synthetic-status generator policy and associated interface fixtures are
+original MIT SciFort code. No upstream implementation source was imported.
+The numerical change is independently derived from the Bernoulli-product PMF
+in the [SciPy mathematical specification](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.poisson_binom.html).
+Writing `g_j` for the mass after removing trial j gives
+`f(k) = p_j*g_j(k-1) + (1-p_j)*g_j(k)` and therefore
+`d log(f(k))/d p_j = (g_j(k-1)-g_j(k))/f(k)` for positive mass.
+
+Existing SciFort log-convolution computes the leave-one-out masses. Signed
+log differences use `log(-expm1(smaller_log-larger_log))` before subtracting
+log mass and exponentiating. Equal log masses give zero. At k=0 and k=n,
+the scores simplify to `-1/(1-p_j)` and `1/p_j`. Endpoint probability
+parameters use the corresponding inward derivative when observed mass is
+positive; zero-mass observations retain undefined (NaN) scores. Existing
+`scifort_math:expm1_safe` is reused without modification. Tests independently
+use finite-outcome enumeration, finite differences and binomial identities;
+SciPy remains an external numerical reference only.
+
 ## 2026-11-25 - Poisson-binomial interface and conversion safety
 
 The generic-selection generator extension, reviewed manifests, adapters, shape

@@ -1941,6 +1941,21 @@ class Poisson_binom(ArrayGroup):
                 'shapes': {'p': ['n']},
                 'status': 'status',
                 'symbol': 'scifort_poisson_binom_logpmf_explicit_f64'},
+     'logpmf_derivative_p': {'arguments': ['count', 'p', 'logf', 'dpvec', 'status'],
+                             'definitions': {'n': {'argument': 'p', 'axis': None}},
+                             'dimensions': ['n'],
+                             'inputs': ['count', 'p'],
+                             'logical_inputs': {},
+                             'metadata': {'count': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                          'dpvec': {'category': 'real', 'intent': 'out', 'rank': 1},
+                                          'logf': {'category': 'real', 'intent': 'out', 'rank': 0},
+                                          'p': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                             'minimums': {'n': 1},
+                             'outputs': ['logf', 'dpvec'],
+                             'shapes': {'dpvec': ['n'], 'p': ['n']},
+                             'status': 'status',
+                             'symbol': 'scifort_poisson_binom_logpmf_derivative_p_explicit_f64',
+                             'synthetic_status': True},
      'logsf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
                'definitions': {'n': {'argument': 'p', 'axis': None}},
                'dimensions': ['n'],
@@ -2020,6 +2035,10 @@ class Poisson_binom(ArrayGroup):
     def logpmf(self, k, p, loc=0.0):
         """Return the native scalar value."""
         return self._invoke('logpmf', {'k': k, 'p': p, 'loc': loc}, None)
+
+    def logpmf_derivative_p(self, count, p, *, out=None):
+        """Return ArrayResult(call status, outputs); native NaN/infinity is retained."""
+        return self._invoke('logpmf_derivative_p', {'count': count, 'p': p}, out)
 
     def logsf(self, k, p, loc=0.0):
         """Return the native scalar value."""

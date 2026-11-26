@@ -127,6 +127,9 @@ def markdown(config, entries):
             meaning = config['argument_docs'][arg].replace('|', r'\|')
             lines.append(f"| `{arg}` | `({declared})` | `({required})` | {meaning} |")
         lines.append('')
+        if entry.get('synthetic_status'):
+            lines += ['The adapter appends a call-level status; the native subroutine has no status argument.',
+                      'Status 0 retains native numerical NaN/infinity; invalid extents preserve outputs.', '']
         if entry.get('result_extents'):
             lines += [f"`{entry['result_argument']}` is the adapter output for the native array-valued result.", '']
         for dim, rule in contract.get('length_choices', {}).items():

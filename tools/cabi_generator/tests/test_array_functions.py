@@ -67,6 +67,7 @@ class ArrayFunctionTests(unittest.TestCase):
         original = copy.deepcopy(self.config)
         for update in (dict(result_argument='x'),dict(result_argument='status'),
                        dict(optional_policy='inferred'),
+                       dict(synthetic_status=True), dict(synthetic_status=False),
                        dict(logical_inputs=dict(value={'false':0,'true':1}))):
             self.config = copy.deepcopy(original)
             self.config['array_functions']['vector_score'].update(update)

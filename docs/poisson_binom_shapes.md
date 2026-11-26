@@ -61,6 +61,22 @@ Evaluate Poisson-binomial logpmf.
 | --- | --- | --- | --- |
 | `p` | `(:)` | `(n)` | finite Bernoulli probabilities in [0,1] |
 
+## poisson_binom_logpmf_derivative_p
+
+SciFort extension: log mass and probability-vector score.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(p)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `p` | `(:)` | `(n)` | finite Bernoulli probabilities in [0,1] |
+| `dpvec` | `(:)` | `(n)` | shape (n); analytic log-mass gradient with respect to p |
+
+The adapter appends a call-level status; the native subroutine has no status argument.
+Status 0 retains native numerical NaN/infinity; invalid extents preserve outputs.
+
 Public generic `poisson_binom_logsf`: reviewed specific `poisson_binom_logsf_real`.
 
 ## poisson_binom_logsf

@@ -16,8 +16,13 @@ def prepare(config, api, identifier, source_lines):
         is_function = name in config.get('array_functions', {})
         if is_function:
             fields |= {'result_argument', 'optional_policy'}
-        if not isinstance(policy, dict) or set(policy) - {"logical_inputs", "shape_contract", "length_choices", "integer_limits", "integer_sums"} != fields:
+        optional_fields = {'logical_inputs', 'shape_contract', 'length_choices',
+                           'integer_limits', 'integer_sums', 'synthetic_status'}
+        if not isinstance(policy, dict) or set(policy) - optional_fields != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
+        synthetic_status = policy.get('synthetic_status', False)
+        if type(synthetic_status) is not bool or (is_function and 'synthetic_status' in policy):
+            raise ValueError(f'{name}: synthetic_status must be boolean and subroutine-only')
         identifier(policy["symbol"])
         node = api[name]
         if is_function:
@@ -34,6 +39,11 @@ def prepare(config, api, identifier, source_lines):
             raise ValueError(f"{name}: expected a directly defined non-bind(c) subroutine")
         args = [identifier(str(a).lower()) for a in node.content[0].items[2].items]
         native_args = args[:]
+        if synthetic_status:
+            status = identifier(policy['status_argument'])
+            if status in args:
+                raise ValueError(f'{name}: synthetic status must not name a native argument')
+            args.append(status)
         if is_function:
             result = identifier(policy['result_argument'])
             status = identifier(policy['status_argument'])
@@ -103,7 +113,7 @@ def prepare(config, api, identifier, source_lines):
                                     category='real')
             declarations[result] = declarations[native_result]
         for arg in args:
-            if is_function and arg in (result, status):
+            if (is_function and arg in (result, status)) or (synthetic_status and arg == status):
                 continue
             if arg not in declared:
                 raise ValueError(f"{name}: {arg} needs an explicit declaration")
@@ -206,6 +216,8 @@ def prepare(config, api, identifier, source_lines):
                                    else 'documented shape differs from wrapper policy'))
         entry = dict(name=name, policy=policy, args=args, metadata=metadata,
                      dimensions=dimensions, documentation_review=review)
+        if synthetic_status:
+            entry.update(native_args=native_args, synthetic_status=True)
         if is_function:
             entry.update(native_args=native_args, result_argument=result)
             if result_extents:
@@ -293,7 +305,7 @@ def emit(entry, index, config):
     for i, arg in enumerate(native_args):
         actual = f"cg_logical_{arg}" if arg in policy.get('logical_inputs', {}) else arg
         lines.append(f"            {arg}={actual}" + (", &" if i < len(native_args)-1 else ")"))
-    if 'result_argument' in entry:
+    if 'result_argument' in entry or entry.get('synthetic_status'):
         lines.append(f'        {status}=0_c_int')
     lines += [f"    end subroutine {symbol}", ""]
     header = [f"/* {policy['description']}",
@@ -331,10 +343,13 @@ def emit(entry, index, config):
         header[-3:-3] = [f" * Rejected integer guards return status {policy['invalid_status']} with output unchanged."]
     if 'result_argument' in entry:
         record.update(interface='explicit_shape_function', result_argument=entry['result_argument'])
+        if entry.get('result_extents'):
+            record['native_result_extents'] = entry['result_extents']
+    if entry.get('synthetic_status'):
+        record['synthetic_status'] = True
+    if 'result_argument' in entry or entry.get('synthetic_status'):
         header[-3:-3] = [' * Status 0 means the call was valid; native numerical NaN/infinity is retained.']
         header = [line.replace(' * Other status/output behavior is inherited from the native procedure. */',
                                ' * Numerical parameter errors use native values, not call-level statuses. */')
                   for line in header]
-        if entry.get('result_extents'):
-            record['native_result_extents'] = entry['result_extents']
     return lines, header, record

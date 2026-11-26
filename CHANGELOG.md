@@ -1,3 +1,14 @@
+## 2026-11-25 - Poisson-binomial score and synthetic call statuses
+
+- Add opt-in synthetic C call statuses for native subroutines without status,
+  preserving existing policies and native numerical NaN/infinity behavior.
+- Expose the Poisson-binomial log-PMF and probability-vector gradient through
+  C/Python, with structured shapes and caller-owned gradient buffers.
+- Keep the derivative in the log domain to avoid underflow, use closed-form
+  endpoint scores, and gate count rounding on finite input.
+- Add generator policy/C-client checks, numerical derivative references,
+  underflow, boundary, buffer and native/C integration regressions.
+
 ## 2026-11-25 - Poisson-binomial interfaces and generic selection
 
 - Add eight generated Poisson-binomial C/Python mass, tail and quantile methods.

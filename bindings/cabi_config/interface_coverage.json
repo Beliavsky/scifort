@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 58,
+    "array_adapters": 59,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 146,
+    "python": 147,
     "scalar": 88
   },
   "procedures": [
@@ -1472,11 +1472,10 @@
       "python": "poisson_binom.logpmf"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Subroutine without native status needs a separately reviewed adapter extension.",
+      "array_adapter": "scifort_poisson_binom_logpmf_derivative_p_explicit_f64",
       "module": "scifort_poisson_binom",
       "procedure": "poisson_binom_logpmf_derivative_p",
-      "scalar_generated": false
+      "python": "poisson_binom.logpmf_derivative_p"
     },
     {
       "array_adapter": "scifort_poisson_binom_logsf_explicit_f64",

@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 58 |
+| array_adapters | 59 |
 | elementwise | 88 |
-| python | 146 |
+| python | 147 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -198,7 +198,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_poisson_binom | poisson_binom_isf |  |  | scifort_poisson_binom_isf_explicit_f64 |  | poisson_binom.isf |
 | scifort_poisson_binom | poisson_binom_logcdf |  |  | scifort_poisson_binom_logcdf_explicit_f64 |  | poisson_binom.logcdf |
 | scifort_poisson_binom | poisson_binom_logpmf |  |  | scifort_poisson_binom_logpmf_explicit_f64 |  | poisson_binom.logpmf |
-| scifort_poisson_binom | poisson_binom_logpmf_derivative_p |  |  |  |  |  |
+| scifort_poisson_binom | poisson_binom_logpmf_derivative_p |  |  | scifort_poisson_binom_logpmf_derivative_p_explicit_f64 |  | poisson_binom.logpmf_derivative_p |
 | scifort_poisson_binom | poisson_binom_logsf |  |  | scifort_poisson_binom_logsf_explicit_f64 |  | poisson_binom.logsf |
 | scifort_poisson_binom | poisson_binom_pmf |  |  | scifort_poisson_binom_pmf_explicit_f64 |  | poisson_binom.pmf |
 | scifort_poisson_binom | poisson_binom_ppf |  |  | scifort_poisson_binom_ppf_explicit_f64 |  | poisson_binom.ppf |

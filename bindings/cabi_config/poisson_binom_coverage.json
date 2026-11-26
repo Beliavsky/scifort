@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 8,
+  "generated_symbol_count": 9,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -186,9 +186,50 @@
       ]
     },
     {
+      "arguments": [
+        "count",
+        "p",
+        "logf",
+        "dpvec",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
       "procedure": "poisson_binom_logpmf_derivative_p",
-      "reason": "Subroutine without native status needs a separately reviewed adapter extension.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "p",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "dpvec": [
+          "n"
+        ],
+        "p": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_poisson_binom_logpmf_derivative_p_explicit_f64"
+      ],
+      "synthetic_status": true
     },
     {
       "arguments": [
@@ -376,5 +417,5 @@
   ],
   "public_api_count": 9,
   "source": "src/stats/poisson_binom.f90",
-  "source_sha256": "806e69ebc683782cfc355573825c92e83c705c329550abefa2169902e9d8e100"
+  "source_sha256": "0872d1301897add8d98c8cfcb6cf64f4a77b7c92ed84b80b526e6f5fb7a50863"
 }

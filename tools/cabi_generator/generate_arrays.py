@@ -115,6 +115,8 @@ def prepare(policy, root, py_name):
                     spec['dimension_defaults'] = fallback
                 if 'result_argument' in entry:
                     spec['result_argument'] = entry['result_argument']
+                if entry.get('synthetic_status'):
+                    spec['synthetic_status'] = True
                 if entry.get('length_choices'):
                     spec['length_choices'] = entry['length_choices']
                 for key in ('integer_limits', 'integer_sums'):
@@ -127,6 +129,7 @@ def prepare(policy, root, py_name):
                 signature = ', '.join(['self', *parameters] + ([] if scalar_result else ['*', 'out=None']))
                 doc = ('Return the native scalar value.' if scalar_result else
                        'Return the native array result; optionally use caller-owned out.' if function_result else
+                       'Return ArrayResult(call status, outputs); native NaN/infinity is retained.' if entry.get('synthetic_status') else
                        'Return ArrayResult(status, outputs); retain native failure outputs.')
                 output = 'None' if scalar_result else 'out'
                 methods += [f'    def {name}({signature}):',

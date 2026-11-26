@@ -1052,7 +1052,7 @@ validated. Benchmark baselines were not refreshed.
 `logcdf`, `logsf`, `ppf(probability, p, loc=0.0)` and `isf`. Each returns one
 Python float. `p` is a rank-one vector of length `n >= 1`, containing finite
 Bernoulli success probabilities in `[0,1]`; zeros and ones are permitted.
-`loc` is a real support shift, defaulting to zero. This interface has no batching,
+`loc` is a real support shift, defaulting to zero. These eight methods have no batching,
 broadcasting or `out=` buffer argument.
 
 Mass functions require an integer-valued `k-loc`; fractional or out-of-support
@@ -1087,10 +1087,37 @@ remain available to Fortran callers. PPF/ISF use their direct native procedures.
 
 See the [shape tables](../../docs/poisson_binom_shapes.md) and
 [generic selection policy](../../tools/cabi_generator/README.md#reviewed-public-generic-selections).
-Native derivative output and private allocation bounds are documented too.
-The derivative C interface remains deferred because its subroutine has no status
-argument. The native derivative now rejects out-of-range real counts before
-integer conversion. No extended-range derivative algorithm was added.
+
+### Poisson-binomial score
+
+**SciFort extension:** `api.poisson_binom.logpmf_derivative_p(count, p, *, out=None)`
+returns `ArrayResult(status, outputs)`. `outputs['logf']` is a float and
+`outputs['dpvec']` is the length-`n` gradient of log mass with respect to `p`.
+The observation is unshifted; this method has no `loc` argument.
+
+```python
+gradient = np.empty(3, dtype=np.float64)
+result = api.poisson_binom.logpmf_derivative_p(
+    1, [.2, .5, .8], out={'dpvec': gradient})
+print(result.status, result.outputs['logf'], gradient)
+```
+
+`p` and the gradient have shape `(n,)`, `n >= 1`. Caller-owned outputs must be
+writable, aligned, native float64 and contiguous, with no overlap with inputs.
+C adds a final call-status pointer without changing the native procedure.
+Nonpositive extents return status 1 with log mass and gradient unchanged;
+valid extents return status 0, including numerical NaNs/infinities.
+
+Invalid probabilities, nonfinite counts and fractional counts give NaN log
+mass and gradients. Finite integer counts outside support and zero-mass
+observations give negative-infinite log mass and NaN gradients. At probability
+0 or 1, gradients are inward one-sided derivatives when the observed mass is
+positive. Endpoint scores use closed forms; other scores use signed log-domain
+leave-one-out masses, so finite gradients survive probability underflow.
+A mathematically finite score beyond binary64 range can still overflow; small
+scores near cancellation are limited by log-mass rounding. The general method
+uses cubic work and linear workspace in the trial count; this change does not
+add a faster score algorithm. Private allocation bounds are documented too.
 
 Native probability tables use quadratic work in the number of trials; quantile
 searches rebuild tables for their tail evaluations. This batch adds no caching
@@ -1166,3 +1193,49 @@ C prototypes and symbols are unchanged. Native changes are limited to the two
 conversion-safety fixes and documentation. Other platforms, very large trial
 vectors and extended-range derivatives were not newly validated; benchmark
 baselines were not refreshed.
+
+## Poisson-binomial score validation (2026-11-25)
+
+Validation used GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. Commands from the repository root:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python bindings\python\example.py
+```
+
+All 72 generator tests and all 64 binding tests passed. The three independent
+synthetic-status generator tests also passed separately after the final emitter
+formatting change. Integration compiled checked `-O0 -g -fcheck=all -fbacktrace`
+and optimized `-O3` libraries, with `-std=f2018 -fimplicit-none
+-Werror=implicit-interface -shared -fPIC`. Native/C clients passed in both
+configurations; the Poisson-binomial native module/client additionally passed
+with `-ftrapv -ffpe-trap=invalid`. C11 and C++17 clients used
+`-Wall -Wextra -Werror`.
+
+New cases cover derivative enumeration, centered finite differences, binomial
+score identities, an independent 80-digit Decimal reference for heterogeneous
+underflow, deterministic probabilities, zero-mass observations, nonfinite and
+fractional counts, caller-owned buffers, alias rejection and unchanged outputs
+on invalid extents. Near-zero gradients use an absolute rounding tolerance.
+The example exercised the score with a caller-owned gradient.
+
+The existing `test_wallenius_poisson_binom` native dependency test passed after
+recompiling the final numerical module with the exact cached-library compile/run
+commands in the preceding validation section. This covers likelihood scores,
+fitting, random sampling and the existing manual C ABI. The full FPM suite was
+not run: the numerical change is confined to this module, while all generator
+and configured binding integrations cover the shared adapter change. Cached
+native dependencies were reused. A final declaration edit made an intermediate
+binding run stale; the source-hash guard stopped it. The 64-test final run above
+used regenerated metadata and completed successfully.
+
+All 124 generated artifacts passed the read-only consistency check. Encoding,
+BOM, ASCII Fortran, 132-column limits, local Markdown links and whitespace checks
+passed. All previous Poisson-binomial C prototypes remain unchanged. Coverage is
+147 Python methods and 59 array adapters in the reviewed subset. General scores
+still require cubic work; cancellation accuracy and binary64 overflow limits
+are described above. Other platforms and large-vector performance were not
+newly validated.

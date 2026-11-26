@@ -119,7 +119,7 @@ class Distribution:
 
 
 class ArrayResult(NamedTuple):
-    """Native status and named outputs, including partial outputs on failure."""
+    """Native or synthetic call status and named outputs; numerical NaNs are retained."""
     status: int
     outputs: dict
 

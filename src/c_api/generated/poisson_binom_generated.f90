@@ -8,15 +8,17 @@ module scifort_c_api_generated_poisson_binom
     use scifort_poisson_binom, only : cg_native_1 => poisson_binom_isf
     use scifort_poisson_binom, only : cg_native_2 => poisson_binom_logcdf
     use scifort_poisson_binom, only : cg_native_3 => poisson_binom_logpmf
-    use scifort_poisson_binom, only : cg_native_4 => poisson_binom_logsf
-    use scifort_poisson_binom, only : cg_native_5 => poisson_binom_pmf
-    use scifort_poisson_binom, only : cg_native_6 => poisson_binom_ppf
-    use scifort_poisson_binom, only : cg_native_7 => poisson_binom_sf
+    use scifort_poisson_binom, only : cg_native_4 => poisson_binom_logpmf_derivative_p
+    use scifort_poisson_binom, only : cg_native_5 => poisson_binom_logsf
+    use scifort_poisson_binom, only : cg_native_6 => poisson_binom_pmf
+    use scifort_poisson_binom, only : cg_native_7 => poisson_binom_ppf
+    use scifort_poisson_binom, only : cg_native_8 => poisson_binom_sf
     implicit none
     private
     public :: scifort_poisson_binom_cdf_explicit_f64
     public :: scifort_poisson_binom_isf_explicit_f64
     public :: scifort_poisson_binom_logcdf_explicit_f64
+    public :: scifort_poisson_binom_logpmf_derivative_p_explicit_f64
     public :: scifort_poisson_binom_logpmf_explicit_f64
     public :: scifort_poisson_binom_logsf_explicit_f64
     public :: scifort_poisson_binom_pmf_explicit_f64
@@ -136,6 +138,35 @@ contains
         status=0_c_int
     end subroutine scifort_poisson_binom_logpmf_explicit_f64
 
+    subroutine scifort_poisson_binom_logpmf_derivative_p_explicit_f64( &
+        n, count, p, logf, dpvec, status) &
+        bind(c, name="scifort_poisson_binom_logpmf_derivative_p_explicit_f64")
+        !! SciFort extension: log mass and probability-vector score.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! trial count, >= 1
+        real(c_double), value, intent(in) :: count !! unshifted finite integer observation
+        real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
+        real(c_double), intent(inout) :: logf !! native log probability mass
+        real(c_double), intent(inout) :: dpvec(n) !! shape (n); analytic log-mass gradient with respect to p
+        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid trial extent
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_4( &
+            count=count, &
+            p=p, &
+            logf=logf, &
+            dpvec=dpvec)
+        status=0_c_int
+    end subroutine scifort_poisson_binom_logpmf_derivative_p_explicit_f64
+
     subroutine scifort_poisson_binom_logsf_explicit_f64( &
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_logsf_explicit_f64")
@@ -157,7 +188,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_4( &
+        value=cg_native_5( &
             k=k, &
             p=p, &
             loc=loc)
@@ -185,7 +216,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_5( &
+        value=cg_native_6( &
             k=k, &
             p=p, &
             loc=loc)
@@ -213,7 +244,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_6( &
+        value=cg_native_7( &
             probability=probability, &
             p=p, &
             loc=loc)
@@ -241,7 +272,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_7( &
+        value=cg_native_8( &
             k=k, &
             p=p, &
             loc=loc)

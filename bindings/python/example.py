@@ -91,6 +91,9 @@ def main():
           api.poisson_binom.logcdf(2, probabilities), api.poisson_binom.logsf(2, probabilities))
     print('Poisson-binomial PPF/ISF:', api.poisson_binom.ppf(.95, probabilities),
           api.poisson_binom.isf(.05, probabilities))
+    gradient = np.empty(3)
+    score = api.poisson_binom.logpmf_derivative_p(2, probabilities, out={'dpvec': gradient})
+    print('Poisson-binomial log-mass score:', score.status, score.outputs['logf'], gradient)
 
 
 if __name__ == '__main__':

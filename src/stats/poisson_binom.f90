@@ -6,7 +6,7 @@
 module scifort_poisson_binom
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_kinds, only : dp
-    use scifort_math, only : log1p_safe, negative_infinity, quiet_nan
+    use scifort_math, only : expm1_safe, log1p_safe, negative_infinity, quiet_nan
     implicit none
     private
 
@@ -268,19 +268,27 @@ contains
 
     pure subroutine poisson_binom_logpmf_derivative_p(count,p,logf,dpvec)
         !! Return log mass and its derivatives with respect to trial probabilities.
-        !! n = size(p), n >= 1; dpvec must have length n.
+        !! SciFort extension: analytic probability-vector score (no loc parameter).
+        !! @dimension n = size(p)
+        !! @require n >= 1
+        !! dpvec must have length n. At p=0 or 1 use the inward derivative.
         !! Invalid input yields NaNs; out-of-support counts give logf = -infinity
         !! and NaN derivatives. Zero-probability observations have NaN derivatives.
+        !! Leave-one-out log masses avoid probability underflow; cancellation uses expm1.
+        !! Derivation and mathematical reference are recorded in CODE_PROVENANCE.md.
+        implicit none
         real(dp), intent(in) :: count !! unshifted integer observation
         real(dp), intent(in) :: p(:) !! shape (n); finite Bernoulli success probabilities in [0,1]
         real(dp), intent(out) :: logf !! log probability mass
         real(dp), intent(out) :: dpvec(:) !! shape (n); derivatives of log mass with respect to p
-        real(dp), allocatable :: q(:), mass(:)
-        real(dp) :: pk, deriv
+        real(dp), allocatable :: q(:), logmass(:)
+        real(dp) :: loga, logb
         integer :: j, k, n
         n=size(p); dpvec=quiet_nan(count)
-        if (size(dpvec)/=n .or. .not.valid_parameters(p) .or. .not.ieee_is_finite(count) .or. &
-            abs(count-aint(count))>0.0_dp) then
+        if (size(dpvec)/=n .or. .not.valid_parameters(p) .or. .not.ieee_is_finite(count)) then
+            logf=quiet_nan(count); return
+        end if
+        if (abs(count-aint(count))>0.0_dp) then
             logf=quiet_nan(count); return
         end if
         if (count < 0.0_dp .or. count > real(n,dp)) then
@@ -290,20 +298,30 @@ contains
         k=int(count)
         logf=poisson_binom_logpmf_real(count,p)
         if (.not.ieee_is_finite(logf)) return
-        pk=exp(logf)
         allocate(q(max(0,n-1)))
         do j=1,n
-            if (n==1) then
-                if (k==0) then; deriv=-1.0_dp; else; deriv=1.0_dp; end if
-            else
-                if (j>1) q(1:j-1)=p(1:j-1)
-                if (j<n) q(j:n-1)=p(j+1:n)
-                call build_pmf(q,mass)
-                deriv=0.0_dp
-                if (k>=1) deriv=deriv+mass(k-1)
-                if (k<=n-1) deriv=deriv-mass(k)
+            ! Endpoint scores have closed forms and need no leave-one-out table.
+            if (k==0) then
+                dpvec(j)=-1.0_dp/(1.0_dp-p(j))
+                cycle
+            else if (k==n) then
+                dpvec(j)=1.0_dp/p(j)
+                cycle
             end if
-            dpvec(j)=deriv/pk
+            if (j>1) q(1:j-1)=p(1:j-1)
+            if (j<n) q(j:n-1)=p(j+1:n)
+            call build_logpmf(q,logmass)
+            loga=logmass(k-1)
+            logb=logmass(k)
+            ! d log f / dp(j) = (f_without_j(k-1)-f_without_j(k))/f(k).
+            ! Subtract before exponentiating to retain small signed differences.
+            if (loga==logb) then
+                dpvec(j)=0.0_dp
+            else if (loga>logb) then
+                dpvec(j)=exp((loga-logf)+log(-expm1_safe(logb-loga)))
+            else
+                dpvec(j)=-exp((logb-logf)+log(-expm1_safe(loga-logb)))
+            end if
         end do
     end subroutine poisson_binom_logpmf_derivative_p
 

@@ -13,7 +13,8 @@ also receive a bulk wrapper with one varying input and uniform scalar parameters
 The native real kind and its module are configured; conversion to/from
 `c_double` is explicit. SciFort's initial integration uses binary64 throughout.
 Rank-one/rank-two assumed-shape array subroutines can now receive explicit-shape
-`bind(c)` adapters, with a required native integer status output. Their native
+`bind(c)` adapters, with a native integer status output or an explicitly
+configured synthetic call status. Their native
 implementations are unchanged; no C implementation or pointer conversion is needed.
 Scalar-result functions with array inputs use the separate `array_functions`
 pattern described below, including explicit promotion of optional real arrays.
@@ -129,7 +130,7 @@ in coverage, so reordering JSON object keys does not change the ABI.
 
 Adapters accept explicit real scalars and assumed-shape arrays declared on the
 entity, for example `real(dp), intent(in) :: a(:,:)`, plus default-integer scalar
-`intent(out)` results (C `int *`). The required native status argument is also
+`intent(out)` results (C `int *`). A native status argument must be
 default-integer `intent(out)`. Default-integer scalar/rank-one/two array inputs
 are also supported. Allocatable, pointer and callback arguments remain unsupported.
 
@@ -670,3 +671,24 @@ and selections for excluded procedures are rejected. Unconfigured generics remai
 unsupported and require explicit exclusion. This adds no automatic overload
 choice, descriptor ABI or general Fortran semantic resolver. The existing
 scalar/array signature restrictions still apply to the selected procedure.
+
+## Subroutines without native status
+
+A reviewed `subroutines` entry may set `"synthetic_status": true`. Its
+`status_argument` then names a new, distinct output appended after all native
+arguments at the C boundary. The generator never forwards this argument to the
+native subroutine. The opt-in must be a JSON boolean; omission or false retains
+the existing native-status requirement. Array functions already synthesize a
+status and reject this subroutine-only option.
+
+Dimension, flag and integer guards return `invalid_status` and preserve all
+other outputs. After a valid native call, the adapter sets status 0 even when
+numerical inputs produce NaN or infinity. It does not infer numerical success
+or intercept native failures. This distinction is recorded in coverage and
+headers; the native Fortran signature remains unchanged.
+
+Python returns `ArrayResult(status, outputs)`, with named scalar/array outputs
+and optional caller-owned array buffers through `out={"name": array}`. The same
+shape, type and alias checks apply as for native-status subroutines. See the
+[Poisson-binomial manifest](../../bindings/cabi_config/poisson_binom.json) and
+[derivative contract](../../bindings/python/README.md#poisson-binomial-score).

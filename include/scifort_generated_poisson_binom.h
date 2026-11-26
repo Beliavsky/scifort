@@ -52,6 +52,15 @@ void scifort_poisson_binom_logcdf_explicit_f64(int arg_n, double arg_k, const do
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_poisson_binom_logpmf_explicit_f64(int arg_n, double arg_k, const double * arg_p, double arg_loc, double * arg_value, int *arg_status);
 
+/* SciFort extension: log mass and probability-vector score.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Status 0 means the call was valid; native numerical NaN/infinity is retained.
+ * Numerical parameter errors use native values, not call-level statuses. */
+void scifort_poisson_binom_logpmf_derivative_p_explicit_f64(int arg_n, double arg_count, const double * arg_p, double * arg_logf, double * arg_dpvec, int *arg_status);
+
 /* Evaluate Poisson-binomial logsf.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.

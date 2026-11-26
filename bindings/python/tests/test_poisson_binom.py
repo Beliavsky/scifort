@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Poisson-binomial scalar C/Python interfaces and conversion-range regressions."""
 import ctypes as C
+from decimal import Decimal, localcontext
 import itertools
 import math
 import os
@@ -100,6 +101,112 @@ class PoissonBinomTests(unittest.TestCase):
             self.assertEqual(group.cdf(0,p),0.)
             np.testing.assert_allclose(group.logcdf(0,p),80*math.log1p(-p[0]),rtol=3e-14,atol=1e-12)
 
+    def test_derivative_enumeration_and_finite_differences(self):
+        p=np.array([.1,.35,.65,.9])
+        for _,_,api in self.builds:
+            group=api.poisson_binom
+            for k in range(5):
+                result=group.logpmf_derivative_p(k,p)
+                self.assertEqual(result.status,0)
+                np.testing.assert_allclose(result.outputs['logf'],group.logpmf(k,p),rtol=2e-14)
+                gradient=[]
+                for j in range(4):
+                    without=np.delete(p,j);mass=np.zeros(4)
+                    for bits in itertools.product((0,1),repeat=3):
+                        mass[sum(bits)]+=math.prod(q if bit else 1-q for q,bit in zip(without,bits))
+                    gradient.append(((mass[k-1] if k else 0)-(mass[k] if k<4 else 0))/math.exp(result.outputs['logf']))
+                    plus=p.copy();minus=p.copy();h=1e-6
+                    plus[j]+=h;minus[j]-=h
+                    difference=(group.logpmf(k,plus)-group.logpmf(k,minus))/(2*h)
+                    np.testing.assert_allclose(result.outputs['dpvec'][j],difference,rtol=2e-8,atol=2e-9)
+                np.testing.assert_allclose(result.outputs['dpvec'],gradient,rtol=2e-13,atol=2e-14)
+            # Symmetry gives zero up to log/log1p rounding; small scores retain sign.
+            zero=group.logpmf_derivative_p(1,[.5,.5]).outputs['dpvec']
+            np.testing.assert_allclose(zero,[0.,0.],rtol=0,atol=3e-16)
+            small=group.logpmf_derivative_p(1,[.5,.5+1e-9]).outputs['dpvec']
+            np.testing.assert_allclose(small,[-4e-9,0.],rtol=2e-7,atol=1e-15)
+
+    def test_derivative_underflow_boundaries_and_invalid_values(self):
+        for _,_,api in self.builds:
+            fn=api.poisson_binom.logpmf_derivative_p
+            # Equal probabilities give k/(n*p)-(n-k)/(n*(1-p)) per coordinate.
+            for n,p,k in ((80,1e-5,80),(80,1e-5,79),(80,1-1e-5,0),(80,1-1e-5,1)):
+                result=fn(k,[p]*n)
+                self.assertEqual(result.status,0)
+                self.assertLess(result.outputs['logf'],-745)
+                self.assertTrue(np.all(np.isfinite(result.outputs['dpvec'])))
+                expected=k/(n*p)-(n-k)/(n*(1-p))
+                np.testing.assert_allclose(result.outputs['dpvec'],expected,rtol=4e-12,atol=2e-10)
+            for p,k,expected in (([0.],0,[-1.]),([1.],1,[1.]),([0.,1.],1,[-1.,1.]),
+                                 ([0.,.4],1,[.5,2.5]),([1.,.4],1,[1/3,-1/.6])):
+                result=fn(k,p)
+                self.assertEqual(result.status,0)
+                np.testing.assert_allclose(result.outputs['dpvec'],expected,rtol=5e-14,atol=1e-15)
+            for k in (np.nan,np.inf,-np.inf,.5):
+                result=fn(k,[.2,.8])
+                self.assertEqual(result.status,0)
+                self.assertTrue(math.isnan(result.outputs['logf']))
+                self.assertTrue(np.all(np.isnan(result.outputs['dpvec'])))
+            for k,p in ((-1,[.2,.8]),(1e100,[.2,.8]),(0,[1.,1.]),(2,[0.,0.])):
+                result=fn(k,p)
+                self.assertEqual(result.status,0)
+                self.assertEqual(result.outputs['logf'],-np.inf)
+                self.assertTrue(np.all(np.isnan(result.outputs['dpvec'])))
+            for p in ([np.nan,.5],[np.inf,.5],[-.1,.5],[1.1,.5]):
+                result=fn(1,p)
+                self.assertTrue(math.isnan(result.outputs['logf']))
+                self.assertTrue(np.all(np.isnan(result.outputs['dpvec'])))
+
+    def test_derivative_buffers_and_call_status(self):
+        for _,_,api in self.builds:
+            group=api.poisson_binom;p=np.array([.2,.8]);out=np.empty(2)
+            result=group.logpmf_derivative_p(1,p,out={'dpvec':out})
+            self.assertEqual(result.status,0)
+            self.assertIs(result.outputs['dpvec'],out)
+            np.testing.assert_allclose(out,[-.6/.68,.6/.68],rtol=2e-14)
+            for bad in ([],[[.2,.8]]):
+                with self.assertRaises(ValueError):group.logpmf_derivative_p(1,bad)
+            with self.assertRaises(TypeError):group.logpmf_derivative_p(1,[.2+1j,.8])
+            for bad in (np.empty(3),np.empty(2,dtype=np.float32),p):
+                with self.assertRaises((ValueError,TypeError)):
+                    group.logpmf_derivative_p(1,p,out={'dpvec':bad})
+            readonly=np.empty(2);readonly.flags.writeable=False
+            with self.assertRaises(ValueError):group.logpmf_derivative_p(1,p,out={'dpvec':readonly})
+            with self.assertRaises(ValueError):group.logpmf_derivative_p(1,p,out={'logf':out})
+            for variant in (p.astype('>f8'),np.array([.2,9.,.8])[::2]):
+                np.testing.assert_allclose(group.logpmf_derivative_p(1,variant).outputs['dpvec'],out)
+            raw=group._functions['logpmf_derivative_p'];value=C.c_double(99.);status=C.c_int(-1)
+            out[:]=[77.,88.]
+            for n in (0,-1):
+                raw(n,1.,p.ctypes.data_as(C.c_void_p),C.byref(value),out.ctypes.data_as(C.c_void_p),C.byref(status))
+                self.assertEqual(status.value,1);self.assertEqual(value.value,99.)
+                np.testing.assert_array_equal(out,[77.,88.])
+
+    def test_derivative_heterogeneous_decimal_underflow_reference(self):
+        p=np.geomspace(1e-50,9e-45,12);k=10
+        with localcontext() as context:
+            context.prec=80
+            probabilities=[Decimal.from_float(float(q)) for q in p]
+            def masses(values):
+                table=[Decimal(1)]
+                for q in values:
+                    updated=[Decimal(0)]*(len(table)+1)
+                    for i,v in enumerate(table):
+                        updated[i]+=v*(1-q);updated[i+1]+=v*q
+                    table=updated
+                return table
+            mass=masses(probabilities)[k]
+            expected=[]
+            for j in range(len(p)):
+                leave=masses(probabilities[:j]+probabilities[j+1:])
+                expected.append(float((leave[k-1]-leave[k])/mass))
+            logmass=float(mass.ln())
+        for _,_,api in self.builds:
+            result=api.poisson_binom.logpmf_derivative_p(k,p)
+            self.assertEqual(result.status,0)
+            np.testing.assert_allclose(result.outputs['logf'],logmass,rtol=3e-14)
+            np.testing.assert_allclose(result.outputs['dpvec'],expected,rtol=4e-12)
+
     def test_shapes_layout_and_raw_c_preservation(self):
         for _,_,api in self.builds:
             group=api.poisson_binom
@@ -134,7 +241,9 @@ class PoissonBinomTests(unittest.TestCase):
                     c.write_text("""#include "scifort.h"
 #include <math.h>
 int main(void) {
- double p[2]={.2,.8},a; int status;
+ double p[2]={.2,.8},a,gradient[2]; int status;
+ scifort_poisson_binom_logpmf_derivative_p_explicit_f64(2,1,p,&a,gradient,&status);
+ if(status || fabs(a-log(.68))>1e-14 || fabs(gradient[0]+.6/.68)>1e-14) return 9;
  scifort_poisson_binom_pmf_explicit_f64(2,1,p,0,&a,&status); if(status || fabs(a-.68)>1e-14) return 1;
  scifort_poisson_binom_logpmf_explicit_f64(2,1,p,0,&a,&status); if(status || fabs(a-log(.68))>1e-14) return 2;
  scifort_poisson_binom_cdf_explicit_f64(2,1,p,0,&a,&status); if(status || fabs(a-.84)>1e-14) return 3;

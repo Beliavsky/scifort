@@ -22,7 +22,10 @@
     "probability": "tail probability in [0,1]",
     "loc": "support shift; required at the C boundary",
     "value": "native scalar result, retaining numerical NaN/infinity",
-    "status": "0 valid call; 1 invalid trial extent"
+    "status": "0 valid call; 1 invalid trial extent",
+    "count": "unshifted finite integer observation",
+    "logf": "native log probability mass",
+    "dpvec": "shape (n); analytic log-mass gradient with respect to p"
   },
   "array_functions": {
     "poisson_binom_pmf": {
@@ -186,13 +189,35 @@
       "shape_contract": true
     }
   },
-  "excluded": {
-    "poisson_binom_logpmf_derivative_p": "Subroutine without native status needs a separately reviewed adapter extension."
-  },
+  "excluded": {},
   "outputs": {
     "fortran": "src/c_api/generated/poisson_binom_generated.f90",
     "header": "include/scifort_generated_poisson_binom.h",
     "coverage": "bindings/cabi_config/poisson_binom_coverage.json",
     "shape_documentation": "docs/poisson_binom_shapes.md"
+  },
+  "subroutines": {
+    "poisson_binom_logpmf_derivative_p": {
+      "symbol": "scifort_poisson_binom_logpmf_derivative_p_explicit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "p": [
+          "n"
+        ],
+        "dpvec": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "SciFort extension: log mass and probability-vector score.",
+      "synthetic_status": true,
+      "shape_contract": true
+    }
   }
 }
