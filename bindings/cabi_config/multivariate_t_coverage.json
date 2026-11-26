@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 2,
+  "generated_symbol_count": 4,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -8,9 +8,55 @@
       "state": "excluded"
     },
     {
+      "arguments": [
+        "loc",
+        "shape",
+        "df",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "loc",
+        "shape",
+        "df"
+      ],
       "procedure": "multivariate_t_entropy",
-      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-      "state": "excluded"
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "loc",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "loc": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_t_entropy_f64"
+      ]
     },
     {
       "arguments": [
@@ -68,9 +114,68 @@
       ]
     },
     {
+      "arguments": [
+        "dimensions",
+        "loc",
+        "shape",
+        "marginal_loc",
+        "marginal_shape",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "m"
+      ],
+      "dimensions": {
+        "m": 1,
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
       "procedure": "multivariate_t_marginal",
-      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "m": {
+            "argument": "dimensions",
+            "axis": null
+          },
+          "n": {
+            "argument": "loc",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "m": 1,
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "dimensions": [
+          "m"
+        ],
+        "loc": [
+          "n"
+        ],
+        "marginal_loc": [
+          "m"
+        ],
+        "marginal_shape": [
+          "m",
+          "m"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_t_marginal_f64"
+      ]
     },
     {
       "arguments": [
@@ -168,5 +273,5 @@
   ],
   "public_api_count": 11,
   "source": "src/stats/multivariate_t.f90",
-  "source_sha256": "ea3a96719af85e5b9c518c05091477ad8a6e65fdd64dc56041c66fc5bff7ae3a"
+  "source_sha256": "40a51c2b7fbd2f2fa41878a45c103dfb44416028f6b966a5e336984725470d97"
 }

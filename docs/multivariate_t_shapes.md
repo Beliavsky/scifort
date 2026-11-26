@@ -7,6 +7,19 @@ Source: `src/stats/multivariate_t.f90`; module: `scifort_multivariate_t`.
 These declared contracts are checked against reviewed C adapter policies.
 They do not prove that the numerical implementation obeys the contract.
 
+## multivariate_t_entropy
+
+Evaluate multivariate t entropy using the native PSD convention.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(loc)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
+| `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
+
 ## multivariate_t_logpdf
 
 Evaluate multivariate Student t log density; singular shape is permitted.
@@ -20,6 +33,23 @@ Evaluate multivariate Student t log density; singular shape is permitted.
 | `x` | `(:)` | `(n)` | evaluation point |
 | `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
 | `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
+
+## multivariate_t_marginal
+
+Select multivariate t marginal parameters using one-based indices.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(loc)` | 1 |
+| `m` | `size(dimensions)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `dimensions` | `(:)` | `(m)` | shape (m); unique one-based indices in [1,n], in requested order |
+| `loc` | `(:)` | `(n)` | location vector; required at the C boundary |
+| `shape` | `(:,:)` | `(n,n)` | shape, not covariance; lower triangle used; all entries finite |
+| `marginal_loc` | `(:)` | `(m)` | shape (m); selected location vector, in requested order |
+| `marginal_shape` | `(:,:)` | `(m,m)` | shape (m,m); selected symmetric matrix from the lower input triangle |
 
 ## multivariate_t_pdf
 

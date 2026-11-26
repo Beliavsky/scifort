@@ -346,7 +346,8 @@ The original assumed-shape functions retain their Fortran optional arguments.
 Their reviewed annotations generate [native shape tables](../../docs/multivariate_normal_shapes.md).
 Python adds zero-mean/identity-covariance defaults through explicit policy and
 returns scalar floats; see the [Python contract](../python/README.md#multivariate-normal-densities).
-CDF, fitting, marginalization and random sampling remain outside this batch.
+Entropy and marginalization are now also generated; see the contract below.
+CDF, fitting and random sampling remain outside the reviewed interfaces.
 
 ## Multivariate Student t density adapters
 
@@ -377,7 +378,8 @@ unchanged. These are call-status codes, not `multivariate_t_status_*` failures.
 
 See the [generated native shape tables](../../docs/multivariate_t_shapes.md)
 and [Python defaults/singularity contract](../python/README.md#multivariate-student-t-densities).
-Entropy, CDF, marginals and random sampling remain outside this batch.
+Entropy and marginalization are now also generated; see the contract below.
+CDF and random sampling remain outside the reviewed interfaces.
 
 ## Dirichlet density, entropy and moment adapters
 
@@ -447,3 +449,26 @@ final-entry adjustment before adjusted-range validation. See the detailed
 [hypergeometric shape tables](../../docs/multivariate_hypergeom_shapes.md).
 Sampling remains native-only pending explicit RNG handle design. Both modules'
 private and sampling array arguments now have readable shape documentation.
+
+## Multivariate entropy and marginal adapters
+
+The normal and Student-t manifests also select entropy and marginal parameter
+selection. Entropy C signatures take `(n, mean, cov, value, status)` and
+`(n, loc, shape, df, value, status)` respectively; the arrays are always required.
+Valid scalar calls return status 0, retaining native numerical NaN/infinity;
+invalid extents return 1 and preserve the result.
+
+Marginal C signatures take `(n, m, dimensions, mean, cov, marginal_mean,
+marginal_cov, status)` and the corresponding `loc/shape` names for Student t.
+Indices are unique **one-based** C integers in `[1,n]`. Inputs/outputs use shapes
+`dimensions(m)`, location `(n)`, matrix `(n,n)`, selected location `(m)` and
+selected matrix `(m,m)`, with n,m >= 1. All pointers must be valid, aligned,
+nonnull, contiguous, disjoint and sufficiently sized; matrices are column-major.
+The native routine validates uniqueness and ranges (status 2); invalid extents
+return 1. Failure leaves both output buffers unchanged. Native lower-triangle
+and finite-entry rules are retained; selection does not test definiteness.
+
+Python separately resolves optional entropy dimensions and converts zero-based
+indices. Read the [full interface contract](../python/README.md#multivariate-entropy-and-marginal-parameters)
+and the generator's [dimension-source](../../tools/cabi_generator/README.md#ordered-optional-dimension-sources)
+and [index policies](../../tools/cabi_generator/README.md#python-zero-based-index-inputs).

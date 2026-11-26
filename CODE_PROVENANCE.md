@@ -1,3 +1,14 @@
+## 2026-11-25 - Multivariate entropy and marginal interfaces
+
+The reviewed manifests, generated interfaces, ordered dimension-source and
+Python index policies, shape documentation and independent fixtures are original
+MIT SciFort interface work. No upstream numerical implementation was imported
+or adapted. Wrappers delegate to the existing multivariate normal and Student-t
+procedures; their mathematical algorithms and prior provenance are unchanged.
+Native source edits add comments, structured annotations and explicit
+implicit-none declarations only. SciPy is an external numerical test reference;
+index selection is independently checked against direct array indexing.
+
 ## 2026-11-25 - Poisson-binomial log-domain score
 
 The synthetic-status generator policy and associated interface fixtures are

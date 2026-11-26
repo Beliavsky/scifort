@@ -114,3 +114,8 @@ existing scalar-returning symbols. See the
 [probability-vector and endpoint contract](python/README.md#poisson-binomial-distribution)
 and [shape tables](../docs/poisson_binom_shapes.md). Their manifest also exercises
 reviewed selection of specific procedures behind public Fortran generics.
+
+Multivariate normal and Student-t also expose entropy and marginal parameter
+selection in C/Python. Python entropy infers dimensions from optional arrays;
+Python marginal indices are zero-based while C/Fortran remain one-based. See the
+[shapes, outputs and status contract](python/README.md#multivariate-entropy-and-marginal-parameters).

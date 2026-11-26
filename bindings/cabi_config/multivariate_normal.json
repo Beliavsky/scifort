@@ -13,8 +13,12 @@
     "mean": "mean vector; required at the C boundary",
     "cov": "covariance; lower triangle authoritative, all entries must be finite",
     "allow_singular": "0 reject singular covariance; 1 permit singular covariance",
-    "value": "native density or log density, including NaN on invalid parameters",
-    "status": "0 valid call; 1 invalid extent or logical flag"
+    "value": "native scalar density, log density or entropy; numerical NaN/infinity retained",
+    "status": "0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2",
+    "m": "retained dimension, >= 1; unique indices imply m <= n",
+    "dimensions": "shape (m); unique one-based indices in [1,n], in requested order",
+    "marginal_mean": "shape (m); selected location vector, in requested order",
+    "marginal_cov": "shape (m,m); selected symmetric matrix from the lower input triangle"
   },
   "array_functions": {
     "multivariate_normal_pdf": {
@@ -82,6 +86,30 @@
         }
       },
       "shape_contract": true
+    },
+    "multivariate_normal_entropy": {
+      "symbol": "scifort_multivariate_normal_entropy_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "mean": [
+          "n"
+        ],
+        "cov": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate multivariate normal entropy using the native PSD convention.",
+      "shape_contract": true
     }
   },
   "outputs": {
@@ -93,14 +121,50 @@
   "excluded": {
     "multivariate_normal_cdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_logcdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-    "multivariate_normal_entropy": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_fit": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-    "multivariate_normal_marginal": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_rvs": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_rvs_array": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_status_success": "Native status constant, not a callable procedure.",
     "multivariate_status_invalid_shape": "Native status constant, not a callable procedure.",
     "multivariate_status_invalid_parameter": "Native status constant, not a callable procedure.",
     "multivariate_status_linalg_failure": "Native status constant, not a callable procedure."
+  },
+  "subroutines": {
+    "multivariate_normal_marginal": {
+      "symbol": "scifort_multivariate_normal_marginal_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        },
+        {
+          "name": "m",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "dimensions": [
+          "m"
+        ],
+        "mean": [
+          "n"
+        ],
+        "cov": [
+          "n",
+          "n"
+        ],
+        "marginal_mean": [
+          "m"
+        ],
+        "marginal_cov": [
+          "m",
+          "m"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Select multivariate normal marginal parameters using one-based indices.",
+      "shape_contract": true
+    }
   }
 }

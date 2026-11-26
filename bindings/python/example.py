@@ -37,6 +37,11 @@ def main():
     print('multivariate Student t PDF:', api.multivariate_t.pdf([0., 0.], df=5.))
     print('multivariate Student t log-PDF:',
           api.multivariate_t.logpdf([.5, -.2], shape=[[2., .3], [.3, 1.]], df=5.))
+    print('multivariate normal entropy:', api.multivariate_normal.entropy(cov=np.eye(3)))
+    print('multivariate Student t entropy:', api.multivariate_t.entropy(shape=np.eye(3), df=5.))
+    for distribution in (api.multivariate_normal, api.multivariate_t):
+        marginal = distribution.marginal([2, 0], [1., 2., 3.], np.eye(3))
+        print('multivariate marginal:', marginal.status, marginal.outputs)
     print('Dirichlet log-PDF, inferred coordinate:', api.dirichlet.logpdf([.2, .3], [2., 3., 4.]))
     print('Dirichlet PDF:', api.dirichlet.pdf([.2, .3, .5], [2., 3., 4.]))
     print('Dirichlet entropy:', api.dirichlet.entropy([2., 3., 4.]))

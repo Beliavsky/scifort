@@ -234,7 +234,11 @@ contains
     end function multivariate_t_cdf
 
     function multivariate_t_entropy(loc, shape, df) result(h)
+        !! Return differential entropy using the native PSD convention.
+        !! @dimension n = size(loc)
+        !! @require n >= 1
         !! n = size(loc) if present, else size(shape,1), else 1; n >= 1.
+        implicit none
         real(dp), intent(in), optional :: loc(:) !! shape (n); location vector, used to infer dimension
         real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent
         real(dp), intent(in), optional :: df !! degrees of freedom, > 0; default 1; +infinity gives normal
@@ -379,7 +383,15 @@ contains
     end subroutine multivariate_t_rvs_array
 
     subroutine multivariate_t_marginal(dimensions, loc, shape, marginal_loc, marginal_shape, status)
+        !! Select marginal locations and the symmetric matrix in requested order.
+        !! @dimension n = size(loc)
+        !! @dimension m = size(dimensions)
+        !! @require n >= 1
+        !! @require m >= 1
         !! n = size(loc), m = size(dimensions); 1 <= m <= n.
+        !! Only the lower matrix triangle is used; all entries must be finite.
+        !! Invalid input leaves both output arrays unchanged.
+        implicit none
         integer, intent(in) :: dimensions(:) !! shape (m); one-based unique indices of retained variables
         real(dp), intent(in) :: loc(:) !! shape (n); original location vector
         real(dp), intent(in) :: shape(:, :) !! shape (n,n); original shape matrix; lower triangle is authoritative

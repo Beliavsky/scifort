@@ -16,7 +16,9 @@ def prepare(policy, root, py_name):
         py_name(group)
         if group in policy['groups'] or group in {'api', 'library', 'distribution', 'path', 'arraygroup'}:
             raise ValueError(f'{group}: reserved or duplicate array group')
-        if not isinstance(settings, dict) or set(settings) - {'prefix', 'dimension_defaults'} != {'manifests', 'defaults'}:
+        if (not isinstance(settings, dict) or set(settings) -
+                {'prefix', 'dimension_defaults', 'dimension_sources', 'zero_based_indices'} !=
+                {'manifests', 'defaults'}):
             raise ValueError('array groups need manifests and defaults')
         prefix = settings.get('prefix', '')
         if not isinstance(prefix, str):
@@ -28,6 +30,11 @@ def prepare(policy, root, py_name):
         dimension_defaults = settings.get('dimension_defaults', {})
         if not isinstance(dimension_defaults, dict):
             raise ValueError('dimension_defaults must map native procedures to dimension values')
+        sources = settings.get('dimension_sources', {})
+        indices = settings.get('zero_based_indices', {})
+        if not isinstance(sources, dict) or not isinstance(indices, dict):
+            raise ValueError('dimension_sources and zero_based_indices must map native procedures')
+        used_sources, used_indices = set(), set()
         specs, methods, used_defaults, used_dimension_defaults = {}, [], set(), set()
         for path in paths:
             manifest = (root/path).resolve()
@@ -113,6 +120,44 @@ def prepare(policy, root, py_name):
                     raise ValueError('dimension defaults must cover exactly defaulted dimension sources with valid C extents')
                 if fallback:
                     spec['dimension_defaults'] = fallback
+                if native_name in sources:
+                    used_sources.add(native_name)
+                    rules = sources[native_name]
+                    if not isinstance(rules, dict) or not rules or set(rules) - set(fallback):
+                        raise ValueError('dimension sources need dimensions with explicit fallbacks')
+                    for dim, candidates in rules.items():
+                        if (not isinstance(candidates, list) or len(candidates) < 2
+                                or candidates[0] != contract['definitions'][dim]):
+                            raise ValueError('ordered dimension sources must begin with the declared source')
+                        seen = []
+                        for candidate in candidates:
+                            if not isinstance(candidate, dict) or set(candidate) != {'argument', 'axis'}:
+                                raise ValueError('dimension sources need argument/axis objects')
+                            arg, axis = candidate['argument'], candidate['axis']
+                            info = metadata.get(arg, {}) if isinstance(arg, str) else {}
+                            rank = info.get('rank', 0)
+                            if (not isinstance(arg, str) or arg not in array_defaults
+                                    or not rank or candidate in seen
+                                    or not (axis is None and rank == 1 or
+                                            type(axis) is int and 1 <= axis <= rank)
+                                    or entry['policy']['shapes'][arg][(axis or 1)-1] != dim):
+                                raise ValueError('dimension source must be a distinct matching optional array axis')
+                            seen.append(candidate)
+                    spec['dimension_sources'] = rules
+                if native_name in indices:
+                    used_indices.add(native_name)
+                    rules = indices[native_name]
+                    if not isinstance(rules, dict) or not rules:
+                        raise ValueError('zero_based_indices needs input-array/dimension mappings')
+                    for arg, dim in rules.items():
+                        info = metadata.get(arg, {})
+                        if (arg not in inputs or info.get('category') != 'integer'
+                                or info.get('rank') != 1 or not isinstance(dim, str)
+                                or dim not in entry['dimensions'] or arg in values):
+                            raise ValueError('zero-based indices need required rank-one integer inputs and a bound dimension')
+                        if any(arg in entry['policy'].get(key, {}) for key in ('integer_limits', 'integer_sums')):
+                            raise ValueError('zero-based indices cannot combine with native integer guards')
+                    spec['zero_based_indices'] = rules
                 if 'result_argument' in entry:
                     spec['result_argument'] = entry['result_argument']
                 if entry.get('synthetic_status'):
@@ -137,6 +182,8 @@ def prepare(policy, root, py_name):
                             f'        return self._invoke({name!r}, {{{actuals}}}, {output})', '']
         if set(dimension_defaults) != used_dimension_defaults:
             raise ValueError('unused dimension defaults')
+        if set(sources) != used_sources or set(indices) != used_indices:
+            raise ValueError('unused dimension sources or zero-based index policies')
         if set(defaults) != used_defaults:
             raise ValueError('unused array method defaults')
         cls = group.capitalize()

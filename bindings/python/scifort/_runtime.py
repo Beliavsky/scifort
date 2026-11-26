@@ -178,13 +178,23 @@ class ArrayGroup:
         dimensions = {}
         for dim in spec['dimensions']:
             definition = spec['definitions'][dim]
-            array = originals.get(definition['argument'])
-            axis = definition['axis']
-            length = (spec['dimension_defaults'][dim] if array is None else
-                      array.shape[axis-1] if axis else array.size)
+            candidates = spec.get('dimension_sources', {}).get(dim, [definition])
+            length = None
+            for candidate in candidates:
+                array = originals.get(candidate['argument'])
+                if array is not None:
+                    axis = candidate['axis']
+                    length = array.shape[axis-1] if axis else array.size
+                    break
+            if length is None:
+                length = spec['dimension_defaults'][dim]
             if not spec['minimums'][dim] <= length <= np.iinfo(np.intc).max:
                 raise ValueError(f'{dim} is outside the supported C integer extent range')
             dimensions[dim] = length
+        for arg, dim in spec.get('zero_based_indices', {}).items():
+            array = originals[arg]
+            if np.any(array < 0) or np.any(array >= dimensions[dim]):
+                raise ValueError(f'{arg} must contain zero-based indices in [0,{dimensions[dim]})')
         for dim, rule in spec.get('length_choices', {}).items():
             if dimensions[dim] not in [dimensions[rule['dimension']] + offset for offset in rule['offsets']]:
                 raise ValueError(f'{dim} does not satisfy the required dimension choices')
@@ -250,6 +260,9 @@ class ArrayGroup:
         for arg, original in originals.items():
             if spec['metadata'][arg]['rank']:
                 dtype = np.intc if spec['metadata'][arg]['category'] == 'integer' else np.float64
+                if arg in spec.get('zero_based_indices', {}):
+                    # Bounds were checked before narrowing; do not mutate caller storage.
+                    original = original.astype(np.int64) + 1
                 buffers[arg] = (np.require(original, dtype=dtype, requirements=['F', 'A'])
                                 if original.size else np.empty(1, dtype=dtype))
                 values[arg] = buffers[arg].ctypes.data_as(C.c_void_p)

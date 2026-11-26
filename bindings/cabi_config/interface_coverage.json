@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 59,
+    "array_adapters": 63,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 147,
+    "python": 151,
     "scalar": 88
   },
   "procedures": [
@@ -1211,11 +1211,10 @@
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_normal_entropy_f64",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_entropy",
-      "scalar_generated": false
+      "python": "multivariate_normal.entropy"
     },
     {
       "bulk_generated": false,
@@ -1238,11 +1237,10 @@
       "python": "multivariate_normal.logpdf"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_normal_marginal_f64",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_marginal",
-      "scalar_generated": false
+      "python": "multivariate_normal.marginal"
     },
     {
       "array_adapter": "scifort_multivariate_normal_pdf_f64",
@@ -1300,11 +1298,10 @@
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_t_entropy_f64",
       "module": "scifort_multivariate_t",
       "procedure": "multivariate_t_entropy",
-      "scalar_generated": false
+      "python": "multivariate_t.entropy"
     },
     {
       "array_adapter": "scifort_multivariate_t_logpdf_f64",
@@ -1313,11 +1310,10 @@
       "python": "multivariate_t.logpdf"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_t_marginal_f64",
       "module": "scifort_multivariate_t",
       "procedure": "multivariate_t_marginal",
-      "scalar_generated": false
+      "python": "multivariate_t.marginal"
     },
     {
       "array_adapter": "scifort_multivariate_t_pdf_f64",

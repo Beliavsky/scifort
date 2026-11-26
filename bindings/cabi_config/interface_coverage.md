@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 59 |
+| array_adapters | 63 |
 | elementwise | 88 |
-| python | 147 |
+| python | 151 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -163,11 +163,11 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_hypergeom | multivariate_hypergeom_status_success |  |  |  |  |  |
 | scifort_multivariate_hypergeom | multivariate_hypergeom_var |  |  | scifort_multivariate_hypergeom_var_f64 |  | multivariate_hypergeom.var |
 | scifort_multivariate_normal | multivariate_normal_cdf |  |  |  |  |  |
-| scifort_multivariate_normal | multivariate_normal_entropy |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_entropy |  |  | scifort_multivariate_normal_entropy_f64 |  | multivariate_normal.entropy |
 | scifort_multivariate_normal | multivariate_normal_fit |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_logcdf |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_logpdf |  |  | scifort_multivariate_normal_logpdf_f64 |  | multivariate_normal.logpdf |
-| scifort_multivariate_normal | multivariate_normal_marginal |  |  |  |  |  |
+| scifort_multivariate_normal | multivariate_normal_marginal |  |  | scifort_multivariate_normal_marginal_f64 |  | multivariate_normal.marginal |
 | scifort_multivariate_normal | multivariate_normal_pdf |  |  | scifort_multivariate_normal_pdf_f64 |  | multivariate_normal.pdf |
 | scifort_multivariate_normal | multivariate_normal_rvs |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_normal_rvs_array |  |  |  |  |  |
@@ -176,9 +176,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_multivariate_normal | multivariate_status_linalg_failure |  |  |  |  |  |
 | scifort_multivariate_normal | multivariate_status_success |  |  |  |  |  |
 | scifort_multivariate_t | multivariate_t_cdf |  |  |  |  |  |
-| scifort_multivariate_t | multivariate_t_entropy |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_entropy |  |  | scifort_multivariate_t_entropy_f64 |  | multivariate_t.entropy |
 | scifort_multivariate_t | multivariate_t_logpdf |  |  | scifort_multivariate_t_logpdf_f64 |  | multivariate_t.logpdf |
-| scifort_multivariate_t | multivariate_t_marginal |  |  |  |  |  |
+| scifort_multivariate_t | multivariate_t_marginal |  |  | scifort_multivariate_t_marginal_f64 |  | multivariate_t.marginal |
 | scifort_multivariate_t | multivariate_t_pdf |  |  | scifort_multivariate_t_pdf_f64 |  | multivariate_t.pdf |
 | scifort_multivariate_t | multivariate_t_rvs |  |  |  |  |  |
 | scifort_multivariate_t | multivariate_t_rvs_array |  |  |  |  |  |

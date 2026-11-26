@@ -1759,7 +1759,31 @@ class Multivariate_hypergeom(ArrayGroup):
         return self._invoke('var', {'m': m, 'n': n}, out)
 
 class Multivariate_normal(ArrayGroup):
-    _specs = {'logpdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
+    _specs = {'entropy': {'arguments': ['mean', 'cov', 'value', 'status'],
+                 'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
+                 'definitions': {'n': {'argument': 'mean', 'axis': None}},
+                 'dimension_defaults': {'n': 1},
+                 'dimension_sources': {'n': [{'argument': 'mean', 'axis': None},
+                                             {'argument': 'cov', 'axis': 1}]},
+                 'dimensions': ['n'],
+                 'inputs': ['mean', 'cov'],
+                 'logical_inputs': {},
+                 'metadata': {'cov': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 2},
+                              'mean': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 1},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'n': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'cov': ['n', 'n'], 'mean': ['n']},
+                 'status': 'status',
+                 'symbol': 'scifort_multivariate_normal_entropy_f64'},
+     'logpdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
                 'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
                 'definitions': {'n': {'argument': 'x', 'axis': None}},
                 'dimensions': ['n'],
@@ -1785,6 +1809,32 @@ class Multivariate_normal(ArrayGroup):
                 'shapes': {'cov': ['n', 'n'], 'mean': ['n'], 'x': ['n']},
                 'status': 'status',
                 'symbol': 'scifort_multivariate_normal_logpdf_f64'},
+     'marginal': {'arguments': ['dimensions',
+                                'mean',
+                                'cov',
+                                'marginal_mean',
+                                'marginal_cov',
+                                'status'],
+                  'definitions': {'m': {'argument': 'dimensions', 'axis': None},
+                                  'n': {'argument': 'mean', 'axis': None}},
+                  'dimensions': ['n', 'm'],
+                  'inputs': ['dimensions', 'mean', 'cov'],
+                  'logical_inputs': {},
+                  'metadata': {'cov': {'category': 'real', 'intent': 'in', 'rank': 2},
+                               'dimensions': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                               'marginal_cov': {'category': 'real', 'intent': 'out', 'rank': 2},
+                               'marginal_mean': {'category': 'real', 'intent': 'out', 'rank': 1},
+                               'mean': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                  'minimums': {'m': 1, 'n': 1},
+                  'outputs': ['marginal_mean', 'marginal_cov'],
+                  'shapes': {'cov': ['n', 'n'],
+                             'dimensions': ['m'],
+                             'marginal_cov': ['m', 'm'],
+                             'marginal_mean': ['m'],
+                             'mean': ['n']},
+                  'status': 'status',
+                  'symbol': 'scifort_multivariate_normal_marginal_f64',
+                  'zero_based_indices': {'dimensions': 'n'}},
      'pdf': {'arguments': ['x', 'mean', 'cov', 'allow_singular', 'value', 'status'],
              'array_defaults': {'cov': 'identity', 'mean': 'zeros'},
              'definitions': {'n': {'argument': 'x', 'axis': None}},
@@ -1806,16 +1856,52 @@ class Multivariate_normal(ArrayGroup):
              'status': 'status',
              'symbol': 'scifort_multivariate_normal_pdf_f64'}}
 
+    def entropy(self, mean=None, cov=None):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'mean': mean, 'cov': cov}, None)
+
     def logpdf(self, x, mean=None, cov=None, allow_singular=False):
         """Return the native scalar value."""
         return self._invoke('logpdf', {'x': x, 'mean': mean, 'cov': cov, 'allow_singular': allow_singular}, None)
+
+    def marginal(self, dimensions, mean, cov, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('marginal', {'dimensions': dimensions, 'mean': mean, 'cov': cov}, out)
 
     def pdf(self, x, mean=None, cov=None, allow_singular=False):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'mean': mean, 'cov': cov, 'allow_singular': allow_singular}, None)
 
 class Multivariate_t(ArrayGroup):
-    _specs = {'logpdf': {'arguments': ['x', 'loc', 'shape', 'df', 'value', 'status'],
+    _specs = {'entropy': {'arguments': ['loc', 'shape', 'df', 'value', 'status'],
+                 'array_defaults': {'loc': 'zeros', 'shape': 'identity'},
+                 'definitions': {'n': {'argument': 'loc', 'axis': None}},
+                 'dimension_defaults': {'n': 1},
+                 'dimension_sources': {'n': [{'argument': 'loc', 'axis': None},
+                                             {'argument': 'shape', 'axis': 1}]},
+                 'dimensions': ['n'],
+                 'inputs': ['loc', 'shape', 'df'],
+                 'logical_inputs': {},
+                 'metadata': {'df': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 0},
+                              'loc': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 1},
+                              'shape': {'category': 'real',
+                                        'intent': 'in',
+                                        'optional': True,
+                                        'rank': 2},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'n': 1},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'loc': ['n'], 'shape': ['n', 'n']},
+                 'status': 'status',
+                 'symbol': 'scifort_multivariate_t_entropy_f64'},
+     'logpdf': {'arguments': ['x', 'loc', 'shape', 'df', 'value', 'status'],
                 'array_defaults': {'loc': 'zeros', 'shape': 'identity'},
                 'definitions': {'n': {'argument': 'x', 'axis': None}},
                 'dimensions': ['n'],
@@ -1841,6 +1927,32 @@ class Multivariate_t(ArrayGroup):
                 'shapes': {'loc': ['n'], 'shape': ['n', 'n'], 'x': ['n']},
                 'status': 'status',
                 'symbol': 'scifort_multivariate_t_logpdf_f64'},
+     'marginal': {'arguments': ['dimensions',
+                                'loc',
+                                'shape',
+                                'marginal_loc',
+                                'marginal_shape',
+                                'status'],
+                  'definitions': {'m': {'argument': 'dimensions', 'axis': None},
+                                  'n': {'argument': 'loc', 'axis': None}},
+                  'dimensions': ['n', 'm'],
+                  'inputs': ['dimensions', 'loc', 'shape'],
+                  'logical_inputs': {},
+                  'metadata': {'dimensions': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                               'loc': {'category': 'real', 'intent': 'in', 'rank': 1},
+                               'marginal_loc': {'category': 'real', 'intent': 'out', 'rank': 1},
+                               'marginal_shape': {'category': 'real', 'intent': 'out', 'rank': 2},
+                               'shape': {'category': 'real', 'intent': 'in', 'rank': 2}},
+                  'minimums': {'m': 1, 'n': 1},
+                  'outputs': ['marginal_loc', 'marginal_shape'],
+                  'shapes': {'dimensions': ['m'],
+                             'loc': ['n'],
+                             'marginal_loc': ['m'],
+                             'marginal_shape': ['m', 'm'],
+                             'shape': ['n', 'n']},
+                  'status': 'status',
+                  'symbol': 'scifort_multivariate_t_marginal_f64',
+                  'zero_based_indices': {'dimensions': 'n'}},
      'pdf': {'arguments': ['x', 'loc', 'shape', 'df', 'allow_singular', 'value', 'status'],
              'array_defaults': {'loc': 'zeros', 'shape': 'identity'},
              'definitions': {'n': {'argument': 'x', 'axis': None}},
@@ -1866,9 +1978,17 @@ class Multivariate_t(ArrayGroup):
              'status': 'status',
              'symbol': 'scifort_multivariate_t_pdf_f64'}}
 
+    def entropy(self, loc=None, shape=None, df=1.0):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'loc': loc, 'shape': shape, 'df': df}, None)
+
     def logpdf(self, x, loc=None, shape=None, df=1.0):
         """Return the native scalar value."""
         return self._invoke('logpdf', {'x': x, 'loc': loc, 'shape': shape, 'df': df}, None)
+
+    def marginal(self, dimensions, loc, shape, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('marginal', {'dimensions': dimensions, 'loc': loc, 'shape': shape}, out)
 
     def pdf(self, x, loc=None, shape=None, df=1.0, allow_singular=False):
         """Return the native scalar value."""

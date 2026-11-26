@@ -4,7 +4,7 @@ This development interface exposes PDF, log-PDF, CDF, SF, log-CDF, log-SF, PPF,
 and ISF for `normal`, `exponential`, `logistic`, `laplace`, `cauchy`, `weibull`,
 `lognormal`, `gamma`, `beta`, Student `t`, and `chi2`. It uses NumPy arrays and the stable
 binary64 C calling convention. Eight matrix methods are available under `api.linalg`,
-and multivariate normal/Student-t PDF/log-PDF under `api.multivariate_normal`
+and multivariate normal/Student-t PDF/log-PDF, entropy and marginal parameters under `api.multivariate_normal`
 and `api.multivariate_t`. `api.dirichlet` provides PDF, log-PDF, entropy, mean,
 variance and covariance. Multinomial and multivariate hypergeometric methods are
 available under `api.multinomial` and `api.multivariate_hypergeom`.
@@ -1239,3 +1239,131 @@ passed. All previous Poisson-binomial C prototypes remain unchanged. Coverage is
 still require cubic work; cancellation accuracy and binary64 overflow limits
 are described above. Other platforms and large-vector performance were not
 newly validated.
+
+## Multivariate entropy and marginal parameters
+
+Both `api.multivariate_normal` and `api.multivariate_t` now expose `entropy`
+and `marginal`. Native procedures retain their names and numerical behavior.
+
+| Python call | Result |
+| --- | --- |
+| `multivariate_normal.entropy(mean=None, cov=None)` | Python float |
+| `multivariate_t.entropy(loc=None, shape=None, df=1.0)` | Python float |
+| `multivariate_normal.marginal(dimensions, mean, cov, *, out=None)` | `ArrayResult(status, outputs)` |
+| `multivariate_t.marginal(dimensions, loc, shape, *, out=None)` | `ArrayResult(status, outputs)` |
+
+Entropy dimension is inferred first from a supplied mean/location vector, then
+from the supplied matrix's first axis, otherwise defaults to one. Supplied
+vectors must have shape `(n,)` and matrices `(n,n)`, `n >= 1`; mismatches and
+empty dimensions raise. Absent vectors become zeros and absent matrices become
+identity. Provided location values must be finite even though entropy does not
+depend on their values. This preserves native SciFort dimension inference.
+Local SciPy 1.15.3 Student-t entropy uses a one-dimensional default when shape
+is omitted, even with a longer loc; cross-library references therefore supply
+an explicit identity shape for that case.
+C always receives explicit arrays, n, and Student-t df.
+Invalid numerical parameters return NaN with call status 0. Nonpositive C
+extents return status 1 with the scalar output unchanged.
+
+Both entropy functions permit PSD matrices and use the lower triangle, while
+requiring every entry to be finite. Normal entropy uses numerical rank and the
+pseudo-determinant, with rank-zero entropy zero. Finite-df Student-t entropy uses
+the ambient dimension n and pseudo-determinant, including singular matrices;
+this is a documented computational convention rather than a full-dimensional
+density entropy for a degenerate law. Infinite df delegates to normal entropy,
+including its rank convention. Invalid df gives NaN; the Python default is 1.
+
+Marginal `dimensions` is a nonempty, rank-one **zero-based** integer vector in
+Python. C and Fortran keep **one-based** indices. Let m be its length; n is the
+input vector length. Vectors have shape `(n,)`, matrices `(n,n)`, selected
+vectors `(m,)` and selected matrices `(m,m)`. Indices must be unique and in
+range, implying `1 <= m <= n`; requested order is preserved. Floats and booleans
+are rejected, and out-of-range Python indices raise before C conversion.
+Duplicate indices return native status 2 and preserve caller-owned outputs.
+Locations and all matrix entries must be finite. Selection symmetrizes from
+the lower triangle; it does not require the input matrix to be positive definite.
+Student-t marginal selection returns location/shape parameters; df is unchanged
+and is not an argument or output of this native routine.
+
+The normal output keys are `marginal_mean` and `marginal_cov`; Student-t uses
+`marginal_loc` and `marginal_shape`. Pass buffers with these names in `out`.
+They must be aligned, writable native float64, column-major, correctly shaped
+and disjoint from each other and all inputs. Other buffers are converted as
+needed; caller index arrays are never modified. Native statuses are 0 success,
+1 invalid shape and 2 invalid parameters. Invalid C extents are rejected before
+native execution; all failure paths preserve caller-owned outputs. All C array
+and scalar output pointers must be valid, aligned, nonnull and have sufficient
+storage; these adapters cannot verify addresses or buffer capacity.
+
+```python
+print(api.multivariate_normal.entropy(cov=np.eye(3)))
+print(api.multivariate_t.entropy(shape=np.eye(3), df=5.0))
+selected_mean = np.empty(2)
+selected_cov = np.empty((2, 2), order='F')
+result = api.multivariate_normal.marginal(
+    [2, 0], [1., 2., 3.], np.eye(3),
+    out={'marginal_mean': selected_mean, 'marginal_cov': selected_cov})
+print(result.status, selected_mean, selected_cov)
+```
+
+See the [normal shape tables](../../docs/multivariate_normal_shapes.md) and
+[Student-t shape tables](../../docs/multivariate_t_shapes.md). C symbols follow
+`scifort_multivariate_normal_entropy_f64`, `scifort_multivariate_t_entropy_f64`,
+`scifort_multivariate_normal_marginal_f64` and `scifort_multivariate_t_marginal_f64`.
+
+## Multivariate parameter-interface validation (2026-11-25)
+
+Validated on Windows with GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental),
+Python 3.13.3, NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. Commands:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+python -m unittest discover -s bindings/python/tests -p test_multivariate_parameters.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+python bindings\python\example.py
+```
+
+All 76 generator tests passed, including four new independent policy/compiled
+fixture tests. The complete 70-test binding run passed all 64 existing tests;
+two new assertions required correction: one expected SciPy's omitted-shape
+Student-t dimension to match SciFort's, and one reused mutated C index test
+storage across families. After those test-only fixes, all six new integration
+tests passed in the focused rerun. No library behavior was changed to satisfy
+those assertions.
+
+Integration used checked `-O0 -g -fcheck=all -fbacktrace` and optimized `-O3`
+libraries, both with `-std=f2018 -fimplicit-none -Werror=implicit-interface
+-shared -fPIC`. Native clients compare all four adapters directly with native
+procedures; C11 and C++17 clients use `-Wall -Wextra -Werror`. Tests cover entropy
+references, independent defaults and dimension precedence, singular and normal
+limits, invalid/nonfinite parameters, marginal ordering and lower triangles,
+zero-/one-based conversion, read-only/endian/strided integer inputs, unsigned
+range checks, unchanged inputs, output ownership/aliasing and failure preservation.
+The updated example ran successfully. General Python-runtime changes justify
+checking every existing configured interface; native numerical algorithms did
+not change.
+
+The existing native `test_multivariate` program also passed after compiling the
+final native sources and linking cached dependencies:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\multivariate_normal.f90 src\stats\multivariate_t.f90 ^
+  test\test_checks.f90 test\multivariate_reference.f90 test\test_multivariate.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\dependent.exe
+build\multivariate-parameters-regression\dependent.exe
+```
+
+The cache paths above are local validation artifacts, not portable build paths.
+This checks existing multivariate density/entropy/marginal, fitting and random
+sampling paths without rebuilding unrelated modules. The full FPM suite was not
+run. It remains required before release or merge under repository policy.
+
+All 124 generated artifacts passed the read-only check. Previous published C
+prototypes are unchanged. Encoding/BOM, ASCII Fortran, 132-column source limits,
+Markdown links and whitespace were checked. Reviewed coverage is now 151 Python
+methods and 63 array adapters. Other platforms and timing baselines were not
+newly validated. CDF, fit and RNG-state interfaces remain outside this batch.

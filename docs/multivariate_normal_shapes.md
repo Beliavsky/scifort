@@ -7,6 +7,19 @@ Source: `src/stats/multivariate_normal.f90`; module: `scifort_multivariate_norma
 These declared contracts are checked against reviewed C adapter policies.
 They do not prove that the numerical implementation obeys the contract.
 
+## multivariate_normal_entropy
+
+Evaluate multivariate normal entropy using the native PSD convention.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(mean)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+
 ## multivariate_normal_logpdf
 
 Evaluate multivariate normal log density.
@@ -20,6 +33,23 @@ Evaluate multivariate normal log density.
 | `x` | `(:)` | `(n)` | evaluation point |
 | `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+
+## multivariate_normal_marginal
+
+Select multivariate normal marginal parameters using one-based indices.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(mean)` | 1 |
+| `m` | `size(dimensions)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `dimensions` | `(:)` | `(m)` | shape (m); unique one-based indices in [1,n], in requested order |
+| `mean` | `(:)` | `(n)` | mean vector; required at the C boundary |
+| `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+| `marginal_mean` | `(:)` | `(m)` | shape (m); selected location vector, in requested order |
+| `marginal_cov` | `(:,:)` | `(m,m)` | shape (m,m); selected symmetric matrix from the lower input triangle |
 
 ## multivariate_normal_pdf
 

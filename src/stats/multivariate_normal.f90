@@ -348,7 +348,15 @@ contains
     end function normal_log_interval
 
     subroutine multivariate_normal_marginal(dimensions, mean, cov, marginal_mean, marginal_cov, status)
+        !! Select marginal locations and the symmetric matrix in requested order.
+        !! @dimension n = size(mean)
+        !! @dimension m = size(dimensions)
+        !! @require n >= 1
+        !! @require m >= 1
         !! n = size(mean), m = size(dimensions); 1 <= m <= n.
+        !! Only the lower matrix triangle is used; all entries must be finite.
+        !! Invalid input leaves both output arrays unchanged.
+        implicit none
         integer, intent(in) :: dimensions(:) !! shape (m); one-based indices of retained variables; must be unique
         real(dp), intent(in) :: mean(:) !! shape (n); original mean vector
         real(dp), intent(in) :: cov(:, :) !! shape (n,n); original covariance matrix; lower triangle is authoritative
@@ -397,7 +405,11 @@ contains
     end subroutine multivariate_normal_marginal
 
     function multivariate_normal_entropy(mean, cov) result(h)
+        !! Return differential entropy using the native PSD convention.
+        !! @dimension n = size(mean)
+        !! @require n >= 1
         !! n = size(mean) if present, else size(cov,1), else 1; n >= 1.
+        implicit none
         real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector used only to infer dimension
         real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
         real(dp) :: h

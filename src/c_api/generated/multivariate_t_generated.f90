@@ -4,26 +4,29 @@ module scifort_c_api_generated_multivariate_t
     use, intrinsic :: iso_c_binding, only : c_double, c_int, c_size_t
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : cg_kind => dp
-    use scifort_multivariate_t, only : cg_native_0 => multivariate_t_logpdf
-    use scifort_multivariate_t, only : cg_native_1 => multivariate_t_pdf
+    use scifort_multivariate_t, only : cg_native_0 => multivariate_t_entropy
+    use scifort_multivariate_t, only : cg_native_1 => multivariate_t_logpdf
+    use scifort_multivariate_t, only : cg_native_2 => multivariate_t_marginal
+    use scifort_multivariate_t, only : cg_native_3 => multivariate_t_pdf
     implicit none
     private
+    public :: scifort_multivariate_t_entropy_f64
     public :: scifort_multivariate_t_logpdf_f64
+    public :: scifort_multivariate_t_marginal_f64
     public :: scifort_multivariate_t_pdf_f64
 contains
 
-    subroutine scifort_multivariate_t_logpdf_f64( &
-        n, x, loc, shape, df, value, status) &
-        bind(c, name="scifort_multivariate_t_logpdf_f64")
-        !! Evaluate multivariate Student t log density; singular shape is permitted.
+    subroutine scifort_multivariate_t_entropy_f64( &
+        n, loc, shape, df, value, status) &
+        bind(c, name="scifort_multivariate_t_entropy_f64")
+        !! Evaluate multivariate t entropy using the native PSD convention.
         implicit none
         integer(c_int), value, intent(in) :: n !! dimension, >= 1
-        real(c_double), intent(in) :: x(n) !! evaluation point
         real(c_double), intent(in) :: loc(n) !! location vector; required at the C boundary
         real(c_double), intent(in) :: shape(n,n) !! shape, not covariance; lower triangle used; all entries finite
         real(c_double), value, intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal limit
-        real(c_double), intent(inout) :: value !! native density or log density, including NaN on invalid parameters
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or logical flag
+        real(c_double), intent(inout) :: value !! native scalar density, log density or entropy; numerical NaN/infinity retained
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -35,12 +38,77 @@ contains
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
         value=cg_native_0( &
+            loc=loc, &
+            shape=shape, &
+            df=df)
+        status=0_c_int
+    end subroutine scifort_multivariate_t_entropy_f64
+
+    subroutine scifort_multivariate_t_logpdf_f64( &
+        n, x, loc, shape, df, value, status) &
+        bind(c, name="scifort_multivariate_t_logpdf_f64")
+        !! Evaluate multivariate Student t log density; singular shape is permitted.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! dimension, >= 1
+        real(c_double), intent(in) :: x(n) !! evaluation point
+        real(c_double), intent(in) :: loc(n) !! location vector; required at the C boundary
+        real(c_double), intent(in) :: shape(n,n) !! shape, not covariance; lower triangle used; all entries finite
+        real(c_double), value, intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal limit
+        real(c_double), intent(inout) :: value !! native scalar density, log density or entropy; numerical NaN/infinity retained
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        value=cg_native_1( &
             x=x, &
             loc=loc, &
             shape=shape, &
             df=df)
         status=0_c_int
     end subroutine scifort_multivariate_t_logpdf_f64
+
+    subroutine scifort_multivariate_t_marginal_f64( &
+        n, m, dimensions, loc, shape, marginal_loc, marginal_shape, status) &
+        bind(c, name="scifort_multivariate_t_marginal_f64")
+        !! Select multivariate t marginal parameters using one-based indices.
+        implicit none
+        integer(c_int), value, intent(in) :: n !! dimension, >= 1
+        integer(c_int), value, intent(in) :: m !! retained dimension, >= 1; unique indices imply m <= n
+        integer(c_int), intent(in) :: dimensions(m) !! shape (m); unique one-based indices in [1,n], in requested order
+        real(c_double), intent(in) :: loc(n) !! location vector; required at the C boundary
+        real(c_double), intent(in) :: shape(n,n) !! shape, not covariance; lower triangle used; all entries finite
+        real(c_double), intent(inout) :: marginal_loc(m) !! shape (m); selected location vector, in requested order
+        real(c_double), intent(inout) :: marginal_shape(m,m) !! shape (m,m); selected symmetric matrix from the lower input triangle
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (n < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (m < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_2( &
+            dimensions=dimensions, &
+            loc=loc, &
+            shape=shape, &
+            marginal_loc=marginal_loc, &
+            marginal_shape=marginal_shape, &
+            status=status)
+    end subroutine scifort_multivariate_t_marginal_f64
 
     subroutine scifort_multivariate_t_pdf_f64( &
         n, x, loc, shape, df, allow_singular, value, status) &
@@ -53,8 +121,8 @@ contains
         real(c_double), intent(in) :: shape(n,n) !! shape, not covariance; lower triangle used; all entries finite
         real(c_double), value, intent(in) :: df !! degrees of freedom, > 0; +infinity gives the normal limit
         integer(c_int), value, intent(in) :: allow_singular !! 0 reject singular shape; 1 permit singular shape
-        real(c_double), intent(inout) :: value !! native density or log density, including NaN on invalid parameters
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent or logical flag
+        real(c_double), intent(inout) :: value !! native scalar density, log density or entropy; numerical NaN/infinity retained
+        integer(c_int), intent(out) :: status !! 0 success/valid scalar call; 1 invalid shape or flag; native parameter errors 2
         logical :: cg_logical_allow_singular
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
@@ -72,7 +140,7 @@ contains
         end if
         cg_logical_allow_singular=(allow_singular == 1_c_int)
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        value=cg_native_1( &
+        value=cg_native_3( &
             x=x, &
             loc=loc, &
             shape=shape, &

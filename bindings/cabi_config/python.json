@@ -180,6 +180,38 @@
             "fill": "identity"
           },
           "allow_singular": false
+        },
+        "multivariate_normal_entropy": {
+          "mean": {
+            "fill": "zeros"
+          },
+          "cov": {
+            "fill": "identity"
+          }
+        }
+      },
+      "dimension_defaults": {
+        "multivariate_normal_entropy": {
+          "n": 1
+        }
+      },
+      "dimension_sources": {
+        "multivariate_normal_entropy": {
+          "n": [
+            {
+              "argument": "mean",
+              "axis": null
+            },
+            {
+              "argument": "cov",
+              "axis": 1
+            }
+          ]
+        }
+      },
+      "zero_based_indices": {
+        "multivariate_normal_marginal": {
+          "dimensions": "n"
         }
       }
     },
@@ -207,6 +239,39 @@
             "fill": "identity"
           },
           "df": 1.0
+        },
+        "multivariate_t_entropy": {
+          "loc": {
+            "fill": "zeros"
+          },
+          "shape": {
+            "fill": "identity"
+          },
+          "df": 1.0
+        }
+      },
+      "dimension_defaults": {
+        "multivariate_t_entropy": {
+          "n": 1
+        }
+      },
+      "dimension_sources": {
+        "multivariate_t_entropy": {
+          "n": [
+            {
+              "argument": "loc",
+              "axis": null
+            },
+            {
+              "argument": "shape",
+              "axis": 1
+            }
+          ]
+        }
+      },
+      "zero_based_indices": {
+        "multivariate_t_marginal": {
+          "dimensions": "n"
         }
       }
     },

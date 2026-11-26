@@ -692,3 +692,48 @@ and optional caller-owned array buffers through `out={"name": array}`. The same
 shape, type and alias checks apply as for native-status subroutines. See the
 [Poisson-binomial manifest](../../bindings/cabi_config/poisson_binom.json) and
 [derivative contract](../../bindings/python/README.md#poisson-binomial-score).
+
+## Ordered optional dimension sources
+
+A Python array group may configure `dimension_sources` by full procedure name,
+then dimension. The ordered candidates have the same `argument`/`axis` format
+as structured dimension definitions (`axis: null` for a vector's length):
+
+```json
+"dimension_sources": {
+  "multivariate_normal_entropy": {
+    "n": [{"argument": "mean", "axis": null}, {"argument": "cov", "axis": 1}]
+  }
+}
+```
+
+The first candidate must equal the declared source. Every candidate must be a
+distinct configured optional/defaulted array axis with the same required shape
+dimension. The dimension must also have an explicit `dimension_defaults` value.
+Missing, malformed, repeated, mismatched or unused policies are rejected.
+Python uses the first supplied candidate, then the fallback if none is supplied.
+It validates every provided shape against that dimension; conflicting arrays
+raise rather than silently changing the selected dimension. Rank and C-int
+extent checks precede allocation. C still receives every input explicitly.
+This policy must be reviewed against native inference order; annotations alone
+do not prove native optional-argument behavior.
+
+## Python zero-based index inputs
+
+A Python array group may configure `zero_based_indices`, mapping full procedure
+names to `{ "integer_input": "bound_dimension" }`. For example:
+
+```json
+"zero_based_indices": {
+  "multivariate_normal_marginal": {"dimensions": "n"}
+}
+```
+
+Only required rank-one integer input arrays qualify. The bound must be a declared
+dimension. Unknown/unused policies, defaults and combinations with native integer
+range/sum guards are rejected. Python checks every index in `[0,n)` before
+narrowing, copies it into widened signed storage, adds one, and passes C-int
+indices to C. Caller arrays remain unchanged. Invalid ranges raise `ValueError`;
+floats and booleans raise `TypeError`. Empty arrays still obey normal minimum
+shape rules. The C ABI, native annotations and Fortran procedures remain
+one-based; uniqueness and other native constraints remain native validations.

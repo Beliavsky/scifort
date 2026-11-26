@@ -1,3 +1,14 @@
+## 2026-11-25 - Multivariate entropy and marginal interfaces
+
+- Add four generated C/Python entropy and marginal-parameter methods for
+  multivariate normal and Student t, with caller-owned marginal outputs.
+- Add reviewed ordered optional-array dimension sources and Python-only
+  zero-based to one-based integer index conversion without mutating inputs.
+- Add structured shape annotations, purpose comments and explicit index,
+  lower-triangle, singular-entropy and output-preservation contracts.
+- Test policy validation, compiled fixtures, SciPy references, native/C agreement,
+  dimensions, ordering, invalid parameters and caller-owned buffer behavior.
+
 ## 2026-11-25 - Poisson-binomial score and synthetic call statuses
 
 - Add opt-in synthetic C call statuses for native subroutines without status,
