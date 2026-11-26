@@ -140,3 +140,7 @@ extents. See [vector sampling](python/README.md#multivariate-vector-batch-sampli
 Wishart and inverse-Wishart batch samplers expose rank-three matrix outputs
 through the same caller-owned stream bridge. See
 [matrix batch sampling](python/README.md#wishart-and-inverse-wishart-batch-sampling).
+
+Matrix-normal and matrix-t batch sampling now reuse the same state bridge and
+rank-three output buffers, with optional mean and row/column parameters. See
+[matrix sampling contracts](python/README.md#matrix-normal-and-matrix-t-batch-sampling).

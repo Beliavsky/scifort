@@ -1519,7 +1519,58 @@ class Matrix_normal(ArrayGroup):
                         'rowcov': ['m', 'm'],
                         'x': ['m', 'n']},
              'status': 'status',
-             'symbol': 'scifort_matrix_normal_pdf_f64'}}
+             'symbol': 'scifort_matrix_normal_pdf_f64'},
+     'rvs_array': {'arguments': ['state',
+                                 'samples',
+                                 'has_mean',
+                                 'mean',
+                                 'has_rowcov',
+                                 'rowcov',
+                                 'has_colcov',
+                                 'colcov',
+                                 'status'],
+                   'definitions': {'m': {'argument': 'samples', 'axis': 1},
+                                   'n': {'argument': 'samples', 'axis': 2},
+                                   'n_samples': {'argument': 'samples', 'axis': 3}},
+                   'dimensions': ['m', 'n', 'n_samples'],
+                   'inputs': ['state', 'mean', 'rowcov', 'colcov'],
+                   'logical_inputs': {},
+                   'metadata': {'colcov': {'category': 'real',
+                                           'intent': 'in',
+                                           'optional': True,
+                                           'rank': 2},
+                                'has_colcov': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'has_mean': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'has_rowcov': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'mean': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 2},
+                                'rowcov': {'category': 'real',
+                                           'intent': 'in',
+                                           'optional': True,
+                                           'rank': 2},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 3},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'m': 0, 'n': 0, 'n_samples': 0},
+                   'optional_arrays': {'colcov': 'has_colcov',
+                                       'mean': 'has_mean',
+                                       'rowcov': 'has_rowcov'},
+                   'output_dimensions': {'m': 1, 'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'colcov': ['n', 'n'],
+                              'mean': ['m', 'n'],
+                              'rowcov': ['m', 'm'],
+                              'samples': ['m', 'n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_matrix_normal_rvs_array_f64'}}
 
     def entropy(self, rowcov=None, colcov=None):
         """Return the native scalar value."""
@@ -1532,6 +1583,10 @@ class Matrix_normal(ArrayGroup):
     def pdf(self, x, mean=None, rowcov=None, colcov=None):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'mean': mean, 'rowcov': rowcov, 'colcov': colcov}, None)
+
+    def rvs_array(self, state, mean=None, rowcov=None, colcov=None, *, m=1, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'mean': mean, 'rowcov': rowcov, 'colcov': colcov, 'm': m, 'n': n, 'n_samples': n_samples}, out)
 
 class Matrix_t(ArrayGroup):
     _specs = {'logpdf': {'arguments': ['x', 'mean', 'row_spread', 'col_spread', 'df', 'value', 'status'],
@@ -1598,7 +1653,67 @@ class Matrix_t(ArrayGroup):
                         'row_spread': ['m', 'm'],
                         'x': ['m', 'n']},
              'status': 'status',
-             'symbol': 'scifort_matrix_t_pdf_f64'}}
+             'symbol': 'scifort_matrix_t_pdf_f64'},
+     'rvs_array': {'arguments': ['state',
+                                 'samples',
+                                 'has_mean',
+                                 'mean',
+                                 'has_row_spread',
+                                 'row_spread',
+                                 'has_col_spread',
+                                 'col_spread',
+                                 'df',
+                                 'status'],
+                   'definitions': {'m': {'argument': 'samples', 'axis': 1},
+                                   'n': {'argument': 'samples', 'axis': 2},
+                                   'n_samples': {'argument': 'samples', 'axis': 3}},
+                   'dimensions': ['m', 'n', 'n_samples'],
+                   'inputs': ['state', 'mean', 'row_spread', 'col_spread', 'df'],
+                   'logical_inputs': {},
+                   'metadata': {'col_spread': {'category': 'real',
+                                               'intent': 'in',
+                                               'optional': True,
+                                               'rank': 2},
+                                'df': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 0},
+                                'has_col_spread': {'category': 'integer',
+                                                   'intent': 'in',
+                                                   'rank': 0},
+                                'has_mean': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                'has_row_spread': {'category': 'integer',
+                                                   'intent': 'in',
+                                                   'rank': 0},
+                                'mean': {'category': 'real',
+                                         'intent': 'in',
+                                         'optional': True,
+                                         'rank': 2},
+                                'row_spread': {'category': 'real',
+                                               'intent': 'in',
+                                               'optional': True,
+                                               'rank': 2},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 3},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'m': 0, 'n': 0, 'n_samples': 0},
+                   'optional_arrays': {'col_spread': 'has_col_spread',
+                                       'mean': 'has_mean',
+                                       'row_spread': 'has_row_spread'},
+                   'output_dimensions': {'m': 1, 'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'col_spread': ['n', 'n'],
+                              'mean': ['m', 'n'],
+                              'row_spread': ['m', 'm'],
+                              'samples': ['m', 'n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_matrix_t_rvs_array_f64'}}
 
     def logpdf(self, x, mean=None, row_spread=None, col_spread=None, df=1.0):
         """Return the native scalar value."""
@@ -1607,6 +1722,10 @@ class Matrix_t(ArrayGroup):
     def pdf(self, x, mean=None, row_spread=None, col_spread=None, df=1.0):
         """Return the native scalar value."""
         return self._invoke('pdf', {'x': x, 'mean': mean, 'row_spread': row_spread, 'col_spread': col_spread, 'df': df}, None)
+
+    def rvs_array(self, state, mean=None, row_spread=None, col_spread=None, df=1.0, *, m=1, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'mean': mean, 'row_spread': row_spread, 'col_spread': col_spread, 'df': df, 'm': m, 'n': n, 'n_samples': n_samples}, out)
 
 class Multinomial(ArrayGroup):
     _specs = {'cov': {'arguments': ['n', 'p', 'value', 'status'],

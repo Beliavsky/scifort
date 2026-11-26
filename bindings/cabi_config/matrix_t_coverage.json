@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 2,
+  "generated_symbol_count": 3,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -144,13 +144,108 @@
     },
     {
       "procedure": "matrix_t_rvs",
-      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
+      "reason": "Single draws are available through the batch sampler with n_samples=1.",
       "state": "excluded"
     },
     {
+      "arguments": [
+        "state",
+        "samples",
+        "has_mean",
+        "mean",
+        "has_row_spread",
+        "row_spread",
+        "has_col_spread",
+        "col_spread",
+        "df",
+        "status"
+      ],
+      "dimension_order": [
+        "m",
+        "n",
+        "n_samples"
+      ],
+      "dimensions": {
+        "m": 0,
+        "n": 0,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_arrays": {
+        "col_spread": "has_col_spread",
+        "mean": "has_mean",
+        "row_spread": "has_row_spread"
+      },
+      "optional_promoted_to_required": [
+        "df"
+      ],
+      "optional_status_promoted_to_required": true,
       "procedure": "matrix_t_rvs_array",
-      "reason": "Explicit RNG state requires a separately reviewed handle interface.",
-      "state": "excluded"
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "All native shape and distribution validation is skipped.",
+            "dimension": "n_samples",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "m": {
+            "argument": "samples",
+            "axis": 1
+          },
+          "n": {
+            "argument": "samples",
+            "axis": 2
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 3
+          }
+        },
+        "minimums": {
+          "m": 0,
+          "n": 0,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col_spread": [
+          "n",
+          "n"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "row_spread": [
+          "m",
+          "m"
+        ],
+        "samples": [
+          "m",
+          "n",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_matrix_t_rvs_array_f64"
+      ]
     },
     {
       "procedure": "matrix_t_status_invalid_parameter",
@@ -175,5 +270,5 @@
   ],
   "public_api_count": 8,
   "source": "src/stats/matrix_t.f90",
-  "source_sha256": "e6094ac2ce34ddd8b84db2098f8abb18f0e2e031276168c28b695881c9c41fda"
+  "source_sha256": "5b358d8339e5f8711c806791602135060832074b8bdce35c9b4fb4f57cb55019"
 }

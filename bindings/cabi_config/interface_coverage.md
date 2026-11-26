@@ -7,9 +7,9 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | exports | 218 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 71 |
+| array_adapters | 73 |
 | elementwise | 88 |
-| python | 159 |
+| python | 161 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -129,7 +129,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_matrix_normal | matrix_normal_logpdf |  |  | scifort_matrix_normal_logpdf_f64 |  | matrix_normal.logpdf |
 | scifort_matrix_normal | matrix_normal_pdf |  |  | scifort_matrix_normal_pdf_f64 |  | matrix_normal.pdf |
 | scifort_matrix_normal | matrix_normal_rvs |  |  |  |  |  |
-| scifort_matrix_normal | matrix_normal_rvs_array |  |  |  |  |  |
+| scifort_matrix_normal | matrix_normal_rvs_array |  |  | scifort_matrix_normal_rvs_array_f64 |  | matrix_normal.rvs_array |
 | scifort_matrix_normal | matrix_normal_status_invalid_parameter |  |  |  |  |  |
 | scifort_matrix_normal | matrix_normal_status_invalid_shape |  |  |  |  |  |
 | scifort_matrix_normal | matrix_normal_status_linalg_failure |  |  |  |  |  |
@@ -137,7 +137,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_matrix_t | matrix_t_logpdf |  |  | scifort_matrix_t_logpdf_f64 |  | matrix_t.logpdf |
 | scifort_matrix_t | matrix_t_pdf |  |  | scifort_matrix_t_pdf_f64 |  | matrix_t.pdf |
 | scifort_matrix_t | matrix_t_rvs |  |  |  |  |  |
-| scifort_matrix_t | matrix_t_rvs_array |  |  |  |  |  |
+| scifort_matrix_t | matrix_t_rvs_array |  |  | scifort_matrix_t_rvs_array_f64 |  | matrix_t.rvs_array |
 | scifort_matrix_t | matrix_t_status_invalid_parameter |  |  |  |  |  |
 | scifort_matrix_t | matrix_t_status_invalid_shape |  |  |  |  |  |
 | scifort_matrix_t | matrix_t_status_linalg_failure |  |  |  |  |  |

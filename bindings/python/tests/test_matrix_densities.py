@@ -121,7 +121,9 @@ class MatrixDensityTests(unittest.TestCase):
             row=np.eye(2,order='F');col=np.eye(3,order='F')
             xp,mp,rp,cp=[a.ctypes.data_as(C.c_void_p) for a in (x,mean,row,col)]
             for group in (api.matrix_normal,api.matrix_t):
-                for method,fn in group._functions.items():
+                for method in (('pdf','logpdf','entropy') if group is api.matrix_normal
+                               else ('pdf','logpdf')):
+                    fn=group._functions[method]
                     value=C.c_double(99.);status=C.c_int(-1)
                     def call(m,n):
                         args=[rp,cp] if method=='entropy' else [xp,mp,rp,cp]

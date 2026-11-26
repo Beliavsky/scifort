@@ -115,11 +115,15 @@
       "src/stats/matrix_distribution_helpers.f90"
     ],
     "src/c_api/generated/matrix_normal_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/matrix_normal.f90"
     ],
     "src/c_api/generated/matrix_t_generated.f90": [
+      "src/c_api/rng_bridge.f90",
       "src/kinds.f90",
+      "src/random.f90",
       "src/stats/matrix_t.f90"
     ],
     "src/c_api/generated/multinomial_generated.f90": [
@@ -490,8 +494,8 @@
     "src/c_api/generated/logistic_generated.f90": "55c171ea93a4c34a385ddba7e096758d07c4c8626d4ca07c8c5c7d925f30bfe0",
     "src/c_api/generated/lognormal_generated.f90": "4227348a38dcc8663865370649bd7324f056da70d96f832c7457f4f8526574c1",
     "src/c_api/generated/matrix_helpers_generated.f90": "ca33490309baf72cd79003fb447ef0227d74860ad6bf41b47d48933cadd0ac71",
-    "src/c_api/generated/matrix_normal_generated.f90": "eb3d3c16c3981c3ddb85fec9e284dd81dcd937194f73799a95f8e3e38a7b949f",
-    "src/c_api/generated/matrix_t_generated.f90": "59490510b1964701bed098b6b7f5b8f7b1fb6fa8ed0696cd400bf763c4d6158f",
+    "src/c_api/generated/matrix_normal_generated.f90": "8b332846d24ae8e7ffa0ac34e496f738ee4fc0334f5c5b902d91dffa0ece5b87",
+    "src/c_api/generated/matrix_t_generated.f90": "6c062061e80ec610dbcfb630ebdc408f8e70b968dff3c06779cf36c6c3526484",
     "src/c_api/generated/multinomial_generated.f90": "f024492af4721ee82360e53707754ee64140edfbe6223b8b1ed24b3ae954625f",
     "src/c_api/generated/multivariate_hypergeom_generated.f90": "58a3cd9b273ffe2711394d8c64437f7d4c07c292d305311d35c905f425020665",
     "src/c_api/generated/multivariate_normal_generated.f90": "8dde911f9128474475b1fa2abaf72baf946ac0616681c0001118101b6add3058",
@@ -526,8 +530,8 @@
     "src/stats/logistic.f90": "ee5488b4d39aacd4a2e1b3f4d364836e234a13d412bf327585d96e01518795a5",
     "src/stats/lognormal.f90": "14ba6ae77569d7d4c0711cb9d66e73183d187407e3c06300c09a9488de8b9274",
     "src/stats/matrix_distribution_helpers.f90": "1811a2fa5ad5b435c80aeb32de738a16a2ca6bef713010557c8fd10f89b58c41",
-    "src/stats/matrix_normal.f90": "63fd0493872295d9d5df7a53ae73bff7c39e1f0a0d6f866f17839e8e11d7fbd5",
-    "src/stats/matrix_t.f90": "e6094ac2ce34ddd8b84db2098f8abb18f0e2e031276168c28b695881c9c41fda",
+    "src/stats/matrix_normal.f90": "cbc76600ab5a94410e7b0ef14497b1a32f4ea1826a1e755b3e8a99ab397ed81c",
+    "src/stats/matrix_t.f90": "5b358d8339e5f8711c806791602135060832074b8bdce35c9b4fb4f57cb55019",
     "src/stats/multinomial.f90": "c55c7c35b0c7f3b2e9c8796b5e74a3db6d3221b7eb3e53481059be1febca5731",
     "src/stats/multivariate_hypergeom.f90": "cc702417844ba7ce6b400d6a5106f7eb20b2aa428c1bba274e96981acd3c2e9e",
     "src/stats/multivariate_integration.f90": "c9aeb7ff1c9bfd2a1ff9c39cc65a2e4419c24899453f88371a569b1c9ade97d9",

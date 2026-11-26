@@ -7,11 +7,13 @@ module scifort_c_api_generated_matrix_normal
     use scifort_matrix_normal, only : cg_native_0 => matrix_normal_entropy
     use scifort_matrix_normal, only : cg_native_1 => matrix_normal_logpdf
     use scifort_matrix_normal, only : cg_native_2 => matrix_normal_pdf
+    use scifort_matrix_normal, only : cg_native_3 => matrix_normal_rvs_array
     implicit none
     private
     public :: scifort_matrix_normal_entropy_f64
     public :: scifort_matrix_normal_logpdf_f64
     public :: scifort_matrix_normal_pdf_f64
+    public :: scifort_matrix_normal_rvs_array_f64
 contains
 
     subroutine scifort_matrix_normal_entropy_f64( &
@@ -19,12 +21,12 @@ contains
         bind(c, name="scifort_matrix_normal_entropy_f64")
         !! Evaluate matrix normal entropy.
         implicit none
-        integer(c_int), value, intent(in) :: m !! row count, >= 1
-        integer(c_int), value, intent(in) :: n !! column count, >= 1
+        integer(c_int), value, intent(in) :: m !! row count; successful nonempty sampling requires >= 1
+        integer(c_int), value, intent(in) :: n !! column count; successful nonempty sampling requires >= 1
         real(c_double), intent(in) :: rowcov(m,m) !! finite SPD row matrix; lower triangle defines symmetry
         real(c_double), intent(in) :: colcov(n,n) !! finite SPD column matrix; lower triangle defines symmetry
         real(c_double), intent(inout) :: value !! native scalar result, including NaN for numerical errors
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -50,14 +52,14 @@ contains
         bind(c, name="scifort_matrix_normal_logpdf_f64")
         !! Evaluate matrix normal logpdf.
         implicit none
-        integer(c_int), value, intent(in) :: m !! row count, >= 1
-        integer(c_int), value, intent(in) :: n !! column count, >= 1
+        integer(c_int), value, intent(in) :: m !! row count; successful nonempty sampling requires >= 1
+        integer(c_int), value, intent(in) :: n !! column count; successful nonempty sampling requires >= 1
         real(c_double), intent(in) :: x(m,n) !! finite evaluation matrix
         real(c_double), intent(in) :: mean(m,n) !! finite mean matrix; required at C boundary
         real(c_double), intent(in) :: rowcov(m,m) !! finite SPD row matrix; lower triangle defines symmetry
         real(c_double), intent(in) :: colcov(n,n) !! finite SPD column matrix; lower triangle defines symmetry
         real(c_double), intent(inout) :: value !! native scalar result, including NaN for numerical errors
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -85,14 +87,14 @@ contains
         bind(c, name="scifort_matrix_normal_pdf_f64")
         !! Evaluate matrix normal pdf.
         implicit none
-        integer(c_int), value, intent(in) :: m !! row count, >= 1
-        integer(c_int), value, intent(in) :: n !! column count, >= 1
+        integer(c_int), value, intent(in) :: m !! row count; successful nonempty sampling requires >= 1
+        integer(c_int), value, intent(in) :: n !! column count; successful nonempty sampling requires >= 1
         real(c_double), intent(in) :: x(m,n) !! finite evaluation matrix
         real(c_double), intent(in) :: mean(m,n) !! finite mean matrix; required at C boundary
         real(c_double), intent(in) :: rowcov(m,m) !! finite SPD row matrix; lower triangle defines symmetry
         real(c_double), intent(in) :: colcov(n,n) !! finite SPD column matrix; lower triangle defines symmetry
         real(c_double), intent(inout) :: value !! native scalar result, including NaN for numerical errors
-        integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid extent
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
         integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
@@ -114,5 +116,86 @@ contains
             colcov=colcov)
         status=0_c_int
     end subroutine scifort_matrix_normal_pdf_f64
+
+    subroutine scifort_matrix_normal_rvs_array_f64( &
+        m, n, n_samples, state, samples, has_mean, mean, has_rowcov, rowcov, has_colcov, colcov, status) &
+        bind(c, name="scifort_matrix_normal_rvs_array_f64")
+        !! Draw matrix_normal matrices using caller-owned RNG state.
+        use, intrinsic :: iso_c_binding, only : c_int64_t
+        use scifort_random, only : cg_type_state => rng_state
+        use scifort_rng_c_bridge, only : cg_load_state => rng_load_c_state, &
+            cg_store_state => rng_store_c_state
+        implicit none
+        integer(c_int), value, intent(in) :: m !! row count; successful nonempty sampling requires >= 1
+        integer(c_int), value, intent(in) :: n !! column count; successful nonempty sampling requires >= 1
+        integer(c_int), value, intent(in) :: n_samples !! number of sample matrices, >= 0
+        integer(c_int64_t), intent(inout) :: state(6) !! six caller-owned int64 RNG components
+        real(c_double), intent(inout) :: samples(m,n,n_samples) !! shape (m,n,n_samples); matrices along the third axis
+        integer(c_int), value, intent(in) :: has_mean !! 0 omit mean; 1 use supplied mean
+        real(c_double), intent(in) :: mean(m,n) !! finite mean matrix; required at C boundary
+        integer(c_int), value, intent(in) :: has_rowcov !! 0 omit row matrix; 1 use supplied matrix
+        real(c_double), intent(in) :: rowcov(m,m) !! finite SPD row matrix; lower triangle defines symmetry
+        integer(c_int), value, intent(in) :: has_colcov !! 0 omit column matrix; 1 use supplied matrix
+        real(c_double), intent(in) :: colcov(n,n) !! finite SPD column matrix; lower triangle defines symmetry
+        integer(c_int), intent(out) :: status !! 0 success; other codes follow the method-specific error contract
+        integer :: cg_state_status
+        type(cg_type_state) :: cg_state_state
+        real(c_double), allocatable :: cg_optional_mean(:,:)
+        real(c_double), allocatable :: cg_optional_rowcov(:,:)
+        real(c_double), allocatable :: cg_optional_colcov(:,:)
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (m < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (n < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (n_samples < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_mean /= 0_c_int .and. has_mean /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_rowcov /= 0_c_int .and. has_rowcov /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (has_colcov /= 0_c_int .and. has_colcov /= 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        call cg_load_state(state,cg_state_state,cg_state_status)
+        if (cg_state_status /= 0) then
+            status=4_c_int
+            return
+        end if
+        ! An unallocated allocatable actual makes an optional array dummy absent.
+        if (has_mean == 1_c_int) then
+            allocate(cg_optional_mean, source=mean)
+        end if
+        if (has_rowcov == 1_c_int) then
+            allocate(cg_optional_rowcov, source=rowcov)
+        end if
+        if (has_colcov == 1_c_int) then
+            allocate(cg_optional_colcov, source=colcov)
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_3( &
+            state=cg_state_state, &
+            samples=samples, &
+            mean=cg_optional_mean, &
+            rowcov=cg_optional_rowcov, &
+            colcov=cg_optional_colcov, &
+            status=status)
+        call cg_store_state(cg_state_state,state)
+    end subroutine scifort_matrix_normal_rvs_array_f64
 
 end module scifort_c_api_generated_matrix_normal

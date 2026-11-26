@@ -52,3 +52,34 @@ Evaluate matrix normal pdf.
 | `mean` | `(:,:)` | `(m,n)` | finite mean matrix; required at C boundary |
 | `rowcov` | `(:,:)` | `(m,m)` | finite SPD row matrix; lower triangle defines symmetry |
 | `colcov` | `(:,:)` | `(n,n)` | finite SPD column matrix; lower triangle defines symmetry |
+
+## matrix_normal_rvs_array
+
+Draw matrix_normal matrices using caller-owned RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `m` | `size(samples,1)` | 0 |
+| `n` | `size(samples,2)` | 0 |
+| `n_samples` | `size(samples,3)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `samples` | `(:,:,:)` | `(m,n,n_samples)` | shape (m,n,n_samples); matrices along the third axis |
+| `mean` | `(:,:)` | `(m,n)` | finite mean matrix; required at C boundary |
+| `rowcov` | `(:,:)` | `(m,m)` | finite SPD row matrix; lower triangle defines symmetry |
+| `colcov` | `(:,:)` | `(n,n)` | finite SPD column matrix; lower triangle defines symmetry |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 4 without native execution.
+
+`mean` is optional natively: C flag `has_mean` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`rowcov` is optional natively: C flag `has_rowcov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`colcov` is optional natively: C flag `has_colcov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+When `n_samples == 0`: All native shape and distribution validation is skipped.

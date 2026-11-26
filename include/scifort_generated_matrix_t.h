@@ -3,6 +3,7 @@
 #ifndef SCIFORT_GENERATED_MATRIX_T_H
 #define SCIFORT_GENERATED_MATRIX_T_H
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,6 +34,18 @@ void scifort_matrix_t_logpdf_f64(int arg_m, int arg_n, const double * arg_x, con
  * Status 0 means the call was valid; native numerical NaN/infinity is retained.
  * Numerical parameter errors use native values, not call-level statuses. */
 void scifort_matrix_t_pdf_f64(int arg_m, int arg_n, const double * arg_x, const double * arg_mean, const double * arg_row_spread, const double * arg_col_spread, double arg_df, double * arg_value, int *arg_status);
+
+/* Draw matrix_t matrices using caller-owned RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.
+ * Buffers remain required and fully sized when absent, but are not read.
+ * state: caller-owned int64_t[6]; invalid state returns 4 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_matrix_t_rvs_array_f64(int arg_m, int arg_n, int arg_n_samples, int64_t * arg_state, double * arg_samples, int arg_has_mean, const double * arg_mean, int arg_has_row_spread, const double * arg_row_spread, int arg_has_col_spread, const double * arg_col_spread, double arg_df, int *arg_status);
 
 #ifdef __cplusplus
 }

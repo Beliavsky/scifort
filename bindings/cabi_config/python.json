@@ -399,6 +399,13 @@
           "m": 1,
           "n": 1
         }
+      },
+      "output_dimensions": {
+        "matrix_normal_rvs_array": {
+          "m": 1,
+          "n": 1,
+          "n_samples": 1
+        }
       }
     },
     "matrix_t": {
@@ -430,6 +437,16 @@
             "fill": "identity"
           },
           "df": 1.0
+        },
+        "matrix_t_rvs_array": {
+          "df": 1.0
+        }
+      },
+      "output_dimensions": {
+        "matrix_t_rvs_array": {
+          "m": 1,
+          "n": 1,
+          "n_samples": 1
         }
       }
     },

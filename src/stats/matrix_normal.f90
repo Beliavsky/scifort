@@ -222,13 +222,24 @@ contains
     end subroutine matrix_normal_rvs
 
     subroutine matrix_normal_rvs_array(state, samples, mean, rowcov, colcov, status)
-        !! Draw matrices into the third dimension.
-        !! m = size(samples,1), n = size(samples,2), b = size(samples,3).
-        !! For b > 0, m >= 1 and n >= 1; b may be zero.
-        !! With b = 0 all shape and parameter validation is skipped, including
-        !! leading extents, optional arrays and degrees of freedom.
+        !! Draw matrix samples along the third axis using explicit RNG state.
+        !! @dimension m = size(samples,1)
+        !! @dimension n = size(samples,2)
+        !! @dimension n_samples = size(samples,3)
+        !! @require m >= 0
+        !! @require n >= 0
+        !! @require n_samples >= 0
+        !! @when n_samples == 0: All native shape and distribution validation is skipped.
+        !! m=size(samples,1), n=size(samples,2), n_samples=size(samples,3); all may be zero.
+        !! Successful nonempty draws require positive m and n. Present mean has shape
+        !! (m,n), row matrix (m,m) and column matrix (n,n), with finite entries.
+        !! Row/column matrices must be SPD; only their lower triangles are used.
+        !! Absent mean is zero and absent row/column matrices are identities.
+        !! On failure, completed matrices are retained and all matrices after the
+        !! failing matrix are NaN. State retains all draws consumed before failure.
+        implicit none
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(out) :: samples(:, :, :) !! shape (m,n,b); draws indexed by the third dimension
+        real(dp), intent(out) :: samples(:, :, :) !! shape (m,n,n_samples); matrices along the third axis
         real(dp), intent(in), optional :: mean(:, :) !! shape (m,n); finite mean; zero when absent
         real(dp), intent(in), optional :: rowcov(:, :) !! shape (m,m); finite SPD row covariance; identity when absent
         real(dp), intent(in), optional :: colcov(:, :) !! shape (n,n); finite SPD column covariance; identity when absent
@@ -240,6 +251,7 @@ contains
         do k = 1, size(samples, 3)
             call matrix_normal_rvs(state, samples(:,:,k), mean, rowcov, colcov, info)
             if (info /= matrix_normal_status_success) then
+                if (k < size(samples,3)) samples(:,:,k+1:) = quiet_nan(0.0_dp)
                 if (present(status)) status = info
                 return
             end if

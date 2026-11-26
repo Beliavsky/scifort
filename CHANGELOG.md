@@ -1,3 +1,14 @@
+## 2026-11-26 - Matrix-normal and matrix-t sampling interfaces
+
+- Add generated C/Python matrix-normal and matrix-t batch samplers, reusing
+  rank-three outputs, explicit dimensions and caller-owned RNG state.
+- Preserve three optional parameter arrays through presence flags; promote
+  matrix-t df to a required C scalar with Python default 1.
+- Add structured shape and error contracts; define previously unwritten native
+  failure remainders as NaN while retaining completed matrices and consumed state.
+- Test all eight optional-array combinations, native/C/Python streams, moments,
+  empty batches, invalid buffers and family-specific failure/state behavior.
+
 ## 2026-11-26 - Rank-three outputs and Wishart sampling interfaces
 
 - Support rank-three real subroutine outputs and third-axis shape annotations

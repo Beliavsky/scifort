@@ -1,3 +1,16 @@
+## 2026-11-26 - Matrix-normal and matrix-t sampling interfaces
+
+The reviewed manifests, shape contracts, wrappers and interface tests are original
+MIT SciFort work. No new upstream implementation was imported or adapted. The
+adapters reuse existing rank-three, state-codec, optional-array and optional-scalar
+policies without changing the generator. Native batch edits add documentation,
+implicit-none and NaN assignment to previously unwritten failure remainders.
+Successful sampling formulas and RNG stream order are unchanged. The matrix-t
+sampling decomposition remains an adaptation of SciPy 1.17.0 as already recorded;
+its source attribution and retained SciPy BSD-3-Clause license remain applicable.
+Tests compare actual native/C/Python streams, the existing inverse-Wishart mixture,
+analytic matrix-normal/matrix-t covariance and explicitly defined failure outputs.
+
 ## 2026-11-26 - Rank-three outputs and Wishart sampling interfaces
 
 The rank-three generator/shape-parser extension, reviewed manifests, interface

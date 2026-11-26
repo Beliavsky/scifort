@@ -567,3 +567,24 @@ state is exported even on failure.
 See [Python/C sampling contracts](../python/README.md#wishart-and-inverse-wishart-batch-sampling),
 [Wishart shapes](../../docs/wishart_shapes.md#wishart_rvs_array) and
 [inverse-Wishart shapes](../../docs/invwishart_shapes.md#invwishart_rvs_array).
+
+## Matrix-normal and matrix-t batch samplers
+
+The matrix-normal and matrix-t manifests now select `rvs_array`, using existing
+rank-three outputs, three optional-array presence flags, optional native status
+promotion and the six-int64 stream codec. Matrix-t additionally promotes native
+optional df to a required C scalar; Python defaults it to 1. No generator change
+is needed. Python m/n/n_samples are explicit keyword-only dimensions defaulting
+to 1; they are never inferred from parameters or out buffers.
+
+Samples have shape `(m,n,n_samples)`, mean `(m,n)`, row covariance/spread `(m,m)`
+and column covariance/spread `(n,n)`. Zero extents are accepted for empty batches;
+successful nonempty draws require positive m/n, finite parameters and SPD row/
+column matrices. Native empty batches skip all parameter/shape validation, but
+C/Python still require matching buffer shapes, valid flags and valid state.
+Native failure now fills unwritten remainder slices with NaN, retaining completed
+matrices and consumed state. Matrix-t may consume inverse-Wishart draws before
+rejecting a non-SPD column matrix. Existing native status differences for a
+nonfinite mean are retained. See [the detailed sampling contract](../python/README.md#matrix-normal-and-matrix-t-batch-sampling),
+[matrix-normal shapes](../../docs/matrix_normal_shapes.md#matrix_normal_rvs_array)
+and [matrix-t shapes](../../docs/matrix_t_shapes.md#matrix_t_rvs_array).

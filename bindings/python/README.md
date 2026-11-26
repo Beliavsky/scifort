@@ -989,7 +989,8 @@ explicit dimensions and all arrays/scalars, including the promoted native
 optional arguments. All pointers must be valid, nonnull, aligned and disjoint;
 arrays use contiguous column-major storage. C status 1 rejects nonpositive
 extents and preserves the scalar result. Status 0 retains numerical NaN/infinity
-results. RNG-based sampling remains available through native Fortran only.
+results. The later [batch sampling section](#matrix-normal-and-matrix-t-batch-sampling)
+describes the added matrix samplers and their status contracts.
 
 See the [matrix-normal shapes](../../docs/matrix_normal_shapes.md),
 [matrix-t shapes](../../docs/matrix_t_shapes.md), and the generator's
@@ -1994,7 +1995,7 @@ regression cover the affected interfaces and dependencies. The full suite
 remains required before merge or release. Other platforms were not newly
 validated. Existing C prototypes and successful sampler algorithms are unchanged;
 coverage now includes 159 Python methods and 71 array adapters. Matrix-normal
-and matrix-t batch samplers remain future work.
+and matrix-t batch samplers are described in the later sampling section.
 
 All 88 generator tests and all 98 binding tests passed. A subsequent focused run
 of all six sampler tests passed with the additional deterministic late-failure
@@ -2003,3 +2004,166 @@ matrix-distribution regression passed. All 124 generated artifacts passed the
 read-only consistency check. Encoding/BOM, Fortran ASCII/line limits, added local
 links, preserved existing C prototypes and whitespace checks passed. No numerical
 tests were repeated for final documentation-only edits.
+
+## Matrix-normal and matrix-t batch sampling
+
+```python
+state = api.rng(123)
+mean = [[1., 2., 3.], [4., 5., 6.]]
+row = [[2., .3], [.3, 1.]]
+col = [[1., .1, .2], [.1, 2., .3], [.2, .3, 3.]]
+normal = api.matrix_normal.rvs_array(state, mean, row, col, m=2, n=3, n_samples=100)
+student = api.matrix_t.rvs_array(state, mean, row, col, df=12, m=2, n=3, n_samples=100)
+assert normal.status == student.status == 0
+```
+
+```python
+api.matrix_normal.rvs_array(state, mean=None, rowcov=None, colcov=None,
+                           *, m=1, n=1, n_samples=1, out=None)
+api.matrix_t.rvs_array(state, mean=None, row_spread=None, col_spread=None, df=1.0,
+                      *, m=1, n=1, n_samples=1, out=None)
+```
+
+Both return `ArrayResult(status, {'samples': array})`. Outputs have shape
+`(m,n,n_samples)`, with one rectangular matrix per third-axis slice, native-endian
+float64 and Fortran-contiguous layout. m/n are explicitly requested row/column
+dimensions; neither is inferred from supplied parameters or out buffers. All
+three extent keywords default to 1, accept nonnegative C integers and reject
+booleans. Positive m and n are required for successful nonempty draws.
+`out={'samples': buffer}` requires exact shape/dtype, alignment, writeability,
+Fortran contiguity and disjointness from inputs/state. Empty array pointers still
+use valid nonnull storage. `np.moveaxis(samples,2,0)` moves the sample axis first.
+
+Optional mean has shape `(m,n)`, the row matrix `(m,m)` and the column matrix
+`(n,n)`. None preserves native absence: zero mean and identity row/column matrices.
+All present entries must be finite, including ignored upper triangles. Row and
+column matrices must be positive definite; singular matrices are rejected.
+Their lower triangles define symmetry; no explicit symmetry check is performed.
+Python validates ranks/shapes/buffers before C. Numerical parameter failures
+remain native statuses with native output values.
+
+For column-major vectorization, matrix-normal covariance is
+`kron(colcov,rowcov)`. Matrix-t uses the existing unscaled inverse-Wishart mixture:
+row covariance is drawn from `InvWishart(df+m-1,row_spread)`, followed by a
+matrix-normal draw with col_spread. Thus for df>2 the vectorized covariance is
+`kron(col_spread,row_spread)/(df-2)`; the mean exists for df>1. This differs from
+multivariate Student t's scale convention. Matrix-t df must be finite and positive;
+positive infinity is invalid. Python uses native default 1; C always supplies df.
+
+Both reuse the [explicit RNG stream](#explicit-rng-streams-and-dirichlet-sampling).
+Normal sampling consumes m*n uniforms per matrix. Successful matrix-t sampling
+consumes m*(m+1)/2+m*n per matrix. Splitting successful batches preserves samples
+and final state. Native/C/Python streams agree exactly for the same method,
+parameters and starting state; NumPy/SciPy seed streams are not promised to match.
+Each stream belongs to its loaded library instance and must not be mutated
+concurrently. Snapshot/restore and ownership rules are unchanged.
+
+Empty batches return native success without shape or parameter validation,
+including zero leading extents and invalid matrix-t df. The C/Python contracts
+still validate requested extents, present array shapes, buffers, flags and state.
+A nonempty batch with a zero leading extent returns native status 1 and has no
+output elements. Neither empty calls nor rejected transport arguments advance
+valid state.
+
+| Status | Meaning | Output/state behavior |
+| ---: | --- | --- |
+| 0 | Success | Sample matrices and advanced state |
+| 1 | Invalid extent/shape/flag; also matrix-normal nonfinite mean | Transport errors preserve buffers/state; native nonfinite mean gives NaNs |
+| 2 | Native invalid parameter values or matrix-t df | Failed and later matrices NaN; no draws consumed |
+| 3 | Native SPD/solve failure | Completed matrices retained; failed and later matrices NaN; consumed state exported |
+| 4 | Invalid serialized RNG state | Output and state unchanged |
+
+Both native batch procedures now define previously unwritten remainder slices
+as NaN when a scalar draw fails. Completed matrices are retained. Matrix-normal
+checks row/column SPD before drawing; its parameter/factorization failures do
+not advance state. Matrix-t checks row SPD through the inverse-Wishart sampler,
+then checks column SPD after generating that row covariance. A non-SPD column
+matrix can therefore advance state by m*(m+1)/2 uniforms before returning 3.
+Nonfinite matrix-t mean returns 2; native matrix-normal uses 1 for nonfinite mean.
+Those existing status conventions are preserved. Tiny positive matrix-t df can
+cause an inverse-Wishart generation failure after RNG consumption; status 3,
+NaN remainder and advanced state are preserved. Singular row/column spreads are
+not supported, and this interface does not replace the native numerical algorithms.
+
+```c
+void scifort_matrix_normal_rvs_array_f64(
+    int m, int n, int n_samples, int64_t *state, double *samples,
+    int has_mean, const double *mean, int has_rowcov, const double *rowcov,
+    int has_colcov, const double *colcov, int *status);
+void scifort_matrix_t_rvs_array_f64(
+    int m, int n, int n_samples, int64_t *state, double *samples,
+    int has_mean, const double *mean, int has_row_spread, const double *row_spread,
+    int has_col_spread, const double *col_spread, double df, int *status);
+```
+
+Each flag is 0 absent or 1 present. All C pointers remain required, nonnull,
+aligned, disjoint and fully sized even when a flag is zero or a batch is empty.
+Absent inputs' buffer values are ignored. Matrices/tensors use column-major
+storage and state uses six int64 components. No descriptors or derived-type
+layout cross C. See [matrix-normal shape tables](../../docs/matrix_normal_shapes.md#matrix_normal_rvs_array)
+and [matrix-t shape tables](../../docs/matrix_t_shapes.md#matrix_t_rvs_array).
+
+## Matrix sampler validation (2026-11-26)
+
+Validation uses GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
+
+```bat
+pushd tools\cabi_generator\tests
+..\..\..\build\cabi-generator-venv\Scripts\python.exe -m unittest test_state_codecs test_rank_three_outputs -v
+popd
+python -m unittest discover -s bindings/python/tests -p test_matrix_sampling.py -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The generator implementation is unchanged; seven focused state-codec/optional-
+scalar and rank-three fixture tests check the capabilities reused here. Sampler
+integration checks all eight optional-array combinations per family, genuine
+absence and explicit zero/identity agreement, native/C/Python samples and final
+state, split batches, native omitted df versus explicit df=1, and all three C
+presence flags. Native clients use rectangular 2-by-3 samples. Moment checks
+include the full vectorized row/column covariance, with covariance errors scaled
+by marginal standard deviations. Error tests cover empty/zero extents, invalid
+df/mean/SPD matrices, buffer ownership, nonfinite ignored C buffers, tiny-df
+mixture failures and column-factorization failure after RNG consumption.
+
+A deterministic later matrix-t failure (seed 2**40+123, ten initial uniforms,
+one row/column, df=0.0001) checks retained completed output, NaN remainder and
+advanced state in native/C/Python clients. Checked builds use
+`-O0 -g -fcheck=all -fbacktrace`; optimized builds use `-O3`. Both use
+`-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+C11 and C++17 checks use `-Wall -Wextra -Werror`.
+
+The dependent native matrix-distribution regression compiles both edited modules
+and reuses existing local FPM dependency objects:
+
+```bat
+gfortran -O0 -g -fcheck=all -fbacktrace ^
+  -I build\gfortran_2806A042DAA8BBF7 -J build\multivariate-parameters-regression ^
+  src\stats\matrix_normal.f90 src\stats\matrix_t.f90 test\test_checks.f90 ^
+  test\test_matrix_distributions_reference.f90 test\test_matrix_distributions.f90 ^
+  build\gfortran_3C159EB802C22FB9\scifort\libscifort.a ^
+  -o build\multivariate-parameters-regression\matrix.exe
+build\multivariate-parameters-regression\matrix.exe
+```
+
+These cache paths are local artifacts. The full FPM suite was not run: only the
+two batch procedures' previously unwritten failure remainders change numerical
+behavior, while focused fixtures, all configured binding integrations and the
+native matrix-distribution regression cover the affected paths. The generator
+and shared build/test process are unchanged. The full suite remains required
+before merge or release. Other platforms were not newly validated. Successful
+sampling algorithms and existing C prototypes are unchanged; the matrix-t SciPy
+attribution and license remain intact. Generated coverage now includes 161
+Python methods and 73 array adapters.
+
+All seven focused generator tests, all six focused sampler tests and all 104
+binding integration tests passed. The full binding run includes the added late-
+failure native/C/Python case, checked and optimized libraries and strict C/C++
+clients. The native dependent matrix-distribution regression passed. All 124
+generated artifacts passed the read-only consistency check. Existing prototypes,
+retained notices, bounded native changes, UTF-8/BOM, Fortran ASCII/line lengths,
+added local links and whitespace checks passed. No numerical tests were repeated
+for final documentation-only edits.

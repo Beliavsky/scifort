@@ -8,15 +8,21 @@
   "header_guard": "SCIFORT_GENERATED_MATRIX_T_H",
   "functions": {},
   "argument_docs": {
-    "m": "row count, >= 1",
-    "n": "column count, >= 1",
+    "m": "row count; successful nonempty sampling requires >= 1",
+    "n": "column count; successful nonempty sampling requires >= 1",
     "x": "finite evaluation matrix",
     "mean": "finite mean matrix; required at C boundary",
     "row_spread": "finite SPD row matrix; lower triangle defines symmetry",
     "col_spread": "finite SPD column matrix; lower triangle defines symmetry",
     "df": "finite positive degrees of freedom",
     "value": "native scalar result, including NaN for numerical errors",
-    "status": "0 valid call; 1 invalid extent"
+    "status": "0 success; other codes follow the method-specific error contract",
+    "n_samples": "number of sample matrices, >= 0",
+    "state": "six caller-owned int64 RNG components",
+    "samples": "shape (m,n,n_samples); matrices along the third axis",
+    "has_mean": "0 omit mean; 1 use supplied mean",
+    "has_row_spread": "0 omit row matrix; 1 use supplied matrix",
+    "has_col_spread": "0 omit column matrix; 1 use supplied matrix"
   },
   "array_functions": {
     "matrix_t_pdf": {
@@ -95,8 +101,7 @@
     }
   },
   "excluded": {
-    "matrix_t_rvs": "Explicit RNG state requires a separately reviewed handle interface.",
-    "matrix_t_rvs_array": "Explicit RNG state requires a separately reviewed handle interface.",
+    "matrix_t_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "matrix_t_status_success": "Native status constant, not a callable procedure.",
     "matrix_t_status_invalid_shape": "Native status constant, not a callable procedure.",
     "matrix_t_status_invalid_parameter": "Native status constant, not a callable procedure.",
@@ -107,5 +112,67 @@
     "header": "include/scifort_generated_matrix_t.h",
     "coverage": "bindings/cabi_config/matrix_t_coverage.json",
     "shape_documentation": "docs/matrix_t_shapes.md"
+  },
+  "subroutines": {
+    "matrix_t_rvs_array": {
+      "symbol": "scifort_matrix_t_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "m",
+          "minimum": 0
+        },
+        {
+          "name": "n",
+          "minimum": 0
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "m",
+          "n",
+          "n_samples"
+        ],
+        "mean": [
+          "m",
+          "n"
+        ],
+        "row_spread": [
+          "m",
+          "m"
+        ],
+        "col_spread": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw matrix_t matrices using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      },
+      "optional_arrays": {
+        "mean": "has_mean",
+        "row_spread": "has_row_spread",
+        "col_spread": "has_col_spread"
+      },
+      "required_optional_scalars": [
+        "df"
+      ]
+    }
   }
 }
