@@ -1329,6 +1329,82 @@ class Kde_bridge(ArrayGroup):
               'shapes': {},
               'status': 'status',
               'symbol': 'scifort_gaussian_kde_info_f64'},
+     'integrate_box': {'arguments': ['handle', 'low', 'high', 'maxpts', 'state', 'value', 'status'],
+                       'definitions': {'d': {'argument': 'low', 'axis': None}},
+                       'dimensions': ['d'],
+                       'inputs': ['state', 'handle', 'low', 'high', 'maxpts'],
+                       'logical_inputs': {},
+                       'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                                    'high': {'category': 'real', 'intent': 'in', 'rank': 1},
+                                    'low': {'category': 'real', 'intent': 'in', 'rank': 1},
+                                    'maxpts': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                    'state': {'category': 'state', 'intent': 'inout', 'rank': 0},
+                                    'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                       'minimums': {'d': 1},
+                       'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                     'type': 'gaussian_kde'}},
+                       'outputs': ['value'],
+                       'shapes': {'high': ['d'], 'low': ['d']},
+                       'state_codecs': {'state': {'invalid_status': 7,
+                                                  'length': 6,
+                                                  'load': 'rng_load_c_state',
+                                                  'module': 'scifort_rng_c_bridge',
+                                                  'store': 'rng_store_c_state',
+                                                  'type': 'rng_state',
+                                                  'type_module': 'scifort_random'}},
+                       'status': 'status',
+                       'symbol': 'scifort_gaussian_kde_integrate_box_f64'},
+     'integrate_box_1d': {'arguments': ['handle', 'low', 'high', 'value', 'status'],
+                          'definitions': {},
+                          'dimensions': [],
+                          'inputs': ['handle', 'low', 'high'],
+                          'logical_inputs': {},
+                          'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                                       'high': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                       'low': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                       'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                          'minimums': {},
+                          'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                        'type': 'gaussian_kde'}},
+                          'outputs': ['value'],
+                          'shapes': {},
+                          'status': 'status',
+                          'symbol': 'scifort_gaussian_kde_integrate_box_1d_f64'},
+     'integrate_gaussian': {'arguments': ['handle', 'mean', 'cov', 'value', 'status'],
+                            'definitions': {'d': {'argument': 'mean', 'axis': None}},
+                            'dimensions': ['d'],
+                            'inputs': ['handle', 'mean', 'cov'],
+                            'logical_inputs': {},
+                            'metadata': {'cov': {'category': 'real', 'intent': 'in', 'rank': 2},
+                                         'handle': {'category': 'handle',
+                                                    'intent': 'in',
+                                                    'rank': 0},
+                                         'mean': {'category': 'real', 'intent': 'in', 'rank': 1},
+                                         'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                            'minimums': {'d': 1},
+                            'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                          'type': 'gaussian_kde'}},
+                            'outputs': ['value'],
+                            'shapes': {'cov': ['d', 'd'], 'mean': ['d']},
+                            'status': 'status',
+                            'symbol': 'scifort_gaussian_kde_integrate_gaussian_f64'},
+     'integrate_kde': {'arguments': ['handle', 'other', 'value', 'status'],
+                       'definitions': {},
+                       'dimensions': [],
+                       'inputs': ['handle', 'other'],
+                       'logical_inputs': {},
+                       'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                                    'other': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                                    'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                       'minimums': {},
+                       'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                     'type': 'gaussian_kde'},
+                                          'other': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                    'type': 'gaussian_kde'}},
+                       'outputs': ['value'],
+                       'shapes': {},
+                       'status': 'status',
+                       'symbol': 'scifort_gaussian_kde_integrate_kde_f64'},
      'logpdf': {'arguments': ['handle', 'points', 'values', 'status'],
                 'definitions': {'d': {'argument': 'points', 'axis': 1},
                                 'm': {'argument': 'points', 'axis': 2}},
@@ -1345,6 +1421,25 @@ class Kde_bridge(ArrayGroup):
                 'shapes': {'points': ['d', 'm'], 'values': ['m']},
                 'status': 'status',
                 'symbol': 'scifort_gaussian_kde_logpdf_f64'},
+     'marginal': {'arguments': ['handle', 'dimensions', 'marginal_handle', 'status'],
+                  'definitions': {'k': {'argument': 'dimensions', 'axis': None}},
+                  'dimensions': ['k'],
+                  'inputs': ['handle', 'dimensions'],
+                  'logical_inputs': {},
+                  'metadata': {'dimensions': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                               'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                               'marginal_handle': {'category': 'handle',
+                                                   'intent': 'out',
+                                                   'rank': 0}},
+                  'minimums': {'k': 1},
+                  'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                'type': 'gaussian_kde'},
+                                     'marginal_handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                         'type': 'gaussian_kde'}},
+                  'outputs': ['marginal_handle'],
+                  'shapes': {'dimensions': ['k']},
+                  'status': 'status',
+                  'symbol': 'scifort_gaussian_kde_marginal_f64'},
      'pdf': {'arguments': ['handle', 'points', 'values', 'status'],
              'definitions': {'d': {'argument': 'points', 'axis': 1},
                              'm': {'argument': 'points', 'axis': 2}},
@@ -1360,7 +1455,31 @@ class Kde_bridge(ArrayGroup):
              'outputs': ['values'],
              'shapes': {'points': ['d', 'm'], 'values': ['m']},
              'status': 'status',
-             'symbol': 'scifort_gaussian_kde_pdf_f64'}}
+             'symbol': 'scifort_gaussian_kde_pdf_f64'},
+     'resample': {'arguments': ['handle', 'state', 'samples', 'status'],
+                  'definitions': {'d': {'argument': 'samples', 'axis': 1},
+                                  'n_samples': {'argument': 'samples', 'axis': 2}},
+                  'dimensions': ['d', 'n_samples'],
+                  'inputs': ['state', 'handle'],
+                  'logical_inputs': {},
+                  'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                               'samples': {'category': 'real', 'intent': 'out', 'rank': 2},
+                               'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                  'minimums': {'d': 1, 'n_samples': 0},
+                  'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                'type': 'gaussian_kde'}},
+                  'output_dimensions': {'d': 1, 'n_samples': 1},
+                  'outputs': ['samples'],
+                  'shapes': {'samples': ['d', 'n_samples']},
+                  'state_codecs': {'state': {'invalid_status': 7,
+                                             'length': 6,
+                                             'load': 'rng_load_c_state',
+                                             'module': 'scifort_rng_c_bridge',
+                                             'store': 'rng_store_c_state',
+                                             'type': 'rng_state',
+                                             'type_module': 'scifort_random'}},
+                  'status': 'status',
+                  'symbol': 'scifort_gaussian_kde_resample_f64'}}
 
     def create(self, dataset, weights, bandwidth=0, factor=1.0, *, out=None):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
@@ -1374,13 +1493,37 @@ class Kde_bridge(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('info', {'handle': handle}, out)
 
+    def integrate_box(self, state, handle, low, high, maxpts=0, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('integrate_box', {'state': state, 'handle': handle, 'low': low, 'high': high, 'maxpts': maxpts}, out)
+
+    def integrate_box_1d(self, handle, low, high, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('integrate_box_1d', {'handle': handle, 'low': low, 'high': high}, out)
+
+    def integrate_gaussian(self, handle, mean, cov, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('integrate_gaussian', {'handle': handle, 'mean': mean, 'cov': cov}, out)
+
+    def integrate_kde(self, handle, other, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('integrate_kde', {'handle': handle, 'other': other}, out)
+
     def logpdf(self, handle, points, *, out=None):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('logpdf', {'handle': handle, 'points': points}, out)
 
+    def marginal(self, handle, dimensions, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('marginal', {'handle': handle, 'dimensions': dimensions}, out)
+
     def pdf(self, handle, points, *, out=None):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('pdf', {'handle': handle, 'points': points}, out)
+
+    def resample(self, state, handle, *, d=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('resample', {'state': state, 'handle': handle, 'd': d, 'n_samples': n_samples}, out)
 
 class Linalg(ArrayGroup):
     _specs = {'cholesky_lower': {'arguments': ['a', 'l', 'status'],

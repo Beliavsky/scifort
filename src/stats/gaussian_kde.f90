@@ -384,6 +384,8 @@ contains
 
     function gaussian_kde_integrate_box(self, low, high, maxpts, state, status) result(value)
         !! Integrate over rectangular limits; d = self%d >= 1 for initialized self.
+        !! Limits may be infinite; each reversed coordinate changes the sign.
+        !! Supplied state retains randomized shifts consumed across Gaussian components.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
         real(dp), intent(in) :: low(:) !! shape (d); lower rectangular integration bounds
         real(dp), intent(in) :: high(:) !! shape (d); upper rectangular integration bounds
@@ -423,6 +425,8 @@ contains
     end function gaussian_kde_integrate_box
 
     function gaussian_kde_integrate_kde(self, other, status) result(value)
+        !! Integrate the product; both initialized estimators have equal positive dimension.
+        !! Passing the same estimator twice computes the squared-density integral.
         class(gaussian_kde), intent(in) :: self !! first KDE object
         class(gaussian_kde), intent(in) :: other !! second KDE object of equal dimension
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
@@ -472,6 +476,7 @@ contains
     subroutine gaussian_kde_resample(self, state, samples, status)
         !! Draw mixture samples using explicit state; d = self%d >= 1.
         !! m = size(samples,2) >= 0; an empty batch leaves RNG state unchanged.
+        !! Each column consumes one mixture-selector uniform and d normal-quantile uniforms.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
         real(dp), intent(out) :: samples(:, :) !! shape (d,m); generated samples by column
@@ -511,6 +516,8 @@ contains
     function gaussian_kde_marginal(self, dimensions, status) result(marginal)
         !! Construct a marginal KDE using selected coordinate rows.
         !! k = size(dimensions), 1 <= k <= self%d; empty selections are invalid.
+        !! Copy selected data and weights; retain the parent bandwidth factor.
+        !! The returned estimator is independent of subsequent parent mutation/lifetime.
         class(gaussian_kde), intent(in) :: self !! initialized multivariate KDE object
         integer, intent(in) :: dimensions(:) !! shape (k); unique one-based dimensions in [1,self%d]
         integer, intent(out), optional :: status !! gaussian_kde_status_* result

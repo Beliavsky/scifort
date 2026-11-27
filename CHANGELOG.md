@@ -1,3 +1,14 @@
+## 2026-11-27 - KDE integrals, resampling and owned marginals
+
+- Add Gaussian-product, interval, box and two-KDE product integrals through C/Python.
+- Add caller-buffer resampling and box integration with explicit serialized RNG
+  state; preserve native sample order, QMC shifts and stream advancement.
+- Return independently owned marginal estimators with retained bandwidth factors;
+  use one-based C coordinates and zero-based/negative Python coordinate indices.
+- Document native/bridge shapes, signed limits, error outputs and marginal lifetime.
+- Extend independent handle tests to two inputs and a new owned output; use focused
+  KDE, handle and state-codec checks without rerunning unrelated numerical modules.
+
 ## 2026-11-27 - Owned Gaussian KDE C/Python interfaces
 
 - Add copied-data KDE construction, destruction, batch PDF/log-PDF and bandwidth

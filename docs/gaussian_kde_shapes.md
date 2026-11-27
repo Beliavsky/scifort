@@ -34,6 +34,12 @@ The estimator fields use dataset `(d,n)`, normalized weights `(n)` and covarianc
 and Cholesky caches `(d,d)`. Changing fields directly can invalidate the native
 object; the C/Python interface keeps them private and copies input data.
 
-Integration, marginalization, resampling, covariance access and bandwidth changes
-after construction are native capabilities deferred from this first C/Python
-interface set. General type-bound-method generation remains a later extension.
+Integration, resampling and marginalization are now exposed through the reviewed
+C/Python bridge. Box integration/resampling require explicit RNG state; native
+resampling consumes d+1 uniforms per column, and empty batches consume none.
+C marginals use distinct one-based coordinates; Python accepts zero-based and
+negative coordinates and preserves their order. The child copies storage,
+retains the parent bandwidth factor and survives parent destruction.
+
+Covariance access and bandwidth changes after construction remain native-only.
+General type-bound-method generation remains a later extension.

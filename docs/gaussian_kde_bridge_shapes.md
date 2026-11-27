@@ -47,6 +47,69 @@ Scalar native arguments; no array shape constraints.
 or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
 Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
 
+## kde_integrate_box
+
+Integrate a KDE over a box with explicit QMC state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `d` | `size(low)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `low` | `(:)` | `(d)` | lower integration limit(s), infinite permitted |
+| `high` | `(:)` | `(d)` | upper integration limit(s), infinite permitted |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 7 without native execution.
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
+## kde_integrate_box_1d
+
+Integrate a univariate KDE over signed interval limits.
+
+Scalar native arguments; no array shape constraints.
+
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
+## kde_integrate_gaussian
+
+Integrate a KDE times a Gaussian density.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `d` | `size(mean)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `mean` | `(:)` | `(d)` | finite Gaussian mean |
+| `cov` | `(:,:)` | `(d,d)` | finite Gaussian covariance; sum with kernel covariance must be SPD |
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
+## kde_integrate_kde
+
+Integrate the product of two KDEs of matching dimension.
+
+Scalar native arguments; no array shape constraints.
+
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
+`other` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
 ## kde_logpdf
 
 Evaluate a batch of Gaussian KDE log densities.
@@ -67,6 +130,26 @@ Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases becom
 
 When `m == 0`: return an empty result after handle and dimension validation
 
+## kde_marginal
+
+Create an independently owned marginal with one-based C coordinates.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `k` | `size(dimensions)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `dimensions` | `(:)` | `(k)` | distinct one-based coordinates within the parent dimension |
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
+`marginal_handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
 ## kde_pdf
 
 Evaluate a batch of Gaussian KDE densities.
@@ -86,3 +169,25 @@ or a `void **` output/inout slot. No descriptor or object layout crosses the ABI
 Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
 
 When `m == 0`: return an empty result after handle and dimension validation
+
+## kde_resample
+
+Resample a KDE into caller-owned columns with explicit RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `d` | `size(samples,1)` | 1 |
+| `n_samples` | `size(samples,2)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `samples` | `(:,:)` | `(d,n_samples)` | sample columns; NaNs on native failure |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 7 without native execution.
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
+When `n_samples == 0`: validate handle and dimension; leave RNG state unchanged

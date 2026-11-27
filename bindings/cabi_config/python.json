@@ -657,6 +657,15 @@
         "kde_create": {
           "bandwidth": 0,
           "factor": 1.0
+        },
+        "kde_integrate_box": {
+          "maxpts": 0
+        }
+      },
+      "output_dimensions": {
+        "kde_resample": {
+          "d": 1,
+          "n_samples": 1
         }
       }
     }

@@ -24,15 +24,18 @@ class GaussianKDE:
             if factor_array.ndim or isinstance(bw_method, (bool, np.bool_)):
                 raise TypeError('bw_method must be a scalar bandwidth factor')
             mode, factor = 2, float(factor_array)
-        self._group = api.kde_bridge
-        result = self._group.create(data, w, mode, factor)
-        handle = result.outputs['handle']
+        result = api.kde_bridge.create(data, w, mode, factor)
+        self._adopt_result(api.kde_bridge, result, 'handle', 'initialization')
+
+    def _adopt_result(self, group, result, name, operation):
+        self._group = group
+        handle = result.outputs[name]
         if result.status:
             if handle is not None:
                 handle.close()
-            raise ValueError(f'Gaussian KDE initialization failed: status {result.status}')
+            raise ValueError(f'Gaussian KDE {operation} failed: status {result.status}')
         if handle is None:
-            raise RuntimeError('Gaussian KDE initialization returned a null handle')
+            raise RuntimeError(f'Gaussian KDE {operation} returned a null handle')
         self._handle = handle
         try:
             self._info = self._query_info()
@@ -125,3 +128,70 @@ class GaussianKDE:
     def logpdf(self, points, *, out=None):
         """Evaluate native log densities directly, without logging the PDF."""
         return self._evaluate('logpdf', points, out)
+
+    @staticmethod
+    def _scalar_result(result, operation):
+        if result.status:
+            raise ValueError(f'Gaussian KDE {operation} failed: status {result.status}')
+        return result.outputs['value']
+
+    def integrate_gaussian(self, mean, cov):
+        """Integrate the product with a Gaussian density of matching dimension."""
+        mean = np.atleast_1d(Distribution._real_array(mean, 'mean'))
+        cov = np.atleast_2d(Distribution._real_array(cov, 'cov'))
+        result = self._group.integrate_gaussian(self._handle, mean, cov)
+        return self._scalar_result(result, 'Gaussian integration')
+
+    def integrate_box_1d(self, low, high):
+        """Integrate an interval for a univariate KDE; reversed limits change the sign."""
+        result = self._group.integrate_box_1d(self._handle, low, high)
+        return self._scalar_result(result, 'interval integration')
+
+    def integrate_box(self, low, high, *, state, maxpts=0):
+        """Integrate a box with explicit QMC state; maxpts=0 selects native defaults."""
+        low = np.atleast_1d(Distribution._real_array(low, 'low'))
+        high = np.atleast_1d(Distribution._real_array(high, 'high'))
+        if np.may_share_memory(low, high):
+            high = np.array(high, copy=True, order='F')
+        result = self._group.integrate_box(handle=self._handle, low=low, high=high,
+                                           state=state, maxpts=maxpts)
+        return self._scalar_result(result, 'box integration')
+
+    def integrate_kde(self, other):
+        """Integrate two KDEs; acquire both handle locks in the runtime's common order."""
+        if not isinstance(other, GaussianKDE):
+            raise TypeError('other must be a GaussianKDE from the same library instance')
+        # Do not hold a facade lock first: the runtime orders/deduplicates both locks.
+        result = self._group.integrate_kde(self._handle, other._handle)
+        return self._scalar_result(result, 'KDE product integration')
+
+    def resample(self, state, size=None, *, out=None):
+        """Draw columns using explicit RNG state; default size is int(neff)."""
+        with self._handle._lock:
+            if size is None:
+                size = int(self.neff)
+            result = self._group.resample(handle=self._handle, state=state, d=self.d,
+                                          n_samples=size, out=None if out is None else {'samples': out})
+            if result.status:
+                raise ValueError(f'Gaussian KDE resampling failed: status {result.status}')
+            return result.outputs['samples']
+
+    def marginal(self, dimensions):
+        """Return an independent KDE for distinct zero-based (possibly negative) axes."""
+        with self._handle._lock:
+            d = self.d
+            axes = np.atleast_1d(np.asarray(dimensions))
+            if axes.ndim != 1 or not axes.size:
+                raise ValueError('dimensions must be a nonempty coordinate vector')
+            if axes.dtype.kind not in 'iu':
+                raise TypeError('dimensions must contain integers')
+            if np.any(axes < -d) or np.any(axes >= d):
+                raise ValueError('dimensions must lie in [-d,d)')
+            axes = axes.astype(np.int64)
+            axes = np.where(axes < 0, axes+d, axes)
+            if np.unique(axes).size != axes.size:
+                raise ValueError('dimensions must be distinct after normalizing negative indices')
+            result = self._group.marginal(self._handle, axes+1)
+        child = type(self).__new__(type(self))
+        child._adopt_result(self._group, result, 'marginal_handle', 'marginalization')
+        return child

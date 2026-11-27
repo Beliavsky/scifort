@@ -2766,10 +2766,9 @@ vector of the requested length, disjoint from input storage. Input arrays may
 be strided or C-order and are converted for Fortran when needed.
 
 Read `d`, `n`, `neff` and `factor`, or call `scotts_factor()` and
-`silverman_factor()` for bandwidth information. The initial interface does not
-provide integration, resampling, marginalization, covariance access, callable
-bandwidths or bandwidth mutation after construction. Those remain native Fortran
-capabilities. Native numerical algorithms and signatures are unchanged.
+`silverman_factor()` for bandwidth information. Integration, resampling and independently owned marginals are also available
+as described below. Covariance access, callable bandwidths and bandwidth mutation
+after construction remain native Fortran capabilities. Native numerical algorithms and signatures are unchanged.
 
 Use a `with` block or call `close()` explicitly. Close is idempotent. Finalization
 also releases native storage, but its timing is not guaranteed. Closed estimators
@@ -2780,7 +2779,7 @@ Failed construction releases partially initialized native storage. Numerical or
 parameter failures raise `ValueError` with the native status; Python shape/type
 validation occurs before C entry where possible.
 
-The five C entry points are `scifort_gaussian_kde_create_f64`,
+The core C entry points are `scifort_gaussian_kde_create_f64`,
 `scifort_gaussian_kde_destroy_f64`, `scifort_gaussian_kde_pdf_f64`,
 `scifort_gaussian_kde_logpdf_f64` and `scifort_gaussian_kde_info_f64`.
 Creation takes column-major data, weights and bandwidth mode 0 Scott, 1 Silverman
@@ -2797,8 +2796,9 @@ disjoint, including buffers for empty arrays. C extent guards preserve outputs
 on rejection. After native entry, failed creation returns NULL, failed evaluation
 fills its output with NaNs, and failed info returns zero dimensions and NaNs.
 Status codes are 0 success, 1 invalid shape/nonfinite point, 2 invalid parameter,
-3 singular covariance, 4 linear-algebra failure, 5 null handle and 6 failure to
-allocate the outer object. Native internal array allocations retain their
+3 singular covariance, 4 linear-algebra/integration failure, 5 null handle,
+6 failure to allocate the outer object, and 7 invalid serialized RNG state for
+box integration/resampling. Native internal array allocations retain their
 existing runtime allocation behavior. A bad extent rejected before native entry
 leaves even the handle slot unchanged; initialize it to NULL before creation.
 
@@ -2832,3 +2832,106 @@ all six KDE tests, checked/optimized native KDE agreement and the original nativ
 KDE regressions, plus executing C11/C++17 clients. The pipeline checked all 160
 artifacts. The README example, new local documentation links, changed-source
 ASCII/Fortran line limits and diff whitespace checks also passed.
+
+## KDE integration, resampling and marginalization
+
+The owned estimator also exposes these methods:
+
+| Python method | Inputs and behavior |
+| --- | --- |
+| `integrate_gaussian(mean, cov)` | Mean `(d,)`, covariance `(d,d)`; scalar inputs accepted in one dimension. Finite arrays; sum of cov and kernel covariance must be positive definite. |
+| `integrate_box_1d(low, high)` | Univariate scalar limits; infinities allowed. Reversing limits changes the sign. |
+| `integrate_box(low, high, *, state, maxpts=0)` | Matching bound vectors `(d,)`; scalar bounds accepted for a univariate KDE. Explicit SciFort RNG state is required; zero selects the native QMC budget, a positive value sets approximate points per Gaussian component. |
+| `integrate_kde(other)` | Product integral of equal-dimensional KDEs from the same library instance; the same estimator can be passed twice. |
+| `resample(state, size=None, *, out=None)` | Draw `(d,size)` samples by column. Default count is `int(neff)`; explicit count may be zero. A caller buffer must be native float64, aligned, writable, Fortran contiguous and disjoint from input/state storage. |
+| `marginal(dimensions)` | Return a new owned estimator for a nonempty integer vector (or scalar) of distinct zero-based coordinates; negative indices count from the end. Coordinate order is preserved. |
+
+```python
+stream = api.rng(123)
+with api.gaussian_kde([[-2., -.5, .25, 1.5, 3., .8],
+                       [.5, 2., -1., .2, 2.8, -.4]]) as kde:
+    overlap = kde.integrate_kde(kde)
+    probability = kde.integrate_box([-1., -1.], [2., 2.], state=stream, maxpts=4000)
+    samples = kde.resample(stream, 8)
+    child = kde.marginal([-1])
+with child:
+    # The child owns copied storage and remains valid after its parent closes.
+    density = child.pdf([0., 1.])
+    assert samples.shape == (2, 8) and density.shape == (2,)
+```
+
+Marginals retain the parent's normalized weights and current bandwidth factor;
+they do not automatically substitute the lower-dimensional Scott factor.
+Closing the parent or child leaves the other estimator usable. Marginals support
+all the same estimator methods, including further marginalization and cleanup.
+Invalid/duplicate coordinates are rejected before native construction where
+possible. Python normalizes negative/zero-based indices before the C call.
+
+The explicit native-state parameter and resampling `out` buffer are **SciFort
+extensions** of the Python interface.
+
+Resampling consumes `d+1` native uniforms per sample: mixture selection first,
+then one normal-quantile uniform per coordinate. Split batches match a single
+batch exactly, including final RNG state. Empty batches validate the handle,
+dimensions and serialized state, then leave the stream unchanged. SciPy's RNG
+algorithm and draw order differ; bitwise SciPy sample equality is not claimed.
+
+Box integration retains all randomized shifts consumed across Gaussian mixture
+components, including shifts consumed before a numerical failure. One-dimensional
+integration is analytic and leaves a valid stream unchanged. Box limits may be
+infinite; each reversed coordinate changes the sign. `maxpts=0` omits the native
+budget argument; negative budgets return status 2 without consuming state. The
+budget is approximate and does not constitute an accuracy guarantee. Python
+bound vectors may overlap (including the same array for both limits); the facade
+copies overlapping bounds before applying the C buffer contract. Native
+univariate interval integration retains a NaN result with status 0 for NaN
+limits; multivariate box integration reports nonfinite computed probabilities
+as an integration failure instead.
+
+The new C symbols share the prefix `scifort_gaussian_kde_` and suffix `_f64`:
+`integrate_gaussian`, `integrate_box_1d`, `integrate_box`, `integrate_kde`,
+`resample` and `marginal`. C marginal coordinates are **one-based**, matching the
+native Fortran API. Pass a fresh NULL-initialized output slot for the owning
+marginal and destroy it independently; never overwrite a live owning slot.
+Two borrowed inputs to `integrate_kde` may be the same handle. Python orders and
+deduplicates multiple handle locks; calls in opposite handle order cannot create
+a facade lock-order inversion.
+
+Box integration and resampling require valid caller-owned `int64_t[6]` RNG
+components. Invalid serialized state returns status 7 before native entry and
+preserves caller outputs/state, including empty sampling calls. Negative or
+otherwise invalid C extents return status 1 before native entry and preserve
+outputs. Native-entry failures return NaN scalar/sample outputs or a NULL marginal
+slot; consumed RNG state is exported even when integration fails. Calls require
+valid non-NULL output pointers and buffers, including empty arrays. C callers
+must synchronize both object lifetime and shared RNG streams across threads.
+The existing handle and buffer contracts continue to apply.
+
+Focused validation commands (CMD):
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_gaussian_kde*.py -v
+python -m unittest discover -s bindings/python/tests -p test_gaussian_kde_methods.py -k box_qmc -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_opaque_handles.py -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_state_codecs.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+These checks cover the changed KDE facade/bridge, native KDE regression tests,
+two-handle ownership and explicit state transport. Native numerical algorithms,
+the shared generator implementation and Python runtime are unchanged; unrelated
+module tests and the full `fpm test` suite are not rerun. The KDE tests build with
+GNU Fortran in checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`)
+modes, plus `-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`,
+and execute native Fortran, C11 and C++17 clients.
+
+Local validation on 2026-11-27 used Python 3.13.3, SciPy 1.15.3
+and GNU Fortran 17.0.0 20260510 (experimental) on Windows. The initial 14-test
+KDE run passed 13 checks and exposed overlapping box-bound input rejection. After
+the facade copied overlapping bounds, the affected box test passed in a focused
+rerun, including checked/optimized execution and its remaining invalid-input
+cases. Both independent handle tests and all six state-codec tests passed.
+Native/C/RNG agreement, original KDE regressions, executing C11/C++17 clients,
+SciPy integral/marginal references and resampling moments are covered. All 160
+generated artifacts matched. The new README example, local links, source ASCII/
+Fortran line limits and diff whitespace checks passed.

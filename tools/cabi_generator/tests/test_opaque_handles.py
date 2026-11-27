@@ -12,7 +12,7 @@ SOURCE = """module example_optional
 use iso_c_binding, only: c_double,c_ptr,c_loc,c_f_pointer,c_associated,c_null_ptr
 implicit none
 private
-public :: make,read,release
+public :: make,read,release,combine
 type :: counter
  real(c_double) :: value
 end type
@@ -45,6 +45,22 @@ subroutine read(handle,x,y,status)
  if(.not.c_associated(handle)) return
  call c_f_pointer(handle,object)
  y=x+object%value
+ status=0
+end subroutine
+subroutine combine(handle,other,child,status)
+ type(c_ptr),intent(in) :: handle !! first live counter
+ type(c_ptr),intent(in) :: other !! second live counter, possibly identical
+ type(c_ptr),intent(out) :: child !! independently owning result
+ integer,intent(out) :: status !! call status
+ type(counter),pointer :: first,second,result
+ child=c_null_ptr
+ status=5
+ if(.not.c_associated(handle).or..not.c_associated(other)) return
+ call c_f_pointer(handle,first)
+ call c_f_pointer(other,second)
+ allocate(result)
+ result%value=first%value+second%value
+ child=c_loc(result)
  status=0
 end subroutine
 subroutine release(handle,status)
@@ -81,6 +97,12 @@ class OpaqueHandleTests(fixtures.OptionalArrayTests):
                 policy.update(dimensions=[dict(name='n',minimum=1 if name=='make' else 0)],shapes=dict(x=['n']))
                 if name=='read':policy['shapes']['y']=['n']
             self.config['subroutines'][name]=policy
+        self.config['argument_docs'].update(other='second counter',child='owning independent result')
+        tag=dict(type='counter',release_symbol='example_release')
+        self.config['subroutines']['combine']=dict(symbol='example_combine',dimensions=[],shapes={},
+            scalar_only=True,status_argument='status',invalid_status=1,
+            description='Combine two counters into an independent object.',shape_contract=True,
+            opaque_handles={name:copy.deepcopy(tag) for name in ('handle','other','child')})
 
     def test_metadata_and_policy_rejections(self):
         outputs=generate.generate(self.config,self.root)
@@ -116,10 +138,13 @@ class OpaqueHandleTests(fixtures.OptionalArrayTests):
         client.write_text("""#include "adapter.h"
 #include <stddef.h>
 int main(void) {
- void *handle=NULL; double x[2]={1,2},y[2]; int status;
+ void *handle=NULL,*child=NULL; double x[2]={1,2},y[2]; int status;
  example_make(2,x,&handle,&status); if(status || !handle) return 1;
  example_read(2,handle,x,y,&status); if(status || y[0]!=4 || y[1]!=5) return 2;
+ example_combine(handle,handle,&child,&status); if(status || !child) return 7;
  example_release(&handle,&status); if(status || handle) return 3;
+ example_read(2,child,x,y,&status); if(status || y[0]!=7 || y[1]!=8) return 8;
+ example_release(&child,&status); if(status || child) return 9;
  example_release(&handle,&status); if(status || handle) return 4;
  example_read(2,NULL,x,y,&status); if(status!=5 || y[0]!=-1) return 5;
  x[0]=-100; example_make(2,x,&handle,&status);
@@ -137,6 +162,7 @@ lib=C.CDLL(sys.argv[2]); api=Optional(lib)
 other=Optional(C.CDLL(sys.argv[2]))
 h=api.make([1.,2.]).outputs['handle']
 np.testing.assert_array_equal(api.read(h,[10.,20.]).outputs['y'],[13.,23.])
+child=api.combine(h,h).outputs['child']
 assert api.read(h,[]).outputs['y'].shape==(0,)
 for operation in (lambda:copy.copy(h),lambda:copy.deepcopy(h),lambda:pickle.dumps(h),
                   lambda:api.read(123,[1.]),lambda:other.read(h,[1.])):
@@ -163,6 +189,8 @@ with ThreadPoolExecutor(max_workers=2) as pool:
  proceed.set();np.testing.assert_array_equal(read.result().outputs['y'],[13.])
  release.result()
 assert h.closed;h.close()
+api._functions['read']=original
+np.testing.assert_array_equal(api.read(child,[0.]).outputs['y'],[6.]);child.close()
 try:api.read(h,[1.])
 except ValueError:pass
 else:raise AssertionError('closed handle accepted')
@@ -170,6 +198,15 @@ api._functions['read']=original
 h=api.make([1.]).outputs['handle'];pointer=h._pointer;reference=weakref.ref(h)
 del h;gc.collect();assert reference() is None and pointer.value is None
 failed=api.make([-1.]);assert failed.status==2 and failed.outputs['handle'] is None
+first=api.make([1.]).outputs['handle'];second=api.make([2.]).outputs['handle']
+def combined(reverse):
+ child=api.combine(second if reverse else first,first if reverse else second).outputs['child']
+ try:return api.read(child,[0.]).outputs['y'][0]
+ finally:child.close()
+with ThreadPoolExecutor(max_workers=4) as pool:
+ futures=[pool.submit(combined,i%2) for i in range(24)]
+ assert all(f.result(timeout=10)==3 for f in futures)
+first.close();second.close()
 for _ in range(100):
  h=api.make([1.]).outputs['handle'];assert api.release(h).status==0 and h.closed
 """,encoding='ascii')

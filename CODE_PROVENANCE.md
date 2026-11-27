@@ -1,3 +1,16 @@
+## 2026-11-27 - KDE integration, sampling and marginal interfaces
+
+The six additional flat KDE bridges, reviewed adapter policies, generated C/Python
+interfaces, Python estimator methods and tests are original MIT SciFort interface
+work. Existing KDE Gaussian-mixture integrals, randomized-QMC box integration,
+mixture resampling and marginal construction are reused without numerical changes;
+their provenance remains below. Native source changes document state consumption,
+signed bounds and independent marginal storage. No upstream implementation was
+imported or copied. Tests compare native values and RNG state, installed SciPy
+public outputs, mixture moments and independently owned object lifetimes. The
+project-independent counter fixture now exercises two handle inputs and one owned
+output, including concurrent calls in reversed handle order.
+
 ## 2026-11-27 - Gaussian KDE owned-object interfaces
 
 The reviewed opaque-handle policy, generic pointer transport and Python lifetime

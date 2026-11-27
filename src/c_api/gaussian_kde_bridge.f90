@@ -4,10 +4,13 @@ module scifort_gaussian_kde_bridge
     use, intrinsic :: iso_c_binding, only : c_ptr, c_loc, c_f_pointer, c_associated, c_null_ptr
     use scifort_kinds, only : dp
     use scifort_math, only : quiet_nan
+    use scifort_random, only : rng_state
     use scifort_gaussian_kde, only : gaussian_kde, gaussian_kde_init
     implicit none
     private
     public :: kde_create, kde_destroy, kde_pdf, kde_logpdf, kde_info
+    public :: kde_integrate_gaussian, kde_integrate_box_1d, kde_integrate_box
+    public :: kde_integrate_kde, kde_resample, kde_marginal
 contains
     subroutine kde_create(dataset, weights, bandwidth, factor, handle, status)
         !! Copy observations into a heap-owned estimator; failure returns a null handle.
@@ -141,4 +144,149 @@ contains
         silverman = kde%silverman_factor()
         status = 0
     end subroutine kde_info
+
+    subroutine kde_integrate_gaussian(handle, mean, cov, value, status)
+        !! Integrate the estimator times a Gaussian density with matching dimension.
+        !! @dimension d = size(mean)
+        !! @require d >= 1
+        !! d must equal the estimator dimension; cov plus kernel covariance must be SPD.
+        type(c_ptr), intent(in) :: handle !! live estimator handle; null returns status 5
+        real(dp), intent(in) :: mean(:) !! shape (d); finite Gaussian mean
+        real(dp), intent(in) :: cov(:,:) !! shape (d,d); finite Gaussian covariance
+        real(dp), intent(out) :: value !! integral; NaN on failure
+        integer, intent(out) :: status !! 0 success; 1 invalid shape/data; 4 solve error; 5 null handle
+        type(gaussian_kde), pointer :: kde
+        real(dp) :: evaluated
+
+        value = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 1
+        if (size(mean) /= kde%d .or. size(cov,1) /= kde%d .or. size(cov,2) /= kde%d) return
+        evaluated = kde%integrate_gaussian(mean, cov, status)
+        if (status == 0) value = evaluated
+    end subroutine kde_integrate_gaussian
+
+    subroutine kde_integrate_box_1d(handle, low, high, value, status)
+        !! Integrate over a one-dimensional interval, preserving native signed limits.
+        type(c_ptr), intent(in) :: handle !! live univariate estimator; null returns status 5
+        real(dp), intent(in) :: low !! lower limit; may be infinite or exceed high
+        real(dp), intent(in) :: high !! upper limit; may be infinite
+        real(dp), intent(out) :: value !! integral; native NaN retained; NaN on failure
+        integer, intent(out) :: status !! 0 native success; 1 wrong dimension; 5 null handle
+        type(gaussian_kde), pointer :: kde
+        real(dp) :: evaluated
+
+        value = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        evaluated = kde%integrate_box_1d(low, high, status)
+        if (status == 0) value = evaluated
+    end subroutine kde_integrate_box_1d
+
+    subroutine kde_integrate_box(handle, low, high, maxpts, state, value, status)
+        !! Integrate over a box using caller-owned randomized-QMC state.
+        !! @dimension d = size(low)
+        !! @require d >= 1
+        !! d must equal the estimator dimension; reversed bounds retain native signs.
+        type(c_ptr), intent(in) :: handle !! live estimator handle; null returns status 5
+        real(dp), intent(in) :: low(:) !! shape (d); lower limits, infinite permitted
+        real(dp), intent(in) :: high(:) !! shape (d); upper limits, infinite permitted
+        integer, intent(in) :: maxpts !! approximate QMC points per component; 0 native default, >= 0
+        type(rng_state), intent(inout) :: state !! explicit QMC state, including shifts consumed on failure
+        real(dp), intent(out) :: value !! integral; NaN on failure
+        integer, intent(out) :: status !! 0 success; 1 shape; 2 budget; 4 integration error; 5 null handle
+        type(gaussian_kde), pointer :: kde
+        real(dp) :: evaluated
+
+        value = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 1
+        if (size(low) /= kde%d .or. size(high) /= kde%d) return
+        status = 2
+        if (maxpts < 0) return
+        if (maxpts == 0) then
+            evaluated = kde%integrate_box(low, high, state=state, status=status)
+        else
+            evaluated = kde%integrate_box(low, high, maxpts=maxpts, state=state, status=status)
+        end if
+        if (status == 0) value = evaluated
+    end subroutine kde_integrate_box
+
+    subroutine kde_integrate_kde(handle, other, value, status)
+        !! Integrate the product of two estimators with equal dimension.
+        type(c_ptr), intent(in) :: handle !! first live estimator; may equal other
+        type(c_ptr), intent(in) :: other !! second live estimator; null returns status 5
+        real(dp), intent(out) :: value !! integral of the product; NaN on failure
+        integer, intent(out) :: status !! 0 success; 1 dimension mismatch; 4 solve error; 5 null handle
+        type(gaussian_kde), pointer :: kde, second
+        real(dp) :: evaluated
+
+        value = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle) .or. .not. c_associated(other)) return
+        call c_f_pointer(handle, kde)
+        call c_f_pointer(other, second)
+        evaluated = kde%integrate_kde(second, status)
+        if (status == 0) value = evaluated
+    end subroutine kde_integrate_kde
+
+    subroutine kde_resample(handle, state, samples, status)
+        !! Draw samples in native column order with explicit RNG state.
+        !! @dimension d = size(samples,1)
+        !! @dimension n_samples = size(samples,2)
+        !! @require d >= 1
+        !! @require n_samples >= 0
+        !! @when n_samples == 0: validate handle and dimension; leave RNG state unchanged
+        !! d must equal the estimator dimension.
+        type(c_ptr), intent(in) :: handle !! live estimator handle; null returns status 5
+        type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
+        real(dp), intent(out) :: samples(:,:) !! shape (d,n_samples); samples by column, NaNs on failure
+        integer, intent(out) :: status !! 0 success; 1 dimension mismatch; 5 null handle
+        type(gaussian_kde), pointer :: kde
+
+        samples = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 1
+        if (size(samples,1) /= kde%d) return
+        call kde%resample(state, samples, status)
+    end subroutine kde_resample
+
+    subroutine kde_marginal(handle, dimensions, marginal_handle, status)
+        !! Return an independently owned marginal; preserve weights and bandwidth factor.
+        !! @dimension k = size(dimensions)
+        !! @require k >= 1
+        !! k <= estimator dimension; coordinates are distinct and one-based at this boundary.
+        type(c_ptr), intent(in) :: handle !! parent estimator; parent remains unchanged
+        integer, intent(in) :: dimensions(:) !! shape (k); distinct one-based coordinates
+        type(c_ptr), intent(out) :: marginal_handle !! new owning handle; null on native failure
+        integer, intent(out) :: status !! 0 success; 2 invalid coordinates; 5 null parent; 6 allocation failure
+        type(gaussian_kde), pointer :: kde, child
+        integer :: info
+
+        marginal_handle = c_null_ptr
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 2
+        if (size(dimensions) < 1 .or. size(dimensions) > kde%d) return
+        if (any(dimensions < 1) .or. any(dimensions > kde%d)) return
+        allocate(child, stat=info)
+        if (info /= 0) then
+            status = 6
+            return
+        end if
+        child = kde%marginal(dimensions, status)
+        if (status /= 0) then
+            deallocate(child)
+            return
+        end if
+        marginal_handle = c_loc(child)
+    end subroutine kde_marginal
 end module scifort_gaussian_kde_bridge

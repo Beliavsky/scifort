@@ -135,6 +135,176 @@
         }
       },
       "scalar_only": true
+    },
+    "kde_integrate_gaussian": {
+      "symbol": "scifort_gaussian_kde_integrate_gaussian_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "mean": [
+          "d"
+        ],
+        "cov": [
+          "d",
+          "d"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Integrate a KDE times a Gaussian density.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
+    },
+    "kde_integrate_box_1d": {
+      "symbol": "scifort_gaussian_kde_integrate_box_1d_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Integrate a univariate KDE over signed interval limits.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    },
+    "kde_integrate_box": {
+      "symbol": "scifort_gaussian_kde_integrate_box_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "low": [
+          "d"
+        ],
+        "high": [
+          "d"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Integrate a KDE over a box with explicit QMC state.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 7
+        }
+      }
+    },
+    "kde_integrate_kde": {
+      "symbol": "scifort_gaussian_kde_integrate_kde_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Integrate the product of two KDEs of matching dimension.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        },
+        "other": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    },
+    "kde_resample": {
+      "symbol": "scifort_gaussian_kde_resample_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "d",
+          "n_samples"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Resample a KDE into caller-owned columns with explicit RNG state.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 7
+        }
+      }
+    },
+    "kde_marginal": {
+      "symbol": "scifort_gaussian_kde_marginal_f64",
+      "dimensions": [
+        {
+          "name": "k",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "dimensions": [
+          "k"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Create an independently owned marginal with one-based C coordinates.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        },
+        "marginal_handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
     }
   },
   "excluded": {},
@@ -152,7 +322,20 @@
     "neff": "effective sample size",
     "scott": "Scott bandwidth factor",
     "silverman": "Silverman bandwidth factor",
-    "status": "0 success; 1-4 native error; 5 null handle; 6 object allocation failure"
+    "status": "0 success; 1-4 native; 5 null handle; 6 allocation; 7 invalid state",
+    "mean": "finite Gaussian mean",
+    "cov": "finite Gaussian covariance; sum with kernel covariance must be SPD",
+    "value": "native integral; NaN on native failure",
+    "low": "lower integration limit(s), infinite permitted",
+    "high": "upper integration limit(s), infinite permitted",
+    "other": "second live KDE handle of the same dimension",
+    "maxpts": "QMC points per Gaussian component, >= 0; 0 native default",
+    "state": "caller-owned int64 RNG components",
+    "n_samples": "number of sample columns, >= 0",
+    "samples": "sample columns; NaNs on native failure",
+    "k": "number of retained coordinates, >= 1",
+    "dimensions": "distinct one-based coordinates within the parent dimension",
+    "marginal_handle": "new independently owned marginal; null on native failure"
   },
   "outputs": {
     "fortran": "src/c_api/generated/gaussian_kde_generated.f90",

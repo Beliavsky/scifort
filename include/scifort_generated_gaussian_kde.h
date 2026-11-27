@@ -3,6 +3,7 @@
 #ifndef SCIFORT_GENERATED_GAUSSIAN_KDE_H
 #define SCIFORT_GENERATED_GAUSSIAN_KDE_H
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,6 +44,46 @@ void scifort_gaussian_kde_destroy_f64(void ** arg_handle, int *arg_status);
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_gaussian_kde_info_f64(void * arg_handle, int * arg_d, int * arg_n, double * arg_neff, double * arg_factor, double * arg_scott, double * arg_silverman, int *arg_status);
 
+/* Integrate a KDE over a box with explicit QMC state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Opaque inputs must be live handles of the reviewed type, or NULL where documented.
+ * Do not dereference/copy ownership; destruction invalidates all aliases.
+ * Handle outputs are owning; release exactly once with the configured destructor.
+ * state: caller-owned int64_t[6]; invalid state returns 7 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_gaussian_kde_integrate_box_f64(int arg_d, void * arg_handle, const double * arg_low, const double * arg_high, int arg_maxpts, int64_t * arg_state, double * arg_value, int *arg_status);
+
+/* Integrate a univariate KDE over signed interval limits.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Opaque inputs must be live handles of the reviewed type, or NULL where documented.
+ * Do not dereference/copy ownership; destruction invalidates all aliases.
+ * Handle outputs are owning; release exactly once with the configured destructor.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_gaussian_kde_integrate_box_1d_f64(void * arg_handle, double arg_low, double arg_high, double * arg_value, int *arg_status);
+
+/* Integrate a KDE times a Gaussian density.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Opaque inputs must be live handles of the reviewed type, or NULL where documented.
+ * Do not dereference/copy ownership; destruction invalidates all aliases.
+ * Handle outputs are owning; release exactly once with the configured destructor.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_gaussian_kde_integrate_gaussian_f64(int arg_d, void * arg_handle, const double * arg_mean, const double * arg_cov, double * arg_value, int *arg_status);
+
+/* Integrate the product of two KDEs of matching dimension.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Opaque inputs must be live handles of the reviewed type, or NULL where documented.
+ * Do not dereference/copy ownership; destruction invalidates all aliases.
+ * Handle outputs are owning; release exactly once with the configured destructor.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_gaussian_kde_integrate_kde_f64(void * arg_handle, void * arg_other, double * arg_value, int *arg_status);
+
 /* Evaluate a batch of Gaussian KDE log densities.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.
@@ -54,6 +95,17 @@ void scifort_gaussian_kde_info_f64(void * arg_handle, int * arg_d, int * arg_n, 
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_gaussian_kde_logpdf_f64(int arg_d, int arg_m, void * arg_handle, const double * arg_points, double * arg_values, int *arg_status);
 
+/* Create an independently owned marginal with one-based C coordinates.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Opaque inputs must be live handles of the reviewed type, or NULL where documented.
+ * Do not dereference/copy ownership; destruction invalidates all aliases.
+ * Handle outputs are owning; release exactly once with the configured destructor.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_gaussian_kde_marginal_f64(int arg_k, void * arg_handle, const int * arg_dimensions, void ** arg_marginal_handle, int *arg_status);
+
 /* Evaluate a batch of Gaussian KDE densities.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.
@@ -64,6 +116,19 @@ void scifort_gaussian_kde_logpdf_f64(int arg_d, int arg_m, void * arg_handle, co
  * Handle outputs are owning; release exactly once with the configured destructor.
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_gaussian_kde_pdf_f64(int arg_d, int arg_m, void * arg_handle, const double * arg_points, double * arg_values, int *arg_status);
+
+/* Resample a KDE into caller-owned columns with explicit RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Opaque inputs must be live handles of the reviewed type, or NULL where documented.
+ * Do not dereference/copy ownership; destruction invalidates all aliases.
+ * Handle outputs are owning; release exactly once with the configured destructor.
+ * state: caller-owned int64_t[6]; invalid state returns 7 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_gaussian_kde_resample_f64(int arg_d, int arg_n_samples, void * arg_handle, int64_t * arg_state, double * arg_samples, int *arg_status);
 
 #ifdef __cplusplus
 }

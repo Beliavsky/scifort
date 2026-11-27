@@ -1019,3 +1019,12 @@ API. Further types can reuse the pointer policy and runtime with their own
 reviewed flat bridges. The independent `test_opaque_handles.py` fixture checks
 this mechanism with a non-SciFort counter in checked/optimized Fortran, C11,
 C++17 and Python, including concurrent close/call serialization.
+
+The KDE integration/resampling/marginal manifest also composes these existing
+policies: two borrowed input handles, one borrowed input plus an independently
+owned output, and handles combined with explicit RNG state codecs. No new
+runtime special case is needed. The counter fixture verifies returned ownership
+and concurrent reverse-order calls; KDE tests verify type-bound dispatch,
+native RNG consumption and copied marginal storage. Python coordinate-index
+normalization remains in the estimator facade; the flat C marginal bridge uses
+the native one-based coordinate convention.

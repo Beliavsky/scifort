@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 273 |
+| exports | 279 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 107 |
+| array_adapters | 113 |
 | elementwise | 88 |
-| python | 195 |
+| python | 201 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -72,8 +72,14 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_gaussian_kde_bridge | kde_create |  |  | scifort_gaussian_kde_create_f64 |  | kde_bridge.create |
 | scifort_gaussian_kde_bridge | kde_destroy |  |  | scifort_gaussian_kde_destroy_f64 |  | kde_bridge.destroy |
 | scifort_gaussian_kde_bridge | kde_info |  |  | scifort_gaussian_kde_info_f64 |  | kde_bridge.info |
+| scifort_gaussian_kde_bridge | kde_integrate_box |  |  | scifort_gaussian_kde_integrate_box_f64 |  | kde_bridge.integrate_box |
+| scifort_gaussian_kde_bridge | kde_integrate_box_1d |  |  | scifort_gaussian_kde_integrate_box_1d_f64 |  | kde_bridge.integrate_box_1d |
+| scifort_gaussian_kde_bridge | kde_integrate_gaussian |  |  | scifort_gaussian_kde_integrate_gaussian_f64 |  | kde_bridge.integrate_gaussian |
+| scifort_gaussian_kde_bridge | kde_integrate_kde |  |  | scifort_gaussian_kde_integrate_kde_f64 |  | kde_bridge.integrate_kde |
 | scifort_gaussian_kde_bridge | kde_logpdf |  |  | scifort_gaussian_kde_logpdf_f64 |  | kde_bridge.logpdf |
+| scifort_gaussian_kde_bridge | kde_marginal |  |  | scifort_gaussian_kde_marginal_f64 |  | kde_bridge.marginal |
 | scifort_gaussian_kde_bridge | kde_pdf |  |  | scifort_gaussian_kde_pdf_f64 |  | kde_bridge.pdf |
+| scifort_gaussian_kde_bridge | kde_resample |  |  | scifort_gaussian_kde_resample_f64 |  | kde_bridge.resample |
 | scifort_invwishart | invwishart_entropy |  |  | scifort_invwishart_entropy_f64 |  | invwishart.entropy |
 | scifort_invwishart | invwishart_logpdf |  |  | scifort_invwishart_logpdf_f64 |  | invwishart.logpdf |
 | scifort_invwishart | invwishart_mean |  |  | scifort_invwishart_mean_f64 |  | invwishart.mean |

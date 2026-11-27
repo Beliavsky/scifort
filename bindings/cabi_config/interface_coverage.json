@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 107,
+    "array_adapters": 113,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 273,
-    "python": 195,
+    "exports": 279,
+    "python": 201,
     "scalar": 88
   },
   "procedures": [
@@ -527,16 +527,52 @@
       "python": "kde_bridge.info"
     },
     {
+      "array_adapter": "scifort_gaussian_kde_integrate_box_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_integrate_box",
+      "python": "kde_bridge.integrate_box"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_integrate_box_1d_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_integrate_box_1d",
+      "python": "kde_bridge.integrate_box_1d"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_integrate_gaussian_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_integrate_gaussian",
+      "python": "kde_bridge.integrate_gaussian"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_integrate_kde_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_integrate_kde",
+      "python": "kde_bridge.integrate_kde"
+    },
+    {
       "array_adapter": "scifort_gaussian_kde_logpdf_f64",
       "module": "scifort_gaussian_kde_bridge",
       "procedure": "kde_logpdf",
       "python": "kde_bridge.logpdf"
     },
     {
+      "array_adapter": "scifort_gaussian_kde_marginal_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_marginal",
+      "python": "kde_bridge.marginal"
+    },
+    {
       "array_adapter": "scifort_gaussian_kde_pdf_f64",
       "module": "scifort_gaussian_kde_bridge",
       "procedure": "kde_pdf",
       "python": "kde_bridge.pdf"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_resample_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_resample",
+      "python": "kde_bridge.resample"
     },
     {
       "array_adapter": "scifort_invwishart_entropy_f64",

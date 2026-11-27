@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 5,
+  "generated_symbol_count": 11,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -131,6 +131,191 @@
     {
       "arguments": [
         "handle",
+        "low",
+        "high",
+        "maxpts",
+        "state",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "d"
+      ],
+      "dimensions": {
+        "d": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_integrate_box",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "d": {
+            "argument": "low",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "d": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "high": [
+          "d"
+        ],
+        "low": [
+          "d"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 7,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_integrate_box_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "low",
+        "high",
+        "value",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_integrate_box_1d",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_integrate_box_1d_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "mean",
+        "cov",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "d"
+      ],
+      "dimensions": {
+        "d": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_integrate_gaussian",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "d": {
+            "argument": "mean",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "d": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "cov": [
+          "d",
+          "d"
+        ],
+        "mean": [
+          "d"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_integrate_gaussian_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "other",
+        "value",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        },
+        "other": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_integrate_kde",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_integrate_kde_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
         "points",
         "values",
         "status"
@@ -190,6 +375,57 @@
       "status_argument": "status",
       "symbols": [
         "scifort_gaussian_kde_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "dimensions",
+        "marginal_handle",
+        "status"
+      ],
+      "dimension_order": [
+        "k"
+      ],
+      "dimensions": {
+        "k": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        },
+        "marginal_handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_marginal",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "k": {
+            "argument": "dimensions",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "k": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "dimensions": [
+          "k"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_marginal_f64"
       ]
     },
     {
@@ -255,9 +491,81 @@
       "symbols": [
         "scifort_gaussian_kde_pdf_f64"
       ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "state",
+        "samples",
+        "status"
+      ],
+      "dimension_order": [
+        "d",
+        "n_samples"
+      ],
+      "dimensions": {
+        "d": 1,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_resample",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "validate handle and dimension; leave RNG state unchanged",
+            "dimension": "n_samples",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "d": {
+            "argument": "samples",
+            "axis": 1
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "d": 1,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "samples": [
+          "d",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 7,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_resample_f64"
+      ]
     }
   ],
-  "public_api_count": 5,
+  "public_api_count": 11,
   "source": "src/c_api/gaussian_kde_bridge.f90",
-  "source_sha256": "cd6cae2dd7e9319b6b92fc1ecd154be887ac2b9f77183e97f1032365da8d5799"
+  "source_sha256": "515e862bc93ae66dd5384f66331c3fcdf11cb816a5db1a5348400eb8ab276c1a"
 }
