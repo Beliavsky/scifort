@@ -412,6 +412,7 @@ Commands used (the isolated generator environment already contains fparser):
 
 ```text
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
 build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/generate_python.py bindings/cabi_config/python.json --check
@@ -505,6 +506,7 @@ Validation commands for the unified workflow:
 
 ```text
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s bindings/cabi_config/tests -p test_generated_shape_families.py -v
 python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
@@ -597,6 +599,7 @@ Validation commands (CMD):
 
 ```text
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
 build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
@@ -624,6 +627,7 @@ Validation commands (CMD):
 
 ```text
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 python -m unittest discover -s benchmarks -p test_compare_python_scipy.py -v
 build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
@@ -701,6 +705,7 @@ Validation commands (CMD):
 
 ```text
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 python -m unittest discover -s bindings/python/tests -p test_dirichlet.py -v
 build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
@@ -744,6 +749,7 @@ Validation commands (CMD):
 
 ```text
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 python -m unittest discover -s bindings/python/tests -p test_discrete_multivariate.py -v
 build\cabi-generator-venv\Scripts\python.exe tools/cabi_generator/pipeline.py bindings/cabi_config/pipeline.json --check
@@ -1205,6 +1211,7 @@ NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. Commands from the repository root:
 
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
 python bindings\python\example.py
@@ -1322,6 +1329,7 @@ Python 3.13.3, NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. Commands:
 
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 python -m unittest discover -s bindings/python/tests -p test_multivariate_parameters.py -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
@@ -1437,6 +1445,7 @@ Python 3.13.3, NumPy 2.2.6, SciPy 1.15.3 and fparser 0.2.5. Commands:
 
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
 python bindings\python\example.py
@@ -1567,6 +1576,7 @@ Python 3.13.3, NumPy 2.2.6 and fparser 0.2.5. Commands:
 
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -p test_random.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
@@ -1697,6 +1707,7 @@ NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
 
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -p test_random.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
@@ -1831,6 +1842,7 @@ NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
 
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -p test_vector_sampling.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
@@ -1958,6 +1970,7 @@ NumPy 2.2.6 and fparser 0.2.5 on Windows. Commands:
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_rank_three_outputs.py -v
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -p test_wishart_sampling.py -v
 python -m unittest discover -s bindings/python/tests -v
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json
@@ -2284,6 +2297,7 @@ Validation commands for this extension (CMD):
 ```bat
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_stateful_functions.py -v
 build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
 python -m unittest discover -s bindings/python/tests -p test_multivariate_cdf.py -v
 python -m unittest discover -s bindings/python/tests -v
 fpm test
@@ -2657,3 +2671,69 @@ all three focused tests. The pipeline checked all 152 generated artifacts.
 The full binding suite was used because the shared Python array runtime changed.
 Native numerical code in unitary_group and random_matrix_helpers is unchanged;
 the full native `fpm test` suite was not rerun.
+
+## Normal-inverse-gamma paired methods
+
+`api.normal_inverse_gamma` exposes all six native public methods. `pdf(x, s2,
+mu=0, lmbda=1, a=1, b=1)` and `logpdf` return scalar values. These first density
+adapters accept scalar inputs; NumPy broadcasting/bulk density evaluation is
+not yet provided. The native elemental Fortran API is unchanged.
+
+`mean(mu=0, lmbda=1, a=1, b=1)` returns an `ArrayResult` with `mean_x` and
+`mean_s2`; `var` returns `var_x` and `var_s2`. Both means are NaN when `a <= 1`,
+matching the current native paired-moment convention. The normal-component
+variance needs `a > 1`; the variance-component variance needs `a > 2`. Invalid
+parameters yield native NaNs with call-level status 0. All parameters must be
+finite, with positive `lmbda`, `a` and `b`.
+
+```python
+stream = api.rng(123)
+means = api.normal_inverse_gamma.mean(mu=2, lmbda=3, a=4, b=2)
+assert means.status == 0
+assert means.outputs['mean_x'] == 2
+single = api.normal_inverse_gamma.rvs(stream, a=4)
+paired = api.normal_inverse_gamma.rvs_array(stream, a=4, n_samples=8)
+assert paired.status == 0
+assert paired.outputs['x'].shape == paired.outputs['s2'].shape == (8,)
+```
+
+Both samplers return paired `x` and `s2` outputs. The batch method defaults to
+one sample and accepts caller-owned `out={'x': x_buffer, 's2': s2_buffer}`;
+outputs must be writable, aligned, native float64, contiguous, disjoint and of
+the requested length. Batch order and final RNG state exactly match repeated
+native scalar draws. Invalid sampling parameters produce NaNs without consuming
+state. Empty batches do not evaluate numerical parameters or consume state.
+
+C symbols use the prefix `scifort_normal_inverse_gamma_` and suffix `_f64` for
+`pdf`, `logpdf`, `mean`, `var`, `rvs` and `rvs_array`. All optional numerical
+parameters are required at the C boundary. Scalar outputs and status use valid,
+non-NULL caller-owned pointers; batch buffers are required even for zero length.
+Negative batch lengths return status 1 without changing outputs/state. Invalid
+serialized RNG state returns status 4 without native execution, including empty
+batches. Numerical errors retain native values with call-level status 0.
+See [the generated header](../../include/scifort_generated_normal_inverse_gamma.h)
+and [native shape contracts](../../docs/normal_inverse_gamma_shapes.md).
+
+Validation commands for this interface change (CMD):
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_scalar_outputs.py -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The binding suite builds with GNU Fortran in checked mode (`-O0 -g -fcheck=all
+-fbacktrace`) and optimized mode (`-O3`), with `-std=f2018 -fimplicit-none
+-Werror=implicit-interface -shared -fPIC` in both. The paired-method tests compile
+native Fortran clients against each library and execute C11/C++17 clients when
+those compilers are available. The full numerical `fpm test` suite is not needed
+for this interface-only change; the native numerical implementation is unchanged.
+
+Local validation on 2026-11-27 used Python 3.13.3, SciPy 1.15.3 and GNU
+Fortran/GCC/G++ 17.0.0 20260510 (experimental) on Windows. All 142 binding tests
+passed, including the five paired-method tests and checked/optimized native,
+C11 and C++17 clients. The 96 existing generator tests passed; both new scalar
+tests passed after a focused rerun correcting a test assertion's C parameter
+spelling. The pipeline checked all 156 artifacts. The README example, new local
+links, source ASCII/line limits and diff whitespace checks passed.

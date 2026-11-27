@@ -135,8 +135,8 @@ Never trade away correctness or provenance merely to add more functions.
   densities, Dirichlet, multinomial, multivariate hypergeometric and Dirichlet-multinomial
   functions, plus Wishart, inverse-Wishart, matrix-normal, matrix-t and
   Poisson-binomial methods, real orthogonal/correlation matrix samplers,
-  fixed-margin random tables, uniform directions, von Mises-Fisher methods
-  and unitary-group sampling.
+  fixed-margin random tables, uniform directions, von Mises-Fisher methods,
+  unitary-group sampling and paired normal-inverse-gamma samples.
   Keep readable shape comments
   and follow `tools/cabi_generator/README.md`. Do not apply the prototype broadly or treat
   conditional prose as verified assertions.

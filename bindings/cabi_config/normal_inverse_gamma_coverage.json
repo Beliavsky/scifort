@@ -1,0 +1,269 @@
+{
+  "generated_symbol_count": 6,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "s2",
+        "mu",
+        "lmbda",
+        "a",
+        "b",
+        "value",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "procedure": "normal_inverse_gamma_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_normal_inverse_gamma_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "mu",
+        "lmbda",
+        "a",
+        "b",
+        "mean_x",
+        "mean_s2",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "procedure": "normal_inverse_gamma_mean",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_normal_inverse_gamma_mean_f64"
+      ],
+      "synthetic_status": true
+    },
+    {
+      "arguments": [
+        "x",
+        "s2",
+        "mu",
+        "lmbda",
+        "a",
+        "b",
+        "value",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "procedure": "normal_inverse_gamma_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_normal_inverse_gamma_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "x",
+        "s2",
+        "mu",
+        "lmbda",
+        "a",
+        "b",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "procedure": "normal_inverse_gamma_rvs",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_normal_inverse_gamma_rvs_f64"
+      ],
+      "synthetic_status": true
+    },
+    {
+      "arguments": [
+        "state",
+        "x",
+        "s2",
+        "mu",
+        "lmbda",
+        "a",
+        "b",
+        "status"
+      ],
+      "dimension_order": [
+        "n_samples"
+      ],
+      "dimensions": {
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "procedure": "normal_inverse_gamma_rvs_array",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "no parameters are evaluated and RNG state is unchanged",
+            "dimension": "n_samples",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "n_samples": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "s2": [
+          "n_samples"
+        ],
+        "x": [
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_normal_inverse_gamma_rvs_array_f64"
+      ],
+      "synthetic_status": true
+    },
+    {
+      "arguments": [
+        "mu",
+        "lmbda",
+        "a",
+        "b",
+        "var_x",
+        "var_s2",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "procedure": "normal_inverse_gamma_var",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_normal_inverse_gamma_var_f64"
+      ],
+      "synthetic_status": true
+    }
+  ],
+  "public_api_count": 6,
+  "source": "src/stats/normal_inverse_gamma.f90",
+  "source_sha256": "e0883e4b15a53547e459a6a3e84d82cdb702b33ab2fca8b66fef497d68aaa375"
+}

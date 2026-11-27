@@ -1,3 +1,14 @@
+## 2026-11-27 - Normal-inverse-gamma interface adapters
+
+The scalar-only generator extension, reviewed normal-inverse-gamma manifest,
+generated interfaces, shape comments and integration tests are original MIT
+SciFort interface work. No numerical implementation was imported or changed.
+The existing normal/inverse-gamma density, moments and inverse-transform sampler
+remain in use, with their original provenance below. Tests compare native and
+wrapped results and RNG states, analytic moment formulas, and installed SciPy
+normal/inverse-gamma public density outputs. No upstream implementation was
+copied; no equality with SciPy random streams is claimed.
+
 ## 2026-11-27 - Unitary sampling and complex-array transport
 
 The complex-array generator/runtime extension, reviewed manifest, generated

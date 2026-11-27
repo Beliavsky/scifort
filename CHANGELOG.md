@@ -1,3 +1,14 @@
+## 2026-11-27 - Paired normal-inverse-gamma interfaces
+
+- Add all six public normal-inverse-gamma C/Python methods: scalar density,
+  log density, paired means/variances and explicit-state single/batch sampling.
+- Extend reviewed adapters with opt-in scalar-only policies and multiple scalar
+  outputs; retain native NaN/infinity conventions and numerical algorithms.
+- Document matching native sample-array lengths and empty batches; generate
+  adapters, headers, shape contracts and build/coverage metadata.
+- Add independent scalar-generator fixtures and checked/optimized native, C,
+  C++ and Python agreement, boundary, stream and buffer checks.
+
 ## 2026-11-27 - Unitary sampling and complex-array interfaces
 
 - Add unitary single/batch C/Python samplers and native/helper shape documentation.

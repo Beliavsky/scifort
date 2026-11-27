@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 96,
+    "array_adapters": 102,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 262,
-    "python": 184,
+    "exports": 268,
+    "python": 190,
     "scalar": 88
   },
   "procedures": [
@@ -1430,6 +1430,42 @@
       "python": "normal.sf",
       "scalar": "scifort_normal_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_normal_inverse_gamma_logpdf_f64",
+      "module": "scifort_normal_inverse_gamma",
+      "procedure": "normal_inverse_gamma_logpdf",
+      "python": "normal_inverse_gamma.logpdf"
+    },
+    {
+      "array_adapter": "scifort_normal_inverse_gamma_mean_f64",
+      "module": "scifort_normal_inverse_gamma",
+      "procedure": "normal_inverse_gamma_mean",
+      "python": "normal_inverse_gamma.mean"
+    },
+    {
+      "array_adapter": "scifort_normal_inverse_gamma_pdf_f64",
+      "module": "scifort_normal_inverse_gamma",
+      "procedure": "normal_inverse_gamma_pdf",
+      "python": "normal_inverse_gamma.pdf"
+    },
+    {
+      "array_adapter": "scifort_normal_inverse_gamma_rvs_f64",
+      "module": "scifort_normal_inverse_gamma",
+      "procedure": "normal_inverse_gamma_rvs",
+      "python": "normal_inverse_gamma.rvs"
+    },
+    {
+      "array_adapter": "scifort_normal_inverse_gamma_rvs_array_f64",
+      "module": "scifort_normal_inverse_gamma",
+      "procedure": "normal_inverse_gamma_rvs_array",
+      "python": "normal_inverse_gamma.rvs_array"
+    },
+    {
+      "array_adapter": "scifort_normal_inverse_gamma_var_f64",
+      "module": "scifort_normal_inverse_gamma",
+      "procedure": "normal_inverse_gamma_var",
+      "python": "normal_inverse_gamma.var"
     },
     {
       "array_adapter": "scifort_ortho_group_rvs_f64",

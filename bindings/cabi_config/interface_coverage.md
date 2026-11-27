@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 262 |
+| exports | 268 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 96 |
+| array_adapters | 102 |
 | elementwise | 88 |
-| python | 184 |
+| python | 190 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -194,6 +194,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_normal | normal_pdf | scifort_normal_pdf_f64 | scifort_normal_pdf_vec_f64 |  | scifort_normal_pdf_elementwise_f64 | normal.pdf |
 | scifort_normal | normal_ppf | scifort_normal_ppf_f64 | scifort_normal_ppf_vec_f64 |  | scifort_normal_ppf_elementwise_f64 | normal.ppf |
 | scifort_normal | normal_sf | scifort_normal_sf_f64 | scifort_normal_sf_vec_f64 |  | scifort_normal_sf_elementwise_f64 | normal.sf |
+| scifort_normal_inverse_gamma | normal_inverse_gamma_logpdf |  |  | scifort_normal_inverse_gamma_logpdf_f64 |  | normal_inverse_gamma.logpdf |
+| scifort_normal_inverse_gamma | normal_inverse_gamma_mean |  |  | scifort_normal_inverse_gamma_mean_f64 |  | normal_inverse_gamma.mean |
+| scifort_normal_inverse_gamma | normal_inverse_gamma_pdf |  |  | scifort_normal_inverse_gamma_pdf_f64 |  | normal_inverse_gamma.pdf |
+| scifort_normal_inverse_gamma | normal_inverse_gamma_rvs |  |  | scifort_normal_inverse_gamma_rvs_f64 |  | normal_inverse_gamma.rvs |
+| scifort_normal_inverse_gamma | normal_inverse_gamma_rvs_array |  |  | scifort_normal_inverse_gamma_rvs_array_f64 |  | normal_inverse_gamma.rvs_array |
+| scifort_normal_inverse_gamma | normal_inverse_gamma_var |  |  | scifort_normal_inverse_gamma_var_f64 |  | normal_inverse_gamma.var |
 | scifort_ortho_group | ortho_group_rvs |  |  | scifort_ortho_group_rvs_f64 |  | ortho_group.rvs |
 | scifort_ortho_group | ortho_group_rvs_array |  |  | scifort_ortho_group_rvs_array_f64 |  | ortho_group.rvs_array |
 | scifort_ortho_group | ortho_group_status_invalid_shape |  |  |  |  |  |

@@ -598,6 +598,55 @@
           "n_samples": 1
         }
       }
+    },
+    "normal_inverse_gamma": {
+      "manifests": [
+        "bindings/cabi_config/normal_inverse_gamma.json"
+      ],
+      "prefix": "normal_inverse_gamma_",
+      "defaults": {
+        "normal_inverse_gamma_pdf": {
+          "mu": 0.0,
+          "lmbda": 1.0,
+          "a": 1.0,
+          "b": 1.0
+        },
+        "normal_inverse_gamma_logpdf": {
+          "mu": 0.0,
+          "lmbda": 1.0,
+          "a": 1.0,
+          "b": 1.0
+        },
+        "normal_inverse_gamma_mean": {
+          "mu": 0.0,
+          "lmbda": 1.0,
+          "a": 1.0,
+          "b": 1.0
+        },
+        "normal_inverse_gamma_var": {
+          "mu": 0.0,
+          "lmbda": 1.0,
+          "a": 1.0,
+          "b": 1.0
+        },
+        "normal_inverse_gamma_rvs": {
+          "mu": 0.0,
+          "lmbda": 1.0,
+          "a": 1.0,
+          "b": 1.0
+        },
+        "normal_inverse_gamma_rvs_array": {
+          "mu": 0.0,
+          "lmbda": 1.0,
+          "a": 1.0,
+          "b": 1.0
+        }
+      },
+      "output_dimensions": {
+        "normal_inverse_gamma_rvs_array": {
+          "n_samples": 1
+        }
+      }
     }
   }
 }

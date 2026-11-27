@@ -22,6 +22,7 @@
 #include "scifort_generated_multivariate_normal.h"
 #include "scifort_generated_multivariate_t.h"
 #include "scifort_generated_normal.h"
+#include "scifort_generated_normal_inverse_gamma.h"
 #include "scifort_generated_ortho_group.h"
 #include "scifort_generated_poisson_binom.h"
 #include "scifort_generated_random_correlation.h"

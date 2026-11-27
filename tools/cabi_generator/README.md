@@ -947,3 +947,25 @@ forbidden. No language complex object layout or Fortran descriptors cross the
 C ABI. The independent complex fixture compiles and runs C11, C++17 and Python
 clients with bounds-checked and optimized Fortran builds, including deliberately
 partial/undefined native output on error.
+
+## Reviewed scalar-only adapters with paired outputs
+
+A `subroutines` or `array_functions` entry may set `"scalar_only": true` with
+`"dimensions": []` and `"shapes": {}`. This explicitly selects the existing
+status/output-pointer adapter convention for procedures without native arrays.
+Without that opt-in, an empty dimension policy remains an error. Scalar-only
+policies reject native arrays or declared dimensions. Serialized RNG state is a
+scalar native object with its existing separately reviewed state codec.
+
+Scalar subroutines may return multiple real/integer outputs. Status-free natives
+still require `synthetic_status`; optional real/integer inputs still require
+`required_optional_scalars`. Function policies retain `result_argument` and
+`optional_policy`. Numerical NaN/infinity is retained on call-level status 0.
+Coverage records distinguish `scalar_subroutine` and `scalar_function`; the
+aggregate report's historical `array_adapters` category includes these reviewed
+output/status adapters as well as adapters with array arguments.
+
+The normal-inverse-gamma manifest demonstrates scalar joint densities, paired
+moments, paired single sampling and matching batch output vectors. Python uses
+one group with scalar density calls and `ArrayResult` for paired outputs.
+See [the native shape contracts](../../docs/normal_inverse_gamma_shapes.md).

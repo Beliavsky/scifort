@@ -22,6 +22,7 @@ module scifort_normal_inverse_gamma
 contains
 
     pure elemental function normal_inverse_gamma_logpdf(x, s2, mu, lmbda, a, b) result(y)
+        !! Evaluate the joint log density of the normal and variance components.
         real(dp), intent(in) :: x !! normal component
         real(dp), intent(in) :: s2 !! variance component; must be positive
         real(dp), intent(in), optional :: mu !! location parameter; default 0
@@ -52,6 +53,7 @@ contains
     end function normal_inverse_gamma_logpdf
 
     pure elemental function normal_inverse_gamma_pdf(x, s2, mu, lmbda, a, b) result(y)
+        !! Evaluate the joint density of the normal and variance components.
         real(dp), intent(in) :: x !! normal component
         real(dp), intent(in) :: s2 !! variance component; must be positive
         real(dp), intent(in), optional :: mu !! location parameter; default 0
@@ -64,6 +66,7 @@ contains
     end function normal_inverse_gamma_pdf
 
     pure subroutine normal_inverse_gamma_mean(mu, lmbda, a, b, mean_x, mean_s2)
+        !! Return paired means; both are NaN for invalid parameters or a <= 1.
         real(dp), intent(in), optional :: mu !! location parameter; default 0
         real(dp), intent(in), optional :: lmbda !! positive normal precision multiplier; default 1
         real(dp), intent(in), optional :: a !! inverse-gamma shape; mean requires a > 1
@@ -87,6 +90,7 @@ contains
     end subroutine normal_inverse_gamma_mean
 
     pure subroutine normal_inverse_gamma_var(mu, lmbda, a, b, var_x, var_s2)
+        !! Return paired variances; undefined components are NaN independently.
         real(dp), intent(in), optional :: mu !! location parameter; default 0
         real(dp), intent(in), optional :: lmbda !! positive normal precision multiplier; default 1
         real(dp), intent(in), optional :: a !! inverse-gamma shape
@@ -118,6 +122,7 @@ contains
     end subroutine normal_inverse_gamma_var
 
     subroutine normal_inverse_gamma_rvs(state, x, s2, mu, lmbda, a, b)
+        !! Draw a paired sample using two uniforms; invalid parameters preserve state.
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
         real(dp), intent(out) :: x !! sampled normal component
         real(dp), intent(out) :: s2 !! sampled variance component
@@ -142,9 +147,13 @@ contains
     end subroutine normal_inverse_gamma_rvs
 
     subroutine normal_inverse_gamma_rvs_array(state, x, s2, mu, lmbda, a, b)
+        !! Draw paired samples in scalar-call order; mismatched lengths return NaNs.
+        !! @dimension n_samples = size(x)
+        !! @require n_samples >= 0
+        !! @when n_samples == 0: no parameters are evaluated and RNG state is unchanged
         type(rng_state), intent(inout) :: state !! explicit random-number generator state
-        real(dp), intent(out) :: x(:) !! sampled normal components
-        real(dp), intent(out) :: s2(:) !! sampled variance components, same length as x
+        real(dp), intent(out) :: x(:) !! shape (n_samples); sampled normal components
+        real(dp), intent(out) :: s2(:) !! shape (n_samples); paired sampled variance components
         real(dp), intent(in), optional :: mu !! location parameter; default 0
         real(dp), intent(in), optional :: lmbda !! positive normal precision multiplier; default 1
         real(dp), intent(in), optional :: a !! positive inverse-gamma shape; default 1

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Validated explicit-shape adapters for native assumed-shape subroutines."""
+"""Validated output/status adapters for native array and scalar procedures."""
 import re
 
 import shape_contracts
@@ -18,9 +18,12 @@ def prepare(config, api, identifier, source_lines):
             fields |= {'result_argument', 'optional_policy'}
         optional_fields = {'logical_inputs', 'shape_contract', 'length_choices',
                            'integer_limits', 'integer_sums', 'synthetic_status', 'optional_arrays',
-                           'state_codecs', 'optional_status', 'required_optional_scalars'}
+                           'state_codecs', 'optional_status', 'required_optional_scalars', 'scalar_only'}
         if not isinstance(policy, dict) or set(policy) - optional_fields != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
+        scalar_only = policy.get('scalar_only', False)
+        if 'scalar_only' in policy and scalar_only is not True:
+            raise ValueError(f'{name}: scalar_only must be true when specified')
         synthetic_status = policy.get('synthetic_status', False)
         if type(synthetic_status) is not bool or (is_function and 'synthetic_status' in policy):
             raise ValueError(f'{name}: synthetic_status must be boolean and subroutine-only')
@@ -91,8 +94,11 @@ def prepare(config, api, identifier, source_lines):
                 raise ValueError(f'{name}: synthetic result/status must be distinct from native arguments')
             args += [result, status]
         dimensions = {}
-        if not isinstance(policy["dimensions"], list) or not policy["dimensions"]:
+        if (not isinstance(policy["dimensions"], list)
+                or not policy["dimensions"] and not scalar_only):
             raise ValueError(f"{name}: dimensions must be an ordered list of name/minimum objects")
+        if scalar_only and policy['dimensions']:
+            raise ValueError(f'{name}: scalar_only requires empty dimensions and shapes')
         for item in policy["dimensions"]:
             if not isinstance(item, dict) or set(item) != {"name", "minimum"}:
                 raise ValueError(f"{name}: each dimension needs name and minimum")
@@ -234,7 +240,9 @@ def prepare(config, api, identifier, source_lines):
                 raise ValueError(f'{name}: optional arrays must be real rank-one/two optional intent(in)')
         shapes = policy["shapes"]
         array_names = {a for a, value in metadata.items() if value["rank"]}
-        if not isinstance(shapes, dict) or set(shapes) != array_names or not array_names:
+        if scalar_only and (array_names or shapes):
+            raise ValueError(f'{name}: scalar_only requires empty dimensions and shapes and no arrays')
+        if not isinstance(shapes, dict) or set(shapes) != array_names or not (array_names or scalar_only):
             raise ValueError(f"{name}: shapes must account for every native array")
         used = set()
         for arg, shape in shapes.items():
@@ -471,7 +479,9 @@ def emit(entry, index, config):
     native_args = entry.get('native_args', args)
     call = (f"{entry['result_argument']}=cg_native_{index}" if 'result_argument' in entry
             else f'call cg_native_{index}')
-    lines += ["        ! The compiler supplies assumed-shape descriptors inside Fortran.",
+    lines += [("        ! Call the native procedure through its module interface."
+               if policy.get('scalar_only') else
+               "        ! The compiler supplies assumed-shape descriptors inside Fortran."),
               f"        {call}( &"]
     for i, arg in enumerate(native_args):
         actual = f"cg_logical_{arg}" if arg in policy.get('logical_inputs', {}) else arg
@@ -551,6 +561,10 @@ def emit(entry, index, config):
         record.update(interface='explicit_shape_function', result_argument=entry['result_argument'])
         if entry.get('result_extents'):
             record['native_result_extents'] = entry['result_extents']
+    if policy.get('scalar_only'):
+        record['interface'] = 'scalar_function' if 'result_argument' in entry else 'scalar_subroutine'
+        header = [line for line in header if not any(text in line for text in
+                  ('Explicit-shape arrays:', 'All array pointers', 'Invalid extents'))]
     if entry.get('synthetic_status'):
         record['synthetic_status'] = True
     if 'result_argument' in entry or entry.get('synthetic_status'):

@@ -10,6 +10,7 @@
     "multivariate_hypergeom",
     "multivariate_normal",
     "multivariate_t",
+    "normal_inverse_gamma",
     "ortho_group",
     "poisson_binom",
     "random_correlation",
@@ -160,6 +161,12 @@
     "src/c_api/generated/normal_generated.f90": [
       "src/kinds.f90",
       "src/stats/normal.f90"
+    ],
+    "src/c_api/generated/normal_inverse_gamma_generated.f90": [
+      "src/c_api/rng_bridge.f90",
+      "src/kinds.f90",
+      "src/random.f90",
+      "src/stats/normal_inverse_gamma.f90"
     ],
     "src/c_api/generated/ortho_group_generated.f90": [
       "src/c_api/rng_bridge.f90",
@@ -320,6 +327,11 @@
       "src/kinds.f90",
       "src/math.f90"
     ],
+    "src/stats/invgamma.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_gamma.f90"
+    ],
     "src/stats/invwishart.f90": [
       "src/kinds.f90",
       "src/math.f90",
@@ -407,6 +419,14 @@
       "src/constants.f90",
       "src/kinds.f90",
       "src/math.f90"
+    ],
+    "src/stats/normal_inverse_gamma.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/elementary.f90",
+      "src/stats/invgamma.f90",
+      "src/stats/normal.f90"
     ],
     "src/stats/ortho_group.f90": [
       "src/kinds.f90",
@@ -535,6 +555,7 @@
     "scifort_c_api_generated_multivariate_normal": "src/c_api/generated/multivariate_normal_generated.f90",
     "scifort_c_api_generated_multivariate_t": "src/c_api/generated/multivariate_t_generated.f90",
     "scifort_c_api_generated_normal": "src/c_api/generated/normal_generated.f90",
+    "scifort_c_api_generated_normal_inverse_gamma": "src/c_api/generated/normal_inverse_gamma_generated.f90",
     "scifort_c_api_generated_ortho_group": "src/c_api/generated/ortho_group_generated.f90",
     "scifort_c_api_generated_poisson_binom": "src/c_api/generated/poisson_binom_generated.f90",
     "scifort_c_api_generated_random_correlation": "src/c_api/generated/random_correlation_generated.f90",
@@ -557,6 +578,7 @@
     "scifort_hypergeom": "src/stats/hypergeom.f90",
     "scifort_incomplete_beta": "src/special/incomplete_beta.f90",
     "scifort_incomplete_gamma": "src/special/incomplete_gamma.f90",
+    "scifort_invgamma": "src/stats/invgamma.f90",
     "scifort_invwishart": "src/stats/invwishart.f90",
     "scifort_kinds": "src/kinds.f90",
     "scifort_laplace": "src/stats/laplace.f90",
@@ -574,6 +596,7 @@
     "scifort_multivariate_normal": "src/stats/multivariate_normal.f90",
     "scifort_multivariate_t": "src/stats/multivariate_t.f90",
     "scifort_normal": "src/stats/normal.f90",
+    "scifort_normal_inverse_gamma": "src/stats/normal_inverse_gamma.f90",
     "scifort_ortho_group": "src/stats/ortho_group.f90",
     "scifort_poisson_binom": "src/stats/poisson_binom.f90",
     "scifort_random": "src/random.f90",
@@ -625,6 +648,7 @@
     "src/c_api/generated/multivariate_normal_generated.f90": "0a668dfd93c96caa172da481a88575a3b12b73bd4289439ff9cd03600d38c715",
     "src/c_api/generated/multivariate_t_generated.f90": "c681f6e12de329a2a3328ed66dd438ce35ee10b9b47736b2f9fd1ac0f92ffb77",
     "src/c_api/generated/normal_generated.f90": "0590847d782eef96c0f11770f4efea43e551ae4070a8a19dc40a357794beb7c9",
+    "src/c_api/generated/normal_inverse_gamma_generated.f90": "ecf75f8c2d17994e62213e306ffc5a33b37710a87a0cf5035fde65fb2829544e",
     "src/c_api/generated/ortho_group_generated.f90": "9a1493c180b65db22142a4aae711973cbe23941f17aa0005b1af8c37adc6637c",
     "src/c_api/generated/poisson_binom_generated.f90": "c1f17721ad3045772b05378009919e6212aeb9cabe373c4ec60584aca0b420e6",
     "src/c_api/generated/random_correlation_generated.f90": "3d10bd133c36b38889e12d86a043425b93b2afc36a2968ffe9e968ca67333cc0",
@@ -657,6 +681,7 @@
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
     "src/stats/hypergeom.f90": "f1667ae722f1af2262936c5110e26f71cfb715868c861c92b6196b5a2a53740a",
+    "src/stats/invgamma.f90": "63b9e99ae6cf01e61a5ca538228f66184528b2a991fef70d9f5f07a1da05c945",
     "src/stats/invwishart.f90": "6cc9c5eabe6e3bd457a4215ee5b9a9e5e180bee05dd762ef9db0ed830c0bcade",
     "src/stats/laplace.f90": "76bc6f447b5c484c6f67b2f420af84156f370863cfba2b258164f96f7bfd0b57",
     "src/stats/logistic.f90": "ee5488b4d39aacd4a2e1b3f4d364836e234a13d412bf327585d96e01518795a5",
@@ -670,6 +695,7 @@
     "src/stats/multivariate_normal.f90": "a2c7e9874bf81da8b722fc1597a3c854c00ea152962ad93e444044d7c45080b3",
     "src/stats/multivariate_t.f90": "d0eabd13f9a75a3efdb0a24e243dc6726140010755767c4c21d7d92f00b8ed34",
     "src/stats/normal.f90": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb",
+    "src/stats/normal_inverse_gamma.f90": "e0883e4b15a53547e459a6a3e84d82cdb702b33ab2fca8b66fef497d68aaa375",
     "src/stats/ortho_group.f90": "9d12edbac1b213f64b2460e2d8c6bd5c5082d23ad47787cd2287ba04013f0e19",
     "src/stats/poisson_binom.f90": "0872d1301897add8d98c8cfcb6cf64f4a77b7c92ed84b80b526e6f5fb7a50863",
     "src/stats/random_correlation.f90": "8dc57eaaa5584c90b30dbf40f27fa3ae6c3dd6af393c80e11b730497820e59cd",
@@ -752,6 +778,9 @@
     "src/stats/multivariate_t.f90",
     "src/c_api/generated/multivariate_t_generated.f90",
     "src/c_api/generated/normal_generated.f90",
+    "src/stats/invgamma.f90",
+    "src/stats/normal_inverse_gamma.f90",
+    "src/c_api/generated/normal_inverse_gamma_generated.f90",
     "src/stats/random_matrix_helpers.f90",
     "src/stats/ortho_group.f90",
     "src/c_api/generated/ortho_group_generated.f90",

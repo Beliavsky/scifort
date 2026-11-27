@@ -2586,6 +2586,183 @@ class Multivariate_t(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('rvs_array', {'state': state, 'loc': loc, 'shape': shape, 'df': df, 'n': n, 'n_samples': n_samples}, out)
 
+class Normal_inverse_gamma(ArrayGroup):
+    _specs = {'logpdf': {'arguments': ['x', 's2', 'mu', 'lmbda', 'a', 'b', 'value', 'status'],
+                'definitions': {},
+                'dimensions': [],
+                'inputs': ['x', 's2', 'mu', 'lmbda', 'a', 'b'],
+                'logical_inputs': {},
+                'metadata': {'a': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                             'b': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                             'lmbda': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 0},
+                             'mu': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                             's2': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 0}},
+                'minimums': {},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {},
+                'status': 'status',
+                'symbol': 'scifort_normal_inverse_gamma_logpdf_f64'},
+     'mean': {'arguments': ['mu', 'lmbda', 'a', 'b', 'mean_x', 'mean_s2', 'status'],
+              'definitions': {},
+              'dimensions': [],
+              'inputs': ['mu', 'lmbda', 'a', 'b'],
+              'logical_inputs': {},
+              'metadata': {'a': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                           'b': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                           'lmbda': {'category': 'real',
+                                     'intent': 'in',
+                                     'optional': True,
+                                     'rank': 0},
+                           'mean_s2': {'category': 'real', 'intent': 'out', 'rank': 0},
+                           'mean_x': {'category': 'real', 'intent': 'out', 'rank': 0},
+                           'mu': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0}},
+              'minimums': {},
+              'outputs': ['mean_x', 'mean_s2'],
+              'shapes': {},
+              'status': 'status',
+              'symbol': 'scifort_normal_inverse_gamma_mean_f64',
+              'synthetic_status': True},
+     'pdf': {'arguments': ['x', 's2', 'mu', 'lmbda', 'a', 'b', 'value', 'status'],
+             'definitions': {},
+             'dimensions': [],
+             'inputs': ['x', 's2', 'mu', 'lmbda', 'a', 'b'],
+             'logical_inputs': {},
+             'metadata': {'a': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'b': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'lmbda': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                          'mu': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          's2': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 0}},
+             'minimums': {},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {},
+             'status': 'status',
+             'symbol': 'scifort_normal_inverse_gamma_pdf_f64'},
+     'rvs': {'arguments': ['state', 'x', 's2', 'mu', 'lmbda', 'a', 'b', 'status'],
+             'definitions': {},
+             'dimensions': [],
+             'inputs': ['state', 'mu', 'lmbda', 'a', 'b'],
+             'logical_inputs': {},
+             'metadata': {'a': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'b': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'lmbda': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                          'mu': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          's2': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'out', 'rank': 0}},
+             'minimums': {},
+             'outputs': ['x', 's2'],
+             'shapes': {},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_normal_inverse_gamma_rvs_f64',
+             'synthetic_status': True},
+     'rvs_array': {'arguments': ['state', 'x', 's2', 'mu', 'lmbda', 'a', 'b', 'status'],
+                   'definitions': {'n_samples': {'argument': 'x', 'axis': None}},
+                   'dimensions': ['n_samples'],
+                   'inputs': ['state', 'mu', 'lmbda', 'a', 'b'],
+                   'logical_inputs': {},
+                   'metadata': {'a': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 0},
+                                'b': {'category': 'real',
+                                      'intent': 'in',
+                                      'optional': True,
+                                      'rank': 0},
+                                'lmbda': {'category': 'real',
+                                          'intent': 'in',
+                                          'optional': True,
+                                          'rank': 0},
+                                'mu': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 0},
+                                's2': {'category': 'real', 'intent': 'out', 'rank': 1},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0},
+                                'x': {'category': 'real', 'intent': 'out', 'rank': 1}},
+                   'minimums': {'n_samples': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['x', 's2'],
+                   'shapes': {'s2': ['n_samples'], 'x': ['n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_normal_inverse_gamma_rvs_array_f64',
+                   'synthetic_status': True},
+     'var': {'arguments': ['mu', 'lmbda', 'a', 'b', 'var_x', 'var_s2', 'status'],
+             'definitions': {},
+             'dimensions': [],
+             'inputs': ['mu', 'lmbda', 'a', 'b'],
+             'logical_inputs': {},
+             'metadata': {'a': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'b': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'lmbda': {'category': 'real',
+                                    'intent': 'in',
+                                    'optional': True,
+                                    'rank': 0},
+                          'mu': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0},
+                          'var_s2': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'var_x': {'category': 'real', 'intent': 'out', 'rank': 0}},
+             'minimums': {},
+             'outputs': ['var_x', 'var_s2'],
+             'shapes': {},
+             'status': 'status',
+             'symbol': 'scifort_normal_inverse_gamma_var_f64',
+             'synthetic_status': True}}
+
+    def logpdf(self, x, s2, mu=0.0, lmbda=1.0, a=1.0, b=1.0):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 's2': s2, 'mu': mu, 'lmbda': lmbda, 'a': a, 'b': b}, None)
+
+    def mean(self, mu=0.0, lmbda=1.0, a=1.0, b=1.0, *, out=None):
+        """Return ArrayResult(call status, outputs); native NaN/infinity is retained."""
+        return self._invoke('mean', {'mu': mu, 'lmbda': lmbda, 'a': a, 'b': b}, out)
+
+    def pdf(self, x, s2, mu=0.0, lmbda=1.0, a=1.0, b=1.0):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 's2': s2, 'mu': mu, 'lmbda': lmbda, 'a': a, 'b': b}, None)
+
+    def rvs(self, state, mu=0.0, lmbda=1.0, a=1.0, b=1.0, *, out=None):
+        """Return ArrayResult(call status, outputs); native NaN/infinity is retained."""
+        return self._invoke('rvs', {'state': state, 'mu': mu, 'lmbda': lmbda, 'a': a, 'b': b}, out)
+
+    def rvs_array(self, state, mu=0.0, lmbda=1.0, a=1.0, b=1.0, *, n_samples=1, out=None):
+        """Return ArrayResult(call status, outputs); native NaN/infinity is retained."""
+        return self._invoke('rvs_array', {'state': state, 'mu': mu, 'lmbda': lmbda, 'a': a, 'b': b, 'n_samples': n_samples}, out)
+
+    def var(self, mu=0.0, lmbda=1.0, a=1.0, b=1.0, *, out=None):
+        """Return ArrayResult(call status, outputs); native NaN/infinity is retained."""
+        return self._invoke('var', {'mu': mu, 'lmbda': lmbda, 'a': a, 'b': b}, out)
+
 class Ortho_group(ArrayGroup):
     _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
              'definitions': {'n': {'argument': 'sample', 'axis': 1}},
@@ -3412,6 +3589,7 @@ class API(Library):
         self.multivariate_hypergeom = Multivariate_hypergeom(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)
         self.multivariate_t = Multivariate_t(self._library)
+        self.normal_inverse_gamma = Normal_inverse_gamma(self._library)
         self.ortho_group = Ortho_group(self._library)
         self.poisson_binom = Poisson_binom(self._library)
         self.random_correlation = Random_correlation(self._library)

@@ -1,0 +1,162 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/normal_inverse_gamma.f90",
+  "module": "scifort_normal_inverse_gamma",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_normal_inverse_gamma",
+  "header_guard": "SCIFORT_GENERATED_NORMAL_INVERSE_GAMMA_H",
+  "functions": {},
+  "argument_docs": {
+    "x": "normal component",
+    "s2": "variance component; positive on support",
+    "mu": "finite location; required at C boundary",
+    "lmbda": "finite positive normal precision multiplier",
+    "a": "finite positive inverse-gamma shape",
+    "b": "finite positive inverse-gamma scale",
+    "mean_x": "mean of normal component; NaN when a <= 1",
+    "mean_s2": "mean of variance component; NaN when a <= 1",
+    "var_x": "normal-component variance; NaN when a <= 1",
+    "var_s2": "variance-component variance; NaN when a <= 2",
+    "state": "caller-owned int64 RNG components",
+    "n_samples": "number of paired samples, >= 0",
+    "value": "native scalar result, including NaN for numerical errors",
+    "status": "0 valid call (native NaN/infinity retained); 1 invalid extent; 4 invalid RNG state"
+  },
+  "array_functions": {
+    "normal_inverse_gamma_pdf": {
+      "symbol": "scifort_normal_inverse_gamma_pdf_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate the normal-inverse-gamma joint density.",
+      "shape_contract": true,
+      "scalar_only": true,
+      "result_argument": "value",
+      "optional_policy": "required"
+    },
+    "normal_inverse_gamma_logpdf": {
+      "symbol": "scifort_normal_inverse_gamma_logpdf_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate the normal-inverse-gamma joint log density.",
+      "shape_contract": true,
+      "scalar_only": true,
+      "result_argument": "value",
+      "optional_policy": "required"
+    }
+  },
+  "subroutines": {
+    "normal_inverse_gamma_mean": {
+      "symbol": "scifort_normal_inverse_gamma_mean_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Return paired normal-inverse-gamma means.",
+      "shape_contract": true,
+      "scalar_only": true,
+      "synthetic_status": true,
+      "required_optional_scalars": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ]
+    },
+    "normal_inverse_gamma_var": {
+      "symbol": "scifort_normal_inverse_gamma_var_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Return paired normal-inverse-gamma variances.",
+      "shape_contract": true,
+      "scalar_only": true,
+      "synthetic_status": true,
+      "required_optional_scalars": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ]
+    },
+    "normal_inverse_gamma_rvs": {
+      "symbol": "scifort_normal_inverse_gamma_rvs_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw a paired normal-inverse-gamma sample.",
+      "shape_contract": true,
+      "scalar_only": true,
+      "synthetic_status": true,
+      "required_optional_scalars": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    },
+    "normal_inverse_gamma_rvs_array": {
+      "symbol": "scifort_normal_inverse_gamma_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n_samples"
+        ],
+        "s2": [
+          "n_samples"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw paired normal-inverse-gamma samples in scalar-call order.",
+      "shape_contract": true,
+      "synthetic_status": true,
+      "required_optional_scalars": [
+        "mu",
+        "lmbda",
+        "a",
+        "b"
+      ],
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    }
+  },
+  "excluded": {},
+  "outputs": {
+    "fortran": "src/c_api/generated/normal_inverse_gamma_generated.f90",
+    "header": "include/scifort_generated_normal_inverse_gamma.h",
+    "coverage": "bindings/cabi_config/normal_inverse_gamma_coverage.json",
+    "shape_documentation": "docs/normal_inverse_gamma_shapes.md"
+  }
+}

@@ -109,14 +109,18 @@ def markdown(config, entries):
         contract = entry.get('shape_contract')
         if not contract:
             continue
-        lines += [f"## {entry['name']}", '', entry['policy']['description'], '',
-                  '| Dimension | Definition | Minimum |', '| --- | --- | ---: |']
+        lines += [f"## {entry['name']}", '', entry['policy']['description'], '']
+        if entry['policy'].get('scalar_only'):
+            lines += ['Scalar native arguments; no array shape constraints.', '']
+        else:
+            lines += ['| Dimension | Definition | Minimum |', '| --- | --- | ---: |']
         for dim in entry['dimensions']:
             definition = contract['definitions'][dim]
             axis = f",{definition['axis']}" if definition['axis'] else ''
             lines.append(f"| `{dim}` | `size({definition['argument']}{axis})` | {contract['minimums'][dim]} |")
-        lines += ['', '| Argument | Declared shape | Required shape | Meaning |',
-                  '| --- | --- | --- | --- |']
+        if entry['policy']['shapes']:
+            lines += ['', '| Argument | Declared shape | Required shape | Meaning |',
+                      '| --- | --- | --- | --- |']
         for arg in entry['args']:
             if arg not in entry['policy']['shapes']:
                 continue
