@@ -1,0 +1,144 @@
+{
+  "generated_symbol_count": 2,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "state",
+        "sample",
+        "status"
+      ],
+      "complex_arrays": {
+        "sample": "interleaved_f64"
+      },
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "unitary_group_rvs",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "sample",
+            "axis": 1
+          }
+        },
+        "minimums": {
+          "n": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "sample": [
+          "n",
+          "n"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_unitary_group_rvs_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "samples",
+        "status"
+      ],
+      "complex_arrays": {
+        "samples": "interleaved_f64"
+      },
+      "dimension_order": [
+        "n",
+        "n_samples"
+      ],
+      "dimensions": {
+        "n": 0,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "unitary_group_rvs_array",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "samples",
+            "axis": 1
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 3
+          }
+        },
+        "minimums": {
+          "n": 0,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "samples": [
+          "n",
+          "n",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_unitary_group_rvs_array_f64"
+      ]
+    },
+    {
+      "procedure": "unitary_group_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "unitary_group_status_numerical_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "unitary_group_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 5,
+  "source": "src/stats/unitary_group.f90",
+  "source_sha256": "5f4addae0a062031d8ecb13f22697cdcbc47d83f1ffd95bebf958f645e76ad96"
+}

@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 94,
+    "array_adapters": 96,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 257,
-    "python": 182,
+    "exports": 262,
+    "python": 184,
     "scalar": 88
   },
   "procedures": [
@@ -1754,6 +1754,39 @@
       "c_manifest_exclusion": "Native status constant, not a callable procedure.",
       "module": "scifort_uniform_direction",
       "procedure": "uniform_direction_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_unitary_group_rvs_f64",
+      "module": "scifort_unitary_group",
+      "procedure": "unitary_group_rvs",
+      "python": "unitary_group.rvs"
+    },
+    {
+      "array_adapter": "scifort_unitary_group_rvs_array_f64",
+      "module": "scifort_unitary_group",
+      "procedure": "unitary_group_rvs_array",
+      "python": "unitary_group.rvs_array"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_unitary_group",
+      "procedure": "unitary_group_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_unitary_group",
+      "procedure": "unitary_group_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_unitary_group",
+      "procedure": "unitary_group_status_success",
       "scalar_generated": false
     },
     {

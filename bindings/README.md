@@ -160,3 +160,7 @@ through generated C/Python interfaces, including rank-three integer outputs. See
 Uniform-direction and von Mises-Fisher distributions now have generated C/Python
 interfaces for directional sampling, density/entropy and fitting. See the
 [directional contracts](python/README.md#directional-distributions).
+
+Unitary-group sampling now has generated C/Python interfaces using portable
+interleaved real/imaginary double buffers and NumPy complex128 arrays. See
+[complex sampling contracts](python/README.md#unitary-group-sampling-and-complex-arrays).

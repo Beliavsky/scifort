@@ -641,3 +641,12 @@ existing real-array adapters, optional-status promotion and caller-owned RNG
 codecs; no generator extension is needed. Uniform output dimension defaults to
 3 in Python; von Mises-Fisher dimensions come from mu/data. See the
 [shape, parameter, fit and error contracts](../python/README.md#directional-distributions).
+
+## Unitary matrices and complex transport
+
+The unitary_group manifest selects single and rank-three batch sampling with the
+existing RNG codec. Native complex array metadata activates interleaved-double C
+transport, complex128 Python buffers and success-only complex output publication.
+The generated shape table records both logical native shapes and the physical
+leading real/imaginary component axis. See the
+[complex representation and error contract](../python/README.md#unitary-group-sampling-and-complex-arrays).

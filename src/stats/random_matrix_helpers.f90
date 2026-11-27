@@ -25,8 +25,10 @@ module scifort_random_matrix_helpers
 contains
 
     subroutine haar_orthogonal(state, q, status)
+        !! Draw an orthogonal Haar matrix; n = size(q,1), n >= 0, size(q,2) = n.
+        !! Empty square input is permitted.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the Gaussian draws
-        real(dp), intent(out) :: q(:, :) !! square Haar-distributed orthogonal matrix
+        real(dp), intent(out) :: q(:, :) !! shape (n,n); Haar-distributed orthogonal matrix
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer, parameter :: max_attempts = 4
@@ -85,8 +87,10 @@ contains
     end subroutine haar_orthogonal
 
     subroutine haar_unitary(state, q, status)
+        !! Draw a unitary Haar matrix; n = size(q,1), n >= 0, size(q,2) = n.
+        !! Empty square input is permitted.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the complex Gaussian draws
-        complex(dp), intent(out) :: q(:, :) !! square Haar-distributed unitary matrix
+        complex(dp), intent(out) :: q(:, :) !! shape (n,n); Haar-distributed unitary matrix
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer, parameter :: max_attempts = 4
@@ -145,7 +149,9 @@ contains
     end subroutine haar_unitary
 
     pure function real_determinant(a) result(det)
-        real(dp), intent(in) :: a(:, :) !! square real matrix
+        !! Compute a real determinant; n = size(a,1), n >= 0, size(a,2) = n.
+        !! Empty square input is permitted.
+        real(dp), intent(in) :: a(:, :) !! shape (n,n); real matrix; empty determinant is one
         real(dp) :: det
 
         integer :: i

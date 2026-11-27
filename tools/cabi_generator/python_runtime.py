@@ -152,6 +152,17 @@ class ArrayGroup:
             raise TypeError(f'{name} must contain integers, without floats or booleans')
         return array
 
+    @staticmethod
+    def _complex_array(value, name):
+        array = np.asarray(value)
+        if array.dtype.kind not in 'biufc':
+            raise TypeError(f'{name} must contain numeric real or complex values')
+        return array
+
+    @staticmethod
+    def _array_dtype(info):
+        return np.dtype({'integer': np.intc, 'complex': np.complex128}.get(info['category'], np.float64))
+
     def __init__(self, library):
         self._library = library
         self._functions = {}
@@ -202,8 +213,9 @@ class ArrayGroup:
                     raise TypeError(f'{arg} must be a boolean')
                 values[arg] = spec['logical_inputs'][arg]['true' if value else 'false']
                 continue
-            array = (self._integer_array(value, arg) if info['category'] == 'integer'
-                     else Distribution._real_array(value, arg))
+            array = (self._integer_array(value, arg) if info['category'] == 'integer' else
+                     self._complex_array(value, arg) if info['category'] == 'complex' else
+                     Distribution._real_array(value, arg))
             if array.ndim != info['rank']:
                 raise ValueError(f'{arg} must have rank {info["rank"]}')
             originals[arg] = array
@@ -286,7 +298,7 @@ class ArrayGroup:
                 scalars[arg] = cls(0 if cls is C.c_int else float('nan'))
                 values[arg] = C.byref(scalars[arg])
                 continue
-            dtype = np.dtype(np.intc if info['category'] == 'integer' else np.float64)
+            dtype = self._array_dtype(info)
             if arg in out:
                 array = out[arg]
                 if not isinstance(array, np.ndarray) or array.dtype != dtype:
@@ -299,7 +311,8 @@ class ArrayGroup:
                 if any(np.may_share_memory(array, other) for other in outputs.values()):
                     raise ValueError('output buffers must not overlap each other')
             else:
-                array = np.full(shapes[arg], 0 if info['category'] == 'integer' else np.nan,
+                array = np.full(shapes[arg], 0 if info['category'] == 'integer' else
+                                complex(np.nan, np.nan) if info['category'] == 'complex' else np.nan,
                                 dtype=dtype, order='F')
             outputs[arg] = array
         # Prepare C memory only after all Python validation. Keep every buffer alive.
@@ -312,7 +325,7 @@ class ArrayGroup:
                 values[arg] = buffers[arg].ctypes.data_as(C.c_void_p)
         for arg, original in originals.items():
             if spec['metadata'][arg]['rank']:
-                dtype = np.intc if spec['metadata'][arg]['category'] == 'integer' else np.float64
+                dtype = self._array_dtype(spec['metadata'][arg])
                 if arg in spec.get('zero_based_indices', {}):
                     # Bounds were checked before narrowing; do not mutate caller storage.
                     original = original.astype(np.int64) + 1

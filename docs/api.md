@@ -7371,3 +7371,13 @@ See [binding details](../bindings/python/README.md#directional-distributions),
 [uniform shapes](uniform_direction_shapes.md) and
 [von Mises-Fisher shapes](vonmises_fisher_shapes.md). Numerical algorithms,
 positive-kappa validation and the native fit concentration bracket are unchanged.
+
+### Unitary sampling interfaces and helper shapes
+
+Unitary single/batch samplers now have generated C/Python interfaces. Native
+complex arrays retain logical shapes `(n,n)` and `(n,n,n_samples)`; C uses
+interleaved real/imaginary double pairs with physical leading axis 2. Native Haar
+and determinant helpers document their square-array constraints and empty-input
+behavior. See [unitary shape contracts](unitary_group_shapes.md) and the
+[representation, state and error contract](../bindings/python/README.md#unitary-group-sampling-and-complex-arrays).
+The numerical algorithms and native interfaces are unchanged.

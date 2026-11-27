@@ -28,5 +28,6 @@
   "random_correlation.json",
   "random_table.json",
   "uniform_direction.json",
-  "vonmises_fisher.json"
+  "vonmises_fisher.json",
+  "unitary_group.json"
 ]

@@ -2568,3 +2568,92 @@ optimized libraries), including native/C clients and C++ header checks. The
 pipeline checked all 148 artifacts. Native executable code is unchanged in both
 modules; the full native `fpm test` suite was not rerun for this bounded interface
 and documentation addition. No generator implementation was changed.
+
+## Unitary group sampling and complex arrays
+
+`api.unitary_group.rvs(state, *, n=1)` draws one Haar-distributed unitary matrix;
+`rvs_array(state, *, n=1, n_samples=1)` draws a batch. Both return `ArrayResult`:
+`outputs["sample"]` has shape `(n,n)` and `outputs["samples"]` has shape
+`(n,n,n_samples)`, with native-endian NumPy `complex128` dtype and Fortran layout.
+The batch axis is last. Output dimensions are explicit keywords and are not
+inferred from a supplied buffer. n and n_samples must be nonnegative C integers.
+Zero-dimensional square matrices and empty batches succeed without advancing
+state, while serialized state is still validated. A one-dimensional sample is a
+random complex phase of modulus one.
+
+```python
+stream = api.rng(123)
+result = api.unitary_group.rvs_array(stream, n=3, n_samples=8)
+assert result.status == 0
+matrices = result.outputs["samples"]
+q = matrices[:, :, 0]
+# q.conj().T @ q is the identity matrix to floating-point accuracy.
+```
+
+To reuse storage, supply `out={"sample": buffer}` or `out={"samples": buffer}`.
+The buffer must have the exact logical shape, native-endian complex128 dtype,
+Fortran contiguity, alignment and write permission; it must not overlap state.
+Float64, complex64, nonnative-endian, unaligned and C-layout buffers are rejected.
+Repeated single draws and split batches match a whole batch and its final RNG
+state exactly from the same initial stream. SciFort does not reproduce SciPy's
+random sequences.
+
+The C symbols `scifort_unitary_group_rvs_f64` and
+`scifort_unitary_group_rvs_array_f64` use plain `double *` buffers containing
+interleaved binary64 pairs: real part first, imaginary part second. Each complex
+element occupies two doubles. The Fortran bind(c) declarations expose physical
+shapes `(2,n,n)` and `(2,n,n,n_samples)`; native routines retain complex assumed-
+shape `(n,n)` and `(n,n,n_samples)` arrays. In zero-based C indexing, element
+`(i,j,k)` starts at double offset `2*(i+n*j+n*n*k)`. Headers are included by
+`scifort.h` and work with both C11 and C++17. Use a double array of capacity
+`2*n*n` or `2*n*n*n_samples`; calculate allocation sizes without integer overflow.
+
+Every C pointer must be valid and non-NULL even for empty arrays. Buffers must
+not overlap, and callers supply their true allocation capacity. State is a
+writable caller-owned `int64_t[6]`. Dimensions precede state and output buffers.
+The suffix f64 describes each real/imaginary component's precision.
+
+The adapter allocates native complex workspace and copies successful output into
+interleaved storage. This adds workspace and memory traffic to the native call.
+Status 0 publishes the whole requested output. Status 1 denotes invalid extents,
+4 invalid serialized state, and 2 native numerical failure. All nonzero statuses
+preserve the caller's complex output buffer. A newly allocated Python output
+therefore retains NaN real and imaginary parts on failure. Native numerical
+failure still exports consumed RNG state; completed native batch slices are not
+published when the batch fails. This complex-buffer publication rule differs
+from the real orthogonal wrappers' partial-output behavior. It prevents reads of
+unspecified native outputs after errors. Always check status before using output.
+
+The same generator transport supports complex rank-one/two inputs and outputs,
+plus rank-three outputs. Complex scalar arguments, complex intent(inout), higher
+ranks and complex function results remain unsupported. Python accepts numeric
+real or complex input arrays, copies them to native-endian complex128 Fortran
+storage, and enforces disjoint input/output buffers. Native complex arrays never
+cross the C boundary as compiler descriptors or C++ objects.
+
+See [unitary shape contracts](../../docs/unitary_group_shapes.md). Shared Haar
+helpers and the real determinant now document their square-matrix shapes and
+empty-matrix behavior in `src/stats/random_matrix_helpers.f90`. Native numerical
+code is unchanged. Focused and shared-runtime validation commands (CMD):
+
+```bat
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The independent complex fixture tests nonzero real/imaginary input transport,
+conjugation, rank-three output order, native error preservation, empty arrays and
+real-to-complex conversion through checked/optimized C, C++ and Python clients.
+Unitary integration tests additionally check native values and final RNG state,
+unitarity, determinant modulus, Haar moments and invalid buffer/state handling.
+
+Local validation on 2026-11-27 used Python 3.13.3, SciPy 1.15.3 and GNU
+Fortran/GCC/G++ 17.0.0 20260510 (experimental) on Windows. All 96 generator
+tests passed in 442.319 seconds; all 137 binding tests passed in 481.518 seconds,
+including the five unitary tests, checked/optimized native clients and executing
+C11/C++17 clients. The final complex shape-documentation fixture also passed
+all three focused tests. The pipeline checked all 152 generated artifacts.
+The full binding suite was used because the shared Python array runtime changed.
+Native numerical code in unitary_group and random_matrix_helpers is unchanged;
+the full native `fpm test` suite was not rerun.

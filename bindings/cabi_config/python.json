@@ -582,6 +582,22 @@
           "n_samples": 1
         }
       }
+    },
+    "unitary_group": {
+      "manifests": [
+        "bindings/cabi_config/unitary_group.json"
+      ],
+      "prefix": "unitary_group_",
+      "defaults": {},
+      "output_dimensions": {
+        "unitary_group_rvs": {
+          "n": 1
+        },
+        "unitary_group_rvs_array": {
+          "n": 1,
+          "n_samples": 1
+        }
+      }
     }
   }
 }

@@ -1,0 +1,98 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/unitary_group.f90",
+  "module": "scifort_unitary_group",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_unitary_group",
+  "header_guard": "SCIFORT_GENERATED_UNITARY_GROUP_H",
+  "functions": {},
+  "argument_docs": {
+    "n": "matrix dimension, >= 0",
+    "state": "caller-owned int64 RNG components",
+    "sample": "unitary matrix; interleaved real/imaginary pairs",
+    "samples": "unitary matrices; interleaved real/imaginary pairs",
+    "n_samples": "number of matrices, >= 0",
+    "status": "0 success; 1 shape; 2 numerical failure; 4 RNG state"
+  },
+  "subroutines": {
+    "unitary_group_rvs": {
+      "symbol": "scifort_unitary_group_rvs_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "sample": [
+          "n",
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw a Haar-distributed unitary matrix.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    },
+    "unitary_group_rvs_array": {
+      "symbol": "scifort_unitary_group_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 0
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "n",
+          "n",
+          "n_samples"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw Haar-distributed unitary matrices.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    }
+  },
+  "excluded": {
+    "unitary_group_status_success": "Native status constant, not a callable procedure.",
+    "unitary_group_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "unitary_group_status_numerical_failure": "Native status constant, not a callable procedure."
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/unitary_group_generated.f90",
+    "header": "include/scifort_generated_unitary_group.h",
+    "coverage": "bindings/cabi_config/unitary_group_coverage.json",
+    "shape_documentation": "docs/unitary_group_shapes.md"
+  }
+}

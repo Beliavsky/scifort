@@ -3069,6 +3069,57 @@ class Uniform_direction(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
 
+class Unitary_group(ArrayGroup):
+    _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
+             'definitions': {'n': {'argument': 'sample', 'axis': 1}},
+             'dimensions': ['n'],
+             'inputs': ['state'],
+             'logical_inputs': {},
+             'metadata': {'sample': {'category': 'complex', 'intent': 'out', 'rank': 2},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+             'minimums': {'n': 0},
+             'output_dimensions': {'n': 1},
+             'outputs': ['sample'],
+             'shapes': {'sample': ['n', 'n']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_unitary_group_rvs_f64'},
+     'rvs_array': {'arguments': ['state', 'samples', 'status'],
+                   'definitions': {'n': {'argument': 'samples', 'axis': 1},
+                                   'n_samples': {'argument': 'samples', 'axis': 3}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state'],
+                   'logical_inputs': {},
+                   'metadata': {'samples': {'category': 'complex', 'intent': 'out', 'rank': 3},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 0, 'n_samples': 0},
+                   'output_dimensions': {'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'samples': ['n', 'n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_unitary_group_rvs_array_f64'}}
+
+    def rvs(self, state, *, n=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'n': n}, out)
+
+    def rvs_array(self, state, *, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
+
 class Vonmises_fisher(ArrayGroup):
     _specs = {'entropy': {'arguments': ['mu', 'kappa', 'value', 'status'],
                  'definitions': {'n': {'argument': 'mu', 'axis': None}},
@@ -3367,6 +3418,7 @@ class API(Library):
         self.random_table = Random_table(self._library)
         self.special_ortho_group = Special_ortho_group(self._library)
         self.uniform_direction = Uniform_direction(self._library)
+        self.unitary_group = Unitary_group(self._library)
         self.vonmises_fisher = Vonmises_fisher(self._library)
         self.wishart = Wishart(self._library)
 

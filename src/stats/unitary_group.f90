@@ -18,8 +18,12 @@ module scifort_unitary_group
 contains
 
     subroutine unitary_group_rvs(state, sample, status)
+        !! Draw a Haar-distributed unitary matrix.
+        !! @dimension n = size(sample,1)
+        !! @require n >= 0
+        !! Empty square matrices succeed without advancing state.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by complex Gaussian draws
-        complex(dp), intent(out) :: sample(:, :) !! square Haar-distributed unitary matrix
+        complex(dp), intent(out) :: sample(:, :) !! shape (n,n); Haar-distributed unitary matrix
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: info
@@ -38,8 +42,14 @@ contains
     end subroutine unitary_group_rvs
 
     subroutine unitary_group_rvs_array(state, samples, status)
+        !! Draw Haar-distributed unitary matrices.
+        !! @dimension n = size(samples,1)
+        !! @require n >= 0
+        !! @dimension n_samples = size(samples,3)
+        !! @require n_samples >= 0
+        !! Empty square matrices or batches succeed without advancing state.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        complex(dp), intent(out) :: samples(:, :, :) !! square matrices indexed by third dimension
+        complex(dp), intent(out) :: samples(:, :, :) !! shape (n,n,n_samples); unitary matrices along the third axis
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: info

@@ -1,3 +1,13 @@
+## 2026-11-27 - Unitary sampling and complex-array interfaces
+
+- Add unitary single/batch C/Python samplers and native/helper shape documentation.
+- Extend explicit-array generation with portable interleaved binary64 complex
+  buffers and NumPy complex128 input/output handling.
+- Publish complex output buffers only on successful native calls while retaining
+  consumed RNG state on numerical errors; document workspace and copying costs.
+- Add checked/optimized C, C++, Python and native agreement tests for component
+  layout, error preservation, unitarity, moments, streams and buffer contracts.
+
 ## 2026-11-27 - Directional distribution C/Python interfaces
 
 - Add uniform-direction single/batch sampling and von Mises-Fisher density,

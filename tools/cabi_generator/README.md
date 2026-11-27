@@ -922,3 +922,28 @@ or validates Fortran-contiguous `np.intc` output cubes. Dimension and state
 policies are unchanged. Rank-three input/inout arrays and higher ranks remain
 unsupported. The independent rank-three fixture compiles real and integer C and
 Python clients; the random_table manifest exercises this pattern in SciFort.
+
+## Complex explicit-array transport
+
+Complex arguments of the configured native kind are supported for rank-one/two
+intent(in/out) arrays and rank-three intent(out) arrays. Native complex scalars,
+intent(inout), higher ranks and complex function results are rejected. Existing
+real/integer interfaces keep their transport and error behavior.
+
+The C ABI uses `const double *` inputs and `double *` outputs with interleaved
+(real, imaginary) pairs. Generated real(c_double) bind(c) dummies prepend an axis
+of length 2 to the logical shape. Local complex(cg_kind) allocatable arrays are
+allocated only after extent, input-policy and state validation. Inputs are
+converted with cmplx; output real/imaginary components are exported only when the
+native status is zero. State codecs export state even after native errors.
+This avoids copying unspecified native outputs on failure, at the cost of
+workspace and copies. Caller complex buffers remain unchanged on every error.
+
+Coverage records label complex arguments `interleaved_f64`; generated shape
+documentation shows physical pair-axis shapes. The Python runtime allocates and
+validates native-endian, aligned, Fortran-contiguous complex128 buffers. Complex
+inputs accept numeric real/complex arrays; all input/output overlap remains
+forbidden. No language complex object layout or Fortran descriptors cross the
+C ABI. The independent complex fixture compiles and runs C11, C++17 and Python
+clients with bounds-checked and optimized Fortran builds, including deliberately
+partial/undefined native output on error.

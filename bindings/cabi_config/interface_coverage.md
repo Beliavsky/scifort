@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 257 |
+| exports | 262 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 94 |
+| array_adapters | 96 |
 | elementwise | 88 |
-| python | 182 |
+| python | 184 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -240,6 +240,11 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_uniform_direction | uniform_direction_status_invalid_shape |  |  |  |  |  |
 | scifort_uniform_direction | uniform_direction_status_numerical_failure |  |  |  |  |  |
 | scifort_uniform_direction | uniform_direction_status_success |  |  |  |  |  |
+| scifort_unitary_group | unitary_group_rvs |  |  | scifort_unitary_group_rvs_f64 |  | unitary_group.rvs |
+| scifort_unitary_group | unitary_group_rvs_array |  |  | scifort_unitary_group_rvs_array_f64 |  | unitary_group.rvs_array |
+| scifort_unitary_group | unitary_group_status_invalid_shape |  |  |  |  |  |
+| scifort_unitary_group | unitary_group_status_numerical_failure |  |  |  |  |  |
+| scifort_unitary_group | unitary_group_status_success |  |  |  |  |  |
 | scifort_vonmises_fisher | vonmises_fisher_entropy |  |  | scifort_vonmises_fisher_entropy_f64 |  | vonmises_fisher.entropy |
 | scifort_vonmises_fisher | vonmises_fisher_fit |  |  | scifort_vonmises_fisher_fit_f64 |  | vonmises_fisher.fit |
 | scifort_vonmises_fisher | vonmises_fisher_logpdf |  |  | scifort_vonmises_fisher_logpdf_f64 |  | vonmises_fisher.logpdf |

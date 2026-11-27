@@ -127,6 +127,14 @@ def markdown(config, entries):
             meaning = config['argument_docs'][arg].replace('|', r'\|')
             lines.append(f"| `{arg}` | `({declared})` | `({required})` | {meaning} |")
         lines.append('')
+        for arg, info in entry['metadata'].items():
+            if info.get('category') == 'complex':
+                extents = ','.join(entry['policy']['shapes'][arg])
+                lines += [f'`{arg}` is native complex; C uses double pairs (real, imaginary),',
+                          f'with physical Fortran shape `(2,{extents})`.']
+                if info['intent'] == 'out':
+                    lines += ['The adapter publishes this buffer only on status 0; errors preserve it.']
+                lines.append('')
         for arg, codec in entry.get('state_codecs', {}).items():
             lines += [f"`{arg}` is native `type({codec['type']})`; C uses caller-owned `int64_t[{codec['length']}]`.",
                       f"Invalid serialized state returns status {codec['invalid_status']} without native execution.", '']

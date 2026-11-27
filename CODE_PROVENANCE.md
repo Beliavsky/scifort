@@ -1,3 +1,15 @@
+## 2026-11-27 - Unitary sampling and complex-array transport
+
+The complex-array generator/runtime extension, reviewed manifest, generated
+adapters, shape documentation and integration tests are original MIT SciFort
+interface work. Interleaved real/imaginary doubles are converted to native
+complex workspace; no third-party implementation was imported or adapted.
+Existing Gaussian-QR unitary sampling, Haar helpers and real determinant
+numerical code are unchanged, with their existing Mezzadri-related provenance
+below. Tests use explicit component formulas, conjugate-transpose identities,
+Haar moments and native/C/Python stream agreement rather than copied external
+implementations or matching another library's random sequences.
+
 ## 2026-11-27 - Directional distribution interfaces
 
 The reviewed manifests, generated C/Python interfaces, native shape comments and

@@ -197,17 +197,21 @@ def prepare(config, api, identifier, source_lines):
                 continue
             if arg in logical_inputs:
                 raise ValueError(f"{name}: logical_inputs must map logical arguments")
-            category = 'integer' if str(dtype).lower() == 'integer' else 'real'
+            category = ('integer' if str(dtype).lower() == 'integer' else
+                        'complex' if str(dtype).lower().startswith('complex') else 'real')
             kind = config["kind_name"]
-            if category != 'integer' and str(dtype).lower().replace(" ", "") not in (f"real({kind})", f"real(kind={kind})"):
-                raise ValueError(f"{name}: {arg} must be real({kind}) or default integer")
+            if category != 'integer' and str(dtype).lower().replace(" ", "") not in (
+                    f"{category}({kind})", f"{category}(kind={kind})"):
+                raise ValueError(f"{name}: {arg} must be real/complex({kind}) or default integer")
             shape = entity.items[1]
             if any(entity.items[2:]) or (shape and (not isinstance(shape, F.Assumed_Shape_Spec_List)
                                                   or any(str(item) != ":" for item in shape.items))):
                 raise ValueError(f"{name}: {arg} must be scalar or assumed-shape with ':' bounds")
             rank = len(shape.items) if shape else 0
-            if rank > 2 and not (rank == 3 and category in ('real', 'integer') and intent == 'out'):
-                raise ValueError(f"{name}: rank-three arrays require real/integer intent(out); higher ranks are unsupported")
+            if rank > 2 and not (rank == 3 and category in ('real', 'integer', 'complex') and intent == 'out'):
+                raise ValueError(f"{name}: rank-three arrays require numeric intent(out); higher ranks are unsupported")
+            if category == 'complex' and (not rank or intent == 'inout'):
+                raise ValueError(f'{name}: complex arrays require intent(in/out); scalars are unsupported')
             if category == 'integer' and intent == 'inout':
                 raise ValueError(f'{name}: integer intent(inout) arguments are unsupported')
             if arg in promoted and (rank or intent != 'in' or 'optional' not in attrs):
@@ -394,6 +398,8 @@ def emit(entry, index, config):
                 ctype = "double" if value else ("const double *" if intent == "in" else "double *")
             cargs.append(f"{ctype} arg_{arg}")
         shape = "(" + ",".join(shapes[arg]) + ")" if arg in shapes else ""
+        if metadata.get(arg, {}).get('category') == 'complex':
+            shape = '(2,' + ','.join(shapes[arg]) + ')'
         if arg in entry.get('state_codecs', {}):
             shape = f"({entry['state_codecs'][arg]['length']})"
         doc = config['argument_docs'][arg]
@@ -402,6 +408,10 @@ def emit(entry, index, config):
         if match and re.sub(r"\s+", "", match[1]).lower() == shape.lower():
             doc = match[2]
         lines.append(f"        {declaration} :: {arg}{shape} !! {doc}")
+    complex_args = [a for a in args if metadata.get(a, {}).get('category') == 'complex']
+    for arg in complex_args:
+        rank = ','.join([':']*metadata[arg]['rank'])
+        lines.append(f'        complex(cg_kind), allocatable :: cg_complex_{arg}({rank})')
     for arg in policy.get('logical_inputs', {}):
         lines.append(f"        logical :: cg_logical_{arg}")
     if entry.get('state_codecs'):
@@ -447,6 +457,12 @@ def emit(entry, index, config):
         lines += [f"        call {state_aliases[arg]['load']}({arg},cg_state_{arg},cg_state_status)",
                   '        if (cg_state_status /= 0) then',
                   f"            {status}={codec['invalid_status']}_c_int", '            return', '        end if']
+    for arg in complex_args:
+        extents = ','.join(shapes[arg])
+        section = ','.join([':']*metadata[arg]['rank'])
+        lines.append(f'        allocate(cg_complex_{arg}({extents}))')
+        if metadata[arg]['intent'] == 'in':
+            lines.append(f'        cg_complex_{arg}=cmplx({arg}(1,{section}), {arg}(2,{section}), kind=cg_kind)')
     if entry.get('optional_arrays'):
         lines += ['        ! An unallocated allocatable actual makes an optional array dummy absent.']
     for arg, flag in entry.get('optional_arrays', {}).items():
@@ -463,11 +479,22 @@ def emit(entry, index, config):
             actual = f'cg_optional_{arg}'
         if arg in entry.get('state_codecs', {}):
             actual = f'cg_state_{arg}'
+        if arg in complex_args:
+            actual = f'cg_complex_{arg}'
         lines.append(f"            {arg}={actual}" + (", &" if i < len(native_args)-1 else ")"))
     for arg in entry.get('state_codecs', {}):
         lines.append(f"        call {state_aliases[arg]['store']}(cg_state_{arg},{arg})")
     if 'result_argument' in entry or entry.get('synthetic_status'):
         lines.append(f'        {status}=0_c_int')
+    complex_outputs = [a for a in complex_args if metadata[a]['intent'] == 'out']
+    if complex_outputs:
+        # Native intent(out) buffers can be undefined/partial on failure: publish only success.
+        lines.append(f'        if ({status} == 0_c_int) then')
+        for arg in complex_outputs:
+            section = ','.join([':']*metadata[arg]['rank'])
+            lines += [f'            {arg}(1,{section})=real(cg_complex_{arg},c_double)',
+                      f'            {arg}(2,{section})=aimag(cg_complex_{arg})']
+        lines.append('        end if')
     lines += [f"    end subroutine {symbol}", ""]
     header = [f"/* {policy['description']}",
               " * Explicit-shape arrays: contiguous column-major storage; no overlap.",
@@ -476,6 +503,10 @@ def emit(entry, index, config):
               f" * Invalid extents return status {policy['invalid_status']} without changing output.",
               " * Other status/output behavior is inherited from the native procedure. */",
               f"void {symbol}(" + ", ".join(cargs) + ");", ""]
+    if complex_args:
+        record_complex = {a: 'interleaved_f64' for a in complex_args}
+        header[-3:-3] = [' * Complex arrays use pairs of doubles: real first, imaginary second.',
+                         ' * Complex outputs are published only on status 0; otherwise their buffers are unchanged.']
     if policy.get('logical_inputs'):
         header[-3:-3] = [f" * {arg}: false={mapping['false']}, true={mapping['true']}; required, no default."
                          for arg, mapping in policy['logical_inputs'].items()]
@@ -486,6 +517,8 @@ def emit(entry, index, config):
                                                 and a not in entry.get('optional_arrays', {})],
                   arguments=args,
                   native_shape_documentation_review=entry["documentation_review"])
+    if complex_args:
+        record['complex_arrays'] = record_complex
     if entry.get('optional_arrays'):
         record['optional_arrays'] = entry['optional_arrays']
         header[-3:-3] = [' * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.',
