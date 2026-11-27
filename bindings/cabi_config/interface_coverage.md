@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 218 |
+| exports | 233 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 76 |
+| array_adapters | 81 |
 | elementwise | 88 |
-| python | 164 |
+| python | 169 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -194,6 +194,11 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_normal | normal_pdf | scifort_normal_pdf_f64 | scifort_normal_pdf_vec_f64 |  | scifort_normal_pdf_elementwise_f64 | normal.pdf |
 | scifort_normal | normal_ppf | scifort_normal_ppf_f64 | scifort_normal_ppf_vec_f64 |  | scifort_normal_ppf_elementwise_f64 | normal.ppf |
 | scifort_normal | normal_sf | scifort_normal_sf_f64 | scifort_normal_sf_vec_f64 |  | scifort_normal_sf_elementwise_f64 | normal.sf |
+| scifort_ortho_group | ortho_group_rvs |  |  | scifort_ortho_group_rvs_f64 |  | ortho_group.rvs |
+| scifort_ortho_group | ortho_group_rvs_array |  |  | scifort_ortho_group_rvs_array_f64 |  | ortho_group.rvs_array |
+| scifort_ortho_group | ortho_group_status_invalid_shape |  |  |  |  |  |
+| scifort_ortho_group | ortho_group_status_numerical_failure |  |  |  |  |  |
+| scifort_ortho_group | ortho_group_status_success |  |  |  |  |  |
 | scifort_poisson_binom | poisson_binom_cdf |  |  | scifort_poisson_binom_cdf_explicit_f64 |  | poisson_binom.cdf |
 | scifort_poisson_binom | poisson_binom_isf |  |  | scifort_poisson_binom_isf_explicit_f64 |  | poisson_binom.isf |
 | scifort_poisson_binom | poisson_binom_logcdf |  |  | scifort_poisson_binom_logcdf_explicit_f64 |  | poisson_binom.logcdf |
@@ -203,6 +208,16 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_poisson_binom | poisson_binom_pmf |  |  | scifort_poisson_binom_pmf_explicit_f64 |  | poisson_binom.pmf |
 | scifort_poisson_binom | poisson_binom_ppf |  |  | scifort_poisson_binom_ppf_explicit_f64 |  | poisson_binom.ppf |
 | scifort_poisson_binom | poisson_binom_sf |  |  | scifort_poisson_binom_sf_explicit_f64 |  | poisson_binom.sf |
+| scifort_random_correlation | random_correlation_rvs |  |  | scifort_random_correlation_rvs_f64 |  | random_correlation.rvs |
+| scifort_random_correlation | random_correlation_status_invalid_parameter |  |  |  |  |  |
+| scifort_random_correlation | random_correlation_status_invalid_shape |  |  |  |  |  |
+| scifort_random_correlation | random_correlation_status_numerical_failure |  |  |  |  |  |
+| scifort_random_correlation | random_correlation_status_success |  |  |  |  |  |
+| scifort_special_ortho_group | special_ortho_group_rvs |  |  | scifort_special_ortho_group_rvs_f64 |  | special_ortho_group.rvs |
+| scifort_special_ortho_group | special_ortho_group_rvs_array |  |  | scifort_special_ortho_group_rvs_array_f64 |  | special_ortho_group.rvs_array |
+| scifort_special_ortho_group | special_ortho_group_status_invalid_shape |  |  |  |  |  |
+| scifort_special_ortho_group | special_ortho_group_status_numerical_failure |  |  |  |  |  |
+| scifort_special_ortho_group | special_ortho_group_status_success |  |  |  |  |  |
 | scifort_student_t | t_cdf | scifort_t_cdf_f64 | scifort_t_cdf_vec_f64 |  | scifort_t_cdf_elementwise_f64 | t.cdf |
 | scifort_student_t | t_isf | scifort_t_isf_f64 | scifort_t_isf_vec_f64 |  | scifort_t_isf_elementwise_f64 | t.isf |
 | scifort_student_t | t_logcdf | scifort_t_logcdf_f64 | scifort_t_logcdf_vec_f64 |  | scifort_t_logcdf_elementwise_f64 | t.logcdf |

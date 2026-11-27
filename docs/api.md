@@ -7338,3 +7338,14 @@ a full input knot vector; see the [fixed-knot guide](interpolate_periodic_lsq.md
 Continuation is native with [explicit state](interpolate_continuation.md). See the
 [TCK guide](interpolate_fitpack_tck_backend.md#native-periodic-parametric-fitting)
 and [validation record](../validation/splprep_closed_2026-11-13.md).
+
+### Random matrix C/Python interfaces and shapes
+
+The existing native `ortho_group_rvs`, `special_ortho_group_rvs`, their batch
+variants, and `random_correlation_rvs` now have generated explicit-shape C
+adapters and Python methods. Native declarations retain assumed-shape arrays
+and document their required dimensions, including constrained private correlation
+helpers. See the [binding contracts](../bindings/python/README.md#real-random-matrix-sampling)
+and reviewed [orthogonal](ortho_group_shapes.md),
+[special-orthogonal](special_ortho_group_shapes.md), and
+[correlation](random_correlation_shapes.md) shape documentation.

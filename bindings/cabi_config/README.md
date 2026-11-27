@@ -613,3 +613,13 @@ correlated log-CDF still logs a probability-domain QMC estimate. See the
 [Python/C contracts](../python/README.md#multivariate-box-cdf-and-normal-log-cdf),
 [normal shapes](../../docs/multivariate_normal_shapes.md) and
 [Student t shapes](../../docs/multivariate_t_shapes.md).
+
+## Real random matrix samplers
+
+The ortho_group and special_ortho_group manifests select single and rank-three
+batch sampling. The random_correlation manifest selects single prescribed-spectrum
+sampling with native optional tolerance scalars required at the C boundary.
+All reuse the existing RNG codec and optional-status promotion; no generator
+extension is required. Python exposes output dimensions for orthogonal draws and
+infers correlation dimension from eigenvalues. See the
+[shape, state, status and memory contracts](../python/README.md#real-random-matrix-sampling).

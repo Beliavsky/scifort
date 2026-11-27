@@ -23,9 +23,15 @@ module scifort_random_correlation
 contains
 
     subroutine random_correlation_rvs(state, eigs, sample, status, tol, diag_tol)
+        !! Draw a correlation matrix with prescribed eigenvalues using explicit RNG state.
+        !! @dimension n = size(eigs)
+        !! @require n >= 2
+        !! Eigenvalues must be finite, >= -tol, with abs(sum(eigs)-n) <= tol.
+        !! Both tolerances must be finite and nonnegative. Invalid inputs zero sample
+        !! without advancing state; numerical failure may leave a partial matrix.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the orthogonal draw
-        real(dp), intent(in) :: eigs(:) !! prescribed eigenvalues; length > 1, nonnegative, sum = dimension
-        real(dp), intent(out) :: sample(:, :) !! output correlation matrix with eigenvalues eigs
+        real(dp), intent(in) :: eigs(:) !! shape (n); finite eigenvalues, >= -tol, sum within tol of n
+        real(dp), intent(out) :: sample(:, :) !! shape (n,n); output correlation matrix with eigenvalues eigs
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
         real(dp), intent(in), optional :: tol !! parameter tolerance (default 1e-13)
         real(dp), intent(in), optional :: diag_tol !! final unit-diagonal tolerance (default 1e-7)
@@ -85,7 +91,8 @@ contains
     end subroutine random_correlation_rvs
 
     subroutine rotate_to_correlation(m, status)
-        real(dp), intent(inout) :: m(:, :) !! symmetric PSD matrix with trace equal to its dimension
+        !! Rotate a symmetric PSD matrix to unit diagonal; n = size(m,1), n >= 2.
+        real(dp), intent(inout) :: m(:, :) !! shape (n,n); symmetric PSD matrix with trace equal to n
         integer, intent(out) :: status !! zero on success; nonzero on numerical failure
 
         integer :: i
@@ -115,7 +122,8 @@ contains
     end subroutine rotate_to_correlation
 
     pure integer function find_partner(m, i) result(jfound)
-        real(dp), intent(in) :: m(:, :) !! symmetric working matrix
+        !! Choose a later balancing diagonal; n = size(m,1), n >= 2, 1 <= i < n.
+        real(dp), intent(in) :: m(:, :) !! shape (n,n); symmetric working matrix
         integer, intent(in) :: i !! diagonal index requiring a partner
 
         integer :: j
@@ -183,7 +191,8 @@ contains
     end subroutine givens_to_one
 
     subroutine similarity_givens(m, i, j, c, s)
-        real(dp), intent(inout) :: m(:, :) !! square matrix transformed in place as G^T M G
+        !! Apply a plane rotation; n = size(m,1), 1 <= i,j <= n, i /= j.
+        real(dp), intent(inout) :: m(:, :) !! shape (n,n); matrix transformed in place as G^T M G
         integer, intent(in) :: i !! first rotation index
         integer, intent(in) :: j !! second rotation index
         real(dp), intent(in) :: c !! rotation cosine

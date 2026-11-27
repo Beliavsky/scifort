@@ -498,6 +498,50 @@
           "loc": 0.0
         }
       }
+    },
+    "ortho_group": {
+      "manifests": [
+        "bindings/cabi_config/ortho_group.json"
+      ],
+      "prefix": "ortho_group_",
+      "defaults": {},
+      "output_dimensions": {
+        "ortho_group_rvs": {
+          "n": 1
+        },
+        "ortho_group_rvs_array": {
+          "n": 1,
+          "n_samples": 1
+        }
+      }
+    },
+    "special_ortho_group": {
+      "manifests": [
+        "bindings/cabi_config/special_ortho_group.json"
+      ],
+      "prefix": "special_ortho_group_",
+      "defaults": {},
+      "output_dimensions": {
+        "special_ortho_group_rvs": {
+          "n": 1
+        },
+        "special_ortho_group_rvs_array": {
+          "n": 1,
+          "n_samples": 1
+        }
+      }
+    },
+    "random_correlation": {
+      "manifests": [
+        "bindings/cabi_config/random_correlation.json"
+      ],
+      "prefix": "random_correlation_",
+      "defaults": {
+        "random_correlation_rvs": {
+          "tol": 1e-13,
+          "diag_tol": 1e-07
+        }
+      }
     }
   }
 }

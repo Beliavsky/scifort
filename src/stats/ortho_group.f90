@@ -18,8 +18,12 @@ module scifort_ortho_group
 contains
 
     subroutine ortho_group_rvs(state, sample, status)
+        !! Draw a Haar-distributed orthogonal matrix.
+        !! @dimension n = size(sample,1)
+        !! @require n >= 0
+        !! Empty square matrices succeed without advancing state.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the Gaussian draws
-        real(dp), intent(out) :: sample(:, :) !! square Haar-distributed orthogonal matrix
+        real(dp), intent(out) :: sample(:, :) !! shape (n,n); Haar-distributed orthogonal matrix
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: info
@@ -38,8 +42,14 @@ contains
     end subroutine ortho_group_rvs
 
     subroutine ortho_group_rvs_array(state, samples, status)
+        !! Draw a batch of orthogonal Haar matrices.
+        !! @dimension n = size(samples,1)
+        !! @require n >= 0
+        !! @dimension n_samples = size(samples,3)
+        !! @require n_samples >= 0
+        !! Empty square matrices or batches succeed without advancing state.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :, :) !! square matrices indexed by third dimension
+        real(dp), intent(out) :: samples(:, :, :) !! shape (n,n,n_samples); Haar matrices along the third axis
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: info

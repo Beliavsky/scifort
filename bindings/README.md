@@ -148,3 +148,7 @@ rank-three output buffers, with optional mean and row/column parameters. See
 Multivariate normal CDF/log-CDF and Student t CDF now have generated C/Python
 interfaces with caller-owned randomized-integration state. See
 [box integration contracts](python/README.md#multivariate-box-cdf-and-normal-log-cdf).
+
+Real orthogonal, special-orthogonal and prescribed-eigenvalue correlation
+matrix samplers now have generated C/Python interfaces. See
+[random matrix sampling](python/README.md#real-random-matrix-sampling).

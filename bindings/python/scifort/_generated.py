@@ -2586,6 +2586,57 @@ class Multivariate_t(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('rvs_array', {'state': state, 'loc': loc, 'shape': shape, 'df': df, 'n': n, 'n_samples': n_samples}, out)
 
+class Ortho_group(ArrayGroup):
+    _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
+             'definitions': {'n': {'argument': 'sample', 'axis': 1}},
+             'dimensions': ['n'],
+             'inputs': ['state'],
+             'logical_inputs': {},
+             'metadata': {'sample': {'category': 'real', 'intent': 'out', 'rank': 2},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+             'minimums': {'n': 0},
+             'output_dimensions': {'n': 1},
+             'outputs': ['sample'],
+             'shapes': {'sample': ['n', 'n']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_ortho_group_rvs_f64'},
+     'rvs_array': {'arguments': ['state', 'samples', 'status'],
+                   'definitions': {'n': {'argument': 'samples', 'axis': 1},
+                                   'n_samples': {'argument': 'samples', 'axis': 3}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state'],
+                   'logical_inputs': {},
+                   'metadata': {'samples': {'category': 'real', 'intent': 'out', 'rank': 3},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 0, 'n_samples': 0},
+                   'output_dimensions': {'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'samples': ['n', 'n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_ortho_group_rvs_array_f64'}}
+
+    def rvs(self, state, *, n=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'n': n}, out)
+
+    def rvs_array(self, state, *, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
+
 class Poisson_binom(ArrayGroup):
     _specs = {'cdf': {'arguments': ['k', 'p', 'loc', 'value', 'status'],
              'definitions': {'n': {'argument': 'p', 'axis': None}},
@@ -2768,6 +2819,88 @@ class Poisson_binom(ArrayGroup):
         """Return the native scalar value."""
         return self._invoke('sf', {'k': k, 'p': p, 'loc': loc}, None)
 
+class Random_correlation(ArrayGroup):
+    _specs = {'rvs': {'arguments': ['state', 'eigs', 'sample', 'status', 'tol', 'diag_tol'],
+             'definitions': {'n': {'argument': 'eigs', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['state', 'eigs', 'tol', 'diag_tol'],
+             'logical_inputs': {},
+             'metadata': {'diag_tol': {'category': 'real',
+                                       'intent': 'in',
+                                       'optional': True,
+                                       'rank': 0},
+                          'eigs': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'sample': {'category': 'real', 'intent': 'out', 'rank': 2},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0},
+                          'tol': {'category': 'real', 'intent': 'in', 'optional': True, 'rank': 0}},
+             'minimums': {'n': 2},
+             'outputs': ['sample'],
+             'shapes': {'eigs': ['n'], 'sample': ['n', 'n']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_random_correlation_rvs_f64'}}
+
+    def rvs(self, state, eigs, tol=1e-13, diag_tol=1e-07, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'eigs': eigs, 'tol': tol, 'diag_tol': diag_tol}, out)
+
+class Special_ortho_group(ArrayGroup):
+    _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
+             'definitions': {'n': {'argument': 'sample', 'axis': 1}},
+             'dimensions': ['n'],
+             'inputs': ['state'],
+             'logical_inputs': {},
+             'metadata': {'sample': {'category': 'real', 'intent': 'out', 'rank': 2},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+             'minimums': {'n': 0},
+             'output_dimensions': {'n': 1},
+             'outputs': ['sample'],
+             'shapes': {'sample': ['n', 'n']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_special_ortho_group_rvs_f64'},
+     'rvs_array': {'arguments': ['state', 'samples', 'status'],
+                   'definitions': {'n': {'argument': 'samples', 'axis': 1},
+                                   'n_samples': {'argument': 'samples', 'axis': 3}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state'],
+                   'logical_inputs': {},
+                   'metadata': {'samples': {'category': 'real', 'intent': 'out', 'rank': 3},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 0, 'n_samples': 0},
+                   'output_dimensions': {'n': 1, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'samples': ['n', 'n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_special_ortho_group_rvs_array_f64'}}
+
+    def rvs(self, state, *, n=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'n': n}, out)
+
+    def rvs_array(self, state, *, n=1, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
+
 class Wishart(ArrayGroup):
     _specs = {'entropy': {'arguments': ['df', 'scale', 'value', 'status'],
                  'definitions': {'p': {'argument': 'scale', 'axis': 1}},
@@ -2932,7 +3065,10 @@ class API(Library):
         self.multivariate_hypergeom = Multivariate_hypergeom(self._library)
         self.multivariate_normal = Multivariate_normal(self._library)
         self.multivariate_t = Multivariate_t(self._library)
+        self.ortho_group = Ortho_group(self._library)
         self.poisson_binom = Poisson_binom(self._library)
+        self.random_correlation = Random_correlation(self._library)
+        self.special_ortho_group = Special_ortho_group(self._library)
         self.wishart = Wishart(self._library)
 
 __all__ = ["API"]

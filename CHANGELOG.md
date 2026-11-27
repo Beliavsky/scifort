@@ -1,3 +1,12 @@
+## 2026-11-27 - Real random matrix C/Python samplers
+
+- Add orthogonal and special-orthogonal single/batch sampling adapters and
+  prescribed-eigenvalue correlation sampling with explicit caller-owned RNG state.
+- Document native shapes and private correlation helper constraints; generate
+  reviewed shape-contract tables, headers, Python methods and coverage records.
+- Add native/C/Python agreement, stream, matrix-property and buffer/error tests.
+- Preserve existing numerical algorithms and native interfaces.
+
 ## 2026-11-27 - Concise explicit-shape argument comments
 
 - Omit matching shape prefixes from generated explicit-shape declarations.

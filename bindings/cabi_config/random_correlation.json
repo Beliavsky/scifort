@@ -1,0 +1,73 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/random_correlation.f90",
+  "module": "scifort_random_correlation",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_random_correlation",
+  "header_guard": "SCIFORT_GENERATED_RANDOM_CORRELATION_H",
+  "functions": {},
+  "argument_docs": {
+    "n": "matrix dimension, >= 2",
+    "state": "caller-owned int64 RNG components",
+    "sample": "sampled matrix",
+    "samples": "sampled matrices along the third axis",
+    "n_samples": "number of matrices, >= 0",
+    "status": "0 success; 1 shape; 2 parameter; 3 numerical; 4 RNG state",
+    "eigs": "finite eigenvalues, >= -tol, sum within tol of n",
+    "tol": "finite nonnegative eigenvalue tolerance; Python default 1e-13",
+    "diag_tol": "finite nonnegative unit-diagonal tolerance; Python default 1e-7"
+  },
+  "subroutines": {
+    "random_correlation_rvs": {
+      "symbol": "scifort_random_correlation_rvs_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        }
+      ],
+      "shapes": {
+        "sample": [
+          "n",
+          "n"
+        ],
+        "eigs": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw random_correlation a matrix using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      },
+      "required_optional_scalars": [
+        "tol",
+        "diag_tol"
+      ]
+    }
+  },
+  "excluded": {
+    "random_correlation_status_success": "Native status constant, not a callable procedure.",
+    "random_correlation_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "random_correlation_status_invalid_parameter": "Native status constant, not a callable procedure.",
+    "random_correlation_status_numerical_failure": "Native status constant, not a callable procedure."
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/random_correlation_generated.f90",
+    "header": "include/scifort_generated_random_correlation.h",
+    "coverage": "bindings/cabi_config/random_correlation_coverage.json",
+    "shape_documentation": "docs/random_correlation_shapes.md"
+  }
+}

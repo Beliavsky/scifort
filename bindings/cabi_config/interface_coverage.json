@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 76,
+    "array_adapters": 81,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 218,
-    "python": 164,
+    "exports": 233,
+    "python": 169,
     "scalar": 88
   },
   "procedures": [
@@ -1432,6 +1432,39 @@
       "scalar_generated": true
     },
     {
+      "array_adapter": "scifort_ortho_group_rvs_f64",
+      "module": "scifort_ortho_group",
+      "procedure": "ortho_group_rvs",
+      "python": "ortho_group.rvs"
+    },
+    {
+      "array_adapter": "scifort_ortho_group_rvs_array_f64",
+      "module": "scifort_ortho_group",
+      "procedure": "ortho_group_rvs_array",
+      "python": "ortho_group.rvs_array"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_ortho_group",
+      "procedure": "ortho_group_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_ortho_group",
+      "procedure": "ortho_group_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_ortho_group",
+      "procedure": "ortho_group_status_success",
+      "scalar_generated": false
+    },
+    {
       "array_adapter": "scifort_poisson_binom_cdf_explicit_f64",
       "module": "scifort_poisson_binom",
       "procedure": "poisson_binom_cdf",
@@ -1484,6 +1517,73 @@
       "module": "scifort_poisson_binom",
       "procedure": "poisson_binom_sf",
       "python": "poisson_binom.sf"
+    },
+    {
+      "array_adapter": "scifort_random_correlation_rvs_f64",
+      "module": "scifort_random_correlation",
+      "procedure": "random_correlation_rvs",
+      "python": "random_correlation.rvs"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_correlation",
+      "procedure": "random_correlation_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_correlation",
+      "procedure": "random_correlation_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_correlation",
+      "procedure": "random_correlation_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_correlation",
+      "procedure": "random_correlation_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_special_ortho_group_rvs_f64",
+      "module": "scifort_special_ortho_group",
+      "procedure": "special_ortho_group_rvs",
+      "python": "special_ortho_group.rvs"
+    },
+    {
+      "array_adapter": "scifort_special_ortho_group_rvs_array_f64",
+      "module": "scifort_special_ortho_group",
+      "procedure": "special_ortho_group_rvs_array",
+      "python": "special_ortho_group.rvs_array"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_special_ortho_group",
+      "procedure": "special_ortho_group_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_special_ortho_group",
+      "procedure": "special_ortho_group_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_special_ortho_group",
+      "procedure": "special_ortho_group_status_success",
+      "scalar_generated": false
     },
     {
       "bulk": "scifort_t_cdf_vec_f64",

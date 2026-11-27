@@ -2293,3 +2293,92 @@ build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bi
 The binding tests build checked and optimized libraries and compile native,
 C and C++ clients. The full Fortran suite is required here because the singular
 Student t correction changes shared integration code.
+
+## Real random matrix sampling
+
+`api.ortho_group` and `api.special_ortho_group` expose `rvs(state, *, n=1)`
+and `rvs_array(state, *, n=1, n_samples=1)`. Results are `ArrayResult` objects:
+`outputs["sample"]` has shape `(n,n)` and `outputs["samples"]` has shape
+`(n,n,n_samples)`. The batch axis is last, matching native Fortran, rather than
+SciPy's leading batch axis. Dimensions are explicit keyword arguments and are
+never inferred from output buffers. All nonnegative dimensions are permitted;
+zero-dimensional matrices and empty batches succeed without consuming randomness.
+Special-orthogonal samples have determinant +1; at n=1 they are always [[1]].
+Orthogonal samples can have either determinant sign.
+
+`api.random_correlation.rvs(state, eigs, tol=1e-13, diag_tol=1e-7)` infers
+`n` from the one-dimensional eigenvalue array and returns `outputs["sample"]`
+with shape `(n,n)`. It requires n >= 2, finite eigenvalues >= -tol, and
+`abs(sum(eigs)-n) <= tol`. Both tolerances must be finite and nonnegative.
+`tol` controls eigenvalue validation; `diag_tol` bounds the unit-diagonal error
+before the native implementation sets the diagonal exactly to one. Eigenvalues
+within tolerance can be slightly negative; they are not clipped. Numerical
+accuracy still depends on conditioning, dimension, and floating-point rounding.
+There is currently no correlation batch adapter.
+
+```python
+stream = api.rng(123)
+q = api.ortho_group.rvs(stream, n=3)
+assert q.status == 0
+rotations = api.special_ortho_group.rvs_array(stream, n=3, n_samples=8)
+corr = api.random_correlation.rvs(stream, [0.2, 0.8, 2.0])
+assert corr.status == 0
+```
+
+Pass `out={"sample": buffer}` or `out={"samples": buffer}` to reuse a writable
+float64 Fortran-contiguous array of the exact required shape. Inputs can be
+copied into suitable storage. Outputs must not overlap any input, state, or other
+output. Python rejects malformed dimensions, shapes, types and buffers before
+calling C. Use an explicit `api.rng(seed)` stream belonging to the same API.
+Repeated single draws and a batch with the same initial stream produce identical
+matrices and final state. SciFort streams and algorithms do not reproduce SciPy's
+bit sequences.
+
+The generated C headers are included by `scifort.h`. Their symbols are
+`scifort_ortho_group_rvs_f64`, `scifort_ortho_group_rvs_array_f64`,
+`scifort_special_ortho_group_rvs_f64`,
+`scifort_special_ortho_group_rvs_array_f64`, and
+`scifort_random_correlation_rvs_f64`. Dimensions precede native arguments;
+correlation retains the native argument order `(state,eigs,sample,status,tol,diag_tol)`.
+C requires both tolerance scalars. Matrices use column-major layout, batches are
+consecutive matrix slices, and state is a writable `int64_t[6]` buffer. All
+buffers must be valid and nonoverlapping, including for zero extents; these thin
+explicit-shape adapters do not check pointer validity or allocation capacity.
+
+Status contracts:
+
+| Status | Orthogonal groups | Random correlation |
+| ---: | --- | --- |
+| 0 | Success | Success |
+| 1 | Invalid adapter dimension | Invalid adapter dimension (n < 2) |
+| 2 | Native numerical failure | Invalid eigenvalues or tolerances |
+| 3 | Unused | Native numerical failure |
+| 4 | Invalid serialized RNG state | Invalid serialized RNG state |
+
+Adapter validation errors preserve output and state, including invalid state on
+an empty call. Correlation parameter errors zero the output without consuming
+state. Numerical failures export all consumed RNG state. An orthogonal single
+draw failure leaves a zero matrix; batch failure retains completed slices and
+leaves later slices unspecified. Correlation numerical failure can leave a
+partially transformed matrix. Always check status before using samples.
+
+See the reviewed [orthogonal](../../docs/ortho_group_shapes.md),
+[special-orthogonal](../../docs/special_ortho_group_shapes.md), and
+[correlation](../../docs/random_correlation_shapes.md) native shape contracts.
+Focused checks from the repository root (CMD):
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_random_matrix_sampling.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The focused test compiles the native/C agreement client
+`test/test_random_matrix_c_api.f90`, runs a C11 client, checks C++17 headers,
+and exercises Python with checked (`-O0 -g -fcheck=all -fbacktrace`) and `-O3`
+shared libraries.
+
+Local validation on 2026-11-27 used Python 3.13.3 and GNU Fortran/GCC/G++
+17.0.0 20260510 (experimental) on Windows. All eight focused tests passed in
+282.035 seconds, including both build configurations and the native/C/C++ clients.
+The three native numerical implementations are unchanged apart from comments;
+the full `fpm test` suite was not rerun for this bounded interface addition.

@@ -22,5 +22,8 @@
   "invwishart.json",
   "matrix_normal.json",
   "matrix_t.json",
-  "poisson_binom.json"
+  "poisson_binom.json",
+  "ortho_group.json",
+  "special_ortho_group.json",
+  "random_correlation.json"
 ]

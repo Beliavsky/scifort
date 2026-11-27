@@ -1,3 +1,13 @@
+## 2026-11-27 - Real random matrix sampling interfaces
+
+The reviewed manifests, generated C/Python adapters, shape documentation and
+integration tests are original MIT SciFort interface work. They delegate to the
+existing Gaussian-QR orthogonal samplers and Davies-Higham correlation sampler;
+no numerical algorithm was imported, rewritten or changed. The existing
+Mezzadri and Davies-Higham provenance below remains applicable. Tests use native
+agreement, stream equality and independent matrix identities, without copying
+third-party implementation code or requiring matching SciPy random streams.
+
 ## 2026-11-27 - Generated adapter module scope
 
 The module-scope import organization and regression fixtures are original MIT
