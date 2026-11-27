@@ -54,6 +54,32 @@ end module
     def collect(self):
         return pipeline.artifacts(self.path,self.root)
 
+    def test_f2018_bodies_dependency_statements_and_hashes(self):
+        import hashlib
+        text = ("module example\nimplicit none\ncontains\nsubroutine work(x)\n"
+                "real :: x(..)\nlogical :: use\nuse = .true.\nselect rank(x)\nrank(1)\n"
+                "error stop 'message, quiet=.true.', &\n quiet=.true. ! flag\n"
+                "rank default\nstop 1, quiet=.false.\nend select\nend subroutine\nend module\n")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root/'example.f90'
+            source.write_text(text, encoding='utf-8')
+            plan, _ = pipeline.build_plan([source], ['.'], root, {})
+            self.assertEqual(plan['source_sha256']['example.f90'],
+                             hashlib.sha256(text.encode()).hexdigest())
+            self.assertEqual(source.read_text(encoding='utf-8'), text)
+            compiler = shutil.which('gfortran')
+            if compiler:
+                result = subprocess.run([compiler,'-std=f2018','-c',source],cwd=root,
+                                        capture_output=True,text=True)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            for invalid in ('module example\nend module wrong\n',
+                            'module example\n', 'submodule (example) child\nend submodule\n',
+                            'module example\ninclude "hidden.inc"\nend module\n'):
+                source.write_text(invalid, encoding='utf-8')
+                with self.assertRaises(ValueError):
+                    pipeline.build_plan([source], ['.'], root, {})
+
     def test_independent_ordered_closure_and_all_outputs_without_writes(self):
         outputs=self.collect()
         self.assertEqual(outputs,self.collect())

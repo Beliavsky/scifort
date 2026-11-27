@@ -1,0 +1,299 @@
+{
+  "generated_symbol_count": 6,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "uncensored",
+        "right",
+        "cdf_handle",
+        "sf_handle",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "r"
+      ],
+      "dimensions": {
+        "n": 0,
+        "r": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "cdf_handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        },
+        "sf_handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "ecdf_create",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "no observed events; an all-censored or empty sample is permitted",
+            "dimension": "n",
+            "value": 0
+          },
+          {
+            "description": "ordinary ECDF; the two input lengths are independent",
+            "dimension": "r",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "n": {
+            "argument": "uncensored",
+            "axis": null
+          },
+          "r": {
+            "argument": "right",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 0,
+          "r": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "right": [
+          "r"
+        ],
+        "uncensored": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_ecdf_create_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "ecdf_destroy",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_ecdf_destroy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "x",
+        "values",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "ecdf_evaluate",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "validate the handle and return an empty result",
+            "dimension": "n",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "n": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "values": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_ecdf_evaluate_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "count",
+        "variance",
+        "survival",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "ecdf_info",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_ecdf_info_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "level",
+        "method",
+        "low_handle",
+        "high_handle",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        },
+        "high_handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        },
+        "low_handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "ecdf_interval",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_ecdf_interval_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "quantiles",
+        "probabilities",
+        "status"
+      ],
+      "dimension_order": [
+        "m"
+      ],
+      "dimensions": {
+        "m": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_ecdf_destroy_f64",
+          "type": "empirical_distribution_function"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "ecdf_values",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "valid only for an empty EDF",
+            "dimension": "m",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "m": {
+            "argument": "quantiles",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "m": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "probabilities": [
+          "m"
+        ],
+        "quantiles": [
+          "m"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_ecdf_values_f64"
+      ]
+    }
+  ],
+  "public_api_count": 6,
+  "source": "src/c_api/ecdf_bridge.f90",
+  "source_sha256": "c25caf091f0ecc365243aa873a84d9f49756b557852941ad6c93f9a76b52e776"
+}

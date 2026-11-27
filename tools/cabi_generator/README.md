@@ -359,8 +359,8 @@ transactional; correct the failure and regenerate. Existing handwritten source
 and aggregate-header targets cannot be overwritten by regeneration.
 
 The build planner indexes MODULE statements with fparser's logical-line reader,
-then parses only the required source closure. It follows module and procedure-local
-USE statements, chooses providers by module declaration rather than filename,
+then reads module boundaries and USE statements in the required source closure.
+It follows module and procedure-local USE statements, chooses providers by module declaration rather than filename,
 and sorts dependencies before dependents. Multiple modules in one file must
 already appear in a compilable order. Missing or ambiguous providers, dependency
 cycles and forward references within a file produce explicit diagnostics.
@@ -368,13 +368,14 @@ Intrinsic USE statements do not need source providers. For implicit module natur
 a configured source provider takes precedence; otherwise the standard intrinsic
 module set is recognized. NON_INTRINSIC imports always require a source provider.
 
-The planner currently supports free-form Fortran module sources accepted by the
-configured fparser grammar. Submodules, preprocessing, INCLUDE inputs, separately
+The planner supports free-form module and USE statements accepted by fparser's
+statement grammar; numerical bodies are validated by the compiler. Submodules,
+preprocessing, INCLUDE inputs, separately
 compiled external modules, non-module procedure dependencies and non-Fortran link
 inputs need explicit future support; they are not inferred from filenames.
 Required submodule/preprocessor/INCLUDE sources are rejected. Other standalone
 external procedure calls are outside module-dependency analysis and can still
-produce compiler/linker errors. The source index does not fully parse unrelated
+produce compiler/linker errors. Dependency inspection does not parse
 numerical bodies or large data initializers.
 
 The checked-in [build_sources.json](../../bindings/python/build_sources.json)
@@ -1033,3 +1034,17 @@ The reviewed KDE bridge also exposes copied covariance/inverse matrices and a
 transactional bandwidth update. It composes existing opaque input handles,
 scalar-only status procedures and output dimensions; no generator special case
 for type-bound methods is required. See the [Python contract](../../bindings/python/README.md#kde-covariance-and-bandwidth-updates).
+
+The reviewed ECDF bridge composes two independently owned outputs for CDF/SF
+construction and for confidence bounds, with scalar information queries and
+output-defined exact array lengths. Native ECDF/Greenwood shape constraints are
+listed in [ecdf_shapes.md](../../docs/ecdf_shapes.md).
+
+Dependency inspection reads module boundaries and USE statements (including
+procedure-local imports) with fparser's logical-line reader and statement
+parsers. It does not interpret numerical bodies, which may use Fortran 2018
+assumed-rank, SELECT RANK or STOP QUIET syntax. Original sources are hashed and
+compiled. Module termination, duplicate providers, ordering, cycles, preprocessing,
+INCLUDE and submodule restrictions remain checked. Numerical syntax/semantics
+are the compiler's responsibility; reviewed interface generation still uses its
+full parser and existing supported grammar.

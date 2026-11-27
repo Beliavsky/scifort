@@ -1,3 +1,13 @@
+## 2026-11-27 - Empirical CDF and Kaplan-Meier interfaces
+
+- Expose copied-data ECDF/Kaplan-Meier construction, batch evaluation, exact-length
+  knot/probability retrieval and independently owned Greenwood confidence bounds.
+- Add Python CDF/SF objects with explicit cleanup, caller buffers and shape checks.
+- Validate samples and interval options before native calls that can terminate;
+  retain native evaluation and endpoint conventions and document array shapes.
+- Inspect dependency module/USE statements without parsing numerical bodies;
+  support Fortran 2018 bodies while compiling and hashing original sources.
+
 ## 2026-11-27 - KDE covariance access and bandwidth updates
 
 - Add caller-owned covariance/inverse matrices and Scott/Silverman/constant

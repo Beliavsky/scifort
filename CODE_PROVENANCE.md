@@ -1,3 +1,15 @@
+## 2026-11-27 - Empirical distribution interfaces
+
+The ECDF flat bridges, ownership adapters, Python objects, shape documentation,
+planner compatibility handling and tests are original MIT SciFort interface work.
+No upstream numerical implementation was copied or adapted. The native empirical
+frequency, Kaplan-Meier and Greenwood calculations are unchanged; their original
+references and provenance remain below. Installed SciPy public outputs, direct
+native/C agreement and existing native regressions serve as numerical references.
+The dependency planner reads module boundaries and USE statements with the
+logical-line reader and statement parsers; it does not parse numerical bodies.
+Source text used for compilation and hashing remains unchanged.
+
 ## 2026-11-27 - KDE covariance and bandwidth interfaces
 
 The flat covariance getters, transactional bandwidth bridge, policies, Python

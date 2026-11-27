@@ -2,6 +2,7 @@
   "array_groups": [
     "dirichlet",
     "dirichlet_multinomial",
+    "ecdf_bridge",
     "invwishart",
     "kde_bridge",
     "linalg",
@@ -67,6 +68,11 @@
       "src/kinds.f90",
       "src/stats/weibull.f90"
     ],
+    "src/c_api/ecdf_bridge.f90": [
+      "src/empirical_distribution.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
     "src/c_api/gaussian_kde_bridge.f90": [
       "src/kinds.f90",
       "src/math.f90",
@@ -94,6 +100,10 @@
     "src/c_api/generated/dirichlet_multinomial_generated.f90": [
       "src/kinds.f90",
       "src/stats/dirichlet_multinomial.f90"
+    ],
+    "src/c_api/generated/ecdf_generated.f90": [
+      "src/c_api/ecdf_bridge.f90",
+      "src/kinds.f90"
     ],
     "src/c_api/generated/exponential_generated.f90": [
       "src/kinds.f90",
@@ -247,6 +257,252 @@
     "src/constants.f90": [
       "src/kinds.f90"
     ],
+    "src/contingency_meta.f90": [
+      "src/hypothesis_extended.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/stats/beta.f90",
+      "src/stats/binomial.f90",
+      "src/stats/chi2.f90",
+      "src/stats/hypergeom.f90",
+      "src/stats/nchypergeom_fisher.f90",
+      "src/stats/normal.f90",
+      "src/stats/student_t.f90"
+    ],
+    "src/descriptive.f90": [
+      "src/descriptive_circular_1_8.f90",
+      "src/descriptive_circular_9_15.f90",
+      "src/descriptive_entropy_1_8.f90",
+      "src/descriptive_entropy_9_15.f90",
+      "src/descriptive_expectile_sigmaclip.f90",
+      "src/descriptive_frequency_1_8.f90",
+      "src/descriptive_frequency_9_15.f90",
+      "src/descriptive_frequency_engine.f90",
+      "src/descriptive_highrank_means.f90",
+      "src/descriptive_highrank_stats_10_15.f90",
+      "src/descriptive_highrank_stats_5_9.f90",
+      "src/descriptive_highrank_weights_10_15.f90",
+      "src/descriptive_highrank_weights_4_9.f90",
+      "src/descriptive_kstat_1_8.f90",
+      "src/descriptive_kstat_9_15.f90",
+      "src/descriptive_lmoment_1_8.f90",
+      "src/descriptive_lmoment_9_15.f90",
+      "src/descriptive_lowrank.f90",
+      "src/descriptive_named_scale_highrank.f90",
+      "src/descriptive_named_scale_lowrank.f90",
+      "src/descriptive_proportion_trim_1_8.f90",
+      "src/descriptive_proportion_trim_9_15.f90",
+      "src/descriptive_rank_1_8.f90",
+      "src/descriptive_rank_9_15.f90",
+      "src/descriptive_standardize_10_15.f90",
+      "src/descriptive_standardize_1_9.f90",
+      "src/descriptive_summary_engine.f90",
+      "src/descriptive_trimmed_1_8.f90",
+      "src/descriptive_trimmed_9_15.f90"
+    ],
+    "src/descriptive_circular_1_8.f90": [
+      "src/descriptive_circular_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_circular_9_15.f90": [
+      "src/descriptive_circular_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_circular_engine.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_entropy_1_8.f90": [
+      "src/descriptive_entropy_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_entropy_9_15.f90": [
+      "src/descriptive_entropy_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_entropy_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/elementary.f90"
+    ],
+    "src/descriptive_expectile_sigmaclip.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_frequency_1_8.f90": [
+      "src/descriptive_frequency_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_frequency_9_15.f90": [
+      "src/descriptive_frequency_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_frequency_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_highrank_means.f90": [
+      "src/descriptive_lowrank.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_highrank_stats_10_15.f90": [
+      "src/descriptive_highrank_stats_engine.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_highrank_stats_5_9.f90": [
+      "src/descriptive_highrank_stats_engine.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_highrank_stats_engine.f90": [
+      "src/descriptive_lowrank.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_highrank_weights_10_15.f90": [
+      "src/descriptive_weighted_engine.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_highrank_weights_4_9.f90": [
+      "src/descriptive_weighted_engine.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_kstat_1_8.f90": [
+      "src/descriptive_kstat_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_kstat_9_15.f90": [
+      "src/descriptive_kstat_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_kstat_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_lmoment_1_8.f90": [
+      "src/descriptive_lmoment_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_lmoment_9_15.f90": [
+      "src/descriptive_lmoment_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_lmoment_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_lowrank.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_named_scale_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_named_scale_highrank.f90": [
+      "src/descriptive_highrank_stats_10_15.f90",
+      "src/descriptive_highrank_stats_5_9.f90",
+      "src/descriptive_named_scale_engine.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_named_scale_lowrank.f90": [
+      "src/descriptive_lowrank.f90",
+      "src/descriptive_named_scale_engine.f90",
+      "src/kinds.f90"
+    ],
+    "src/descriptive_proportion_trim_1_8.f90": [
+      "src/descriptive_proportion_trim_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_proportion_trim_9_15.f90": [
+      "src/descriptive_proportion_trim_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_proportion_trim_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_rank_1_8.f90": [
+      "src/descriptive_rank_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_rank_9_15.f90": [
+      "src/descriptive_rank_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_rank_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_standardize_10_15.f90": [
+      "src/descriptive_standardize_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_standardize_1_9.f90": [
+      "src/descriptive_standardize_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_standardize_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_summary_engine.f90": [
+      "src/descriptive_lowrank.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_trimmed_1_8.f90": [
+      "src/descriptive_trimmed_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_trimmed_9_15.f90": [
+      "src/descriptive_trimmed_engine.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_trimmed_engine.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/descriptive_weighted_engine.f90": [
+      "src/descriptive_lowrank.f90",
+      "src/kinds.f90",
+      "src/math.f90"
+    ],
+    "src/empirical_distribution.f90": [
+      "src/contingency_meta.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/stats/beta.f90",
+      "src/stats/binomial.f90",
+      "src/stats/normal.f90"
+    ],
+    "src/hypothesis_extended.f90": [
+      "src/descriptive.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/stats/chi2.f90",
+      "src/stats/f_distribution.f90",
+      "src/stats/hypergeom.f90",
+      "src/stats/normal.f90"
+    ],
     "src/kinds.f90": [],
     "src/linalg.f90": [
       "src/kinds.f90"
@@ -330,6 +586,12 @@
     "src/stats/exponential.f90": [
       "src/kinds.f90",
       "src/math.f90"
+    ],
+    "src/stats/f_distribution.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/incomplete_beta.f90",
+      "src/special/log_gamma.f90"
     ],
     "src/stats/gamma.f90": [
       "src/kinds.f90",
@@ -436,6 +698,10 @@
       "src/stats/chi2.f90",
       "src/stats/multivariate_integration.f90",
       "src/stats/multivariate_normal.f90"
+    ],
+    "src/stats/nchypergeom_fisher.f90": [
+      "src/kinds.f90",
+      "src/math.f90"
     ],
     "src/stats/normal.f90": [
       "src/constants.f90",
@@ -562,6 +828,7 @@
     "scifort_c_api_generated_chi2": "src/c_api/generated/chi2_generated.f90",
     "scifort_c_api_generated_dirichlet": "src/c_api/generated/dirichlet_generated.f90",
     "scifort_c_api_generated_dirichlet_multinomial": "src/c_api/generated/dirichlet_multinomial_generated.f90",
+    "scifort_c_api_generated_ecdf": "src/c_api/generated/ecdf_generated.f90",
     "scifort_c_api_generated_exponential": "src/c_api/generated/exponential_generated.f90",
     "scifort_c_api_generated_gamma": "src/c_api/generated/gamma_generated.f90",
     "scifort_c_api_generated_gaussian_kde": "src/c_api/generated/gaussian_kde_generated.f90",
@@ -593,14 +860,60 @@
     "scifort_cauchy": "src/stats/cauchy.f90",
     "scifort_chi2": "src/stats/chi2.f90",
     "scifort_constants": "src/constants.f90",
+    "scifort_contingency_meta": "src/contingency_meta.f90",
+    "scifort_descriptive": "src/descriptive.f90",
+    "scifort_descriptive_circular_1_8": "src/descriptive_circular_1_8.f90",
+    "scifort_descriptive_circular_9_15": "src/descriptive_circular_9_15.f90",
+    "scifort_descriptive_circular_engine": "src/descriptive_circular_engine.f90",
+    "scifort_descriptive_entropy_1_8": "src/descriptive_entropy_1_8.f90",
+    "scifort_descriptive_entropy_9_15": "src/descriptive_entropy_9_15.f90",
+    "scifort_descriptive_entropy_engine": "src/descriptive_entropy_engine.f90",
+    "scifort_descriptive_expectile_sigmaclip": "src/descriptive_expectile_sigmaclip.f90",
+    "scifort_descriptive_frequency_1_8": "src/descriptive_frequency_1_8.f90",
+    "scifort_descriptive_frequency_9_15": "src/descriptive_frequency_9_15.f90",
+    "scifort_descriptive_frequency_engine": "src/descriptive_frequency_engine.f90",
+    "scifort_descriptive_highrank_means": "src/descriptive_highrank_means.f90",
+    "scifort_descriptive_highrank_stats_10_15": "src/descriptive_highrank_stats_10_15.f90",
+    "scifort_descriptive_highrank_stats_5_9": "src/descriptive_highrank_stats_5_9.f90",
+    "scifort_descriptive_highrank_stats_engine": "src/descriptive_highrank_stats_engine.f90",
+    "scifort_descriptive_highrank_weights_10_15": "src/descriptive_highrank_weights_10_15.f90",
+    "scifort_descriptive_highrank_weights_4_9": "src/descriptive_highrank_weights_4_9.f90",
+    "scifort_descriptive_kstat_1_8": "src/descriptive_kstat_1_8.f90",
+    "scifort_descriptive_kstat_9_15": "src/descriptive_kstat_9_15.f90",
+    "scifort_descriptive_kstat_engine": "src/descriptive_kstat_engine.f90",
+    "scifort_descriptive_lmoment_1_8": "src/descriptive_lmoment_1_8.f90",
+    "scifort_descriptive_lmoment_9_15": "src/descriptive_lmoment_9_15.f90",
+    "scifort_descriptive_lmoment_engine": "src/descriptive_lmoment_engine.f90",
+    "scifort_descriptive_lowrank": "src/descriptive_lowrank.f90",
+    "scifort_descriptive_named_scale_engine": "src/descriptive_named_scale_engine.f90",
+    "scifort_descriptive_named_scale_highrank": "src/descriptive_named_scale_highrank.f90",
+    "scifort_descriptive_named_scale_lowrank": "src/descriptive_named_scale_lowrank.f90",
+    "scifort_descriptive_proportion_trim_1_8": "src/descriptive_proportion_trim_1_8.f90",
+    "scifort_descriptive_proportion_trim_9_15": "src/descriptive_proportion_trim_9_15.f90",
+    "scifort_descriptive_proportion_trim_engine": "src/descriptive_proportion_trim_engine.f90",
+    "scifort_descriptive_rank_1_8": "src/descriptive_rank_1_8.f90",
+    "scifort_descriptive_rank_9_15": "src/descriptive_rank_9_15.f90",
+    "scifort_descriptive_rank_engine": "src/descriptive_rank_engine.f90",
+    "scifort_descriptive_standardize_10_15": "src/descriptive_standardize_10_15.f90",
+    "scifort_descriptive_standardize_1_9": "src/descriptive_standardize_1_9.f90",
+    "scifort_descriptive_standardize_engine": "src/descriptive_standardize_engine.f90",
+    "scifort_descriptive_summary_engine": "src/descriptive_summary_engine.f90",
+    "scifort_descriptive_trimmed_1_8": "src/descriptive_trimmed_1_8.f90",
+    "scifort_descriptive_trimmed_9_15": "src/descriptive_trimmed_9_15.f90",
+    "scifort_descriptive_trimmed_engine": "src/descriptive_trimmed_engine.f90",
+    "scifort_descriptive_weighted_engine": "src/descriptive_weighted_engine.f90",
     "scifort_digamma": "src/special/digamma.f90",
     "scifort_dirichlet": "src/stats/dirichlet.f90",
     "scifort_dirichlet_multinomial": "src/stats/dirichlet_multinomial.f90",
+    "scifort_ecdf_bridge": "src/c_api/ecdf_bridge.f90",
+    "scifort_empirical_distribution": "src/empirical_distribution.f90",
     "scifort_exponential": "src/stats/exponential.f90",
+    "scifort_f_distribution": "src/stats/f_distribution.f90",
     "scifort_gamma": "src/stats/gamma.f90",
     "scifort_gaussian_kde": "src/stats/gaussian_kde.f90",
     "scifort_gaussian_kde_bridge": "src/c_api/gaussian_kde_bridge.f90",
     "scifort_hypergeom": "src/stats/hypergeom.f90",
+    "scifort_hypothesis_extended": "src/hypothesis_extended.f90",
     "scifort_incomplete_beta": "src/special/incomplete_beta.f90",
     "scifort_incomplete_gamma": "src/special/incomplete_gamma.f90",
     "scifort_invgamma": "src/stats/invgamma.f90",
@@ -620,6 +933,7 @@
     "scifort_multivariate_integration": "src/stats/multivariate_integration.f90",
     "scifort_multivariate_normal": "src/stats/multivariate_normal.f90",
     "scifort_multivariate_t": "src/stats/multivariate_t.f90",
+    "scifort_nchypergeom_fisher": "src/stats/nchypergeom_fisher.f90",
     "scifort_normal": "src/stats/normal.f90",
     "scifort_normal_inverse_gamma": "src/stats/normal_inverse_gamma.f90",
     "scifort_ortho_group": "src/stats/ortho_group.f90",
@@ -653,12 +967,14 @@
     "bindings/python/native/normal_compat.f90": "17d59ec884632766395dee1f8fce9db74e6410013f8bc457525f83a8a39ce0b9",
     "bindings/python/native/t_compat.f90": "0a2dee93cedfe8931f329b26aec2da734b025c910eed2289499dc583cd053bde",
     "bindings/python/native/weibull_compat.f90": "5566c9bb3eccfae4f8479959d59365a080731701d1988724a1a972c658b29819",
+    "src/c_api/ecdf_bridge.f90": "c25caf091f0ecc365243aa873a84d9f49756b557852941ad6c93f9a76b52e776",
     "src/c_api/gaussian_kde_bridge.f90": "f1649edbafd3f5b327210d46a371c0f6c7e329348dfb0080fc78983fc8edda5e",
     "src/c_api/generated/beta_generated.f90": "97750d6e13b3c1736c987da5ad75b007485b7200f3a260d5ce28d23565b94315",
     "src/c_api/generated/cauchy_generated.f90": "6ac0881184b88fbcdb58ebea8b74282f35bfeeca72d7beeaee82794bc94e5f45",
     "src/c_api/generated/chi2_generated.f90": "eb77a10fcddecf5889c3580d3e03c8cd9ab4accfcb1188ba9d9ac019a55ed458",
     "src/c_api/generated/dirichlet_generated.f90": "7f3711eb6237c75805823ca9bceb249326c9c16071c5febb2e5ca30f4407e19a",
     "src/c_api/generated/dirichlet_multinomial_generated.f90": "5e46f7a6f2b77e15b9b33b4de10224bbec14323b184dc2e47c325468824d226a",
+    "src/c_api/generated/ecdf_generated.f90": "74640f1c7fcc68aa52ce2a92aba5a0f6518907705dbe8d585c858c96ea8a9702",
     "src/c_api/generated/exponential_generated.f90": "099dd394d78654ea1c8c062a3d045a545e91092a28dd7d7fd485220fb2b7763e",
     "src/c_api/generated/gamma_generated.f90": "747fc30a93f32ace72240a720c60bef4c3a5c18d7c167d41de144dae7c521d52",
     "src/c_api/generated/gaussian_kde_generated.f90": "c8b32b1a309be7a895a74e129e2c0e63102beaa2ad0174973309b411b9df359f",
@@ -689,6 +1005,50 @@
     "src/c_api/generated/wishart_generated.f90": "a4da1dbf813ccaa7911e6008138b059878a3e1d3a4bce537e2a738d9382c84ff",
     "src/c_api/rng_bridge.f90": "964d64258685671cb15562c4bd10b48b7cb21d04f3936f1dd10f14753d799565",
     "src/constants.f90": "c49598c1f413384af26a4468b2ff442a68d5f015a983c404bd3150e6cdde874e",
+    "src/contingency_meta.f90": "f8f7c409a855c82f2375dbe17237c712427445ebe057dc805a8e5aafb2dada2c",
+    "src/descriptive.f90": "b43d6234cd330c0af76ced900e4f9e92a93761df033b11f4e7b6aa0b3d6df5b4",
+    "src/descriptive_circular_1_8.f90": "1112a5cbefc253a0a3146358d7df148fe16eca20d7384f0ac15363f2f99a04f8",
+    "src/descriptive_circular_9_15.f90": "ec233491a9f3f8942687c039ad2ca3a44dbd6df6ed6ae4d4937c1cb6563e7878",
+    "src/descriptive_circular_engine.f90": "3f0cccdca7139cd2c843de9f5322817e14f10a8f95b4ae2500edb18698067562",
+    "src/descriptive_entropy_1_8.f90": "71dcf5056d713f8f7424563a762baf56f408b11ddd597b0d8bae5e774281abac",
+    "src/descriptive_entropy_9_15.f90": "a8a22b827b612e512e5082e4f55fb18b82feee44de4bb5fe27f57e6fe36a73e3",
+    "src/descriptive_entropy_engine.f90": "ff00c300c1afe60f9c991814f4c948647a4e0c12a7c7f738d2af0230cb5086cc",
+    "src/descriptive_expectile_sigmaclip.f90": "66725015752a66de820b66131147ddde6fc591f401bc04fc0aac9bf7697f7e5a",
+    "src/descriptive_frequency_1_8.f90": "f2594d6ecd91b020d35ea2ac3a0b113b55936dfa859055d34cf8f16da586195c",
+    "src/descriptive_frequency_9_15.f90": "973542a72638b8038c5abcbd7656a63907fd1315465e797336adf5d4d2346d0c",
+    "src/descriptive_frequency_engine.f90": "416443f3f81e30585d84a69071ba2823356bc713b2a53220f9a05db1d3c413cd",
+    "src/descriptive_highrank_means.f90": "6f9555ab4c07cd187789c2047920723f225eed6ac5acc1e6b9c541ff8770e963",
+    "src/descriptive_highrank_stats_10_15.f90": "66240baa255e8a61bf349692c1b51f9b2d6eb32a79d317c8519486303363dd91",
+    "src/descriptive_highrank_stats_5_9.f90": "cd5f30176411c19ddf0144a80653f6e199cfc47169cfdb78522e604772012df4",
+    "src/descriptive_highrank_stats_engine.f90": "5c2b8ff1a1178e6403061d35edfa336845c05b536995f6b630293e95b1e54c8a",
+    "src/descriptive_highrank_weights_10_15.f90": "b52c478d3018fce6a632af23efaabb09aafd68e582ec58d8a019f015d7d2c60e",
+    "src/descriptive_highrank_weights_4_9.f90": "8357d67b291fde2423987357d1a6ffbe941bfc8ec8bc113cf17c093c254b8cbf",
+    "src/descriptive_kstat_1_8.f90": "442d3d32c93a9710630ea62ff83f5036eae124040b93d60c8bddd10caa39c4b9",
+    "src/descriptive_kstat_9_15.f90": "41aa2c2952883ed08e20acf2c2012ef941b7dee62e93520b23db5d0994e0f2db",
+    "src/descriptive_kstat_engine.f90": "75d7ced861b973f326e80e355de9f8d6e8b0a96e969a526432aa42e68faddf25",
+    "src/descriptive_lmoment_1_8.f90": "cb9a52b9ff10f1d78d7d8849e55767816f4b1181498f36410f67ef073f18a13c",
+    "src/descriptive_lmoment_9_15.f90": "0589335ddd59ec8c682026ac6393b29d48d84065333cc40231f53985b304a33f",
+    "src/descriptive_lmoment_engine.f90": "16552f12dd54aa6fe408055c44c4afd0b14ee2bae58e3e587d11c2402f94f5ea",
+    "src/descriptive_lowrank.f90": "c052d36b681945b4bffacc194f583093e8789b987c8aaaf70dfd5b48c3c46b0c",
+    "src/descriptive_named_scale_engine.f90": "1c7be7a0c37a774a51124cdcf2a18153a34df098703aecb25e23e6a1dc6bef88",
+    "src/descriptive_named_scale_highrank.f90": "2810255e39dc32cdb0b8b3510d1c5e7abf7c31d67b58109cefbb947aa73cb850",
+    "src/descriptive_named_scale_lowrank.f90": "ac6706843b0ab84e23473dcb9d2823b5be6504b7a7c0a63f58eeed10edb30089",
+    "src/descriptive_proportion_trim_1_8.f90": "5078e825818547ba382ab942386b80eb44c5db1a20b19f6443b027cf63c4a881",
+    "src/descriptive_proportion_trim_9_15.f90": "b01312e00d74aac0046270bb1a4788d8b2a5ee85af41e06eb81af238634d6c6e",
+    "src/descriptive_proportion_trim_engine.f90": "22c85cfb648989318c1d0d3afd6186bf312b45c67200d60e1f7e819874340b6b",
+    "src/descriptive_rank_1_8.f90": "21325f2637b63e655a03ad6d8bba7dbce784007ea845b0ec12a93e9dc912cbff",
+    "src/descriptive_rank_9_15.f90": "d10213250348efecd63e53d544ca048b8d2a7bdf27cca6c2692f9c0a4e66baca",
+    "src/descriptive_rank_engine.f90": "5517e9c44a113b35f9a7cefcab2e2cd66418a5ca1139bdd77743625f896712e5",
+    "src/descriptive_standardize_10_15.f90": "7ec9f735b34800076049cfb13ca7916b9900329fe62f72c27e55a05d69e23f94",
+    "src/descriptive_standardize_1_9.f90": "7e55f8693a9c83fc2893ee44522949e155a585b05b936e427f09e94dccbd8e01",
+    "src/descriptive_standardize_engine.f90": "a552841a60699c5b1eb688f20c72cc350275e435d1f3b621cf31f9ab7635eb0a",
+    "src/descriptive_summary_engine.f90": "a42b00f1bd873afae7c6a662f38ab57c0c37dcdb4485bfb19a072cac52c34035",
+    "src/descriptive_trimmed_1_8.f90": "c8e19cb9dd0c0440fe2505f7d230cedc6a45bd66375817834065e4daf8556632",
+    "src/descriptive_trimmed_9_15.f90": "ff408a6fcb8ff3d7d3a82365971a72e2388cd63f8c40142058f662333d0cfc22",
+    "src/descriptive_trimmed_engine.f90": "e7134816d63338dab1a16f691f411ea953cb9e86caffa273b4115fea82120bad",
+    "src/descriptive_weighted_engine.f90": "a366cc5ea3ad550c692ef40fc9a05fdded138d16a3da68fbc03d4552c047857c",
+    "src/empirical_distribution.f90": "6f07c95232c7781048f6b01b2fecd4db763dea3a8fdb764a377c64a10b80b90a",
+    "src/hypothesis_extended.f90": "41531fec1485a0a6042fa104a572b5d65824ec020f7fda71d426576e19f00d11",
     "src/kinds.f90": "afbca1b088e17f5c0ff7930c693e9ae9e0b699b31a826cb25bc139597fe66f46",
     "src/linalg.f90": "b149cf757f3620cce4fcb2e8ecdbd705184534d0d81ed5ab908d464cd09d6788",
     "src/math.f90": "1dfdd6e012e1c6e7ad63e6744b0b57b8beee8700d2a2e51f0e8eb89caf8185db",
@@ -706,6 +1066,7 @@
     "src/stats/dirichlet.f90": "79969ce80ce0427a9b5ef21ee14b4c6e582785e7b66aafe857834785b41a3862",
     "src/stats/dirichlet_multinomial.f90": "c5650f002d1b8d2c7bef8fb3e6d6e7d5a6539cbc2f5ebcbdcc5c982a976654bd",
     "src/stats/exponential.f90": "c785b69af2cd889f4eb6bddf741312eb9c9e8357ad7c321ff7d274891ec0c81c",
+    "src/stats/f_distribution.f90": "a19215cf11f0c4c0ae220a501a518f8cb95552f4bda1658f24ca935e74fc8a47",
     "src/stats/gamma.f90": "f62bfb0462f390c00d1c61367245468816521fc49d8c2c48f90a5f9d56b3c4ed",
     "src/stats/gaussian_kde.f90": "77cc123a7821e5f127e500c52f8cbdc073f35d332e4b97dfe26f6af64af24bf1",
     "src/stats/hypergeom.f90": "f1667ae722f1af2262936c5110e26f71cfb715868c861c92b6196b5a2a53740a",
@@ -722,6 +1083,7 @@
     "src/stats/multivariate_integration.f90": "ecdf7f093e4c8065c5a98a01b2eb1becef10b28a7c59307c5231c4e8cd753ad2",
     "src/stats/multivariate_normal.f90": "a2c7e9874bf81da8b722fc1597a3c854c00ea152962ad93e444044d7c45080b3",
     "src/stats/multivariate_t.f90": "d0eabd13f9a75a3efdb0a24e243dc6726140010755767c4c21d7d92f00b8ed34",
+    "src/stats/nchypergeom_fisher.f90": "8dfec766fe141f6f3a367655904d045d02d2e2cde68b1b165a83f00d63fa9cfe",
     "src/stats/normal.f90": "8174db2e18634aaee3852f68ac656623271fc75c27383201c8dcd5ba5c7bdcbb",
     "src/stats/normal_inverse_gamma.f90": "e0883e4b15a53547e459a6a3e84d82cdb702b33ab2fca8b66fef497d68aaa375",
     "src/stats/ortho_group.f90": "9d12edbac1b213f64b2460e2d8c6bd5c5082d23ad47787cd2287ba04013f0e19",
@@ -778,6 +1140,56 @@
     "src/c_api/generated/dirichlet_generated.f90",
     "src/stats/dirichlet_multinomial.f90",
     "src/c_api/generated/dirichlet_multinomial_generated.f90",
+    "src/descriptive_circular_engine.f90",
+    "src/descriptive_circular_1_8.f90",
+    "src/descriptive_circular_9_15.f90",
+    "src/descriptive_entropy_engine.f90",
+    "src/descriptive_entropy_1_8.f90",
+    "src/descriptive_entropy_9_15.f90",
+    "src/descriptive_expectile_sigmaclip.f90",
+    "src/descriptive_frequency_engine.f90",
+    "src/descriptive_frequency_1_8.f90",
+    "src/descriptive_frequency_9_15.f90",
+    "src/descriptive_lowrank.f90",
+    "src/descriptive_highrank_means.f90",
+    "src/descriptive_highrank_stats_engine.f90",
+    "src/descriptive_highrank_stats_10_15.f90",
+    "src/descriptive_highrank_stats_5_9.f90",
+    "src/descriptive_weighted_engine.f90",
+    "src/descriptive_highrank_weights_10_15.f90",
+    "src/descriptive_highrank_weights_4_9.f90",
+    "src/descriptive_kstat_engine.f90",
+    "src/descriptive_kstat_1_8.f90",
+    "src/descriptive_kstat_9_15.f90",
+    "src/descriptive_lmoment_engine.f90",
+    "src/descriptive_lmoment_1_8.f90",
+    "src/descriptive_lmoment_9_15.f90",
+    "src/descriptive_named_scale_engine.f90",
+    "src/descriptive_named_scale_highrank.f90",
+    "src/descriptive_named_scale_lowrank.f90",
+    "src/descriptive_proportion_trim_engine.f90",
+    "src/descriptive_proportion_trim_1_8.f90",
+    "src/descriptive_proportion_trim_9_15.f90",
+    "src/descriptive_rank_engine.f90",
+    "src/descriptive_rank_1_8.f90",
+    "src/descriptive_rank_9_15.f90",
+    "src/descriptive_standardize_engine.f90",
+    "src/descriptive_standardize_10_15.f90",
+    "src/descriptive_standardize_1_9.f90",
+    "src/descriptive_summary_engine.f90",
+    "src/descriptive_trimmed_engine.f90",
+    "src/descriptive_trimmed_1_8.f90",
+    "src/descriptive_trimmed_9_15.f90",
+    "src/descriptive.f90",
+    "src/stats/f_distribution.f90",
+    "src/stats/hypergeom.f90",
+    "src/hypothesis_extended.f90",
+    "src/stats/binomial.f90",
+    "src/stats/nchypergeom_fisher.f90",
+    "src/contingency_meta.f90",
+    "src/empirical_distribution.f90",
+    "src/c_api/ecdf_bridge.f90",
+    "src/c_api/generated/ecdf_generated.f90",
     "src/c_api/generated/exponential_generated.f90",
     "src/c_api/generated/gamma_generated.f90",
     "src/linalg.f90",
@@ -799,10 +1211,8 @@
     "src/c_api/generated/matrix_normal_generated.f90",
     "src/stats/matrix_t.f90",
     "src/c_api/generated/matrix_t_generated.f90",
-    "src/stats/binomial.f90",
     "src/stats/multinomial.f90",
     "src/c_api/generated/multinomial_generated.f90",
-    "src/stats/hypergeom.f90",
     "src/stats/multivariate_hypergeom.f90",
     "src/c_api/generated/multivariate_hypergeom_generated.f90",
     "src/c_api/generated/multivariate_normal_generated.f90",

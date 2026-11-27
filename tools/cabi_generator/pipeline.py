@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import sys
 
@@ -13,7 +14,7 @@ from fparser.common.readfortran import FortranStringReader
 from fparser.two import Fortran2003 as F
 from fparser.two import Fortran2008 as F08
 from fparser.two.parser import ParserFactory
-from fparser.two.utils import NoMatchError, walk
+from fparser.two.utils import NoMatchError
 import generate
 import generate_python
 
@@ -54,10 +55,63 @@ def providers(source_directories, root, overlay):
     return index, paths
 
 
+def dependency_modules(text):
+    """Read only module boundaries and USE statements, including procedure-local USE.
+
+    Numerical bodies may use Fortran 2018 syntax outside fparser's F2008
+    grammar. Dependencies do not require interpreting those bodies; compilation
+    validates them. Keep the logical-line reader for comments/continuations and
+    statement parsers for module names, nature and USE syntax.
+    """
+    modules = []
+    current = None
+    for item in FortranStringReader(text):
+        line = getattr(item, 'line', '').strip()
+        if not line:
+            continue
+        if line.lower().startswith('submodule'):
+            try:
+                F08.Submodule_Stmt(line)
+            except NoMatchError:
+                pass
+            else:
+                raise ValueError('submodule compilation is not supported')
+        if line.lower().startswith('module'):
+            try:
+                statement = F.Module_Stmt(line)
+            except NoMatchError:
+                continue  # MODULE PROCEDURE/FUNCTION is not a module definition.
+            if current is not None:
+                raise ValueError('nested module definitions are not supported')
+            current = (str(statement.items[1]).lower(), [])
+            modules.append(current)
+        elif re.match(r'^end\s*module\b', line, re.I):
+            try:
+                statement = F.End_Module_Stmt(line)
+            except NoMatchError:
+                continue  # For example, assignment to a variable named ENDMODULE.
+            if current is None:
+                raise ValueError('END MODULE without a module')
+            name = statement.items[1]
+            if name is not None and str(name).lower() != current[0]:
+                raise ValueError('END MODULE name does not match its module')
+            current = None
+        elif re.match(r'^use\b', line, re.I):
+            if current is None:
+                raise ValueError('USE outside a module is not supported')
+            # USE is also a legal variable name in Fortran.
+            if re.match(r'^use\s*(?:=|\()', line, re.I):
+                continue
+            current[1].append(F.Use_Stmt(line))
+    if current is not None:
+        raise ValueError('unterminated module definition')
+    return modules
+
+
 def build_plan(roots, source_directories, root, overlay):
     """Resolve a deterministic file-level module closure; never guess a provider from its filename."""
     # The fparser statement classes must be initialized before indexing statements.
-    parser = ParserFactory().create(std='f2008')
+    ParserFactory().create(std='f2008')
     index, indexed = providers(source_directories, root, overlay)
     ordered, edges, definitions, visiting, visited, hashes = [], {}, {}, [], set(), {}
 
@@ -83,23 +137,19 @@ def build_plan(roots, source_directories, root, overlay):
                     continue
                 raise ValueError(f'{relative(path, root)}: INCLUDE inputs need explicit build-planner support')
         try:
-            tree = parser(FortranStringReader(text))
-        except generate.FortranSyntaxError as error:
+            modules = dependency_modules(text)
+        except (NoMatchError, ValueError) as error:
             raise ValueError(f'cannot inspect dependency source {relative(path, root)}: {error}') from error
-        if walk(tree, F08.Submodule):
-            raise ValueError(f'{relative(path, root)}: submodule compilation is not supported')
-        modules = walk(tree, F.Module)
         if not modules:
             raise ValueError(f'{relative(path, root)}: a build source must define a module')
-        positions = {str(m.content[0].items[1]).lower(): i for i, m in enumerate(modules)}
+        positions = {name: i for i, (name, _) in enumerate(modules)}
         dependencies = set()
-        for position, module in enumerate(modules):
-            name = str(module.content[0].items[1]).lower()
+        for position, (name, uses) in enumerate(modules):
             if len(index.get(name, [])) != 1:
                 candidates = ', '.join(relative(p, root) for p in index.get(name, []))
                 raise ValueError(f'ambiguous provider for module {name}: {candidates}')
             definitions[name] = relative(path, root)
-            for use in walk(module, F.Use_Stmt):
+            for use in uses:
                 nature = str(use.items[0]).lower() if use.items[0] else None
                 dependency = str(use.items[2]).lower()
                 if nature == 'intrinsic':

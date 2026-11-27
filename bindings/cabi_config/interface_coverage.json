@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 116,
+    "array_adapters": 122,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 282,
-    "python": 204,
+    "exports": 288,
+    "python": 210,
     "scalar": 88
   },
   "procedures": [
@@ -347,6 +347,42 @@
       "module": "scifort_dirichlet_multinomial",
       "procedure": "dirichlet_multinomial_var",
       "python": "dirichlet_multinomial.var"
+    },
+    {
+      "array_adapter": "scifort_ecdf_create_f64",
+      "module": "scifort_ecdf_bridge",
+      "procedure": "ecdf_create",
+      "python": "ecdf_bridge.create"
+    },
+    {
+      "array_adapter": "scifort_ecdf_destroy_f64",
+      "module": "scifort_ecdf_bridge",
+      "procedure": "ecdf_destroy",
+      "python": "ecdf_bridge.destroy"
+    },
+    {
+      "array_adapter": "scifort_ecdf_evaluate_f64",
+      "module": "scifort_ecdf_bridge",
+      "procedure": "ecdf_evaluate",
+      "python": "ecdf_bridge.evaluate"
+    },
+    {
+      "array_adapter": "scifort_ecdf_info_f64",
+      "module": "scifort_ecdf_bridge",
+      "procedure": "ecdf_info",
+      "python": "ecdf_bridge.info"
+    },
+    {
+      "array_adapter": "scifort_ecdf_interval_f64",
+      "module": "scifort_ecdf_bridge",
+      "procedure": "ecdf_interval",
+      "python": "ecdf_bridge.interval"
+    },
+    {
+      "array_adapter": "scifort_ecdf_values_f64",
+      "module": "scifort_ecdf_bridge",
+      "procedure": "ecdf_values",
+      "python": "ecdf_bridge.values"
     },
     {
       "bulk": "scifort_exponential_cdf_vec_f64",

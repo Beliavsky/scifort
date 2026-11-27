@@ -7,6 +7,7 @@
 #include "scifort_generated_chi2.h"
 #include "scifort_generated_dirichlet.h"
 #include "scifort_generated_dirichlet_multinomial.h"
+#include "scifort_generated_ecdf.h"
 #include "scifort_generated_exponential.h"
 #include "scifort_generated_gamma.h"
 #include "scifort_generated_gaussian_kde.h"

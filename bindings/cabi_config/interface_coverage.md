@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 282 |
+| exports | 288 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 116 |
+| array_adapters | 122 |
 | elementwise | 88 |
-| python | 204 |
+| python | 210 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -53,6 +53,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_dirichlet_multinomial | dirichlet_multinomial_mean |  |  | scifort_dirichlet_multinomial_mean_f64 |  | dirichlet_multinomial.mean |
 | scifort_dirichlet_multinomial | dirichlet_multinomial_pmf |  |  | scifort_dirichlet_multinomial_pmf_f64 |  | dirichlet_multinomial.pmf |
 | scifort_dirichlet_multinomial | dirichlet_multinomial_var |  |  | scifort_dirichlet_multinomial_var_f64 |  | dirichlet_multinomial.var |
+| scifort_ecdf_bridge | ecdf_create |  |  | scifort_ecdf_create_f64 |  | ecdf_bridge.create |
+| scifort_ecdf_bridge | ecdf_destroy |  |  | scifort_ecdf_destroy_f64 |  | ecdf_bridge.destroy |
+| scifort_ecdf_bridge | ecdf_evaluate |  |  | scifort_ecdf_evaluate_f64 |  | ecdf_bridge.evaluate |
+| scifort_ecdf_bridge | ecdf_info |  |  | scifort_ecdf_info_f64 |  | ecdf_bridge.info |
+| scifort_ecdf_bridge | ecdf_interval |  |  | scifort_ecdf_interval_f64 |  | ecdf_bridge.interval |
+| scifort_ecdf_bridge | ecdf_values |  |  | scifort_ecdf_values_f64 |  | ecdf_bridge.values |
 | scifort_exponential | exponential_cdf | scifort_exponential_cdf_f64 | scifort_exponential_cdf_vec_f64 |  | scifort_exponential_cdf_elementwise_f64 | exponential.cdf |
 | scifort_exponential | exponential_isf | scifort_exponential_isf_f64 | scifort_exponential_isf_vec_f64 |  | scifort_exponential_isf_elementwise_f64 | exponential.isf |
 | scifort_exponential | exponential_logcdf | scifort_exponential_logcdf_f64 | scifort_exponential_logcdf_vec_f64 |  | scifort_exponential_logcdf_elementwise_f64 | exponential.logcdf |

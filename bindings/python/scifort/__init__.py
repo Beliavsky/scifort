@@ -3,6 +3,7 @@
 from ._generated import API
 from .random import RandomState
 from .kde import GaussianKDE
+from .ecdf import ecdf, EmpiricalDistributionFunction, ECDFResult, ECDFConfidenceInterval
 
 from ._runtime import ArrayResult
 
@@ -12,9 +13,14 @@ class Scifort(API):
         """Create a caller-owned native stream bound to this library instance."""
         return RandomState(self, seed)
 
+    def ecdf(self, sample, *, right=None):
+        """Create independent empirical CDF/SF owners; optionally include right censoring."""
+        return ecdf(self, sample, right=right)
+
     def gaussian_kde(self, dataset, bw_method=None, weights=None):
         """Create an owning KDE; use close() or a context manager to release it."""
         return GaussianKDE(self, dataset, bw_method=bw_method, weights=weights)
 
 
-__all__ = ['Scifort', 'ArrayResult', 'RandomState', 'GaussianKDE']
+__all__ = ['Scifort', 'ArrayResult', 'RandomState', 'GaussianKDE',
+           'EmpiricalDistributionFunction', 'ECDFResult', 'ECDFConfidenceInterval']

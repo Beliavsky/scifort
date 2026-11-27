@@ -137,7 +137,7 @@ Never trade away correctness or provenance merely to add more functions.
   Poisson-binomial methods, real orthogonal/correlation matrix samplers,
   fixed-margin random tables, uniform directions, von Mises-Fisher methods,
   unitary-group sampling, paired normal-inverse-gamma samples and Gaussian-KDE
-  bridge procedures.
+  bridge procedures and reviewed empirical-distribution bridge procedures.
   Keep readable shape comments
   and follow `tools/cabi_generator/README.md`. Do not apply the prototype broadly or treat
   conditional prose as verified assertions.

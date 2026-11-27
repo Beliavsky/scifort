@@ -1139,6 +1139,132 @@ class Dirichlet_multinomial(ArrayGroup):
         """Return the native array result; optionally use caller-owned out."""
         return self._invoke('var', {'alpha': alpha, 'n': n}, out)
 
+class Ecdf_bridge(ArrayGroup):
+    _specs = {'create': {'arguments': ['uncensored', 'right', 'cdf_handle', 'sf_handle', 'status'],
+                'definitions': {'n': {'argument': 'uncensored', 'axis': None},
+                                'r': {'argument': 'right', 'axis': None}},
+                'dimensions': ['n', 'r'],
+                'inputs': ['uncensored', 'right'],
+                'logical_inputs': {},
+                'metadata': {'cdf_handle': {'category': 'handle', 'intent': 'out', 'rank': 0},
+                             'right': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'sf_handle': {'category': 'handle', 'intent': 'out', 'rank': 0},
+                             'uncensored': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'n': 0, 'r': 0},
+                'opaque_handles': {'cdf_handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                                  'type': 'empirical_distribution_function'},
+                                   'sf_handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                                 'type': 'empirical_distribution_function'}},
+                'outputs': ['cdf_handle', 'sf_handle'],
+                'shapes': {'right': ['r'], 'uncensored': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_ecdf_create_f64'},
+     'destroy': {'arguments': ['handle', 'status'],
+                 'definitions': {},
+                 'dimensions': [],
+                 'inputs': ['handle'],
+                 'logical_inputs': {},
+                 'metadata': {'handle': {'category': 'handle', 'intent': 'inout', 'rank': 0}},
+                 'minimums': {},
+                 'opaque_handles': {'handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                               'type': 'empirical_distribution_function'}},
+                 'outputs': [],
+                 'shapes': {},
+                 'status': 'status',
+                 'symbol': 'scifort_ecdf_destroy_f64'},
+     'evaluate': {'arguments': ['handle', 'x', 'values', 'status'],
+                  'definitions': {'n': {'argument': 'x', 'axis': None}},
+                  'dimensions': ['n'],
+                  'inputs': ['handle', 'x'],
+                  'logical_inputs': {},
+                  'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                               'values': {'category': 'real', 'intent': 'out', 'rank': 1},
+                               'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                  'minimums': {'n': 0},
+                  'opaque_handles': {'handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                                'type': 'empirical_distribution_function'}},
+                  'outputs': ['values'],
+                  'shapes': {'values': ['n'], 'x': ['n']},
+                  'status': 'status',
+                  'symbol': 'scifort_ecdf_evaluate_f64'},
+     'info': {'arguments': ['handle', 'count', 'variance', 'survival', 'status'],
+              'definitions': {},
+              'dimensions': [],
+              'inputs': ['handle'],
+              'logical_inputs': {},
+              'metadata': {'count': {'category': 'integer', 'intent': 'out', 'rank': 0},
+                           'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                           'survival': {'category': 'integer', 'intent': 'out', 'rank': 0},
+                           'variance': {'category': 'integer', 'intent': 'out', 'rank': 0}},
+              'minimums': {},
+              'opaque_handles': {'handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                            'type': 'empirical_distribution_function'}},
+              'outputs': ['count', 'variance', 'survival'],
+              'shapes': {},
+              'status': 'status',
+              'symbol': 'scifort_ecdf_info_f64'},
+     'interval': {'arguments': ['handle', 'level', 'method', 'low_handle', 'high_handle', 'status'],
+                  'definitions': {},
+                  'dimensions': [],
+                  'inputs': ['handle', 'level', 'method'],
+                  'logical_inputs': {},
+                  'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                               'high_handle': {'category': 'handle', 'intent': 'out', 'rank': 0},
+                               'level': {'category': 'real', 'intent': 'in', 'rank': 0},
+                               'low_handle': {'category': 'handle', 'intent': 'out', 'rank': 0},
+                               'method': {'category': 'integer', 'intent': 'in', 'rank': 0}},
+                  'minimums': {},
+                  'opaque_handles': {'handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                                'type': 'empirical_distribution_function'},
+                                     'high_handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                                     'type': 'empirical_distribution_function'},
+                                     'low_handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                                    'type': 'empirical_distribution_function'}},
+                  'outputs': ['low_handle', 'high_handle'],
+                  'shapes': {},
+                  'status': 'status',
+                  'symbol': 'scifort_ecdf_interval_f64'},
+     'values': {'arguments': ['handle', 'quantiles', 'probabilities', 'status'],
+                'definitions': {'m': {'argument': 'quantiles', 'axis': None}},
+                'dimensions': ['m'],
+                'inputs': ['handle'],
+                'logical_inputs': {},
+                'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                             'probabilities': {'category': 'real', 'intent': 'out', 'rank': 1},
+                             'quantiles': {'category': 'real', 'intent': 'out', 'rank': 1}},
+                'minimums': {'m': 0},
+                'opaque_handles': {'handle': {'release_symbol': 'scifort_ecdf_destroy_f64',
+                                              'type': 'empirical_distribution_function'}},
+                'output_dimensions': {'m': 0},
+                'outputs': ['quantiles', 'probabilities'],
+                'shapes': {'probabilities': ['m'], 'quantiles': ['m']},
+                'status': 'status',
+                'symbol': 'scifort_ecdf_values_f64'}}
+
+    def create(self, uncensored, right, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('create', {'uncensored': uncensored, 'right': right}, out)
+
+    def destroy(self, handle, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('destroy', {'handle': handle}, out)
+
+    def evaluate(self, handle, x, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('evaluate', {'handle': handle, 'x': x}, out)
+
+    def info(self, handle, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('info', {'handle': handle}, out)
+
+    def interval(self, handle, level=0.95, method=0, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('interval', {'handle': handle, 'level': level, 'method': method}, out)
+
+    def values(self, handle, *, m=0, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('values', {'handle': handle, 'm': m}, out)
+
 class Invwishart(ArrayGroup):
     _specs = {'entropy': {'arguments': ['df', 'scale', 'value', 'status'],
                  'definitions': {'p': {'argument': 'scale', 'axis': 1}},
@@ -3885,6 +4011,7 @@ class API(Library):
         self.weibull = Weibull(self._library)
         self.dirichlet = Dirichlet(self._library)
         self.dirichlet_multinomial = Dirichlet_multinomial(self._library)
+        self.ecdf_bridge = Ecdf_bridge(self._library)
         self.invwishart = Invwishart(self._library)
         self.kde_bridge = Kde_bridge(self._library)
         self.linalg = Linalg(self._library)

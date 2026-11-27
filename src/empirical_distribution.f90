@@ -351,7 +351,8 @@ contains
     end function count_at_risk
 
     function ecdf_uncensored(sample) result(res)
-        real(dp), intent(in) :: sample(:) !! one-dimensional uncensored sample
+        !! Build frequency steps; n = size(sample) >= 0; an empty sample is supported.
+        real(dp), intent(in) :: sample(:) !! shape (n); finite uncensored observations, ties permitted
         type(ecdf_result) :: res
 
         integer :: cumulative
@@ -417,8 +418,10 @@ contains
     end function ecdf_uncensored
 
     function ecdf_right_censored(uncensored, right) result(res)
-        real(dp), intent(in) :: uncensored(:) !! observed event/death times
-        real(dp), intent(in) :: right(:) !! right-censoring/loss times
+        !! Build Kaplan-Meier steps; n = size(uncensored), r = size(right), both >= 0.
+        !! Lengths are independent; all-censored and empty samples are supported.
+        real(dp), intent(in) :: uncensored(:) !! shape (n); finite observed event times
+        real(dp), intent(in) :: right(:) !! shape (r); finite right-censoring times
         type(ecdf_result) :: res
 
         real(dp), allocatable :: cdf(:)
@@ -752,8 +755,9 @@ contains
     end function valid_order_statistic
 
     pure elemental function edf_evaluate_scalar(self, x) result(y)
-        class(empirical_distribution_function), intent(in) :: self
-        real(dp), intent(in) :: x
+        !! Evaluate a right-continuous step, including native NaN/infinity conventions.
+        class(empirical_distribution_function), intent(in) :: self !! initialized CDF, SF or confidence-bound function
+        real(dp), intent(in) :: x !! evaluation point; NaN maps to CDF 1 or SF 0
         real(dp) :: y
 
         integer :: i
@@ -811,7 +815,8 @@ contains
     end function edf_evaluate_scalar
 
     function edf_confidence_interval_method(self, confidence_level, method) result(ci)
-        class(empirical_distribution_function), intent(in) :: self
+        !! Construct independent Greenwood bounds; self must contain variance data.
+        class(empirical_distribution_function), intent(in) :: self !! CDF or SF with matching knot, risk and event arrays
         real(dp), intent(in), optional :: confidence_level !! confidence level in [0,1], default 0.95
         character(len=*), intent(in), optional :: method !! linear or log-log
         type(ecdf_confidence_interval) :: ci
@@ -851,10 +856,12 @@ contains
     end function edf_confidence_interval_method
 
     subroutine linear_greenwood(self, level, low, high)
-        class(empirical_distribution_function), intent(in) :: self
-        real(dp), intent(in) :: level
-        real(dp), intent(out) :: low(:)
-        real(dp), intent(out) :: high(:)
+        !! Compute linear Greenwood bounds; m = size(self%probabilities) >= 0.
+        !! self%at_risk and self%events each have length m.
+        class(empirical_distribution_function), intent(in) :: self !! initialized EDF with variance data
+        real(dp), intent(in) :: level !! confidence level in [0,1]
+        real(dp), intent(out) :: low(:) !! shape (m); lower probability bounds
+        real(dp), intent(out) :: high(:) !! shape (m); upper probability bounds
 
         real(dp) :: cumulative
         integer :: d
@@ -892,10 +899,12 @@ contains
     end subroutine linear_greenwood
 
     subroutine loglog_greenwood(self, level, low, high)
-        class(empirical_distribution_function), intent(in) :: self
-        real(dp), intent(in) :: level
-        real(dp), intent(out) :: low(:)
-        real(dp), intent(out) :: high(:)
+        !! Compute exponential Greenwood bounds; m = size(self%probabilities) >= 0.
+        !! self%at_risk and self%events each have length m.
+        class(empirical_distribution_function), intent(in) :: self !! initialized EDF with variance data
+        real(dp), intent(in) :: level !! confidence level in [0,1]
+        real(dp), intent(out) :: low(:) !! shape (m); lower probability bounds
+        real(dp), intent(out) :: high(:) !! shape (m); upper probability bounds
 
         real(dp) :: cumulative
         integer :: d
@@ -1101,13 +1110,15 @@ contains
     end subroutine clip_unit_interval
 
     subroutine set_edf(edf, quantiles, probabilities, at_risk, events, is_survival, has_variance_data)
-        type(empirical_distribution_function), intent(out) :: edf
-        real(dp), intent(in) :: quantiles(:)
-        real(dp), intent(in) :: probabilities(:)
-        integer, intent(in) :: at_risk(:)
-        integer, intent(in) :: events(:)
-        logical, intent(in) :: is_survival
-        logical, intent(in) :: has_variance_data
+        !! Copy EDF storage; m = size(quantiles) >= 0.
+        !! Risk/event lengths are m when has_variance_data, otherwise zero.
+        type(empirical_distribution_function), intent(out) :: edf !! independent destination EDF
+        real(dp), intent(in) :: quantiles(:) !! shape (m); sorted distinct sample times
+        real(dp), intent(in) :: probabilities(:) !! shape (m); probabilities at quantiles
+        integer, intent(in) :: at_risk(:) !! shape (m) with variance data, otherwise (0); risk-set counts
+        integer, intent(in) :: events(:) !! shape (m) with variance data, otherwise (0); event counts
+        logical, intent(in) :: is_survival !! select survival rather than cumulative probabilities
+        logical, intent(in) :: has_variance_data !! whether risk/event counts support confidence intervals
 
         edf%quantiles = quantiles
         edf%probabilities = probabilities
@@ -1138,7 +1149,8 @@ contains
     end function real_equal
 
     subroutine sort_real(values)
-        real(dp), intent(inout) :: values(:)
+        !! Sort values in ascending order; any length, including zero.
+        real(dp), intent(inout) :: values(:) !! observations to sort in place
         real(dp), allocatable :: workspace(:)
 
         if (size(values) <= 1) return
@@ -1147,10 +1159,12 @@ contains
     end subroutine sort_real
 
     recursive subroutine merge_sort_real(values, workspace, left, right)
-        real(dp), intent(inout) :: values(:)
-        real(dp), intent(inout) :: workspace(:)
-        integer, intent(in) :: left
-        integer, intent(in) :: right
+        !! Merge-sort a subrange; n = size(values), size(workspace) >= n.
+        !! Nonempty work uses 1 <= left <= right <= n; left >= right returns immediately.
+        real(dp), intent(inout) :: values(:) !! shape (n); observations to sort in place
+        real(dp), intent(inout) :: workspace(:) !! shape (capacity), capacity >= n; merge scratch storage
+        integer, intent(in) :: left !! first subrange index, one-based
+        integer, intent(in) :: right !! last subrange index, inclusive
 
         integer :: i
         integer :: j
@@ -1205,8 +1219,9 @@ contains
     end subroutine sort_nan_last
 
     subroutine stable_sort_indices(values, order)
-        real(dp), intent(in) :: values(:)
-        integer, intent(out) :: order(size(values))
+        !! Return stable sorted indices; n = size(values) >= 0.
+        real(dp), intent(in) :: values(:) !! shape (n); sample values
+        integer, intent(out) :: order(size(values)) !! one-based indices in stable ascending value order
         integer, allocatable :: workspace(:)
         integer :: i
 
@@ -1219,11 +1234,13 @@ contains
     end subroutine stable_sort_indices
 
     recursive subroutine merge_sort_indices(values, order, workspace, left, right)
-        real(dp), intent(in) :: values(:)
-        integer, intent(inout) :: order(:)
-        integer, intent(inout) :: workspace(:)
-        integer, intent(in) :: left
-        integer, intent(in) :: right
+        !! Merge-sort indices; n = size(values), size(order) = n, size(workspace) >= n.
+        !! Nonempty work uses 1 <= left <= right <= n; left >= right returns immediately.
+        real(dp), intent(in) :: values(:) !! shape (n); values addressed by one-based order entries
+        integer, intent(inout) :: order(:) !! shape (n); index permutation to sort
+        integer, intent(inout) :: workspace(:) !! shape (capacity), capacity >= n; merge scratch storage
+        integer, intent(in) :: left !! first subrange index, one-based
+        integer, intent(in) :: right !! last subrange index, inclusive
 
         integer :: i
         integer :: j

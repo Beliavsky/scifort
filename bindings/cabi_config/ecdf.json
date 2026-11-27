@@ -1,0 +1,186 @@
+{
+  "schema_version": 2,
+  "source": "src/c_api/ecdf_bridge.f90",
+  "module": "scifort_ecdf_bridge",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_ecdf",
+  "header_guard": "SCIFORT_GENERATED_ECDF_H",
+  "functions": {},
+  "subroutines": {
+    "ecdf_create": {
+      "symbol": "scifort_ecdf_create_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 0
+        },
+        {
+          "name": "r",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "n"
+        ],
+        "right": [
+          "r"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Create independently owned ordinary or right-censored CDF/SF functions.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "cdf_handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        },
+        "sf_handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        }
+      }
+    },
+    "ecdf_destroy": {
+      "symbol": "scifort_ecdf_destroy_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Destroy an EDF and null its owning slot.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    },
+    "ecdf_info": {
+      "symbol": "scifort_ecdf_info_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Query EDF length and variance/survival flags.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    },
+    "ecdf_evaluate": {
+      "symbol": "scifort_ecdf_evaluate_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n"
+        ],
+        "values": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate an empirical CDF or SF at a batch of points.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        }
+      }
+    },
+    "ecdf_values": {
+      "symbol": "scifort_ecdf_values_f64",
+      "dimensions": [
+        {
+          "name": "m",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "quantiles": [
+          "m"
+        ],
+        "probabilities": [
+          "m"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Copy knots and probabilities into exact-length caller buffers.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        }
+      }
+    },
+    "ecdf_interval": {
+      "symbol": "scifort_ecdf_interval_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Return independently owned Greenwood confidence-bound functions.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        },
+        "low_handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        },
+        "high_handle": {
+          "type": "empirical_distribution_function",
+          "release_symbol": "scifort_ecdf_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    }
+  },
+  "excluded": {},
+  "argument_docs": {
+    "handle": "live EDF; null returns status 5",
+    "status": "0 success; 1 shape; 2 invalid input/options; 5 null; 6 object allocation",
+    "uncensored": "finite event times",
+    "right": "finite right-censoring times",
+    "n": "number of events or evaluation points, >= 0",
+    "r": "number of right-censored observations, >= 0",
+    "m": "exact knot count from info, >= 0",
+    "x": "evaluation points; NaN and infinities permitted",
+    "values": "evaluated probabilities; NaNs on native failure",
+    "quantiles": "copied sorted distinct times",
+    "probabilities": "copied probabilities at knots",
+    "count": "exact number of stored knots",
+    "variance": "1 if variance data are available; otherwise 0",
+    "survival": "1 for SF; otherwise 0",
+    "level": "finite confidence level in [0,1]",
+    "method": "0 linear; 1 log-log",
+    "cdf_handle": "new owning CDF; null on failure",
+    "sf_handle": "new owning SF; null on failure",
+    "low_handle": "new owning lower bound; null on failure",
+    "high_handle": "new owning upper bound; null on failure"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/ecdf_generated.f90",
+    "header": "include/scifort_generated_ecdf.h",
+    "coverage": "bindings/cabi_config/ecdf_coverage.json",
+    "shape_documentation": "docs/ecdf_bridge_shapes.md"
+  }
+}

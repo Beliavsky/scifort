@@ -2985,3 +2985,94 @@ The unified regeneration check also passed for all 160 pipeline artifacts:
 ```bat
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
 ```
+
+## Empirical CDF and Kaplan-Meier objects
+
+`api.ecdf(sample, right=None)` copies finite, one-dimensional event observations
+and optional finite right-censoring times into independent `.cdf` and `.sf`
+objects. The input lengths are independent. Ties, an empty event vector, an
+all-censored sample and a completely empty sample are supported. This Python
+signature uses separate vectors rather than accepting SciPy's `CensoredData`.
+Left and interval censoring are not supported by ECDF/Kaplan-Meier construction.
+
+```python
+with api.ecdf([1., 2., 2., 4.], right=[2., 5.]) as result:
+    probabilities = result.cdf.evaluate([0., 1., 2., 4., 6.])
+    quantiles, at_knots = result.cdf.get_values()
+    with result.sf.confidence_interval(.9, method='log-log') as interval:
+        lower = interval.low.probabilities
+        upper = interval.high.probabilities
+```
+
+`evaluate` (also callable) accepts a scalar or vector. Scalars return floats;
+vectors return float64 vectors, including empty results. A writable, aligned,
+contiguous float64 `out=` vector can be supplied, of length one for a scalar.
+Evaluation is right-continuous. Native behavior is preserved: NaN and positive
+infinity map to CDF 1/SF 0; negative infinity maps to CDF 0/SF 1. For an empty
+estimate, finite points map to CDF 0/SF 1. In a right-censored sample the final
+finite knot need not have CDF 1; positive infinity still uses the native endpoint.
+
+`.quantiles` and `.probabilities` return independent copies. `get_values` returns
+both and accepts `out={'quantiles': q, 'probabilities': p}` for separate writable
+float64 vectors of the exact knot count. Changing a returned vector cannot
+change the estimate. Strided evaluation inputs are copied as needed; output
+buffers must be contiguous and disjoint from inputs and each other.
+
+`confidence_interval(confidence_level=.95, method='linear')` supports linear
+Greenwood and `'log-log'` exponential Greenwood intervals, including confidence
+levels 0 and 1. Returned `.low` and `.high` are independent EDF owners. Undefined
+native confidence bounds are NaN with success status, matching the underlying
+Greenwood formulas; they are not replaced by fabricated limits. Bounds do not
+carry variance data and reject nested confidence intervals.
+
+Use a context manager or explicit `close()` for each result pair or individual
+function. Closing a pair closes its two functions; closing one function leaves
+its partner usable. A confidence bound survives closing its source. Retaining
+an individual function after its pair is garbage-collected keeps that function
+alive. Function owners retain their library and cannot be copied or pickled.
+Python's existing per-handle locks serialize calls and close operations.
+
+The reviewed [C header](../../include/scifort_generated_ecdf.h) exposes six stable
+functions: create, destroy, info, evaluate, values and interval. Owning output
+slots must be fresh; do not overwrite a live handle. Query `info` for the exact
+knot count before allocating retrieval buffers. Every array pointer, including
+an empty buffer, must be valid and disjoint; scalar output pointers are non-null.
+Null handle destruction succeeds; any other null-handle operation returns 5.
+Invalid nonnegative retrieval lengths return 1 with NaN buffers. Negative C
+extents fail before native entry and preserve outputs. Creation validates finite
+samples before entering native code, returning status 2 and null owners on
+failure. Interval mode is 0 linear or 1 log-log; invalid mode/level or a bound
+without variance data returns 2 and null owners. Outer object allocation failures
+return 6; native allocatable components retain their existing allocation behavior.
+
+Native algorithms/signatures are unchanged. Shape relationships are documented
+for public and private procedures in [ecdf_shapes.md](../../docs/ecdf_shapes.md)
+and the [generated bridge contracts](../../docs/ecdf_bridge_shapes.md).
+
+Focused test commands:
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_ecdf.py -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The existing native empirical-distribution module imports the contingency module
+for a confidence-interval result type. That dependency currently brings additional
+statistics/descriptive modules into the shared-library build, even though the
+new C ABI exposes only ECDF operations. They are recorded in the generated build
+plan; a first optimized build can take substantially longer. No additional
+numerical APIs are inferred from those dependencies.
+
+Validation on 2026-11-27: all six ECDF tests passed against checked
+(`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries, using GNU
+Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3 and SciPy 1.15.3.
+They include ordinary/tied/right-censored/empty samples, endpoint and NaN behavior,
+both Greenwood methods at levels 0, 0.9 and 1, invalid inputs, buffers, ownership,
+C/C++ clients, direct native/C agreement and the existing native empirical
+regression program. The new README example also ran against the checked library.
+All 101 generator tests passed; the final eight planner tests were rerun after
+parser refinements and passed. The unified check passed for all 164 artifacts.
+Native numerical statements and shared Python runtime implementations were
+unchanged; the unrelated full `fpm test` suite was not rerun. Other compilers and
+platforms were not newly validated.

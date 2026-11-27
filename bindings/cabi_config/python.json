@@ -674,6 +674,23 @@
           "d": 1
         }
       }
+    },
+    "ecdf_bridge": {
+      "manifests": [
+        "bindings/cabi_config/ecdf.json"
+      ],
+      "prefix": "ecdf_",
+      "defaults": {
+        "ecdf_interval": {
+          "level": 0.95,
+          "method": 0
+        }
+      },
+      "output_dimensions": {
+        "ecdf_values": {
+          "m": 0
+        }
+      }
     }
   }
 }
