@@ -1,0 +1,337 @@
+{
+  "generated_symbol_count": 6,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "mu",
+        "kappa",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 2
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "vonmises_fisher_entropy",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "mu",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 2
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "mu": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_vonmises_fisher_entropy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "data",
+        "mu",
+        "kappa",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "n_obs"
+      ],
+      "dimensions": {
+        "n": 2,
+        "n_obs": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "vonmises_fisher_fit",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "data",
+            "axis": 1
+          },
+          "n_obs": {
+            "argument": "data",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "n": 2,
+          "n_obs": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "data": [
+          "n",
+          "n_obs"
+        ],
+        "mu": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_vonmises_fisher_fit_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "mu",
+        "kappa",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 2
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "vonmises_fisher_logpdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "mu",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 2
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_vonmises_fisher_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "mu",
+        "kappa",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 2
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "vonmises_fisher_pdf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "mu",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 2
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_vonmises_fisher_pdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "mu",
+        "kappa",
+        "sample",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 2
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "vonmises_fisher_rvs",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "mu",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 2
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "sample": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_vonmises_fisher_rvs_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "mu",
+        "kappa",
+        "samples",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "n_samples"
+      ],
+      "dimensions": {
+        "n": 2,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "vonmises_fisher_rvs_array",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "mu",
+            "axis": null
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "n": 2,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "samples": [
+          "n",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_vonmises_fisher_rvs_array_f64"
+      ]
+    },
+    {
+      "procedure": "vonmises_fisher_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "vonmises_fisher_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "vonmises_fisher_status_numerical_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "vonmises_fisher_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 10,
+  "source": "src/stats/vonmises_fisher.f90",
+  "source_sha256": "b798be30f8772025e9bbea22255474cae9755f75d831a7be650216d07e793481"
+}

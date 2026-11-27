@@ -632,3 +632,12 @@ Python output allocation and RNG state codec; higher ranks and rank-three inputs
 remain unsupported. Shapes and numerical count limits are documented in the
 [native contracts](../../docs/random_table_shapes.md) and
 [C/Python interface](../python/README.md#fixed-margin-random-tables).
+
+## Directional distribution manifests
+
+uniform_direction selects single and column-batch sampling. vonmises_fisher
+selects pdf/logpdf/entropy, fitting and single/column-batch sampling. Both reuse
+existing real-array adapters, optional-status promotion and caller-owned RNG
+codecs; no generator extension is needed. Uniform output dimension defaults to
+3 in Python; von Mises-Fisher dimensions come from mu/data. See the
+[shape, parameter, fit and error contracts](../python/README.md#directional-distributions).

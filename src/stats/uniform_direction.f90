@@ -21,8 +21,11 @@ module scifort_uniform_direction
 contains
 
     subroutine uniform_direction_rvs(state, sample, status)
+        !! Draw a unit vector uniformly on the sphere.
+        !! @dimension n = size(sample)
+        !! @require n >= 1
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the Gaussian draws
-        real(dp), intent(out) :: sample(:) !! one unit vector; its length is the spatial dimension
+        real(dp), intent(out) :: sample(:) !! shape (n); sampled unit vector
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer, parameter :: max_attempts = 8
@@ -52,8 +55,14 @@ contains
     end subroutine uniform_direction_rvs
 
     subroutine uniform_direction_rvs_array(state, samples, status)
+        !! Draw unit vectors by column uniformly on the sphere.
+        !! @dimension n = size(samples,1)
+        !! @require n >= 1
+        !! @dimension n_samples = size(samples,2)
+        !! @require n_samples >= 0
+        !! Empty batches succeed without advancing state; dimension must still be positive.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :) !! samples by column, shape (dimension, count)
+        real(dp), intent(out) :: samples(:, :) !! shape (n,n_samples); unit-vector samples by column
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: j

@@ -3018,6 +3018,185 @@ class Special_ortho_group(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
 
+class Uniform_direction(ArrayGroup):
+    _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
+             'definitions': {'n': {'argument': 'sample', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['state'],
+             'logical_inputs': {},
+             'metadata': {'sample': {'category': 'real', 'intent': 'out', 'rank': 1},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+             'minimums': {'n': 1},
+             'output_dimensions': {'n': 3},
+             'outputs': ['sample'],
+             'shapes': {'sample': ['n']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_uniform_direction_rvs_f64'},
+     'rvs_array': {'arguments': ['state', 'samples', 'status'],
+                   'definitions': {'n': {'argument': 'samples', 'axis': 1},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state'],
+                   'logical_inputs': {},
+                   'metadata': {'samples': {'category': 'real', 'intent': 'out', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 1, 'n_samples': 0},
+                   'output_dimensions': {'n': 3, 'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'samples': ['n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_uniform_direction_rvs_array_f64'}}
+
+    def rvs(self, state, *, n=3, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'n': n}, out)
+
+    def rvs_array(self, state, *, n=3, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
+
+class Vonmises_fisher(ArrayGroup):
+    _specs = {'entropy': {'arguments': ['mu', 'kappa', 'value', 'status'],
+                 'definitions': {'n': {'argument': 'mu', 'axis': None}},
+                 'dimensions': ['n'],
+                 'inputs': ['mu', 'kappa'],
+                 'logical_inputs': {},
+                 'metadata': {'kappa': {'category': 'real', 'intent': 'in', 'rank': 0},
+                              'mu': {'category': 'real', 'intent': 'in', 'rank': 1},
+                              'value': {'category': 'real', 'intent': 'out', 'rank': 0}},
+                 'minimums': {'n': 2},
+                 'outputs': ['value'],
+                 'result_argument': 'value',
+                 'shapes': {'mu': ['n']},
+                 'status': 'status',
+                 'symbol': 'scifort_vonmises_fisher_entropy_f64'},
+     'fit': {'arguments': ['data', 'mu', 'kappa', 'status'],
+             'definitions': {'n': {'argument': 'data', 'axis': 1},
+                             'n_obs': {'argument': 'data', 'axis': 2}},
+             'dimensions': ['n', 'n_obs'],
+             'inputs': ['data'],
+             'logical_inputs': {},
+             'metadata': {'data': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'kappa': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'mu': {'category': 'real', 'intent': 'out', 'rank': 1}},
+             'minimums': {'n': 2, 'n_obs': 1},
+             'outputs': ['mu', 'kappa'],
+             'shapes': {'data': ['n', 'n_obs'], 'mu': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_vonmises_fisher_fit_f64'},
+     'logpdf': {'arguments': ['x', 'mu', 'kappa', 'value', 'status'],
+                'definitions': {'n': {'argument': 'mu', 'axis': None}},
+                'dimensions': ['n'],
+                'inputs': ['x', 'mu', 'kappa'],
+                'logical_inputs': {},
+                'metadata': {'kappa': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'mu': {'category': 'real', 'intent': 'in', 'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'n': 2},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'mu': ['n'], 'x': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_vonmises_fisher_logpdf_f64'},
+     'pdf': {'arguments': ['x', 'mu', 'kappa', 'value', 'status'],
+             'definitions': {'n': {'argument': 'mu', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['x', 'mu', 'kappa'],
+             'logical_inputs': {},
+             'metadata': {'kappa': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'mu': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'real', 'intent': 'in', 'rank': 1}},
+             'minimums': {'n': 2},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'mu': ['n'], 'x': ['n']},
+             'status': 'status',
+             'symbol': 'scifort_vonmises_fisher_pdf_f64'},
+     'rvs': {'arguments': ['state', 'mu', 'kappa', 'sample', 'status'],
+             'definitions': {'n': {'argument': 'mu', 'axis': None}},
+             'dimensions': ['n'],
+             'inputs': ['state', 'mu', 'kappa'],
+             'logical_inputs': {},
+             'metadata': {'kappa': {'category': 'real', 'intent': 'in', 'rank': 0},
+                          'mu': {'category': 'real', 'intent': 'in', 'rank': 1},
+                          'sample': {'category': 'real', 'intent': 'out', 'rank': 1},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+             'minimums': {'n': 2},
+             'outputs': ['sample'],
+             'shapes': {'mu': ['n'], 'sample': ['n']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_vonmises_fisher_rvs_f64'},
+     'rvs_array': {'arguments': ['state', 'mu', 'kappa', 'samples', 'status'],
+                   'definitions': {'n': {'argument': 'mu', 'axis': None},
+                                   'n_samples': {'argument': 'samples', 'axis': 2}},
+                   'dimensions': ['n', 'n_samples'],
+                   'inputs': ['state', 'mu', 'kappa'],
+                   'logical_inputs': {},
+                   'metadata': {'kappa': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                'mu': {'category': 'real', 'intent': 'in', 'rank': 1},
+                                'samples': {'category': 'real', 'intent': 'out', 'rank': 2},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n': 2, 'n_samples': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'mu': ['n'], 'samples': ['n', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_vonmises_fisher_rvs_array_f64'}}
+
+    def entropy(self, mu, kappa):
+        """Return the native scalar value."""
+        return self._invoke('entropy', {'mu': mu, 'kappa': kappa}, None)
+
+    def fit(self, data, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('fit', {'data': data}, out)
+
+    def logpdf(self, x, mu, kappa):
+        """Return the native scalar value."""
+        return self._invoke('logpdf', {'x': x, 'mu': mu, 'kappa': kappa}, None)
+
+    def pdf(self, x, mu, kappa):
+        """Return the native scalar value."""
+        return self._invoke('pdf', {'x': x, 'mu': mu, 'kappa': kappa}, None)
+
+    def rvs(self, state, mu, kappa, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'mu': mu, 'kappa': kappa}, out)
+
+    def rvs_array(self, state, mu, kappa, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'mu': mu, 'kappa': kappa, 'n_samples': n_samples}, out)
+
 class Wishart(ArrayGroup):
     _specs = {'entropy': {'arguments': ['df', 'scale', 'value', 'status'],
                  'definitions': {'p': {'argument': 'scale', 'axis': 1}},
@@ -3187,6 +3366,8 @@ class API(Library):
         self.random_correlation = Random_correlation(self._library)
         self.random_table = Random_table(self._library)
         self.special_ortho_group = Special_ortho_group(self._library)
+        self.uniform_direction = Uniform_direction(self._library)
+        self.vonmises_fisher = Vonmises_fisher(self._library)
         self.wishart = Wishart(self._library)
 
 __all__ = ["API"]

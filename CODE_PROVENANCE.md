@@ -1,3 +1,14 @@
+## 2026-11-27 - Directional distribution interfaces
+
+The reviewed manifests, generated C/Python interfaces, native shape comments and
+integration tests are original MIT SciFort interface work. No numerical algorithm
+was imported or changed. Existing normalized-Gaussian uniform-direction sampling
+and von Mises-Fisher Bessel normalization, circular/3D/Wood samplers and fitting
+remain in use, with their existing provenance below. Tests use installed SciPy
+public outputs, analytic 3D normalization and mean-resultant formulas, independent
+unit-norm/moment checks and native/C/state agreement. No third-party implementation
+source was copied or adapted for this interface addition.
+
 ## 2026-11-27 - Fixed-margin table interfaces and safe count sums
 
 The rank-three integer-output generator extension, manifests, adapters,

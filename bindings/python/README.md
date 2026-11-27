@@ -2466,3 +2466,105 @@ tests passed in 599.194 seconds; all seven focused table tests passed in
 140 artifacts. The numerical change is confined to random_table validation;
 focused native/C/Python and overflow-trapping checks cover that behavior.
 The full native `fpm test` suite was not rerun.
+
+## Directional distributions
+
+`api.uniform_direction.rvs(state, *, n=3)` returns one unit vector of shape
+`(n)`. `rvs_array(state, *, n=3, n_samples=1)` returns column samples of shape
+`(n,n_samples)`. Both return `ArrayResult` with `outputs["sample"]` or
+`outputs["samples"]`. Dimensions are explicit; n >= 1 even for empty batches.
+The one-dimensional sampler returns either -1 or +1. Empty batches advance no
+state, but C/Python still require valid serialized state.
+
+`api.vonmises_fisher` exposes:
+
+| Method | Inputs | Result |
+| --- | --- | --- |
+| `pdf`, `logpdf` | x `(n)`, mu `(n)`, kappa | Scalar density/log density |
+| `entropy` | mu `(n)`, kappa | Scalar differential entropy |
+| `rvs` | state, mu `(n)`, kappa | ArrayResult: sample `(n)` |
+| `rvs_array` | state, mu `(n)`, kappa, keyword n_samples=1 | ArrayResult: samples `(n,n_samples)` |
+| `fit` | data `(n,n_obs)` | ArrayResult: mu `(n)`, scalar kappa |
+
+Dimension n is inferred from mu or data and must be >= 2. Observations and
+samples are columns, unlike SciPy's observation-row convention. Evaluation and
+mean directions must be finite with Euclidean norm within 1.1e-5 of one; inputs
+are not automatically normalized. Concentration must be finite and strictly
+positive. kappa=0 is rejected; use uniform_direction for uniform sampling.
+Native sampling uses separate 2D, 3D and higher-dimensional algorithms, with
+unchanged iteration limits and numerical behavior. Large finite concentrations
+can still encounter native numerical limitations; valid input does not certify
+successful sampling over every representable parameter combination.
+
+Fit requires at least one finite unit-vector observation. It searches for kappa
+between 1e-8 and 1e9. Nonfinite data return status 1 and NaN outputs; nonunit data
+return 2 and NaN outputs. Near-zero mean resultant returns 3 and NaN outputs.
+An effectively aligned sample or a concentration outside the search bracket
+can return 3 with a finite fitted direction and NaN concentration. Always check
+status before using a fit. This preserves existing SciFort behavior rather than
+silently extending the fit range.
+
+```python
+stream = api.rng(123)
+uniform = api.uniform_direction.rvs_array(stream, n=3, n_samples=8)
+mu = [0.6, 0.8, 0.0]
+draws = api.vonmises_fisher.rvs_array(stream, mu, 4.0, n_samples=100)
+assert draws.status == 0
+fit = api.vonmises_fisher.fit(draws.outputs["samples"])
+assert fit.status == 0
+log_density = api.vonmises_fisher.logpdf(mu, mu, 4.0)
+```
+
+Use writable, aligned, Fortran-contiguous float64 output buffers of exact shape,
+passed as `out={"sample": buffer}`, `out={"samples": buffer}`, or
+`out={"mu": buffer}` for fitting. Outputs must not overlap inputs or state.
+Input buffers must also be disjoint from each other. With NumPy arrays, use
+`mu.copy()` as x when evaluating at mu. The fit concentration is returned as a
+scalar in `outputs["kappa"]`. The RNG
+must belong to the same API instance. Repeated single draws and split batches
+match whole batches exactly for identical initial streams. SciFort does not
+reproduce SciPy RNG sequences.
+
+Generated C symbols use `scifort_uniform_direction_{rvs,rvs_array}_f64` and
+`scifort_vonmises_fisher_{pdf,logpdf,entropy,fit,rvs,rvs_array}_f64`. Headers are
+included by `scifort.h`. Dimensions precede native arguments: n, then n_samples
+for batch sampling or n_obs for fit. Vectors/matrices use contiguous column-major
+`double` buffers and state uses caller-owned `int64_t[6]`. Every pointer must be
+valid and non-NULL even for empty arrays; capacity and nonoverlap are caller
+responsibilities. Thin explicit-shape adapters do not validate pointers.
+
+Adapter shape errors return 1, preserving outputs/state; native fit failures
+follow the distinct output rules above. Invalid state returns 4, also preserving
+buffers, even on empty calls. Scalar density/entropy
+calls retain native NaN results with status 0 for numerical/parameter errors.
+Uniform sampling returns native status 2 on numerical failure. Von Mises-Fisher
+sampling returns 2 for invalid parameters, with zero output and unchanged state,
+or 3 for numerical failure, exporting any consumed state. Empty von Mises-Fisher
+batches skip parameter validation but still require n >= 2 and valid state.
+On numerical failure, completed columns are retained. Uniform batches leave later
+columns unspecified; von Mises-Fisher batches initially zero all columns, and a
+failing draw can be partial. Check status before reading failed sample outputs.
+
+See [uniform-direction shapes](../../docs/uniform_direction_shapes.md) and
+[von Mises-Fisher shapes](../../docs/vonmises_fisher_shapes.md). Native comments
+also document private helper lengths and matching-array requirements.
+Focused commands from the repository root (CMD):
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_directional.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The focused test runs checked (`-O0 -g -fcheck=all -fbacktrace`) and optimized
+(`-O3`) shared libraries, a native/C agreement program, a C11 client and C++17
+header checks. It covers all native sampling branches in dimensions 2, 3 and 5,
+reference densities/entropy/fits, stream agreement, unit norms, moments, rejected
+buffers, invalid parameters and empty batches.
+
+Local validation on 2026-11-27 used Python 3.13.3, SciPy 1.15.3
+and GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental) on Windows. All seven
+focused tests passed in the final run (10.846 seconds with cached checked and
+optimized libraries), including native/C clients and C++ header checks. The
+pipeline checked all 148 artifacts. Native executable code is unchanged in both
+modules; the full native `fpm test` suite was not rerun for this bounded interface
+and documentation addition. No generator implementation was changed.

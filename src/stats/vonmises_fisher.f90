@@ -37,9 +37,14 @@ module scifort_vonmises_fisher
 contains
 
     function vonmises_fisher_logpdf(x, mu, kappa) result(y)
-        real(dp), intent(in) :: x(:) !! unit vector at which the density is evaluated
-        real(dp), intent(in) :: mu(:) !! mean direction; unit vector of matching dimension >= 2
-        real(dp), intent(in) :: kappa !! positive concentration parameter
+        !! Evaluate the log density on the unit sphere.
+        !! @dimension n = size(mu)
+        !! @require n >= 2
+        !! Mean/evaluation directions must be finite with norm within 1.1e-5 of one.
+        !! Concentration must be finite and strictly positive; kappa=0 is not accepted.
+        real(dp), intent(in) :: x(:) !! shape (n); finite unit vector where the density is evaluated
+        real(dp), intent(in) :: mu(:) !! shape (n); finite unit mean direction
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
         real(dp) :: y
 
         integer :: dim
@@ -57,17 +62,27 @@ contains
     end function vonmises_fisher_logpdf
 
     function vonmises_fisher_pdf(x, mu, kappa) result(y)
-        real(dp), intent(in) :: x(:) !! unit vector at which the density is evaluated
-        real(dp), intent(in) :: mu(:) !! mean direction; unit vector of matching dimension >= 2
-        real(dp), intent(in) :: kappa !! positive concentration parameter
+        !! Evaluate the unit-sphere density.
+        !! @dimension n = size(mu)
+        !! @require n >= 2
+        !! Mean/evaluation directions must be finite with norm within 1.1e-5 of one.
+        !! Concentration must be finite and strictly positive; kappa=0 is not accepted.
+        real(dp), intent(in) :: x(:) !! shape (n); finite unit vector where the density is evaluated
+        real(dp), intent(in) :: mu(:) !! shape (n); finite unit mean direction
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
         real(dp) :: y
 
         y = exp(vonmises_fisher_logpdf(x, mu, kappa))
     end function vonmises_fisher_pdf
 
     function vonmises_fisher_entropy(mu, kappa) result(y)
-        real(dp), intent(in) :: mu(:) !! mean direction; unit vector of dimension >= 2
-        real(dp), intent(in) :: kappa !! positive concentration parameter
+        !! Compute differential entropy on the unit sphere.
+        !! @dimension n = size(mu)
+        !! @require n >= 2
+        !! Mean/evaluation directions must be finite with norm within 1.1e-5 of one.
+        !! Concentration must be finite and strictly positive; kappa=0 is not accepted.
+        real(dp), intent(in) :: mu(:) !! shape (n); finite unit mean direction
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
         real(dp) :: y
 
         integer :: dim
@@ -86,10 +101,15 @@ contains
     end function vonmises_fisher_entropy
 
     subroutine vonmises_fisher_rvs(state, mu, kappa, sample, status)
+        !! Draw a unit vector using explicit RNG state.
+        !! @dimension n = size(mu)
+        !! @require n >= 2
+        !! Mean/evaluation directions must be finite with norm within 1.1e-5 of one.
+        !! Concentration must be finite and strictly positive; kappa=0 is not accepted.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by the draw
-        real(dp), intent(in) :: mu(:) !! mean direction; unit vector of dimension >= 2
-        real(dp), intent(in) :: kappa !! positive concentration parameter
-        real(dp), intent(out) :: sample(:) !! sampled unit vector of the same dimension as mu
+        real(dp), intent(in) :: mu(:) !! shape (n); finite unit mean direction
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
+        real(dp), intent(out) :: sample(:) !! shape (n); sampled unit vector
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: dim
@@ -122,10 +142,18 @@ contains
     end subroutine vonmises_fisher_rvs
 
     subroutine vonmises_fisher_rvs_array(state, mu, kappa, samples, status)
+        !! Draw unit-vector samples by column using explicit RNG state.
+        !! @dimension n = size(mu)
+        !! @require n >= 2
+        !! Mean/evaluation directions must be finite with norm within 1.1e-5 of one.
+        !! Concentration must be finite and strictly positive; kappa=0 is not accepted.
+        !! @dimension n_samples = size(samples,2)
+        !! @require n_samples >= 0
+        !! Empty batches skip parameter validation but still require n >= 2.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(in) :: mu(:) !! mean direction; unit vector of dimension >= 2
-        real(dp), intent(in) :: kappa !! positive concentration parameter
-        real(dp), intent(out) :: samples(:, :) !! samples by column, shape (dimension, count)
+        real(dp), intent(in) :: mu(:) !! shape (n); finite unit mean direction
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
+        real(dp), intent(out) :: samples(:, :) !! shape (n,n_samples); unit-vector samples by column
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: info
@@ -147,8 +175,14 @@ contains
     end subroutine vonmises_fisher_rvs_array
 
     subroutine vonmises_fisher_fit(data, mu, kappa, status)
-        real(dp), intent(in) :: data(:, :) !! unit-vector observations by column, shape (dimension, count)
-        real(dp), intent(out) :: mu(:) !! fitted mean direction
+        !! Fit mean direction and concentration from unit-vector observations.
+        !! @dimension n = size(data,1)
+        !! @dimension n_obs = size(data,2)
+        !! @require n >= 2
+        !! @require n_obs >= 1
+        !! Concentration is searched between 1e-8 and 1e9; degenerate fits return status 3.
+        real(dp), intent(in) :: data(:, :) !! shape (n,n_obs); finite unit-vector observations by column
+        real(dp), intent(out) :: mu(:) !! shape (n); fitted mean direction
         real(dp), intent(out) :: kappa !! fitted positive concentration
         integer, intent(out) :: status !! zero on success; nonzero for invalid/numerical failure
 
@@ -211,10 +245,11 @@ contains
     end subroutine vonmises_fisher_fit
 
     subroutine sample_2d(state, mu, kappa, sample)
+        !! Draw a circular sample; both mu and sample have length 2.
         type(rng_state), intent(inout) :: state !! RNG state advanced by one circular draw
-        real(dp), intent(in) :: mu(:) !! two-dimensional unit mean direction
-        real(dp), intent(in) :: kappa !! positive concentration parameter
-        real(dp), intent(out) :: sample(:) !! two-dimensional unit sample
+        real(dp), intent(in) :: mu(:) !! shape (2); unit mean direction
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
+        real(dp), intent(out) :: sample(:) !! shape (2); unit sample
 
         real(dp) :: angle
         real(dp) :: mean_angle
@@ -226,9 +261,10 @@ contains
     end subroutine sample_2d
 
     subroutine sample_3d_north(state, kappa, sample, status)
+        !! Draw about the first axis; sample has length 3.
         type(rng_state), intent(inout) :: state !! RNG state advanced by the axial and circle draws
-        real(dp), intent(in) :: kappa !! positive concentration parameter
-        real(dp), intent(out) :: sample(:) !! three-dimensional sample around the first coordinate axis
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
+        real(dp), intent(out) :: sample(:) !! shape (3); sample around the first coordinate axis
         integer, intent(out) :: status !! zero on success; nonzero on numerical failure
 
         integer :: info
@@ -253,9 +289,10 @@ contains
     end subroutine sample_3d_north
 
     subroutine sample_wood_north(state, kappa, sample, status)
+        !! Draw about the first axis using rejection; n = size(sample), n >= 4.
         type(rng_state), intent(inout) :: state !! RNG state advanced by rejection and direction draws
-        real(dp), intent(in) :: kappa !! positive concentration parameter
-        real(dp), intent(out) :: sample(:) !! sample around the first coordinate axis, dimension >= 4
+        real(dp), intent(in) :: kappa !! finite positive concentration parameter
+        real(dp), intent(out) :: sample(:) !! shape (n); sample around the first coordinate axis
         integer, intent(out) :: status !! zero on success; nonzero on numerical failure
 
         integer, parameter :: max_attempts = 100000
@@ -310,8 +347,9 @@ contains
     end subroutine sample_wood_north
 
     pure subroutine rotate_from_north(sample, mu)
-        real(dp), intent(inout) :: sample(:) !! sample initially centered on the first coordinate axis
-        real(dp), intent(in) :: mu(:) !! target unit mean direction
+        !! Rotate a sample to mu; n = size(mu), n >= 2 and size(sample) = n.
+        real(dp), intent(inout) :: sample(:) !! shape (n); sample initially centered on the first coordinate axis
+        real(dp), intent(in) :: mu(:) !! shape (n); target unit mean direction
 
         real(dp) :: denom
         real(dp) :: projection
@@ -326,7 +364,8 @@ contains
     end subroutine rotate_from_north
 
     pure logical function valid_parameters(mu, kappa) result(valid)
-        real(dp), intent(in) :: mu(:) !! candidate mean direction
+        !! Validate finite positive kappa and a unit direction; n = size(mu), valid only for n >= 2.
+        real(dp), intent(in) :: mu(:) !! shape (n); candidate mean direction
         real(dp), intent(in) :: kappa !! candidate concentration
 
         valid = size(mu) >= 2 .and. ieee_is_finite(kappa) .and. kappa > 0.0_dp .and. &
@@ -335,6 +374,7 @@ contains
     end function valid_parameters
 
     pure logical function is_unit_vector(x) result(valid)
+        !! Test finite unit norm within 1.1e-5; any vector length is accepted, empty returns false.
         real(dp), intent(in) :: x(:) !! candidate direction vector
 
         real(dp) :: normx

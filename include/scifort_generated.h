@@ -28,6 +28,8 @@
 #include "scifort_generated_random_table.h"
 #include "scifort_generated_special_ortho_group.h"
 #include "scifort_generated_student_t.h"
+#include "scifort_generated_uniform_direction.h"
+#include "scifort_generated_vonmises_fisher.h"
 #include "scifort_generated_weibull.h"
 #include "scifort_generated_wishart.h"
 #endif /* SCIFORT_GENERATED_H */

@@ -554,6 +554,34 @@
           "n_samples": 1
         }
       }
+    },
+    "uniform_direction": {
+      "manifests": [
+        "bindings/cabi_config/uniform_direction.json"
+      ],
+      "prefix": "uniform_direction_",
+      "defaults": {},
+      "output_dimensions": {
+        "uniform_direction_rvs": {
+          "n": 3
+        },
+        "uniform_direction_rvs_array": {
+          "n": 3,
+          "n_samples": 1
+        }
+      }
+    },
+    "vonmises_fisher": {
+      "manifests": [
+        "bindings/cabi_config/vonmises_fisher.json"
+      ],
+      "prefix": "vonmises_fisher_",
+      "defaults": {},
+      "output_dimensions": {
+        "vonmises_fisher_rvs_array": {
+          "n_samples": 1
+        }
+      }
     }
   }
 }

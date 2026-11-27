@@ -1,0 +1,136 @@
+{
+  "generated_symbol_count": 2,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "state",
+        "sample",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "uniform_direction_rvs",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "sample",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "sample": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_uniform_direction_rvs_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "samples",
+        "status"
+      ],
+      "dimension_order": [
+        "n",
+        "n_samples"
+      ],
+      "dimensions": {
+        "n": 1,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "uniform_direction_rvs_array",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "samples",
+            "axis": 1
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "n": 1,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "samples": [
+          "n",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_uniform_direction_rvs_array_f64"
+      ]
+    },
+    {
+      "procedure": "uniform_direction_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "uniform_direction_status_numerical_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "uniform_direction_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 5,
+  "source": "src/stats/uniform_direction.f90",
+  "source_sha256": "52ad41d427f939417096a92c472962e9b6147b15223decd9548f119260712632"
+}

@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 86,
+    "array_adapters": 94,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 242,
-    "python": 174,
+    "exports": 257,
+    "python": 182,
     "scalar": 88
   },
   "procedures": [
@@ -1722,6 +1722,103 @@
       "python": "t.sf",
       "scalar": "scifort_t_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_uniform_direction_rvs_f64",
+      "module": "scifort_uniform_direction",
+      "procedure": "uniform_direction_rvs",
+      "python": "uniform_direction.rvs"
+    },
+    {
+      "array_adapter": "scifort_uniform_direction_rvs_array_f64",
+      "module": "scifort_uniform_direction",
+      "procedure": "uniform_direction_rvs_array",
+      "python": "uniform_direction.rvs_array"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_uniform_direction",
+      "procedure": "uniform_direction_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_uniform_direction",
+      "procedure": "uniform_direction_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_uniform_direction",
+      "procedure": "uniform_direction_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_vonmises_fisher_entropy_f64",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_entropy",
+      "python": "vonmises_fisher.entropy"
+    },
+    {
+      "array_adapter": "scifort_vonmises_fisher_fit_f64",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_fit",
+      "python": "vonmises_fisher.fit"
+    },
+    {
+      "array_adapter": "scifort_vonmises_fisher_logpdf_f64",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_logpdf",
+      "python": "vonmises_fisher.logpdf"
+    },
+    {
+      "array_adapter": "scifort_vonmises_fisher_pdf_f64",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_pdf",
+      "python": "vonmises_fisher.pdf"
+    },
+    {
+      "array_adapter": "scifort_vonmises_fisher_rvs_f64",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_rvs",
+      "python": "vonmises_fisher.rvs"
+    },
+    {
+      "array_adapter": "scifort_vonmises_fisher_rvs_array_f64",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_rvs_array",
+      "python": "vonmises_fisher.rvs_array"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_vonmises_fisher",
+      "procedure": "vonmises_fisher_status_success",
+      "scalar_generated": false
     },
     {
       "bulk": "scifort_weibull_cdf_vec_f64",

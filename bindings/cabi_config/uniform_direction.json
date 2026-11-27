@@ -1,0 +1,103 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/uniform_direction.f90",
+  "module": "scifort_uniform_direction",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_uniform_direction",
+  "header_guard": "SCIFORT_GENERATED_UNIFORM_DIRECTION_H",
+  "functions": {},
+  "argument_docs": {
+    "n": "spatial dimension",
+    "n_samples": "sample count, >= 0",
+    "n_obs": "observation count, >= 1",
+    "x": "finite unit evaluation vector",
+    "mu": "finite unit mean direction or fitted direction",
+    "kappa": "positive concentration or fitted concentration",
+    "data": "unit-vector observations by column",
+    "sample": "sampled unit vector",
+    "samples": "unit-vector samples by column",
+    "value": "native result; invalid parameters yield NaN",
+    "state": "caller-owned int64 RNG components",
+    "status": "0 success; 1 shape; 2 numerical failure; 4 RNG state"
+  },
+  "array_functions": {},
+  "subroutines": {
+    "uniform_direction_rvs": {
+      "symbol": "scifort_uniform_direction_rvs_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "sample": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw a unit vector using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    },
+    "uniform_direction_rvs_array": {
+      "symbol": "scifort_uniform_direction_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "samples": [
+          "n",
+          "n_samples"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw unit-vector columns using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    }
+  },
+  "excluded": {
+    "uniform_direction_status_success": "Native status constant, not a callable procedure.",
+    "uniform_direction_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "uniform_direction_status_numerical_failure": "Native status constant, not a callable procedure."
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/uniform_direction_generated.f90",
+    "header": "include/scifort_generated_uniform_direction.h",
+    "coverage": "bindings/cabi_config/uniform_direction_coverage.json",
+    "shape_documentation": "docs/uniform_direction_shapes.md"
+  }
+}

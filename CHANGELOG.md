@@ -1,3 +1,14 @@
+## 2026-11-27 - Directional distribution C/Python interfaces
+
+- Add uniform-direction single/batch sampling and von Mises-Fisher density,
+  log density, entropy, fitting and single/batch sampling interfaces.
+- Document native public/private array constraints and generate reviewed shape
+  tables, explicit-shape adapters, C headers and Python methods.
+- Preserve native algorithms, unit-vector tolerance, positive concentration
+  requirement, empty-batch behavior and bounded concentration fitting.
+- Test native/C/Python agreement, unit norms, fitted directions, sampling
+  moments, parameter errors, state transport and buffer contracts.
+
 ## 2026-11-27 - Fixed-margin table C/Python interfaces
 
 - Add random_table probability, log probability, mean and single/batch samplers

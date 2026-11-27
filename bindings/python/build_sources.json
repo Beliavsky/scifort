@@ -15,6 +15,8 @@
     "random_correlation",
     "random_table",
     "special_ortho_group",
+    "uniform_direction",
+    "vonmises_fisher",
     "wishart"
   ],
   "dependencies": {
@@ -190,6 +192,18 @@
       "src/kinds.f90",
       "src/stats/student_t.f90"
     ],
+    "src/c_api/generated/uniform_direction_generated.f90": [
+      "src/c_api/rng_bridge.f90",
+      "src/kinds.f90",
+      "src/random.f90",
+      "src/stats/uniform_direction.f90"
+    ],
+    "src/c_api/generated/vonmises_fisher_generated.f90": [
+      "src/c_api/rng_bridge.f90",
+      "src/kinds.f90",
+      "src/random.f90",
+      "src/stats/vonmises_fisher.f90"
+    ],
     "src/c_api/generated/weibull_generated.f90": [
       "src/kinds.f90",
       "src/stats/weibull.f90"
@@ -215,6 +229,11 @@
     ],
     "src/random.f90": [
       "src/kinds.f90"
+    ],
+    "src/special/bessel_i.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90"
     ],
     "src/special/digamma.f90": [
       "src/kinds.f90",
@@ -421,6 +440,27 @@
       "src/special/log_gamma.f90",
       "src/stats/normal.f90"
     ],
+    "src/stats/uniform_direction.f90": [
+      "src/kinds.f90",
+      "src/random.f90",
+      "src/stats/normal.f90"
+    ],
+    "src/stats/vonmises.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/special/elementary.f90"
+    ],
+    "src/stats/vonmises_fisher.f90": [
+      "src/constants.f90",
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/special/bessel_i.f90",
+      "src/stats/beta.f90",
+      "src/stats/uniform_direction.f90",
+      "src/stats/vonmises.f90"
+    ],
     "src/stats/weibull.f90": [
       "src/constants.f90",
       "src/kinds.f90",
@@ -460,6 +500,7 @@
     "cg_python_normal_compat": "bindings/python/native/normal_compat.f90",
     "cg_python_t_compat": "bindings/python/native/t_compat.f90",
     "cg_python_weibull_compat": "bindings/python/native/weibull_compat.f90",
+    "scifort_bessel_i": "src/special/bessel_i.f90",
     "scifort_beta": "src/stats/beta.f90",
     "scifort_binomial": "src/stats/binomial.f90",
     "scifort_c_api_generated_beta": "src/c_api/generated/beta_generated.f90",
@@ -488,6 +529,8 @@
     "scifort_c_api_generated_random_table": "src/c_api/generated/random_table_generated.f90",
     "scifort_c_api_generated_special_ortho_group": "src/c_api/generated/special_ortho_group_generated.f90",
     "scifort_c_api_generated_student_t": "src/c_api/generated/student_t_generated.f90",
+    "scifort_c_api_generated_uniform_direction": "src/c_api/generated/uniform_direction_generated.f90",
+    "scifort_c_api_generated_vonmises_fisher": "src/c_api/generated/vonmises_fisher_generated.f90",
     "scifort_c_api_generated_weibull": "src/c_api/generated/weibull_generated.f90",
     "scifort_c_api_generated_wishart": "src/c_api/generated/wishart_generated.f90",
     "scifort_cauchy": "src/stats/cauchy.f90",
@@ -528,6 +571,9 @@
     "scifort_special_elementary": "src/special/elementary.f90",
     "scifort_special_ortho_group": "src/stats/special_ortho_group.f90",
     "scifort_student_t": "src/stats/student_t.f90",
+    "scifort_uniform_direction": "src/stats/uniform_direction.f90",
+    "scifort_vonmises": "src/stats/vonmises.f90",
+    "scifort_vonmises_fisher": "src/stats/vonmises_fisher.f90",
     "scifort_weibull": "src/stats/weibull.f90",
     "scifort_wishart": "src/stats/wishart.f90"
   },
@@ -571,6 +617,8 @@
     "src/c_api/generated/random_table_generated.f90": "3ab77e13925e16ac12a9893e6859112e6945b404c34ce7ebe3c2fcfdfd0851cf",
     "src/c_api/generated/special_ortho_group_generated.f90": "9559dcf5f3aa726d01fb8788484722774b543d2709b191fccf8051d7a6890d16",
     "src/c_api/generated/student_t_generated.f90": "c86f8767f5e7114308c357eef3046b69df86442d2a864517b5987d93ee40ebdc",
+    "src/c_api/generated/uniform_direction_generated.f90": "b8f02bf1c8ff6966672f907cc8aa3fa756a25db99c5b65e37daf63067ba388e7",
+    "src/c_api/generated/vonmises_fisher_generated.f90": "a5fe2b2f2ec96eaa7bb3538f77dc55b957de9749c56e8847f7a0728f8b91516a",
     "src/c_api/generated/weibull_generated.f90": "6618fbaef1cf4bd7d9b77e62ef14f4617456aeec703a58e8135534e38caef3b8",
     "src/c_api/generated/wishart_generated.f90": "a4da1dbf813ccaa7911e6008138b059878a3e1d3a4bce537e2a738d9382c84ff",
     "src/c_api/rng_bridge.f90": "964d64258685671cb15562c4bd10b48b7cb21d04f3936f1dd10f14753d799565",
@@ -579,6 +627,7 @@
     "src/linalg.f90": "b149cf757f3620cce4fcb2e8ecdbd705184534d0d81ed5ab908d464cd09d6788",
     "src/math.f90": "1dfdd6e012e1c6e7ad63e6744b0b57b8beee8700d2a2e51f0e8eb89caf8185db",
     "src/random.f90": "47d6780213372febbbaabea82cf8acb52acb5425e9eced867f4750a8d6a3d098",
+    "src/special/bessel_i.f90": "f0aa031e16f412e7744dcfe5e4c4b8057b9ad458fe88af11e6ccb31f1b753fea",
     "src/special/digamma.f90": "dd412031581245e621853d5ef8cb8347c28364fc4a8aa0c6735546b30aaca1aa",
     "src/special/elementary.f90": "6602603d453eca7cbe570ccc9747d1474dda4022520ba5317c9e4e47fb2d383d",
     "src/special/incomplete_beta.f90": "dd7bd608158f5ec852aea0c6282a00d6d8b363316f26c688f986324ea69312a6",
@@ -613,6 +662,9 @@
     "src/stats/random_table.f90": "227c362afa5f59f5b8f0822ae174c9de639ab319910ca22812f5bb6a669778b3",
     "src/stats/special_ortho_group.f90": "4b0979b9d8510c4a94b3f456c6a76e280db494f60b6ea1bf7aed69465da440ea",
     "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",
+    "src/stats/uniform_direction.f90": "52ad41d427f939417096a92c472962e9b6147b15223decd9548f119260712632",
+    "src/stats/vonmises.f90": "1970915daef9774fd786a7cb7f9d879e39078786798a96f1f7a438430e94eea6",
+    "src/stats/vonmises_fisher.f90": "b798be30f8772025e9bbea22255474cae9755f75d831a7be650216d07e793481",
     "src/stats/weibull.f90": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585",
     "src/stats/wishart.f90": "06a6d3a5fee8ffd4aef455e64d0499e34d52522697f211769d9e1b512ae32b42"
   },
@@ -696,6 +748,12 @@
     "src/stats/special_ortho_group.f90",
     "src/c_api/generated/special_ortho_group_generated.f90",
     "src/c_api/generated/student_t_generated.f90",
+    "src/stats/uniform_direction.f90",
+    "src/c_api/generated/uniform_direction_generated.f90",
+    "src/special/bessel_i.f90",
+    "src/stats/vonmises.f90",
+    "src/stats/vonmises_fisher.f90",
+    "src/c_api/generated/vonmises_fisher_generated.f90",
     "src/c_api/generated/weibull_generated.f90",
     "src/c_api/generated/wishart_generated.f90"
   ]

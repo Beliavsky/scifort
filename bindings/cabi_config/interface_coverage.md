@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 242 |
+| exports | 257 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 86 |
+| array_adapters | 94 |
 | elementwise | 88 |
-| python | 174 |
+| python | 182 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -235,6 +235,21 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_student_t | t_pdf | scifort_t_pdf_f64 | scifort_t_pdf_vec_f64 |  | scifort_t_pdf_elementwise_f64 | t.pdf |
 | scifort_student_t | t_ppf | scifort_t_ppf_f64 | scifort_t_ppf_vec_f64 |  | scifort_t_ppf_elementwise_f64 | t.ppf |
 | scifort_student_t | t_sf | scifort_t_sf_f64 | scifort_t_sf_vec_f64 |  | scifort_t_sf_elementwise_f64 | t.sf |
+| scifort_uniform_direction | uniform_direction_rvs |  |  | scifort_uniform_direction_rvs_f64 |  | uniform_direction.rvs |
+| scifort_uniform_direction | uniform_direction_rvs_array |  |  | scifort_uniform_direction_rvs_array_f64 |  | uniform_direction.rvs_array |
+| scifort_uniform_direction | uniform_direction_status_invalid_shape |  |  |  |  |  |
+| scifort_uniform_direction | uniform_direction_status_numerical_failure |  |  |  |  |  |
+| scifort_uniform_direction | uniform_direction_status_success |  |  |  |  |  |
+| scifort_vonmises_fisher | vonmises_fisher_entropy |  |  | scifort_vonmises_fisher_entropy_f64 |  | vonmises_fisher.entropy |
+| scifort_vonmises_fisher | vonmises_fisher_fit |  |  | scifort_vonmises_fisher_fit_f64 |  | vonmises_fisher.fit |
+| scifort_vonmises_fisher | vonmises_fisher_logpdf |  |  | scifort_vonmises_fisher_logpdf_f64 |  | vonmises_fisher.logpdf |
+| scifort_vonmises_fisher | vonmises_fisher_pdf |  |  | scifort_vonmises_fisher_pdf_f64 |  | vonmises_fisher.pdf |
+| scifort_vonmises_fisher | vonmises_fisher_rvs |  |  | scifort_vonmises_fisher_rvs_f64 |  | vonmises_fisher.rvs |
+| scifort_vonmises_fisher | vonmises_fisher_rvs_array |  |  | scifort_vonmises_fisher_rvs_array_f64 |  | vonmises_fisher.rvs_array |
+| scifort_vonmises_fisher | vonmises_fisher_status_invalid_parameter |  |  |  |  |  |
+| scifort_vonmises_fisher | vonmises_fisher_status_invalid_shape |  |  |  |  |  |
+| scifort_vonmises_fisher | vonmises_fisher_status_numerical_failure |  |  |  |  |  |
+| scifort_vonmises_fisher | vonmises_fisher_status_success |  |  |  |  |  |
 | scifort_weibull | weibull_cdf | scifort_weibull_cdf_f64 | scifort_weibull_cdf_vec_f64 |  | scifort_weibull_cdf_elementwise_f64 | weibull.cdf |
 | scifort_weibull | weibull_isf | scifort_weibull_isf_f64 | scifort_weibull_isf_vec_f64 |  | scifort_weibull_isf_elementwise_f64 | weibull.isf |
 | scifort_weibull | weibull_logcdf | scifort_weibull_logcdf_f64 | scifort_weibull_logcdf_vec_f64 |  | scifort_weibull_logcdf_elementwise_f64 | weibull.logcdf |

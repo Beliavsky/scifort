@@ -1,0 +1,203 @@
+{
+  "schema_version": 2,
+  "source": "src/stats/vonmises_fisher.f90",
+  "module": "scifort_vonmises_fisher",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_vonmises_fisher",
+  "header_guard": "SCIFORT_GENERATED_VONMISES_FISHER_H",
+  "functions": {},
+  "argument_docs": {
+    "n": "spatial dimension",
+    "n_samples": "sample count, >= 0",
+    "n_obs": "observation count, >= 1",
+    "x": "finite unit evaluation vector",
+    "mu": "finite unit mean direction or fitted direction",
+    "kappa": "positive concentration or fitted concentration",
+    "data": "unit-vector observations by column",
+    "sample": "sampled unit vector",
+    "samples": "unit-vector samples by column",
+    "value": "native result; invalid parameters yield NaN",
+    "state": "caller-owned int64 RNG components",
+    "status": "0 success; 1 shape; 2 parameter; 3 numerical failure; 4 RNG state"
+  },
+  "array_functions": {
+    "vonmises_fisher_pdf": {
+      "symbol": "scifort_vonmises_fisher_pdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        }
+      ],
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate von Mises-Fisher density.",
+      "shape_contract": true,
+      "result_argument": "value",
+      "optional_policy": "required"
+    },
+    "vonmises_fisher_logpdf": {
+      "symbol": "scifort_vonmises_fisher_logpdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        }
+      ],
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate von Mises-Fisher log density.",
+      "shape_contract": true,
+      "result_argument": "value",
+      "optional_policy": "required"
+    },
+    "vonmises_fisher_entropy": {
+      "symbol": "scifort_vonmises_fisher_entropy_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        }
+      ],
+      "shapes": {
+        "mu": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Compute von Mises-Fisher entropy.",
+      "shape_contract": true,
+      "result_argument": "value",
+      "optional_policy": "required"
+    }
+  },
+  "subroutines": {
+    "vonmises_fisher_rvs": {
+      "symbol": "scifort_vonmises_fisher_rvs_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        }
+      ],
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "sample": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw a unit vector using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    },
+    "vonmises_fisher_rvs_array": {
+      "symbol": "scifort_vonmises_fisher_rvs_array_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        },
+        {
+          "name": "n_samples",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "samples": [
+          "n",
+          "n_samples"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Draw unit-vector columns using caller-owned RNG state.",
+      "shape_contract": true,
+      "optional_status": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4
+        }
+      }
+    },
+    "vonmises_fisher_fit": {
+      "symbol": "scifort_vonmises_fisher_fit_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 2
+        },
+        {
+          "name": "n_obs",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "mu": [
+          "n"
+        ],
+        "data": [
+          "n",
+          "n_obs"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Fit von Mises-Fisher direction and concentration.",
+      "shape_contract": true
+    }
+  },
+  "excluded": {
+    "vonmises_fisher_status_success": "Native status constant, not a callable procedure.",
+    "vonmises_fisher_status_invalid_shape": "Native status constant, not a callable procedure.",
+    "vonmises_fisher_status_invalid_parameter": "Native status constant, not a callable procedure.",
+    "vonmises_fisher_status_numerical_failure": "Native status constant, not a callable procedure."
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/vonmises_fisher_generated.f90",
+    "header": "include/scifort_generated_vonmises_fisher.h",
+    "coverage": "bindings/cabi_config/vonmises_fisher_coverage.json",
+    "shape_documentation": "docs/vonmises_fisher_shapes.md"
+  }
+}

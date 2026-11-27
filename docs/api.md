@@ -7360,3 +7360,14 @@ rejects negative, unequal or excessive totals before summing; totals must be
 table row/column sums are also checked without integer overflow. See the
 [shape contracts](random_table_shapes.md) and
 [binding details](../bindings/python/README.md#fixed-margin-random-tables).
+
+### Directional distribution interfaces and shapes
+
+Uniform-direction and von Mises-Fisher procedures now have native shape contracts
+and generated explicit-shape C/Python adapters. Required shapes include vectors
+`(n)`, observation matrices `(n,n_obs)` and column samples `(n,n_samples)`.
+Private directional helpers document fixed dimensions and matching vector sizes.
+See [binding details](../bindings/python/README.md#directional-distributions),
+[uniform shapes](uniform_direction_shapes.md) and
+[von Mises-Fisher shapes](vonmises_fisher_shapes.md). Numerical algorithms,
+positive-kappa validation and the native fit concentration bracket are unchanged.
