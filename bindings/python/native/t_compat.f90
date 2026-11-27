@@ -18,7 +18,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_cdf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -36,7 +35,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_pdf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -54,7 +52,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_ppf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required

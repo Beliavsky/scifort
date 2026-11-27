@@ -30,7 +30,6 @@ contains
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_cdf_explicit_f64")
         !! Evaluate Poisson-binomial cdf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: k !! real-valued observation; tail methods floor after shifting
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -58,7 +57,6 @@ contains
         n, probability, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_isf_explicit_f64")
         !! Evaluate Poisson-binomial isf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: probability !! tail probability in [0,1]
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -86,7 +84,6 @@ contains
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_logcdf_explicit_f64")
         !! Evaluate Poisson-binomial logcdf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: k !! real-valued observation; tail methods floor after shifting
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -114,7 +111,6 @@ contains
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_logpmf_explicit_f64")
         !! Evaluate Poisson-binomial logpmf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: k !! real-valued observation; tail methods floor after shifting
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -142,12 +138,11 @@ contains
         n, count, p, logf, dpvec, status) &
         bind(c, name="scifort_poisson_binom_logpmf_derivative_p_explicit_f64")
         !! SciFort extension: log mass and probability-vector score.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: count !! unshifted finite integer observation
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
         real(c_double), intent(inout) :: logf !! native log probability mass
-        real(c_double), intent(inout) :: dpvec(n) !! shape (n); analytic log-mass gradient with respect to p
+        real(c_double), intent(inout) :: dpvec(n) !! analytic log-mass gradient with respect to p
         integer(c_int), intent(out) :: status !! 0 valid call; 1 invalid trial extent
         ! Direct array association requires matching native and C kinds.
         integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
@@ -171,7 +166,6 @@ contains
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_logsf_explicit_f64")
         !! Evaluate Poisson-binomial logsf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: k !! real-valued observation; tail methods floor after shifting
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -199,7 +193,6 @@ contains
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_pmf_explicit_f64")
         !! Evaluate Poisson-binomial pmf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: k !! real-valued observation; tail methods floor after shifting
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -227,7 +220,6 @@ contains
         n, probability, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_ppf_explicit_f64")
         !! Evaluate Poisson-binomial ppf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: probability !! tail probability in [0,1]
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]
@@ -255,7 +247,6 @@ contains
         n, k, p, loc, value, status) &
         bind(c, name="scifort_poisson_binom_sf_explicit_f64")
         !! Evaluate Poisson-binomial sf.
-        implicit none
         integer(c_int), value, intent(in) :: n !! trial count, >= 1
         real(c_double), value, intent(in) :: k !! real-valued observation; tail methods floor after shifting
         real(c_double), intent(in) :: p(n) !! finite Bernoulli probabilities in [0,1]

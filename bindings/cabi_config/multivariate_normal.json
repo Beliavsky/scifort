@@ -25,7 +25,7 @@
     "fixed_cov": "shape (n,n); optional finite PSD covariance, lower triangle used",
     "has_fixed_mean": "0 omit fixed mean; 1 use supplied fixed mean",
     "has_fixed_cov": "0 omit fixed covariance; 1 use supplied fixed covariance",
-    "state": "six caller-owned int64 RNG components",
+    "state": "caller-owned int64 RNG components",
     "samples": "shape (n,n_samples); sample vectors by column",
     "n_samples": "number of sample columns, >= 0",
     "has_mean": "0 omit location; 1 use supplied vector",

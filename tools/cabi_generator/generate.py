@@ -250,6 +250,10 @@ def generate(config, root):
         lines.append(f"    use {config['module']}, only : cg_native_{index} => {name}")
     for index, entry in enumerate(array_entries, start=len(entries)):
         lines.append(f"    use {config['module']}, only : cg_native_{index} => {entry['name']}")
+    if any(entry['policy'].get('integer_limits') or entry['policy'].get('integer_sums')
+           or entry.get('state_codecs') for entry in array_entries):
+        lines[3] = lines[3].replace('c_double,', 'c_double, c_int64_t,', 1)
+    lines += explicit_arrays.module_imports(array_entries, symbols | {module})
     lines += ["    implicit none", "    private"]
     for symbol in sorted(symbols):
         lines.append(f"    public :: {symbol}")
@@ -275,7 +279,7 @@ def generate(config, root):
         if symbol:
             lines += [f"    function {symbol}( &", "        " + ", ".join(arglist) + ") &",
                       f'        result(cg_result) bind(c, name="{symbol}")',
-                      "        !! Forward one scalar evaluation to the native Fortran function.", "        implicit none"]
+                      "        !! Forward one scalar evaluation to the native Fortran function."]
             for arg in args:
                 lines.append(f"        real(c_double), value, intent(in) :: {aliases[arg]} "
                              f"!! {config['argument_docs'][arg]}; required")
@@ -291,7 +295,6 @@ def generate(config, root):
             lines += [f"    subroutine {vector}( &", "        " + ", ".join(vecargs) + ") &",
                       f'        bind(c, name="{vector}")',
                       "        !! Evaluate independent inputs using uniform scalar parameters.",
-                      "        implicit none",
                       "        integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0"]
             for arg in args:
                 if arg == array and pointer:
@@ -338,7 +341,6 @@ def generate(config, root):
                       "        " + ", ".join(["cg_count", *arglist, "cg_output", "cg_status"]) + ") &",
                       f'        bind(c, name="{elementwise}")',
                       "        !! Evaluate corresponding elements of equally sized input arrays.",
-                      "        implicit none",
                       "        integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0"]
             for arg in args:
                 lines.append(f"        real(c_double), intent(in) :: {aliases[arg]}(cg_count) "

@@ -20,7 +20,6 @@ contains
         n, l, linv, status) &
         bind(c, name="scifort_invert_lower_f64")
         !! Invert a nonsingular lower-triangular matrix.
-        implicit none
         integer(c_int), value, intent(in) :: n !! matrix order, >= 1
         real(c_double), intent(in) :: l(n,n) !! lower-triangular factor
         real(c_double), intent(inout) :: linv(n,n) !! inverse lower-triangular factor
@@ -45,7 +44,6 @@ contains
         n, k, l, b, x, status) &
         bind(c, name="scifort_solve_lower_matrix_f64")
         !! Solve lower-triangular systems with multiple right-hand sides.
-        implicit none
         integer(c_int), value, intent(in) :: n !! matrix order, >= 1
         integer(c_int), value, intent(in) :: k !! right-hand-side column count, >= 0
         real(c_double), intent(in) :: l(n,n) !! lower-triangular factor
@@ -77,7 +75,6 @@ contains
         n, k, l, b, x, status) &
         bind(c, name="scifort_solve_spd_matrix_f64")
         !! Solve SPD systems using a supplied lower Cholesky factor.
-        implicit none
         integer(c_int), value, intent(in) :: n !! matrix order, >= 1
         integer(c_int), value, intent(in) :: k !! right-hand-side column count, >= 0
         real(c_double), intent(in) :: l(n,n) !! lower-triangular factor
@@ -109,7 +106,6 @@ contains
         n, a, l, logdet, status) &
         bind(c, name="scifort_spd_factor_f64")
         !! Factor an SPD matrix and compute its log determinant.
-        implicit none
         integer(c_int), value, intent(in) :: n !! matrix order, >= 1
         real(c_double), intent(in) :: a(n,n) !! SPD coefficient matrix; all entries finite
         real(c_double), intent(inout) :: l(n,n) !! lower-triangular factor

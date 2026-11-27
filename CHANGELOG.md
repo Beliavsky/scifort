@@ -1,3 +1,16 @@
+## 2026-11-27 - Concise explicit-shape argument comments
+
+- Omit matching shape prefixes from generated explicit-shape declarations.
+- Remove redundant component counts from RNG buffer descriptions.
+- Preserve native assumed-shape documentation and argument constraints.
+
+## 2026-11-27 - Module scope in generated C adapters
+
+- Use module-level implicit none and shared imports in generated adapters.
+- Deduplicate RNG codec imports and separate aliases for distinct codecs.
+- Record inherited implicit typing and shared-import preferences in AGENTS.md.
+- Preserve existing C symbols, buffer contracts, and numerical operations.
+
 ## 2026-11-26 - Multivariate CDF and stateful-function bindings
 
 - Add normal CDF/log-CDF and Student t CDF C/Python interfaces with explicit
@@ -1268,7 +1281,7 @@
   annealing's best-point notification helper and SHGO's nonlinear value and
   Jacobian helpers.
 
-## 2026-11-10 — Dense mixed-integer linear programming (`milp`)
+## 2026-11-10 â€” Dense mixed-integer linear programming (`milp`)
 
 - Add `scifort_optimize_milp` with an independent best-bound branch-and-bound
   algorithm built on SciFort's original `linprog` simplex solver.
@@ -1286,7 +1299,7 @@
 - No new third-party code or FPM dependency. Full `fpm test` remains
   unverified where FPM is unavailable.
 
-## 2026-11-10 — Quadratic assignment: FAQ and 2-opt
+## 2026-11-10 â€” Quadratic assignment: FAQ and 2-opt
 
 - Add `scifort_optimize_quadratic_assignment` with a pure approximate solver
   for minimum or maximum quadratic assignment, including seeded fixed matches.
@@ -1299,7 +1312,7 @@
 - No new library dependencies. `fpm test` remains unverified here because the
   Fortran Package Manager is not installed.
 
-## 2026-11-10 — SHGO independent nonlinear constraint objects
+## 2026-11-10 â€” SHGO independent nonlinear constraint objects
 
 - Add public `shgo_nonlinear_constraint` with `fun`, optional `jac`, and
   allocatable `lb`/`ub` arrays; both `shgo` and `shgo_core` accept
@@ -1317,7 +1330,7 @@
 - No source code was copied from SciPy and no new FPM dependencies were added.
   Actual SLSQP integration still requires a real FPM-backed build.
 
-## 2026-11-10 — SHGO analytic constraint Jacobians and feasible-point recovery
+## 2026-11-10 â€” SHGO analytic constraint Jacobians and feasible-point recovery
 
 - Accept optional `nonlinear_jac(x,a)` in the core and public SHGO adapter.
   Convert linear/nonlinear equalities, lower and upper bounds into exact
@@ -1332,7 +1345,7 @@
 - Preserve old defaults; restoration is heuristic, not a global convergence
   or feasibility certificate. Actual FPM/SLSQP integration remains unverified.
 
-## 2026-11-10 — Constrained SHGO global optimization
+## 2026-11-10 â€” Constrained SHGO global optimization
 
 - Add linear/nonlinear constraint blocks with lower/upper bounds and equality
   handling to `shgo` and `shgo_core` without changing unconstrained defaults.
@@ -1344,7 +1357,7 @@
   constrained example, and an expanded SLSQP public-adapter smoke test.
 - No new dependencies, bundled external code, or license obligations.
 
-## 2026-11-10 — Conforming three-dimensional adaptive SHGO tetrahedralization
+## 2026-11-10 â€” Conforming three-dimensional adaptive SHGO tetrahedralization
 
 - Extend opt-in `adaptive=.true., conforming=.true.` from 2D to 3D without
   changing the public argument list or uniform/nonconforming default paths.
@@ -1361,7 +1374,7 @@
 - Preserve all prior 2D, adaptive, HGR and DIRECT behavior. This geometric
   construction does not supply SciPy SHGO's homology guarantees or constraints.
 
-## 2026-11-10 — Conforming two-dimensional adaptive SHGO triangulation
+## 2026-11-10 â€” Conforming two-dimensional adaptive SHGO triangulation
 
 - Add opt-in `conforming=.true.` to `shgo_core` and the public `shgo`
   adapter, requiring `adaptive=.true.` and a two-dimensional bounds array.
@@ -1375,7 +1388,7 @@
 - Preserve previous uniform/adaptive/HGR defaults and higher-dimensional
   behavior; topology conformity does not establish global convergence.
 
-## 2026-11-10 — Optional SHGO sampled homology-growth stopping
+## 2026-11-10 â€” Optional SHGO sampled homology-growth stopping
 
 - Add opt-in `hgr_stability_iters`, `hgr_min_iters` and `hgr_f_tol` to the
   SHGO core and public local-minimizer adapter, preserving all earlier defaults.
@@ -1389,7 +1402,7 @@
 - Add dedicated tests, adapter smoke tests, example, validation, and guide.
   No new dependencies or third-party implementation source were introduced.
 
-## 2026-11-10 — Adaptive cell refinement for SHGO
+## 2026-11-10 â€” Adaptive cell refinement for SHGO
 
 - Add opt-in `adaptive` / `adaptive_fraction` controls at the end of both the
   standalone `shgo_core` and public `shgo` argument lists, preserving uniform
@@ -1406,7 +1419,7 @@
   theoretical SHGO convergence guarantees. Conforming triangulation,
   constraints and homology-rank stopping remain future work.
 
-## 2026-11-10 — Deterministic SHGO subset
+## 2026-11-10 â€” Deterministic SHGO subset
 
 - Add an independent bounded simplicial global optimizer (`shgo_core`) using
   nested Kuhn-Freudenthal grids and H_0 sublevel-set component births to find
@@ -1425,7 +1438,7 @@
   comparisons in each of checked and optimized configurations, and full
   attribution and tests (2026-11-10).
 
-## 2026-11-10 — Deterministic DIRECT global optimizer
+## 2026-11-10 â€” Deterministic DIRECT global optimizer
 
 - Add `src/optimize/direct.f90` implementing slope-based potentially optimal
   rectangle selection, dimension-wise trisecting, and deterministic bounded
@@ -1440,7 +1453,7 @@
   Git dependencies were not available in the offline validation environment.
 
 
-## 2026-11-10 — Basin-hopping global optimization
+## 2026-11-10 â€” Basin-hopping global optimization
 
 - Add original `scifort_optimize_basinhopping` stochastic basin-hopping core
   and `scifort_optimize_basinhopping_minimize` adapter to existing Nelder-Mead,
@@ -1453,7 +1466,7 @@
   example, guide, validation report and reproducible standalone test script.
 - No new FPM dependencies or copied third-party implementation code.
 
-## 2026-11-10 — Dense linear programming (linprog)
+## 2026-11-10 â€” Dense linear programming (linprog)
 
 - Add `scifort_optimize_linprog` with an original, self-contained two-phase
   tableau simplex for dense continuous LPs, inequalities/equalities, variable
@@ -1465,7 +1478,7 @@
   because its dense dual-only formulation needs extra integration work.
 - No changes to existing numerical kernels or FPM dependencies.
 
-## 2026-11-10 — Nonnegative and bounded linear least squares
+## 2026-11-10 â€” Nonnegative and bounded linear least squares
 
 - Add native `nnls` and `lsq_linear` (BVLS active-set algorithm) for dense
   real matrices with box constraints and rank-deficient input support.
@@ -1477,7 +1490,7 @@
 - Add native and independent SciPy tests in checked/optimized builds; the real
   SLSQP backend still needs FPM validation.
 
-## 2026-11-10 — SciPy-style differential evolution global optimization
+## 2026-11-10 â€” SciPy-style differential evolution global optimization
 
 - Add `scifort_optimize_differential_evolution` with all 12 standard mutation
   strategy names, binomial/exponential crossover, bound handling, seeded local
@@ -1491,7 +1504,7 @@
   harness, executable example, reproducible validation runner, and API guide.
 - No new dependencies.
 
-## 2026-11-10 — Standalone matrix exponential and dense-linalg API audit
+## 2026-11-10 â€” Standalone matrix exponential and dense-linalg API audit
 
 - Add `scifort_linalg_expm` implementing real/complex matrix exponentials,
   with a single leading batch dimension, via fixed-degree [13/13] Pade
@@ -1502,7 +1515,7 @@
   API guide, validation and coverage notes; both GNU Fortran build modes pass.
 - All existing numerical modules and build dependencies are preserved.
 
-## 2026-11-10 — Matrix-free randomized interpolative SVD
+## 2026-11-10 â€” Matrix-free randomized interpolative SVD
 
 - Add `scifort_linalg_interpolative_svd_operator` with fixed-rank and
   tolerance-based real/complex SVD from forward/adjoint callbacks.
@@ -1513,7 +1526,7 @@
   GNU Fortran builds pass all new checks and relevant regressions.
 - Preserve all previous Fortran modules and runtime dependencies.
 
-## 2026-11-10 — Matrix-free randomized interpolative decomposition
+## 2026-11-10 â€” Matrix-free randomized interpolative decomposition
 
 - Add `scifort_linalg_interpolative_operator`, with fixed-rank and
   tolerance-based real/complex operator interfaces and optional exact
@@ -1523,7 +1536,7 @@
 - Add a true implicit low-rank example and native/SciPy comparisons.
 - Preserve all previous source modules, interfaces and dependencies.
 
-## 2026-11-10 — Randomized interpolative decomposition
+## 2026-11-10 â€” Randomized interpolative decomposition
 
 - Add `scifort_linalg_interpolative_random` with real/complex fixed-rank and
   adaptive randomized ID, using local reproducible Gaussian row sketches.
@@ -1534,7 +1547,7 @@
 - Add native and independent NumPy/SciPy tests, executable example, and API
   documentation; preserve previous Fortran APIs and runtime dependencies.
 
-## 2026-11-10 — Randomized interpolative SVD
+## 2026-11-10 â€” Randomized interpolative SVD
 
 - Add `scifort_linalg_interpolative_svd_random`, a new module for fixed-rank
   and adaptive real/complex randomized ID-based SVD.
@@ -1547,7 +1560,7 @@
 - Include a reference driver, runnable example, API guide and validation.
 - Preserve all existing Fortran modules and runtime dependencies.
 
-## 2026-11-09 — Deterministic SVD via interpolative decomposition
+## 2026-11-09 â€” Deterministic SVD via interpolative decomposition
 
 - Add `scifort_linalg_interpolative_svd` with fixed-rank and adaptive relative
   Frobenius tolerance real/complex interfaces; produce U, s, V.
@@ -1557,11 +1570,11 @@
 - Document the distinction from SciPy's default randomized implementation.
 - No existing source modules or dependencies were changed.
 
-## 2026-11-09 — Randomized numerical rank estimation
+## 2026-11-09 â€” Randomized numerical rank estimation
 
 - Add `scifort_linalg_estimate_rank` for real/complex dense and forward-only
   matrix-free operators, using adaptive random range probes and two-pass
-  modified Gram–Schmidt.
+  modified Gramâ€“Schmidt.
 - Support optional `int64` seeds, oversampling, rectangular and zero-sized
   matrices, and explicit shape/nonfinite/callback failure statuses.
 - Add checked/optimized native tests, NumPy-SVD rank verification,
@@ -1569,7 +1582,7 @@
 - Document different stochastic output semantics from SciPy's rank estimator.
 - Preserve all existing Fortran sources and build dependencies.
 
-## 2026-11-09 — Randomized spectral-norm estimates
+## 2026-11-09 â€” Randomized spectral-norm estimates
 
 - Implement `scipy.linalg.interpolative.estimate_spectral_norm` and
   `estimate_spectral_norm_diff` for real and complex dense matrices.
@@ -1581,7 +1594,7 @@
   and exact NumPy SVD norms in checked and optimized GNU Fortran builds.
 - Preserve all existing SciFort source modules and dependency declarations.
 
-## 2026-11-09 — Clarkson-Woodruff / CountSketch random projection
+## 2026-11-09 â€” Clarkson-Woodruff / CountSketch random projection
 
 - Add `scifort_linalg_clarkson_woodruff` implementing real/complex dense,
   one-leading-batch, and one-based CSR sparse CountSketch accumulation.
@@ -1591,7 +1604,7 @@
   checked/optimized build), an executable example, and API/validation docs.
 - Keep all existing Fortran modules and dependencies unchanged.
 
-## 2026-11-09 — Deterministic interpolative decomposition
+## 2026-11-09 â€” Deterministic interpolative decomposition
 
 - Add `scifort_linalg_interpolative` with real/complex fixed-rank and
   relative-Frobenius-tolerance `interp_decomp` interfaces and one-based
@@ -1603,7 +1616,7 @@
 - Add 14,944 native checks and 2,016 independent SciPy reference cases
   per checked/optimized build, an example, and API/validation documentation.
 
-## 2026-11-09 — Hermitian pseudoinverse (`pinvh`)
+## 2026-11-09 â€” Hermitian pseudoinverse (`pinvh`)
 
 - Add `scifort_linalg_pinvh` for symmetric/Hermitian Moore--Penrose
   pseudoinverses, using positive and negative eigenvalues with configurable
@@ -1613,7 +1626,7 @@
   API documentation, and reproducible validation instructions.
 - No existing Fortran modules or dependencies were changed.
 
-## 2026-11-09 — Real invariant eigenbasis (`cdf2rdf`)
+## 2026-11-09 â€” Real invariant eigenbasis (`cdf2rdf`)
 
 - Add `scifort_linalg_cdf2rdf`, converting conjugate eigenpairs of real
   matrices to real block eigenvalues and a real invariant vector basis.
@@ -1623,7 +1636,7 @@
   SciFort `eig`, plus native and independent SciPy comparison tests.
 - Preserve all existing source APIs and build dependencies.
 
-## 2026-11-09 — Rectangular LU, determinant, and inverse
+## 2026-11-09 â€” Rectangular LU, determinant, and inverse
 
 - Add `scifort_linalg_lu` for singular-safe rectangular, real/complex `lu`,
   `lu_indices`, and `lu_permuted` with one-based permutation conventions.
@@ -1632,7 +1645,7 @@
 - Add native tests, SciPy comparison driver and checker, executable example,
   API/validation documentation. No new dependencies or existing source edits.
 
-## 2026-11-09 — Real/complex RQ factorization
+## 2026-11-09 â€” Real/complex RQ factorization
 
 - Add `scifort_linalg_rq` (`rq` and `rq_r`) for full, economic, R-only,
   empty core dimensions and one leading batch dimension.
@@ -1641,14 +1654,14 @@
 - Add native tests, an independent SciPy reference driver/checker,
   executable example and API/validation documentation. No new dependencies.
 
-## 2026-11-09 — Householder QR multiplication
+## 2026-11-09 â€” Householder QR multiplication
 
 - Add `scifort_linalg_qr_multiply`, providing `qr_multiply` and reusable
   `qr_apply` for real, complex, vector, and matrix multipliers; no explicit
   Q construction or new numerical dependencies.
 - Add native tests, SciPy phase-aligned reference comparisons, example and docs.
 
-## 2026-11-09 — QR rank-k updates, insertion and deletion
+## 2026-11-09 â€” QR rank-k updates, insertion and deletion
 
 - Add `scifort_linalg_qr_updates` with real/complex `qr_update`,
   `qr_insert`, and `qr_delete`, for complete and economy QR factors.
@@ -1658,7 +1671,7 @@
 - Add native and independent SciPy comparison tests, executable example,
   API documentation, and validation report. No new dependencies.
 
-## 2026-11-09 — Complete cosine–sine decomposition
+## 2026-11-09 â€” Complete cosineâ€“sine decomposition
 
 - Implement `scipy.linalg.cossin` in `scifort_linalg_cossin`, with real and
   complex full-factor and separate-factor APIs, all valid partitions, and
@@ -1668,7 +1681,7 @@
 - Reject nonunitary/nonfinite input, document differences in phase gauge,
   batch and subblock input support, and optional-factor computation.
 
-## 2026-11-09 — Matrix inspection and SVD diagonal construction
+## 2026-11-09 â€” Matrix inspection and SVD diagonal construction
 
 - Add `scifort_linalg_structure.bandwidth`, `issymmetric`, `ishermitian`.
   Support int32, int64, real64 and complex64, including one leading batch
@@ -1680,7 +1693,7 @@
   independent SciPy comparisons passed across checked and optimized builds.
   No existing source module was modified; no new dependencies were added.
 
-## 2026-11-09 — Block-diagonal matrices and Khatri–Rao products
+## 2026-11-09 â€” Block-diagonal matrices and Khatriâ€“Rao products
 
 - Add `scifort_linalg_block_diag.as_block` and `block_diag`, supporting
   heterogeneous scalar, vector, matrix, and one-batch matrix blocks with
@@ -1693,7 +1706,7 @@
   executable example, API docs, provenance, and validation report. Existing
   Fortran source remains unchanged; no additional dependencies are needed.
 
-## 2026-11-09 — Hadamard, Leslie and DFT matrix constructors
+## 2026-11-09 â€” Hadamard, Leslie and DFT matrix constructors
 
 - Add `scifort_linalg_hadamard.hadamard` with Sylvester ordering and
   integer32/integer64/real64/complex64 output overloads.
@@ -1706,7 +1719,7 @@
   optimized builds passed 1473 comparisons each and prior Pascal,
   Helmert/Hilbert and companion/Fiedler regression tests.
 
-## 2026-11-09 — Pascal and inverse Pascal matrix constructors
+## 2026-11-09 â€” Pascal and inverse Pascal matrix constructors
 
 - Add `scifort_linalg_pascal.pascal` and `invpascal`, with symmetric, lower,
   and upper forms, real64 and overflow-checked exact int64 overloads.
@@ -1717,7 +1730,7 @@
   constructor regression tests. Add tests, runnable example and API guide.
   No existing Fortran source modules or external dependencies were changed.
 
-## 2026-11-09 — Helmert, Hilbert and exact inverse Hilbert matrices
+## 2026-11-09 â€” Helmert, Hilbert and exact inverse Hilbert matrices
 
 - Add `scifort_linalg_helmert.helmert` for full and contrast-only
   orthonormal matrices, including the single-observation edge case.
@@ -1729,7 +1742,7 @@
   cases, reference driver, executable example, documentation and provenance.
   No existing source files are modified, and no new dependencies are needed.
 
-## 2026-11-09 — Companion, Fiedler companion and Fiedler matrices
+## 2026-11-09 â€” Companion, Fiedler companion and Fiedler matrices
 
 - Add `scifort_linalg_companion.companion` and `fiedler_companion`,
   matching the polynomial matrix conventions of `scipy.linalg`.
@@ -1740,7 +1753,7 @@
 - Include native checked/optimized tests, 3,420 independent SciPy matrix
   comparisons, 116 polynomial root checks, runnable example, docs and provenance.
 
-## 2026-11-09 — Convolution matrix construction and FFT-based products
+## 2026-11-09 â€” Convolution matrix construction and FFT-based products
 
 - Add `scifort_linalg_convolution_matrix.convolution_matrix` matching
   `scipy.linalg.convolution_matrix` for `full`, `same`, and `valid` modes,
@@ -1751,7 +1764,7 @@
 - Add native checked/optimized tests, independent SciPy comparison harness,
   example, API documentation and validation report. No new dependencies.
 
-## 2026-11-09 — Hankel construction and FFT-based multiplication
+## 2026-11-09 â€” Hankel construction and FFT-based multiplication
 
 - Add `scifort_linalg_hankel.hankel`, corresponding to `scipy.linalg.hankel`,
   supporting rectangular and complex matrices, mixed real/complex inputs,
@@ -1765,7 +1778,7 @@
   comparisons and 452 constructor comparisons passed in checked/optimized
   GNU Fortran builds, alongside existing structured-matrix regressions.
 
-## 2026-11-09 — FFT-based Toeplitz multiplication
+## 2026-11-09 â€” FFT-based Toeplitz multiplication
 
 - Add `scifort_linalg_matmul_toeplitz.matmul_toeplitz`, using the existing
   FFT plan with circulant embedding to multiply square or rectangular
@@ -1776,7 +1789,7 @@
   reference comparisons, runnable example, API documentation and provenance.
 - No new dependencies, third-party source code or license obligations.
 
-## 2026-11-09 — FFT-based circulant construction and solves
+## 2026-11-09 â€” FFT-based circulant construction and solves
 
 - Add `scifort_linalg_circulant.circulant` and `solve_circulant`, supporting
   real, complex, mixed-type, vector and multiple right-hand sides.
@@ -1786,7 +1799,7 @@
 - Add checked and optimized native tests, 2,400 independent SciPy 1.17.0
   reference cases, example, documentation, and provenance. No new dependencies.
 
-## 2026-11-09 — Toeplitz construction and quadratic-time solves
+## 2026-11-09 â€” Toeplitz construction and quadratic-time solves
 
 - Add `scifort_linalg_toeplitz.toeplitz` for real/complex rectangular
   Toeplitz matrices and `solve_toeplitz` for real, complex and mixed-type
@@ -1798,12 +1811,12 @@
   reference comparisons, including 128 fallback cases, with executable
   example, API documentation, and provenance.
 
-## 2026-11-09 — LDL-based symmetric/Hermitian linear solves
+## 2026-11-09 â€” LDL-based symmetric/Hermitian linear solves
 
 - Add `scifort_linalg_indefinite_solve` with `solve_indefinite` for the
   `sym`/`her` specializations of SciPy's dense `solve` and `ldl_solve` to
   reuse pivoted LDL factors, both for real/complex vector and matrix RHS.
-- Handle 1x1 and 2x2 Bunch–Kaufman blocks, one-based permutations, upper
+- Handle 1x1 and 2x2 Bunchâ€“Kaufman blocks, one-based permutations, upper
   and lower factors, and complex symmetric versus Hermitian transposes.
 - Check invalid factors, singular blocks, nonfinite RHS and zero-size cases;
   add native, independent SciPy, and NumPy-reference tests (4,500 comparisons).
@@ -1818,7 +1831,7 @@
 - Add native randomized tests, 2,400 checked/optimized SciPy reference cases,
   Fortran example, API documentation and provenance. No new dependencies.
 
-## 2026-11-09 — Ordered complex generalized Schur decomposition (`ordqz`)
+## 2026-11-09 â€” Ordered complex generalized Schur decomposition (`ordqz`)
 
 - Add `scifort_linalg_ordqz.ordqz` with four real/complex input overloads,
   homogeneous `alpha/beta` outputs, SciPy's four sorting rules, optional
@@ -1830,7 +1843,7 @@
 - Add native tests, independent SciPy comparisons, example, API guide and
   provenance. No third-party code or new dependencies introduced.
 
-## 2026-11-08 — Generalized nonsymmetric eig/eigvals
+## 2026-11-08 â€” Generalized nonsymmetric eig/eigvals
 
 - Add `scifort_linalg_generalized_eigen.eig/eigvals` for real/complex and
   mixed-kind regular matrix pairs, with optional left/right eigenvectors.
@@ -1841,10 +1854,10 @@
 - Add native tests, SciPy-projective-spectrum comparison harness, example,
   API documentation and provenance record.
 
-## 2026-11-08 — Inverse-free two-sided complex QZ iteration
+## 2026-11-08 â€” Inverse-free two-sided complex QZ iteration
 
-- Add `qz(...,method='iterative')` with Hessenberg–triangular reduction,
-  complex two-sided Givens bulge chasing, and trailing 2×2 generalized shifts.
+- Add `qz(...,method='iterative')` with Hessenbergâ€“triangular reduction,
+  complex two-sided Givens bulge chasing, and trailing 2Ã—2 generalized shifts.
 - Keep `method='inverse'` for the previous construction and add conservative
   iterative-first `method='auto'` dispatch with failure fallback.
 - Add native tests of real/complex pencils, conjugate pairs, extreme scaling,
@@ -1853,7 +1866,7 @@
 - Document limitations relative to robust LAPACK QZ; no new dependencies
   or third-party source code.
 
-## 2026-11-08 — Generalized complex Schur factors for regular pencils
+## 2026-11-08 â€” Generalized complex Schur factors for regular pencils
 
 - Add `scifort_linalg_qz.qz` with real, complex, and mixed real/complex
   inputs, complex unitary output bases, and upper-triangular generalized
@@ -1866,7 +1879,7 @@
   numerical validation, and provenance. No new library dependencies.
 - Note explicitly that this is not a full LAPACK-style iterative QZ solver.
 
-## 2026-11-08 — Conversion of real Schur factors to complex (`rsf2csf`)
+## 2026-11-08 â€” Conversion of real Schur factors to complex (`rsf2csf`)
 
 - Add `scifort_linalg_schur.rsf2csf` for precomputed real Schur factors and
   real orthogonal bases; construct complex triangular factors with local
@@ -1878,7 +1891,7 @@
 - The conversion is not subject to the existing Schur engine's order-40 bound.
   No additional numerical library or third-party source code is required.
 
-## 2026-11-08 — Real quasi-triangular Schur decomposition
+## 2026-11-08 â€” Real quasi-triangular Schur decomposition
 
 - Extend the public `schur` generic with real `T`/`Z` output for real inputs;
   retain the established complex interfaces unchanged.
@@ -1889,7 +1902,7 @@
 - Add native tests, randomized checked/-O3 SciPy comparisons, a revised
   example, API/validation notes, and provenance. No new dependencies.
 
-## 2026-11-08 — Public complex Schur decomposition and reordering
+## 2026-11-08 â€” Public complex Schur decomposition and reordering
 
 - Add `scifort_linalg_schur.schur` for real and complex coefficient matrices,
   returning a complex upper-triangular Schur factor and a unitary basis.
@@ -1900,7 +1913,7 @@
 - Real quasi-upper-triangular Schur output remains future work. No external
   numerical dependency or imported third-party code was added.
 
-## 2026-11-08 — General nonsymmetric dense eig/eigvals
+## 2026-11-08 â€” General nonsymmetric dense eig/eigvals
 
 - Add real/complex `scifort_linalg_general_eigen.eig` and `eigvals` for
   ordinary nonsymmetric matrices up to order 40.
@@ -1911,7 +1924,7 @@
   a runnable example, API documentation and provenance notes. No external
   numerical dependencies or third-party implementation code added.
 
-## 2026-11-08 — Real banded Givens kernel and conservative auto dispatch
+## 2026-11-08 â€” Real banded Givens kernel and conservative auto dispatch
 
 - Replace the complex conversion in `band_to_tridiagonal` for real symmetric
   packed bands with a dedicated real Givens similarity and bulge chase.
@@ -1922,7 +1935,7 @@
 - Add native auto-dispatch tests, independent SciPy comparison cases and a
   deterministic microbenchmark. Preserve the no-new-dependencies policy.
 
-## 2026-11-08 — Banded bulge-chasing tridiagonalization
+## 2026-11-08 â€” Banded bulge-chasing tridiagonalization
 
 - Add `scifort_linalg_banded_tridiagonal.band_to_tridiagonal`, a Givens
   bulge-chasing reduction for real symmetric and complex Hermitian bands.
@@ -1933,7 +1946,7 @@
 - Add native similarity tests, independent SciPy comparisons, example,
   validation notes, and an algorithm provenance entry.
 
-## 2026-11-08 — Opt-in full-spectrum banded inverse iteration
+## 2026-11-08 â€” Opt-in full-spectrum banded inverse iteration
 
 - Allow `eig_banded(...,method='inverse')` without a subset, computing every
   eigenpair via banded Sturm bisection and shifted LU inverse iteration.
@@ -1944,7 +1957,7 @@
 - Add native tests, real/complex SciPy comparisons, a runnable example,
   API notes and provenance. A band-to-tridiagonal reduction remains future work.
 
-## 2026-11-08 — Banded selected eigenvectors: real-LU specialization
+## 2026-11-08 â€” Banded selected eigenvectors: real-LU specialization
 
 - Extended `eig_banded` with a selected-eigenvector path based on Sturm bisection,
   pivoted band LU inverse iteration, and two-pass reorthogonalization.
@@ -1954,7 +1967,7 @@
 - Added native and independent SciPy tests, including large narrow bands and
   real-vs-complex consistency checks. The full FPM suite is still untested.
 
-## 2026-11-08 — Selected symmetric/Hermitian band eigenvectors
+## 2026-11-08 â€” Selected symmetric/Hermitian band eigenvectors
 
 - Add opt-in low-memory selected `eig_banded` eigenpairs for real symmetric
   and complex Hermitian input using pivoted band LU inverse iteration.
@@ -1964,7 +1977,7 @@
 - Preserve original full-spectrum dense path, with small-size auto fallback.
 - Include tests, SciPy comparisons, example, documentation, and provenance.
 
-## 2026-11-08 — Selected tridiagonal eigenvectors by inverse iteration
+## 2026-11-08 â€” Selected tridiagonal eigenvectors by inverse iteration
 
 - Extend selected `eigh_tridiagonal` eigenpairs with Sturm bisection followed by
   partial-pivoted tridiagonal inverse iteration and two-pass reorthogonalization.
@@ -1975,7 +1988,7 @@
   eigenpair comparisons, error-case checks, documentation and a runnable example.
 - Preserve existing positional call patterns; introduce no new dependencies.
 
-## 2026-11-08 — Selected tridiagonal eigenvalues via Sturm bisection
+## 2026-11-08 â€” Selected tridiagonal eigenvalues via Sturm bisection
 
 - Extend `eigh_tridiagonal` and `eigvalsh_tridiagonal` with optional inclusive
   one-based `subset_by_index`, half-open `(low,high]` `subset_by_value`,
@@ -1988,7 +2001,7 @@
   independent SciPy comparisons, example, API documentation, and provenance.
 - No third-party implementation copied or new numerical dependency introduced.
 
-## 2026-11-08 — Half-open eigenvalue selection by value
+## 2026-11-08 â€” Half-open eigenvalue selection by value
 
 - Extend real and complex `eigh`/`eigvalsh` with optional `subset_by_value`
   and `num_selected` for standard and generalized definite problems.
@@ -1999,7 +2012,7 @@
 - Add native tests, independent SciPy comparison harness, example, API notes,
   and provenance; no new numerical dependency or borrowed implementation.
 
-## 2026-11-08 — Generalized symmetric/Hermitian definite eigenproblems
+## 2026-11-08 â€” Generalized symmetric/Hermitian definite eigenproblems
 
 - Extend existing real/complex `eigh` and `eigvalsh` with optional `b` and
   `problem_type=1|2|3`, retaining the old positional interface and default.
@@ -2010,7 +2023,7 @@
 - Add native tests, SciPy reference harness, example, API/validation notes,
   and provenance. No new numerical dependencies or borrowed code.
 
-## 2026-11-07 — Dense symmetric/Hermitian eigenproblems
+## 2026-11-07 â€” Dense symmetric/Hermitian eigenproblems
 
 - Add real and complex `scifort_linalg_dense_eigen.eigh` and `eigvalsh`,
   including upper/lower triangle handling and inclusive one-based
@@ -2021,7 +2034,7 @@
   420 neighboring regression comparisons, example, API and provenance notes.
 - Document O(n^3) dense complexity and absence of generalized problems.
 
-## 2026-11-07 — Symmetric tridiagonal and Hermitian band eigensolvers
+## 2026-11-07 â€” Symmetric tridiagonal and Hermitian band eigensolvers
 
 Added `scifort_linalg_banded_eigen` with `eigh_tridiagonal`,
 `eigvalsh_tridiagonal`, `eig_banded`, and `eigvals_banded` for real
@@ -2031,7 +2044,7 @@ reduced by SciFort Householder Hessenberg. Native and SciPy comparison
 tests, a runnable example, API documentation and provenance are included.
 General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 
-## 2026-11-07 — Matrix balancing
+## 2026-11-07 â€” Matrix balancing
 
 - Add `scifort_linalg_balance.matrix_balance` (real and complex) with
   optional isolated-row/column permutation and binary-power diagonal scaling.
@@ -2040,7 +2053,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   example, API documentation, numerical-validation notes and provenance.
 - Preserve existing APIs and introduce no additional numerical dependency.
 
-## 2026-11-07 — Hessenberg reduction
+## 2026-11-07 â€” Hessenberg reduction
 
 - Add `scifort_linalg_hessenberg.hessenberg` for real and complex matrices,
   returning the upper Hessenberg form and optional orthogonal/unitary basis.
@@ -2048,7 +2061,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   example, error-handling/validation documentation and algorithm provenance.
 - Preserve all previous public interfaces and introduce no new dependencies.
 
-## 2026-11-07 — Schur matrix-equation methods
+## 2026-11-07 â€” Schur matrix-equation methods
 
 - Extend existing real/complex `solve_sylvester`, `solve_continuous_lyapunov`,
   and `solve_discrete_lyapunov` with `method='auto'|'direct'|'schur'`.
@@ -2059,7 +2072,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native and independent SciPy tests, example, updated documentation and
   numerical provenance; no new dependencies or borrowed source code.
 
-## 2026-11-07 — Dense orthogonal and unitary Procrustes alignment
+## 2026-11-07 â€” Dense orthogonal and unitary Procrustes alignment
 
 - Add `scifort_linalg_procrustes.orthogonal_procrustes`, a generic for
   all real/complex pairings, solving `min ||A R - B||_F` with orthogonal
@@ -2071,7 +2084,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   a Fortran example, and detailed API/validation documentation.
 - No third-party code or runtime dependency added.
 
-## 2026-11-07 — Efficient singular values and spectral diagnostics
+## 2026-11-07 â€” Efficient singular values and spectral diagnostics
 
 - Replace `svdvals` full-SVD allocation with independent values-only Jacobi
   sweeps; avoid singular-vector construction and use a native real arithmetic
@@ -2092,7 +2105,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Added native tests, full-SVD SciPy reference driver and comparison harness,
   runnable example, and validation documentation.
 
-## 2026-11-07 — SVD-based range, null space and principal angles
+## 2026-11-07 â€” SVD-based range, null space and principal angles
 
 - Add independent MIT-licensed `scifort_linalg_subspaces`, providing real and
   complex `orth` and `null_space` and all four real/complex combinations for
@@ -2105,7 +2118,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   API and validation documentation. No new numerical dependencies or licenses.
 
 
-## 2026-11-07 — Dense economy SVD, pseudoinverse, and rank-deficient least squares
+## 2026-11-07 â€” Dense economy SVD, pseudoinverse, and rank-deficient least squares
 
 - Add original real/complex one-sided Jacobi economy `svd`, Moore-Penrose
   `pinv`, and reusable `svd_lstsq` minimum-norm solver for rectangular,
@@ -2117,7 +2130,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   runnable example, API/validation documentation, and provenance.
 - Preserve standalone Fortran builds without an additional numerical library.
 
-## 2026-11-07 — Real/complex dense QR and full-rank least squares
+## 2026-11-07 â€” Real/complex dense QR and full-rank least squares
 
 - Add `scifort_linalg_qr` with reduced/complete Householder `qr`, compact
   `qr_factor`/`qr_unpack`, optional norm-based column pivoting, and one-based
@@ -2130,7 +2143,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   unblocked `O(m*n^2)` performance limitation.
 - New source is MIT-licensed, without new numerical dependencies.
 
-## 2026-11-07 — Dense Cholesky decomposition and reusable solves
+## 2026-11-07 â€” Dense Cholesky decomposition and reusable solves
 
 - Add real/complex `cholesky`, `cho_factor`, `cho_solve` to `scifort_linalg_dense`,
   with upper/lower triangular storage, vector/matrix right-hand sides, and
@@ -2142,7 +2155,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   builds, a runnable example, and API/validation/provenance documentation.
 - No new external or third-party source dependencies.
 
-## 2026-11-07 — Dense triangular systems and reusable LU factors
+## 2026-11-07 â€” Dense triangular systems and reusable LU factors
 
 - Add `scifort_linalg_dense` with real/complex `solve_triangular`, `lu_factor`,
   and `lu_solve` generics; vector/matrix right-hand sides and `'N'/'T'/'C'` modes.
@@ -2151,7 +2164,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native Fortran tests, runnable example, independent SciPy validation,
   API documentation, and numerical provenance notes.
 
-## 2026-11-07 — Reusable packed-band LU factors and transpose solves
+## 2026-11-07 â€” Reusable packed-band LU factors and transpose solves
 
 - Add `lu_factor_banded` and `lu_solve_banded` with real/complex binary64,
   1-based local partial pivot indices, and packed extended LU storage.
@@ -2164,7 +2177,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   example, API, provenance and numerical-validation documentation.
 - Original MIT implementation, with no new runtime dependencies.
 
-## 2026-11-07 — General and positive-definite packed-band solvers
+## 2026-11-07 â€” General and positive-definite packed-band solvers
 
 - Add original MIT-licensed `scifort_linalg_banded` with `solve_banded`,
   `solveh_banded`, `cholesky_banded`, and `cho_solve_banded`; real and complex
@@ -2175,7 +2188,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   SciPy comparisons, API/validation documentation and provenance notes.
 - No new BLAS/LAPACK dependencies or bundled third-party source code.
 
-## 2026-11-07 — Adaptive Taylor evaluation for dense `funm` clusters
+## 2026-11-07 â€” Adaptive Taylor evaluation for dense `funm` clusters
 
 - Add opt-in `taylor_max_order` (1--128) to the real/complex `funm` and
   `funm_real` interfaces for coupled Schur eigenvalue clusters.
@@ -2188,7 +2201,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   comparisons including matrices up to order 40, and validation documentation.
 - Original MIT implementation; no new external dependencies.
 
-## 2026-11-07 — Block Schur--Parlett `funm` and semisimple spectra
+## 2026-11-07 â€” Block Schur--Parlett `funm` and semisimple spectra
 
 - Replace scalar cross-block recurrence with a block Sylvester solve on
   globally reordered spectral clusters (including unequal block orders).
@@ -2199,7 +2212,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   triangular and dense similarity-transformed repeated spectra to order 40.
 - Preserve the existing public API and dependency-free MIT implementation.
 
-## 2026-11-07 — Global Schur clustering for dense `funm`
+## 2026-11-07 â€” Global Schur clustering for dense `funm`
 
 - Extend `scifort_linalg_funm` to cluster repeated or close Schur eigenvalues
   globally rather than only when they appear in adjacent diagonal positions.
@@ -2210,7 +2223,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   comparisons for noncontiguous repeated spectra through order 40.
 - Keep existing API/status values, MIT provenance, and runtime dependencies.
 
-## 2026-11-07 — General analytic dense matrix functions (`funm`)
+## 2026-11-07 â€” General analytic dense matrix functions (`funm`)
 
 - Add `scifort_linalg_funm` with real/complex `funm`, `funm_real`, scalar
   callbacks, and optional k-th derivative callbacks for repeated spectra.
@@ -2221,10 +2234,10 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   harness, stress cases, documentation and independent provenance notes.
 - No extra runtime dependencies or third-party implementation code.
 
-## 2026-11-07 — Dense exponential condition numbers
+## 2026-11-07 â€” Dense exponential condition numbers
 
 - Add real and complex `expm_cond`, estimating SciPy's relative Frobenius
-  condition number via existing SciFort Fréchet derivative kernels and a
+  condition number via existing SciFort FrÃ©chet derivative kernels and a
   fully reorthogonalized matrix-free Lanczos solver.
 - Add exact diagonal divided-difference evaluation, scalar-shift
   normalization for large offset inputs, explicit iteration/status controls.
@@ -2232,7 +2245,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   reference checks, API/validation documentation, and provenance records.
 - No additional numerical dependencies or third-party source.
 
-## 2026-11-07 — Dense matrix trigonometric/hyperbolic functions
+## 2026-11-07 â€” Dense matrix trigonometric/hyperbolic functions
 
 - Add `scifort_linalg_trigonometric` with real/complex `sinm`, `cosm`,
   `tanm`, `sinhm`, `coshm`, and `tanhm`.
@@ -2243,7 +2256,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native tests, runnable example, independent randomized SciPy reference
   checks and API/validation/provenance documentation. No new dependencies.
 
-## 2026-11-07 — Dense matrix logarithm and fractional matrix powers
+## 2026-11-07 â€” Dense matrix logarithm and fractional matrix powers
 
 - Add real/complex `logm` and `fractional_matrix_power`, including real-only
   output convenience wrappers, with explicit status reporting.
@@ -2256,7 +2269,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   harness, API/limitations documentation, and validation/provenance records.
 - No new external dependencies or imported third-party source.
 
-## 2026-11-06 — Polar decomposition and matrix exponential Fréchet derivatives
+## 2026-11-06 â€” Polar decomposition and matrix exponential FrÃ©chet derivatives
 
 - Add `scifort_linalg_polar` with real/complex `polar` for rectangular,
   square, and rank-deficient matrices, and both left/right PSD factors.
@@ -2267,7 +2280,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   comparisons, documentation, validation records, and provenance notes.
 - No external numerical dependencies or third-party source incorporated.
 
-## 2026-11-06 — Dense matrix square root and matrix sign functions
+## 2026-11-06 â€” Dense matrix square root and matrix sign functions
 
 - Add real/complex `sqrtm` and `signm`, with real-input complex-output
   principal square-root semantics and a `sqrtm_real` convenience routine.
@@ -2276,7 +2289,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add focused and randomized SciPy/NumPy comparisons, executable example,
   documentation, and review of permissively licensed external libraries.
 
-## 2026-11-06 — Dense continuous and discrete algebraic Riccati equations
+## 2026-11-06 â€” Dense continuous and discrete algebraic Riccati equations
 
 - Add `scifort_linalg_riccati` with real/complex `solve_continuous_are` and
   `solve_discrete_are`, including generalized descriptor `E` and cross-cost `S`.
@@ -2288,7 +2301,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Document the 20-state limit, method differences from SciPy's Schur/QZ
   implementation, and numerical limitations near stability boundaries.
 
-## 2026-11-06 — Dense Sylvester and Lyapunov matrix equations
+## 2026-11-06 â€” Dense Sylvester and Lyapunov matrix equations
 
 - Add `scifort_linalg_matrix_equations` with real and complex binary64
   `solve_sylvester`, `solve_continuous_lyapunov`, and
@@ -2300,7 +2313,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   in checked and optimized GNU Fortran builds. Document the 400-unknown
   size cap and the cubic-in-number-of-unknowns performance limitation.
 
-## 2026-11-06 — Complex restarted Krylov matrix-function actions
+## 2026-11-06 â€” Complex restarted Krylov matrix-function actions
 
 - Add `scifort_sparse_linalg_complex_funm` with `funm_multiply_krylov_complex`
   (CSR/CSC vector and block overloads) and
@@ -2311,7 +2324,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add independent SciPy/NumPy comparisons of exp/sin/polynomial actions,
   native tests, a compilable example, API and validation documentation.
 
-## 2026-11-06 — Complex sparse exponential actions and time intervals
+## 2026-11-06 â€” Complex sparse exponential actions and time intervals
 
 - Add `scifort_sparse_linalg_complex_expm` with complex CSR, CSC and
   matrix-free `expm_multiply_complex` overloads for vectors and dense blocks.
@@ -2323,11 +2336,11 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add a native regression, independent randomized SciPy/NumPy comparisons,
   an executable example and API/validation documentation.
 
-## 2026-11-06 — Matrix-free complex Arnoldi and reusable shift-invert LU
+## 2026-11-06 â€” Matrix-free complex Arnoldi and reusable shift-invert LU
 
 - Extend the complex `eigs_complex` generic with `eigs_complex_operator(n,k,matvec,...)`,
   accepting a complex matrix-free callback and optional shifted inverse callback.
-- Share Arnoldi/Rayleigh–Ritz, selection, restart, and true-residual logic across
+- Share Arnoldi/Rayleighâ€“Ritz, selection, restart, and true-residual logic across
   CSR, CSC, and matrix-free paths, rather than duplicating eigensolver kernels.
 - Add `complex_eigs_shift_cache` and `eigs_complex_prepare_shift` for CSR/CSC;
   reject mismatched shifts, modified matrices, and incomplete factors, while
@@ -2335,7 +2348,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native regression, 2,500-dimensional matrix-free stress test, independent
   randomized NumPy comparisons, documentation, and callback-error validation.
 
-## 2026-11-06 — Complex shift-invert Arnoldi eigenvalue searches
+## 2026-11-06 â€” Complex shift-invert Arnoldi eigenvalue searches
 
 - Add optional complex `sigma` to the CSR/CSC `eigs_complex` interface, using
   one pivoted complex sparse LU factorization of `A-sigma*I`, reused for all
@@ -2348,7 +2361,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   shifts, CSR/CSC, limited iteration budgets, and a 70-by-70 truncated-space
   banded problem; add randomized NumPy/SciPy comparison harness.
 
-## 2026-11-06 — Nonsymmetric complex sparse eigenpairs
+## 2026-11-06 â€” Nonsymmetric complex sparse eigenpairs
 
 - Add `scifort_sparse_linalg_complex_eigs`, providing `eigs_complex` for
   square complex binary64 CSR/CSC matrices with `LM`, `SM`, `LR`, `SR`, `LI`,
@@ -2361,7 +2374,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - `SM` currently requires a full basis; no shift-invert or ARPACK-style
   implicit restarting is implemented.
 
-## 2026-11-06 — Complex sparse SVD
+## 2026-11-06 â€” Complex sparse SVD
 
 - Added `scifort_sparse_linalg_complex_svds` with CSR/CSC overloads of
   `svds_complex`, returning complex U, real singular values, and complex V^H.
@@ -2374,7 +2387,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   convergence, guarding against missed repeated dominant singular values.
 - No additional runtime dependencies or third-party source imported.
 
-## 2026-11-06 — Complex sparse LSMR
+## 2026-11-06 â€” Complex sparse LSMR
 
 - Add `scifort_sparse_linalg_complex_lsmr` with CSR and CSC overloads of
   `lsmr_complex`. Supports rectangular complex binary64 matrices, damping,
@@ -2383,10 +2396,10 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   reference comparisons, plus a BSD-3-Clause source attribution notice.
 - Retain the existing real LSQR/LSMR and complex LSQR APIs unchanged.
 
-## 2026-11-06 — Complex sparse LSQR for rectangular least squares
+## 2026-11-06 â€” Complex sparse LSQR for rectangular least squares
 
 - Added `scifort_sparse_linalg_complex_lsqr` with `lsqr_complex` CSR/CSC
-  overloads, Golub–Kahan bidiagonalization using the conjugate-transpose
+  overloads, Golubâ€“Kahan bidiagonalization using the conjugate-transpose
   operator, optional damping and nonzero `x0`, true residual diagnostics,
   variance-diagonal estimates, and failure status codes.
 - Added native regression tests and randomized comparisons against independent
@@ -2517,7 +2530,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   comparisons, and integration into the checked/optimized sparse test runner.
   No new numerical dependencies or imported third-party source.
 
-## 2026-11-05 — N-dimensional sparse COO arrays
+## 2026-11-05 â€” N-dimensional sparse COO arrays
 
 - Add `scifort_sparse_coo_nd` with one-based `coo_nd_array` coordinates for
   arbitrary positive ranks; preserve duplicate and explicitly stored entries.
@@ -2525,9 +2538,9 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   duplicate summation, zero elimination, scalar lookups, dense/flat conversion,
   and lossless conversion to and from existing 2D COO matrices.
 - Add focused bounds-checked tests and 1,100 independent SciPy 1.17 randomized
-  cases covering ranks 1–7 in checked and optimized gfortran builds.
+  cases covering ranks 1â€“7 in checked and optimized gfortran builds.
 
-## 2026-11-05 — Incremental DOK and LIL sparse formats
+## 2026-11-05 â€” Incremental DOK and LIL sparse formats
 
 - Add `scifort_sparse_dok_lil`, with hash-based DOK and sorted, dynamically
   allocated row-list LIL matrices. Support one-based, real binary64 entry
@@ -2541,7 +2554,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   Checked and optimized GNU Fortran runs passed 500 cases each.
 - No new runtime dependencies or external implementation source.
 
-## 2026-11-05 — COO sparse matrices and sparse.find
+## 2026-11-05 â€” COO sparse matrices and sparse.find
 
 - Add `scifort_sparse_coo` with `coo_matrix` and coordinate-format construction,
   CSR/CSC/dense conversions, transpose, matrix-vector multiplication, indexing,
@@ -2552,7 +2565,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add independent native Fortran regressions and SciPy 1.17 randomized
   comparisons in checked and optimized GNU Fortran builds; no added dependency.
 
-## 2026-11-05 — Krylov actions for arbitrary matrix functions
+## 2026-11-05 â€” Krylov actions for arbitrary matrix functions
 
 - Add `scifort_sparse_linalg.funm_multiply_krylov` for real CSR and
   caller-provided matrix-free operators, following the restarted
@@ -2569,7 +2582,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   tests and 600 independent SciPy comparisons passed per compiler mode.
   No new dependency.
 
-## 2026-11-05 — Grid Laplacians and sparse structural queries
+## 2026-11-05 â€” Grid Laplacians and sparse structural queries
 
 - Add `scifort_sparse_laplacian_nd`, including an initialized real
   `LaplacianNd`-style operator with matrix-free matvec/matmat, CSR assembly,
@@ -2587,7 +2600,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Original MIT implementations; no new runtime dependencies or imported
   third-party code.
 
-## 2026-11-05 — Restarted augmented/recycled sparse Krylov solvers
+## 2026-11-05 â€” Restarted augmented/recycled sparse Krylov solvers
 
 - Add `scifort_sparse_linalg.lgmres` (LGMRES) with optional retained
   correction directions, and `gcrotmk` (GCROT(m,k)) with orthogonalized
@@ -2604,7 +2617,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Original MIT-licensed implementation based on published algorithmic
   descriptions; no third-party numerical source was imported.
 
-## 2026-11-05 — Sparse QMR and transpose-free QMR
+## 2026-11-05 â€” Sparse QMR and transpose-free QMR
 
 - Add `scifort_sparse_linalg.qmr` for nonsymmetric CSR systems with explicit
   transpose products and an optional right Jacobi preconditioner.
@@ -2616,7 +2629,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   preserve existing status codes, optional diagnostics and default tolerances.
 - Retain BSD-3-Clause SciPy QMR and TFQMR attributions and full license terms.
 
-## 2026-11-05 — BiCG, CGS and sparse Kronecker sums
+## 2026-11-05 â€” BiCG, CGS and sparse Kronecker sums
 
 - Add `scifort_sparse_linalg.bicg` with explicit transposed CSR products,
   optional Jacobi preconditioning, and verified true-residual convergence.
@@ -2631,7 +2644,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   are original MIT-licensed SciFort code based on published mathematical
   algorithms; no third-party source code has been imported.
 
-## 2026-11-05 — Sparse random and diagonal-array constructors
+## 2026-11-05 â€” Sparse random and diagonal-array constructors
 
 - Add `scifort_sparse_constructors` with `csr_random`, `csr_random_array`, `csr_rand`,
   `csr_diags_array`, and a ragged `sparse_diagonal` helper.
@@ -2643,7 +2656,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native and randomized SciPy 1.17 comparison tests, and integrate
   native test into the sparse regression runner. No new dependencies.
 
-## 2026-11-05 — Sparse structural deletion and scalable sparse assignment
+## 2026-11-05 â€” Sparse structural deletion and scalable sparse assignment
 
 - Add `csr_delete_entries`, `csr_delete_rows`, `csr_delete_columns` and
   C-order `csr_reshape` for general canonical CSR matrices.
@@ -2657,7 +2670,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add standalone native regression and randomized NumPy/SciPy comparisons
   for five new/revised operations. No new dependencies or imported code.
 
-## 2026-11-05 — General block matrices and sparse scatter assignment
+## 2026-11-05 â€” General block matrices and sparse scatter assignment
 
 - Implement `csr_bmat` and alias `csr_block` for rank-two grids of rectangular
   CSR blocks, with unallocated placeholders for missing blocks and optional
@@ -2670,7 +2683,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add standalone checked/optimized native tests and independent SciPy/NumPy
   randomized block/assignment comparisons. No new dependencies.
 
-## 2026-11-05 — Sparse CSR assembly, Kronecker products, indexing and slicing
+## 2026-11-05 â€” Sparse CSR assembly, Kronecker products, indexing and slicing
 
 - Add `csr_hstack`, `csr_vstack`, `csr_block_diag`, and `csr_kron` for
   sparse matrix assembly, including rectangular and empty matrix shapes.
@@ -2684,19 +2697,19 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   covering positive/negative strides, duplicate coordinates and zero-sized blocks.
 - No additional dependencies or third-party source implementations.
 
-## 2026-11-05 — Sparse DIA/BSR formats and matrix norms
+## 2026-11-05 â€” Sparse DIA/BSR formats and matrix norms
 
 - Add canonical diagonal (`dia_matrix`) and block CSR (`bsr_matrix`) representations,
   rectangular blocks, validation, CSR conversions, dense conversions and direct matvec.
 - Add CSR/CSC `scifort_sparse_linalg.norm` supporting Frobenius, column/row
-  ±1/±infinity norms, and approximate spectral 2-norm through existing `svds`.
+  Â±1/Â±infinity norms, and approximate spectral 2-norm through existing `svds`.
 - Add one-based `norm_axis` for vector norms by column or by row.
 - Include checked/optimized native tests, a randomized SciPy/NumPy comparison
   driver and edge-case validations for empty matrices, stored zeros, duplicate
   coordinates and large sparse bands.
 - Preserve prior sparse APIs, existing provenance and build dependencies.
 
-## 2026-11-05 — Sparse integer matrix powers and inverse
+## 2026-11-05 â€” Sparse integer matrix powers and inverse
 
 - Add `scifort_sparse_linalg.matrix_power` for nonnegative integer exponents
   via exponentiation by squaring, preserving canonical real CSR/CSC storage.
@@ -2709,7 +2722,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   pivoting, empty matrices, singularity, and large sparse diagonal inputs.
 - No new external dependencies or third-party source implementation code.
 
-## 2026-11-05 — LOBPCG for sparse symmetric and generalized eigenproblems
+## 2026-11-05 â€” LOBPCG for sparse symmetric and generalized eigenproblems
 
 - Add `scifort_sparse_linalg.lobpcg` for multiple algebraically largest/smallest
   eigenpairs using a locally optimal Rayleigh--Ritz subspace `[X,W,P]`.
@@ -2723,7 +2736,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Preserve all existing sparse APIs. No new runtime libraries or
   third-party source code.
 
-## 2026-11-05 — Sparse threshold ILU with controlled fill
+## 2026-11-05 â€” Sparse threshold ILU with controlled fill
 
 - Add `scifort_sparse_linalg.spilu` as an original natural-order ILUT implementation for canonical real CSR and CSC matrices, with configurable relative dropping, per-row fill budgets, and optional diagonal perturbation.
 - Add `spilu_solve` vector and multiple-RHS adapters and reuse existing `ilu0_factor` storage for direct interoperability with GMRES/BiCGSTAB preconditioners.
@@ -2731,7 +2744,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Document the important difference from SciPy's pivoted SuperLU implementation: no permutations or equilibration; factor sparsity patterns are not expected to coincide.
 - Add new native test to the sparse regression runner. No new dependencies or third-party source code.
 
-## 2026-11-05 — Sparse triangular and pivoted direct solvers
+## 2026-11-05 â€” Sparse triangular and pivoted direct solvers
 
 - Add canonical CSR/CSC `spsolve_triangular` for lower/upper systems with unit
   diagonal support, accepting vector or block right-hand sides.
@@ -2745,7 +2758,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   tridiagonal systems. Extend the standalone sparse test runner.
 - No third-party solver code copied; no extra dependencies.
 
-## 2026-11-04 — CSR 1-norm estimation and full sparse exponential
+## 2026-11-04 â€” CSR 1-norm estimation and full sparse exponential
 
 - Added `scifort_sparse_linalg.onenormest`, a deterministic block sign/adjoint
   1-norm lower-bound estimator for real square CSR matrices with optional
@@ -2759,7 +2772,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   registration, API documentation, and provenance record.
 - No new runtime dependencies or third-party source code.
 
-## 2026-11-04 — sparse matrix-exponential action (`expm_multiply`)
+## 2026-11-04 â€” sparse matrix-exponential action (`expm_multiply`)
 
 - Add real-CSR `scifort_sparse_linalg.expm_multiply` for vectors and multiple
   right-hand sides, with configurable time, trace-shift hint, local Taylor-tail
@@ -2774,7 +2787,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   SciPy and independent dense exponential reference comparisons.
 - No new runtime dependencies or third-party source code.
 
-## 2026-11-04 — partial sparse singular value decomposition (`svds`)
+## 2026-11-04 â€” partial sparse singular value decomposition (`svds`)
 
 - Add `scifort_sparse_linalg.svds` for real rectangular canonical CSR matrices,
   using two-pass-reorthogonalized Golub--Kahan search directions and a stable
@@ -2789,7 +2802,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   randomized NumPy/SciPy reference comparisons plus 1,200-by-900 sparse test.
 - No added external numerical dependencies or third-party source code.
 
-## 2026-11-04 — block-restarted Arnoldi for clustered nonsymmetric spectra
+## 2026-11-04 â€” block-restarted Arnoldi for clustered nonsymmetric spectra
 
 - Add optional `block_size=1..k` to `eigs_arnoldi` and to the
   `eigs(method='arnoldi'/'arnoldi_schur')` dispatcher, preserving the original
@@ -2803,7 +2816,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   plus pass the earlier 14 native and Arnoldi comparison suites.
 - No added external dependencies or third-party solver source code.
 
-## 2026-11-04 — nonsymmetric Schur-subspace locking for restarted Arnoldi
+## 2026-11-04 â€” nonsymmetric Schur-subspace locking for restarted Arnoldi
 
 - Add optional `schur_locking=.true.` and `schur_locked_count` to
   `eigs_arnoldi`; add `eigs(...,method='arnoldi_schur')` dispatcher.
@@ -2816,7 +2829,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   Add randomized SciPy/dense reference checks in both build modes.
 - No external solver sources, BLAS/LAPACK requirements or new runtime deps.
 
-## 2026-11-04 — hard-locked restarted symmetric sparse eigensolver
+## 2026-11-04 â€” hard-locked restarted symmetric sparse eigensolver
 
 - Add opt-in `eigsh_lanczos(...,hard_locking=.true.)` and
   `eigsh(...,method='lanczos_locked')`, retaining the existing soft-locking
@@ -2833,7 +2846,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Keep nonsymmetric Arnoldi soft locked: orthogonal deflation of right
   eigenvectors alone is invalid for general nonnormal operators.
 
-## 2026-11-04 — normal-mode shift-invert for restarted Lanczos and Arnoldi
+## 2026-11-04 â€” normal-mode shift-invert for restarted Lanczos and Arnoldi
 
 - Extend `eigsh_lanczos` with real `sigma`, shifted MINRES inner solves,
   `inner_rtol` and `inner_maxiter`. Preserve inverse-spectrum `LM`, `LA`,
@@ -2848,7 +2861,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   copied external solver code. Hard locking and user-supplied inverse
   operators remain unsupported.
 
-## 2026-11-04 — restarted symmetric Lanczos and eigensolver method dispatch
+## 2026-11-04 â€” restarted symmetric Lanczos and eigensolver method dispatch
 
 - Add `scifort_sparse_linalg.eigsh_lanczos`, a real-symmetric restarted
   Krylov eigensolver with thick Ritz-vector retention, two-pass full
@@ -2862,7 +2875,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   spectral edges and explicit nonconvergence checks.
 - No new external dependencies or copied third-party solver source.
 
-## 2026-11-04 — thick-restarted Arnoldi for nonsymmetric sparse eigenvalues
+## 2026-11-04 â€” thick-restarted Arnoldi for nonsymmetric sparse eigenvalues
 
 - Add the independent `scifort_sparse_linalg.eigs_arnoldi` entry point,
   leaving all existing `eigs` and `eigsh` signatures unchanged.
@@ -2877,7 +2890,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - The new solver is **not** implicitly restarted Arnoldi, does not provide
   hard invariant-subspace locking, and has no shift-invert path yet.
 
-## 2026-11-04 — complex shift-invert and extended sparse eigenvalue selection
+## 2026-11-04 â€” complex shift-invert and extended sparse eigenvalue selection
 
 - Extend `scifort_sparse_linalg.eigs` with complex `sigma` shift-invert on
   real CSR inputs. A new internal complex restarted GMRES solves the shifted
@@ -2894,7 +2907,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   source or libraries. Implicitly restarted Arnoldi/Lanczos and generalized
   eigenproblems remain outstanding.
 
-## 2026-11-04 — nonsymmetric sparse eigenvalues and symmetric shift-invert
+## 2026-11-04 â€” nonsymmetric sparse eigenvalues and symmetric shift-invert
 
 - Implement `scifort_sparse_linalg.eigs` for real nonsymmetric CSR matrices
   with complex eigenpairs. Use complex block orthogonal iteration, real sparse
@@ -2909,7 +2922,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   eigenvalue, eigenvector, and residual comparisons. This update introduces
   no BLAS/LAPACK dependency or third-party source code.
 
-## 2026-11-04 — MINRES and first symmetric sparse eigensolver
+## 2026-11-04 â€” MINRES and first symmetric sparse eigensolver
 
 - Add `scifort_sparse_linalg.minres` using the three-term symmetric Lanczos
   recurrence with streamed Givens QR updates for real indefinite and singular
@@ -2927,7 +2940,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   for both checked and optimized builds. The MINRES recurrences carry the
   SciPy BSD-3-Clause attribution; no new build dependency was added.
 
-## 2026-11-04 — sparse LSQR and ILU(0) preconditioning
+## 2026-11-04 â€” sparse LSQR and ILU(0) preconditioning
 
 - Add `scifort_sparse_linalg.lsqr` using original Golub--Kahan LSQR
   recurrences, with rectangular/underdetermined/rank-deficient solutions,
@@ -2943,7 +2956,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   checked and optimized GNU Fortran builds. No source was imported from
   upstream libraries and no new binary dependency was added.
 
-## 2026-11-04 — sparse CSR iterative linear algebra
+## 2026-11-04 â€” sparse CSR iterative linear algebra
 
 - Add `scifort_sparse_linalg` with original dependency-free CG, BiCGSTAB and
   restarted GMRES solvers, one-based CSR matvecs, optional Jacobi inverse
@@ -2955,7 +2968,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   documentation of tolerance, preconditioner, and error semantics. `kiss`
   remains a license-reviewed candidate, not imported into this update.
 
-## 2026-11-04 — canonical CSC, packed diagonals, and triangular CSR utilities
+## 2026-11-04 â€” canonical CSC, packed diagonals, and triangular CSR utilities
 
 - Extend `scifort_sparse` with canonical, one-based `csc_matrix`, validation,
   COO/dense constructors, bidirectional sparse CSR/CSC conversion, CSC matvec
@@ -2968,7 +2981,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   a large sparse conversion test, and new API/attribution documentation.
   No third-party source code or additional runtime dependencies were added.
 
-## 2026-11-03 — generic rectangular CSR sparse matrix arithmetic
+## 2026-11-03 â€” generic rectangular CSR sparse matrix arithmetic
 
 - Add independent `scifort_sparse` module with canonical one-based real64
   rectangular CSR matrices and COO/dense constructors and conversions.
@@ -2979,7 +2992,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   product, and randomized SciPy 1.17 comparison scripts. No additional
   runtime dependencies or third-party source code.
 
-## 2026-11-03 — Yen K-shortest simple paths in sparse graphs
+## 2026-11-03 â€” Yen K-shortest simple paths in sparse graphs
 
 - Add `scifort_sparse_csgraph.yen` to enumerate the K shortest loopless
   directed or undirected source-to-target paths; supports `unweighted`, signed
@@ -2992,7 +3005,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   plus exhaustive DFS enumeration of all simple routes on small graphs.
   No additional runtime dependencies or third-party source were introduced.
 
-## 2026-11-03 — weighted rectangular matching and sparse CSR Laplacians
+## 2026-11-03 â€” weighted rectangular matching and sparse CSR Laplacians
 
 - Add `csr_weighted_bipartite_graph`, weighted edge/dense/square CSR
   constructors, validation, and `minimum_weight_full_bipartite_matching`
@@ -3005,7 +3018,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   independent small-instance exhaustive matching verification. No new
   dependencies or borrowed third-party code.
 
-## 2026-11-03 — sparse graph reordering, maximum flow and bipartite matching
+## 2026-11-03 â€” sparse graph reordering, maximum flow and bipartite matching
 
 - Add one-based `reverse_cuthill_mckee` with structural symmetrization,
   duplicate/zero-edge handling, pseudo-peripheral roots, and stable degree sorting.
@@ -3013,13 +3026,13 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   64-bit flow totals, nonnegative-capacity validation, and a coalesced
   antisymmetric CSR net-flow result.
 - Add independent rectangular `csr_bipartite_graph` storage, edge/dense/square
-  constructors, iterative Hopcroft–Karp `maximum_bipartite_matching`, and
+  constructors, iterative Hopcroftâ€“Karp `maximum_bipartite_matching`, and
   maximum-transversal `structural_rank`.
 - Add native regressions in both checked and optimized modes, plus randomized
   SciPy 1.17 comparisons with exhaustive small-instance min-cut and matching
   oracles. No external dependencies or borrowed code.
 
-## 2026-11-03 — sparse graph all-pairs paths, Laplacians and search trees
+## 2026-11-03 â€” sparse graph all-pairs paths, Laplacians and search trees
 
 - Add independent one-based `floyd_warshall` and `johnson` shortest-path
   algorithms, with unweighted/undirected options, predecessor matrices,
@@ -3034,7 +3047,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   disconnected signed graphs, negative cycles, directedness, normalized
   Laplacian variants, selected sources, and tree edges. No new dependencies.
 
-## 2026-11-03 — sparse CSR graph algorithms and hierarchy conveniences
+## 2026-11-03 â€” sparse CSR graph algorithms and hierarchy conveniences
 
 - Add dependency-free `scifort_sparse_csgraph` with one-based compressed sparse
   row constructors/conversion/validation, weak and strong connected components,
@@ -3050,7 +3063,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Retain SciFort's one-based indexing, all existing hierarchy/VQ interfaces,
   and the project dependency and licensing policy.
 
-## 2026-11-03 — numeric hierarchy dendrograms and Gaussian K-means initialization
+## 2026-11-03 â€” numeric hierarchy dendrograms and Gaussian K-means initialization
 
 - Add `dendrogram` to `scifort_cluster_hierarchy`, returning SciPy-compatible
   numeric branch coordinates and one-based leaf order without graphics;
@@ -3068,7 +3081,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   SciFort's partition predicate detects several SciPy 1.17 false positives
   when the same right-side label appears in separated left-side groups.
 
-## 2026-11-03 — end-to-end hierarchical clustering and cophenetic correlation
+## 2026-11-03 â€” end-to-end hierarchical clustering and cophenetic correlation
 
 - Implement SciPy-compatible `fclusterdata` for observation matrices, using
   the existing SciFort pairwise metric, linkage and flat-cluster kernels.
@@ -3082,7 +3095,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   comparisons per build, spanning seven linkage methods, six pairwise
   metrics and three flat-cut criteria. No third-party source or dependencies.
 
-## 2026-11-03 — globally optimal hierarchy leaf ordering and tree utilities
+## 2026-11-03 â€” globally optimal hierarchy leaf ordering and tree utilities
 
 - Implement `optimal_leaf_ordering` for condensed distances and observation
   matrices; add `optimal_ordering=.true.` to both `linkage` overloads. Minimize
@@ -3095,7 +3108,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   and independent exhaustive leaf-orientation verification for small trees.
   No external library code or dependencies were incorporated.
 
-## 2026-11-03 — expanded hierarchical-clustering diagnostics and cut criteria
+## 2026-11-03 â€” expanded hierarchical-clustering diagnostics and cut criteria
 
 - Extend `scifort_cluster_hierarchy` with SciPy-style `inconsistent` (depth-limited
   sample statistics), `maxdists`, `maxrstat`, `maxinconsts`, `is_monotonic`,
@@ -3111,7 +3124,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   driver (180 scenarios per checked/optimized build). No new dependencies or
   incorporated third-party source code.
 
-## 2026-11-03 — independent vector quantization and K-means clustering
+## 2026-11-03 â€” independent vector quantization and K-means clustering
 
 - Add `scifort_cluster_vq` with population-standard-deviation `whiten`,
   one-based nearest-neighbor `vq`, fixed-iteration `kmeans2`, and restart-based
@@ -3123,7 +3136,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native regression tests and randomized comparisons against SciPy 1.17;
   retain existing hierarchy APIs and introduce no third-party algorithm code.
 
-## 2026-11-03 — new hierarchical clustering algorithms
+## 2026-11-03 â€” new hierarchical clustering algorithms
 
 - Add `scifort_cluster_hierarchy` with `linkage` for seven classical methods,
   using both observation matrices and SciPy-compatible condensed distances.
@@ -3132,7 +3145,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native checked/optimized tests and independent randomized SciPy 1.17
   comparisons; no new binary dependencies or imported algorithm source.
 
-## 2026-11-03 — arbitrary-rank rotation and rigid-transform broadcasting
+## 2026-11-03 â€” arbitrary-rank rotation and rigid-transform broadcasting
 
 - Add `scifort_spatial_transform_nd` with assumed-rank constructors for SO(3)
   quaternions/rotation vectors/matrices and SE(3) twists/matrices/dual quats.
@@ -3144,7 +3157,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Document remaining gaps: reductions and slicing, true dynamic-rank outputs,
   and SVD correction of imperfect rotation matrices.
 
-## 2026-11-03 — Davenport-angle construction and extraction
+## 2026-11-03 â€” Davenport-angle construction and extraction
 
 - Add `Rotation.from_davenport` and `Rotation.as_davenport` equivalents to
   `scifort_spatial_transform`, supporting arbitrary normalized axes with
@@ -3156,7 +3169,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   native spatial regression and preserve all existing rotation APIs.
 - Uses no additional compiled dependencies. See provenance and license notices.
 
-## 2026-11-03 — rank-two SE(3) rigid-transform grids
+## 2026-11-03 â€” rank-two SE(3) rigid-transform grids
 
 - Add `scifort_spatial_rigid_transform_grid` with two-dimensional batches of
   rigid transforms, scalar/stack/grid composition, per-axis broadcasting,
@@ -3168,7 +3181,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   1.17 comparisons. Existing scalar and 1D SE(3) APIs are unchanged; no new
   libraries or external numerical source are required.
 
-## 2026-11-02 — native SE(3) rigid transformations and stacks
+## 2026-11-02 â€” native SE(3) rigid transformations and stacks
 
 - Add `scifort_spatial_rigid_transform`: rotation/translation composition,
   inversion, homogeneous 4x4 matrices, point-cloud application, SE(3) exp/log
@@ -3180,7 +3193,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Explicitly document differences from SciPy: strict rotation-matrix validation
   and lack of arbitrary-rank broadcasting.
 
-## 2026-11-02 — finite SO(3) rotational symmetry groups and reduction
+## 2026-11-02 â€” finite SO(3) rotational symmetry groups and reduction
 
 - Add `scifort_spatial_rotation_group` with `rotation_create_group` for
   SciPy-compatible cyclic, proper dihedral, tetrahedral, octahedral and
@@ -3192,7 +3205,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   an independent two-seed SciPy comparator and API documentation.
 - All code is original MIT-licensed Fortran; no new external dependency.
 
-## 2026-11-02 — reproducible random SO(3) rotations and rank-two rotation grids
+## 2026-11-02 â€” reproducible random SO(3) rotations and rank-two rotation grids
 
 - Add `rotation_rng_type`, `rotation_rng`, `rotation_random`, and
   `rotation_stack_random` using Haar-uniform Shoemake quaternions. Support
@@ -3207,7 +3220,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   isotropy checks and randomized broadcasting. No new dependencies or copied
   third-party source.
 
-## 2026-11-02 — batched spatial rotations and rotation stacks
+## 2026-11-02 â€” batched spatial rotations and rotation stacks
 
 - Add independent MIT-licensed `scifort_spatial_rotation_stack`, exposing
   one-dimensional `rotation_stack_type` and batched quaternion, rotation-vector,
@@ -3219,7 +3232,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   comparisons in checked and optimized builds. Preserve scalar rotation APIs
   and introduce no new runtime dependencies.
 
-## 2026-11-02 — smooth cubic SO(3) rotation splines
+## 2026-11-02 â€” smooth cubic SO(3) rotation splines
 
 - Add `scifort_spatial_rotation_spline` implementing SciPy-style cubic
   `RotationSpline` on nonuniform orientation keyframes, with rotation,
@@ -3232,7 +3245,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   catastrophic nonlinear-iteration divergence and return explicit status 2
   instead of interpolating from numerically invalid cubic coefficients.
 
-## 2026-11-02 — weighted rotation alignment and chordal means
+## 2026-11-02 â€” weighted rotation alignment and chordal means
 
 - Add `rotation_align_vectors(a,b,weights=,rssd=,sensitivity=,status=)`
   with row-major vector collections and a native quaternion Wahba solver.
@@ -3245,7 +3258,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   native 3D vector/weight/invalid-input tests and independent randomized
   comparison drivers. Preserve all prior source/module exports and dependencies.
 
-## 2026-11-02 — Euler angles and modified Rodrigues parameters
+## 2026-11-02 â€” Euler angles and modified Rodrigues parameters
 
 - Extend `scifort_spatial_transform` with `rotation_from_euler` (1-3 axes),
   `r%as_euler` (24 three-axis intrinsic/extrinsic sequences), and gimbal-lock
@@ -3257,7 +3270,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   angles, degrees, and extreme-magnitude inputs. No imported code or runtime
   dependencies were added.
 
-## 2026-11-02 — spatial.transform rotations and piecewise Slerp
+## 2026-11-02 â€” spatial.transform rotations and piecewise Slerp
 
 - Add the independent `scifort_spatial_transform` module with `rotation_type`
   and conversions to/from quaternions, rotation vectors and 3x3 matrices.
@@ -3268,7 +3281,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add two native regression programs and randomized SciPy comparison tests
   using checked and optimized GNU Fortran. No new dependencies or imports.
 
-## 2026-11-02 — validated 3D convex-hull reconstruction
+## 2026-11-02 â€” validated 3D convex-hull reconstruction
 
 - Fix a reproducible near-coplanar 26-point 3D hull that previously failed
   during neighbor assembly. Reject incomplete/nonconvex output by validating
@@ -3282,7 +3295,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Update the native spatial test runner and 3D hull documentation. No new
   external runtime dependencies or third-party source code.
 
-## 2026-11-02 — native 2D/3D bounded halfspace intersections
+## 2026-11-02 â€” native 2D/3D bounded halfspace intersections
 
 - Add `scifort_spatial_halfspace` and export `halfspace_intersection` and
   `halfspace_intersection_type` through `scifort_spatial`.
@@ -3296,7 +3309,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add native status/geometry tests, independent randomized SciPy comparisons
   with two seeds, and documentation. No new dependency or imported code.
 
-## 2026-11-02 — native 2D/3D convex hull construction
+## 2026-11-02 â€” native 2D/3D convex hull construction
 
 - Add `scifort_spatial_convex_hull` and export `convex_hull` and
   `convex_hull_type` through the existing `scifort_spatial` facade.
@@ -3308,7 +3321,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add a native regression and independent SciPy numerical tests with
   randomized data and multiple seeds in checked and optimized builds.
 
-## 2026-11-02 — native 2D/3D spherical Voronoi diagrams
+## 2026-11-02 â€” native 2D/3D spherical Voronoi diagrams
 
 - Add `scifort_spatial_voronoi` and export the `spherical_voronoi` factory
   and `spherical_voronoi_type` through `scifort_spatial`.
@@ -3331,7 +3344,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   randomized SciPy comparison driver, and `docs/spatial_procrustes.md`.
 - No new build dependency or imported third-party implementation code.
 
-## 2026-11-02 — directed Hausdorff distances and great-circle interpolation
+## 2026-11-02 â€” directed Hausdorff distances and great-circle interpolation
 
 - Add MIT-licensed `scifort_spatial_hausdorff` with exact
   `directed_hausdorff` (optional one-based witness indices and early
@@ -3345,7 +3358,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   tests, SciPy comparison drivers, and `docs/spatial_geometry.md`.
 - No new dependency or third-party implementation source was introduced.
 
-## 2026-11-02 — five weighted Boolean `scipy.spatial.distance` metrics
+## 2026-11-02 â€” five weighted Boolean `scipy.spatial.distance` metrics
 
 - Extend `scifort_spatial` from 14 to 19 distance metrics: add `dice`,
   `rogerstanimoto`, `russellrao`, `sokalsneath`, and `yule` to `point_distance`,
@@ -3358,7 +3371,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add `test_spatial_distance_boolean.f90`, randomized independent SciPy
   comparisons, and documentation. No new dependency or third-party source.
 
-## 2026-11-02 — standardized Euclidean, Mahalanobis and Jensen--Shannon distances
+## 2026-11-02 â€” standardized Euclidean, Mahalanobis and Jensen--Shannon distances
 
 - Extend the MIT-licensed `scifort_spatial` distance API to 14 metrics, adding
   `seuclidean`, `mahalanobis`, and `jensenshannon` to `point_distance`, `pdist`,
@@ -3373,7 +3386,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   two seeds in both GNU Fortran configurations, and updated API documentation.
   No third-party code or new runtime dependencies were introduced.
 
-## 2026-11-01 — weighted and multi-radius `scipy.spatial.cKDTree.count_neighbors`
+## 2026-11-01 â€” weighted and multi-radius `scipy.spatial.cKDTree.count_neighbors`
 
 - Overload the MIT-licensed native `kd_tree_type%count_neighbors` with
   rank-one radius arrays and `cumulative=.false.` distance histogram bins.
@@ -3388,7 +3401,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   and optimized GNU Fortran builds, and extend native regression tests.
 - No new dependency, third-party source, or Delaunay changes.
 
-## 2026-11-01 — periodic and Minkowski KD-tree spatial searches
+## 2026-11-01 â€” periodic and Minkowski KD-tree spatial searches
 
 - Extend the existing balanced, native Fortran KD-tree to support scalar or
   per-coordinate `boxsize`, including nonperiodic axes (`L=0`) and wrapped
@@ -3401,7 +3414,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add randomized native and independent SciPy reference tests using checked
   and optimized GNU Fortran. No new dependencies or copied upstream source.
 
-## 2026-11-01 — KD-tree pair and cross-tree spatial searches
+## 2026-11-01 â€” KD-tree pair and cross-tree spatial searches
 
 - Extend the existing balanced KD-tree with four `scipy.spatial.cKDTree`
   methods: `query_pairs`, `query_ball_tree`, `count_neighbors`, and
@@ -3414,7 +3427,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   and spatial test runners. Existing interpolation routines and external
   dependencies remain unchanged.
 
-## 2026-11-01 — `scipy.spatial.distance` pairwise metric coverage
+## 2026-11-01 â€” `scipy.spatial.distance` pairwise metric coverage
 
 - Add a new native `scifort_spatial` module exporting `point_distance`,
   `pdist`, `cdist`, and rank-overloaded `squareform` for real binary64 data.
@@ -3429,11 +3442,11 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   seed in both checked and optimized GNU Fortran builds. No new Fortran
   dependencies or imported upstream source code.
 
-## 2026-11-01 — `make_lsq_spline` with complete knot vectors
+## 2026-11-01 â€” `make_lsq_spline` with complete knot vectors
 
 - Add `make_lsq_spline` to the public `scifort_interpolate` API for real
   scalar and multichannel weighted least-squares fitting with explicit full
-  knots, including nonuniform/repeated interior knots and degrees 0–15.
+  knots, including nonuniform/repeated interior knots and degrees 0â€“15.
 - Support nondecreasing sample coordinates and zero weights; expose `qr`
   method selection and report rank deficiency via the existing status codes.
 - Extract the existing banded Givens QR algorithm into a shared kernel used
@@ -3443,23 +3456,23 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   SciPy 1.17 numerical fixtures, invalid-input tests, and documentation.
   Checked and optimized GNU Fortran builds pass; no new dependencies.
 
-## 2026-11-01 — periodic interpolating B-splines (scalar and multichannel)
+## 2026-11-01 â€” periodic interpolating B-splines (scalar and multichannel)
 
 - Implement `make_interp_spline(x,y,k=...,bc_type='periodic')` for real data,
   with cyclic knots, value interpolation and matching endpoint derivatives
-  for polynomial degrees 2–15; preserve SciPy's degree-0/1 special cases.
+  for polynomial degrees 2â€“15; preserve SciPy's degree-0/1 special cases.
 - Factor a single periodic collocation system across output channels, using
   SciFort's existing dense pivoted solver; enable periodic evaluation,
   derivatives, knot insertion and exact integration across multiple periods.
 - Validate against SciPy 1.17.0: 150/150 and 120/120 randomized cases per
-  checked/optimized build, covering degrees 1–15, coefficients, derivatives,
+  checked/optimized build, covering degrees 1â€“15, coefficients, derivatives,
   and integrals. All 30 native interpolation tests pass in both builds.
   Normalize high-degree derivative rows to avoid false singularity flags.
   No mandatory dependency.
 - Record the periodic-knot construction's SciPy BSD-3-Clause provenance;
   leave Delaunay and the optional FITPACK backend unchanged.
 
-## 2026-11-01 — bivariate spline partial derivatives and exact knot refinement
+## 2026-11-01 â€” bivariate spline partial derivatives and exact knot refinement
 
 - Add `fitpack_bivariate_tck_type%partial_derivative(dx,dy,status)` to construct
   the mixed-partial derivative spline (SciPy `BivariateSpline.partial_derivative`).
@@ -3472,11 +3485,11 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Expand the native interpolation suite to 29 programs; keep all 29 passing.
   No new dependencies, vendoring, or Delaunay changes.
 
-## 2026-11-01 — exact rectangular-grid bivariate spline interpolation and integration
+## 2026-11-01 â€” exact rectangular-grid bivariate spline interpolation and integration
 
 - Add dependency-free `rect_bivariate_spline(x,y,z,kx,ky,status)`, covering
   `scipy.interpolate.RectBivariateSpline(s=0)` on strictly increasing real grids
-  with independent spline degrees 1–5. Reuse SciFort's existing 1D not-a-knot
+  with independent spline degrees 1â€“5. Reuse SciFort's existing 1D not-a-knot
   collocation solver; return the established `fitpack_bivariate_tck_type`.
 - Add exact signed, domain-clipped rectangular integration for **any** valid
   bivariate TCK through `%integral()` and `bispline_integral()`, including
@@ -3488,7 +3501,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   All 28 interpolation test programs pass in the bounds-checked build.
 - No copied upstream code, added dependencies, or Delaunay changes.
 
-## 2026-11-01 — bivariate FITPACK smoothing and fixed-knot least squares
+## 2026-11-01 â€” bivariate FITPACK smoothing and fixed-knot least squares
 
 - Add dependency-free `fitpack_bivariate_tck_type`, `bisplev` scalar/grid
   evaluation, mixed partial derivatives, and paired-query `bisplev_points`.
@@ -3501,10 +3514,10 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Preserve the optional dependency architecture; no FITPACK code is vendored.
   Delaunay interpolation is unchanged.
 
-## 2026-10-31 — FITPACK-style weighted LSQ and exact univariate splines
+## 2026-10-31 â€” FITPACK-style weighted LSQ and exact univariate splines
 
 - Implement `lsq_univariate_spline` (SciPy `LSQUnivariateSpline`): weighted
-  least squares with supplied interior knots, degrees 1–5, optional bbox,
+  least squares with supplied interior knots, degrees 1â€“5, optional bbox,
   and scalar or multichannel real observations.
 - Implement `interpolated_univariate_spline` (`InterpolatedUnivariateSpline`)
   using the existing not-a-knot B-spline interpolator.
@@ -3514,9 +3527,9 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   SciPy comparisons of knots, coefficients, derivatives and integration.
 - Preserve Delaunay implementation unchanged.
 
-## 2026-10-31 — natural cubic smoothing splines (new algorithm coverage)
+## 2026-10-31 â€” natural cubic smoothing splines (new algorithm coverage)
 
-- Stop expanding native Delaunay dimensions; existing 2D–5D triangulation
+- Stop expanding native Delaunay dimensions; existing 2Dâ€“5D triangulation
   and supplied higher-dimensional simplices remain available unchanged.
 - Implement `scipy.interpolate.make_smoothing_spline`-style fixed-penalty
   and GCV-selected weighted natural cubic smoothing for one or many real
@@ -3527,7 +3540,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   derivatives, coefficients and exact integrals), native regression, and
   detailed API/algorithm documentation.
 
-## 2026-10-31 — dimension-generic native 4D/5D Delaunay and fast simplex location
+## 2026-10-31 â€” dimension-generic native 4D/5D Delaunay and fast simplex location
 
 - Extend `LinearNDInterpolator` and `griddata(method='linear')` to native 4D
   and 5D Delaunay construction with one rank-two geometric implementation:
@@ -3539,18 +3552,18 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add cached barycentric affine transforms, simplex-facet adjacency, and
   nearest-site-guided neighbor walking; retain a generalized BVH fallback.
 - In reproducible `-O3` query benchmarks versus the predecessor ZIP, reduce
-  4D and 5D evaluation CPU times by approximately 6.7× and 27.8×,
+  4D and 5D evaluation CPU times by approximately 6.7Ã— and 27.8Ã—,
   respectively, using identical supplied meshes.
 - Add native 4D/5D regression, independent SciPy/Qhull geometry and complex
   value comparisons, a predecessor query benchmark, and updated documentation.
 - No extra FPM/BLAS/LAPACK dependencies or copied upstream source.
 
-## 2026-10-31 — accelerated 3D Delaunay and dimension-generic supplied-simplices interpolation
+## 2026-10-31 â€” accelerated 3D Delaunay and dimension-generic supplied-simplices interpolation
 
 - Cache conservative circumsphere centers/radii for 3D tetrahedra, screening
   non-cavity tetrahedra before exact extended-precision in-sphere predicates.
   On a reproducible GNU Fortran `-O3` benchmark this reduced median 3D
-  construction time by 6.6–12.5× for 160–440 sites.
+  construction time by 6.6â€“12.5Ã— for 160â€“440 sites.
 - Add `simplices=` to the existing real/complex `linear_nd_interpolator`
   constructors. Supplied `(ndim+1,nsimplices)` tessellations support
   dimension-generic barycentric interpolation, validated through ten dimensions.
@@ -3558,10 +3571,10 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Preserve real and complex multichannel values, `rescale`, fill values,
   existing 2D/3D constructors, and the tetrahedron BVH path.
 - Add native and SciPy randomized comparisons for externally supplied
-  2D–7D simplices, source-based predecessor benchmark, and documentation.
+  2Dâ€“7D simplices, source-based predecessor benchmark, and documentation.
 - No copied third-party code, added FPM dependencies, BLAS or LAPACK.
 
-## 2026-10-31 — accelerated 3D simplex location with tetrahedron BVH
+## 2026-10-31 â€” accelerated 3D simplex location with tetrahedron BVH
 
 - Build a median-split axis-aligned bounding-volume hierarchy over the
   independently generated 3D Delaunay tetrahedra, with per-tetrahedron AABBs.
@@ -3576,22 +3589,22 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   in GNU Fortran checked and optimized builds.
 - No additional FPM dependencies, system libraries, or third-party source.
 
-## 2026-10-31 — 3D Delaunay tetrahedralization and LinearND/griddata support
+## 2026-10-31 â€” 3D Delaunay tetrahedralization and LinearND/griddata support
 
 - Extend real/complex, scalar/multichannel `LinearNDInterpolator` and
   `griddata(method='linear')` from 2D to 3D without changing public calls.
-- Implement an independent hull-preserving incremental 3D Bowyer–Watson
+- Implement an independent hull-preserving incremental 3D Bowyerâ€“Watson
   tetrahedralization with extended-precision in-sphere/orientation tests,
   hashed hull facets, and tetrahedral barycentric evaluation.
-- Preserve the 2D triangulator and Clough–Tocher APIs and dependencies.
+- Preserve the 2D triangulator and Cloughâ€“Tocher APIs and dependencies.
 - Add native affine, boundary, complex, fill, and degenerate-input tests,
   plus independent SciPy and Qhull geometry comparisons.
 - Explicitly document Qhull numerical-offset sensitivity, native predicate
   limitations, and the absence of new BLAS/LAPACK or FPM dependencies.
 
-## 2026-10-31 — indexed, cached Clough–Tocher evaluation
+## 2026-10-31 â€” indexed, cached Cloughâ€“Tocher evaluation
 
-- Cache the 19 active cubic Bernstein–Bézier controls per triangle and output
+- Cache the 19 active cubic Bernsteinâ€“BÃ©zier controls per triangle and output
   channel during construction, avoiding repeated control reconstruction.
 - Introduce a bounded-memory CSR uniform-bin index over triangle bounding
   boxes to accelerate interior queries, with exact linear-search fallback.
@@ -3602,17 +3615,17 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Validate checked and optimized GNU Fortran builds against SciPy; retain
   existing public API, license notices, and FPM dependencies.
 
-## 2026-10-31 — Clough–Tocher C1 scattered-data cubic interpolation
+## 2026-10-31 â€” Cloughâ€“Tocher C1 scattered-data cubic interpolation
 
 - Add SciPy-style `CloughTocher2DInterpolator` for real/complex multichannel
   scattered data, configurable gradient-estimation tolerance/iterations,
   coordinate rescaling, and out-of-convex-hull fills.
 - Implement 2-D global minimum-curvature gradient estimation and affine-
-  invariant cubic triangular Bézier patches with C1 edge continuity.
+  invariant cubic triangular BÃ©zier patches with C1 edge continuity.
   Adapt the BSD-3-Clause SciPy numerical formulas with required attribution.
 - Extend the public `scifort_interpolate:griddata` generic to accept
   `method='cubic'`; preserve existing nearest/linear signatures.
-- Improve Bowyer–Watson triangulation using extended-precision in-circle
+- Improve Bowyerâ€“Watson triangulation using extended-precision in-circle
   predicates (with portable double fallback), conservative convex-hull notch
   repair, local Delaunay edge flips, and a final hull-area consistency check.
   Reject unresolved incomplete meshes instead of returning silent gaps.
@@ -3620,7 +3633,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   and updated stand-alone Fortran comparison scripts. No new required linker
   library or FPM dependency.
 
-## 2026-10-31 — balanced KD-tree for scattered interpolation and RBF fitting
+## 2026-10-31 â€” balanced KD-tree for scattered interpolation and RBF fitting
 
 - Add independent `scifort_interpolate_kdtree` with reusable balanced KD-tree,
   deterministic duplicate/tie handling, exact k-nearest and radius queries,
@@ -3634,12 +3647,12 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - No new upstream source or FPM, BLAS/LAPACK, or Qhull dependency; retain
   the existing 2D-only limit on Delaunay-based linear interpolation.
 
-## 2026-10-31 — scattered-data Delaunay and nearest interpolation
+## 2026-10-31 â€” scattered-data Delaunay and nearest interpolation
 
 - Add independent `scifort_interpolate_scattered` implementing
   `NearestNDInterpolator` in any dimension, `LinearNDInterpolator` in 2D,
   and a `griddata` convenience interface for nearest and 2D linear modes.
-- Implement 2D Bowyer–Watson Delaunay triangulation and barycentric
+- Implement 2D Bowyerâ€“Watson Delaunay triangulation and barycentric
   evaluation without external Qhull, BLAS/LAPACK, or FPM dependencies.
   Support real/complex multichannel values, rescaling, configurable
   convex-hull fills, vector/batch evaluation and triangle inspection.
@@ -3649,11 +3662,11 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   including sample-site queries, convex-hull fills and invalid input tests.
   Document the 2D-only linear and non-robust-predicate limitations.
 
-## 2026-10-31 — RBFInterpolator and legacy interp1d
+## 2026-10-31 â€” RBFInterpolator and legacy interp1d
 
 - Add independent `scifort_interpolate_rbf` for real/complex multichannel
   scattered-data interpolation, eight SciPy 1.17 radial kernels, optional
-  Matérn kernels, global/local neighbor fitting, polynomial augmentation,
+  MatÃ©rn kernels, global/local neighbor fitting, polynomial augmentation,
   and scalar or per-node smoothing.
 - Add independent `scifort_interpolate_legacy` for `interp1d` with nine
   interpolation kinds, sorting, asymmetric out-of-range fill, extrapolation,
@@ -3662,13 +3675,13 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   programs, two SciPy reference drivers, and complete documentation.
 - Keep FPM dependencies unchanged; no third-party code copied or vendored.
 
-## 2026-10-31 — Krogh and Floater–Hormann interpolation
+## 2026-10-31 â€” Krogh and Floaterâ€“Hormann interpolation
 
 - Add independent `scifort_interpolate_global`, exported by the existing
   `scifort_interpolate` facade. Implement SciPy-style confluent Newton/Hermite
   (Krogh) interpolation, including repeated-node derivatives, real/complex
   multichannel outputs, and all-derivatives-array evaluation.
-- Implement Floater–Hormann pole-free rational interpolation for monotone
+- Implement Floaterâ€“Hormann pole-free rational interpolation for monotone
   real nodes and real/complex multichannel ordinates, using normalized
   log-space barycentric weights and local degree `d`.
 - Add checked/optimized native regressions, two-seed SciPy comparisons,
@@ -3676,20 +3689,20 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Preserve the optional, nonvendored `polyroots-fortran` integration without
   introducing any new FPM or system BLAS/LAPACK dependencies.
 
-## 2026-10-31 — genuine upstream polyroots adapter compilation
+## 2026-10-31 â€” genuine upstream polyroots adapter compilation
 
 - Compile Jacob Williams's user-supplied `polyroots-fortran` master source
   against the existing optional SciFort callback, rather than a test double.
 - Verify checked/optimized builds, conventional LAPACK linking, and
   GNU linker garbage collection without BLAS/LAPACK for the `rpoly` path.
-- Add 120 deterministic degree-5–25 polynomial test cases per build and
-  rerun the genuine upstream-versus-native benchmark at degrees 5–17.
+- Add 120 deterministic degree-5â€“25 polynomial test cases per build and
+  rerun the genuine upstream-versus-native benchmark at degrees 5â€“17.
 - Add an offline build-and-test script that accepts a separate upstream ZIP
   and does not vendor any third-party source or modify main dependencies.
 - Document the upstream nonstandard `COMPLEX*16` declaration, distinct
   master-versus-tag provenance, and outstanding Windows/FPM limitations.
 
-## 2026-10-31 — barycentric interpolation and optional polynomial-root callbacks
+## 2026-10-31 â€” barycentric interpolation and optional polynomial-root callbacks
 
 - Add SciPy-style `BarycentricInterpolator`/`barycentric_interpolate`
   for real and complex scalar/multichannel ordinates with stable normalized
@@ -3704,7 +3717,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   Document the SciPy 1.17 even-batch barycentric insertion discrepancy
   and distinguish interface-stub checks from real upstream validation.
 
-## 2026-10-31 — piecewise extension, Hermite order selection and root-finding reuse review
+## 2026-10-31 â€” piecewise extension, Hermite order selection and root-finding reuse review
 
 - Add `%extend()` to real/complex `PPoly` and `BPoly`, appending/prepending
   intervals while preserving polynomial values across different local degrees.
@@ -3718,7 +3731,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   their prospective license obligations and optional FPM backend strategy.
   No source was copied and no dependency was introduced.
 
-## 2026-10-31 — PPoly real roots, from_spline and complex polynomial calculus
+## 2026-10-31 â€” PPoly real roots, from_spline and complex polynomial calculus
 
 - Add `PPoly.roots` and `PPoly.solve` for real coefficients: stationary-point
   isolation, tangential roots, exact-zero sections with NaN sentinels,
@@ -3733,7 +3746,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add independent SciPy 1.17 randomized Fortran/Python comparison drivers and
   native regressions. Retain existing Fortran compiler and FPM dependencies.
 
-## 2026-10-31 — PPoly, BPoly, and arbitrary-order Hermite interpolation
+## 2026-10-31 â€” PPoly, BPoly, and arbitrary-order Hermite interpolation
 
 - Implement independent real-valued `scifort_interpolate_piecewise` with
   `PPoly` local power and `BPoly` Bernstein coefficients, scalar and
@@ -3747,23 +3760,23 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   documentation and examples. Update existing standalone interpolator build
   scripts for the new public-facade dependency. No new FPM dependency.
 
-## 2026-10-31 — multidimensional PCHIP and banded tensor spline collocation
+## 2026-10-31 â€” multidimensional PCHIP and banded tensor spline collocation
 
 - Add `RegularGridInterpolator(method='pchip')` and `interpn(...,method='pchip')`
-  for real 1–6D grids, multichannel ordinates, ascending/descending axes,
+  for real 1â€“6D grids, multichannel ordinates, ascending/descending axes,
   fill/bounds/extrapolation and per-call method selection. Recursion processes
   axes last-to-first as in SciPy. Match SciPy's >=4-knot rule, reject complex
   PCHIP and disallow `nu=` for PCHIP.
 - Replace dense per-axis B-spline collocation storage and pivoted LU with a
   specialized banded no-pivot LU (degree 1/3/5), reducing factor storage from
-  `O(n²)` to `O(n*k)` and factorization from `O(n³)` to `O(n*k²)`.
+  `O(nÂ²)` to `O(n*k)` and factorization from `O(nÂ³)` to `O(n*kÂ²)`.
 - Add randomized SciPy reference tests, native PCHIP regression and a
   reproducible old/new fit-time benchmark; update provenance and API docs.
 
 ## 2026-10-31: Tensor-product B-spline interpolation and mixed partial derivatives
 
 - Extend `scifort_interpolate_regular_grid` with `'slinear'`, `'cubic'`, and
-  `'quintic'` methods for 1–6D rectilinear grids, in real or complex, with
+  `'quintic'` methods for 1â€“6D rectilinear grids, in real or complex, with
   optional trailing output channels. Use a separable per-axis not-a-knot
   collocation fit and local B-spline basis evaluation, including descending
   coordinate axes and extrapolation.
@@ -3783,7 +3796,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   derivatives and derivative objects, repeated antiderivatives, exact definite
   integrals, shape-preserving knot insertion and dense basis matrices.
 - Add `make_interp_spline` with SciPy-compatible default not-a-knot placement
-  for degrees 0–15, and natural/clamped cubic boundary conditions. Support
+  for degrees 0â€“15, and natural/clamped cubic boundary conditions. Support
   real-valued multichannel `axis=0` ordinates and optional custom knot arrays.
 - Add checked/optimized native/public tests and two-seed independent SciPy
   comparisons (1,390 cases per seed and per compiler build, including
@@ -3796,7 +3809,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 ## 2026-10-31: Rectilinear RegularGridInterpolator / interpn support
 
 - Add `scifort_interpolate_regular_grid` re-exported by `scifort_interpolate`,
-  implementing SciPy-style 1–6D nearest and multilinear interpolation over
+  implementing SciPy-style 1â€“6D nearest and multilinear interpolation over
   uneven, increasing/decreasing and singleton coordinate axes. Support real
   and complex grids, trailing output channels, reusable interpolation plans,
   `interpn` / `complex_interpn` convenience wrappers, method overrides,
@@ -4329,7 +4342,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
   native and public-interface tests. See `docs/signal_harmonic_fit.md` and
   `tools/run_signal_harmonic_fit.py`.
 
-## 2026-10-28: Weighted multiharmonic Lomb–Scargle spectral analysis
+## 2026-10-28: Weighted multiharmonic Lombâ€“Scargle spectral analysis
 
 - Add `lombscargle_multiharmonic(x,y,freqs,nterms,...)` for joint weighted
   least-squares fitting of multiple sine/cosine harmonics to irregular data.
@@ -4569,7 +4582,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 
 ## 2026-10-28: Arbitrary real and complex transfer functions for decimate
 
-- Extend the existing `decimate` vector and rank-2/3 functions and rank-1–15
+- Extend the existing `decimate` vector and rank-2/3 functions and rank-1â€“15
   `decimate_into` with trailing `b=` and `a=` coefficient arrays. Support real
   IIR systems, complex IIR systems, and real-to-complex filtering without
   disturbing previous positional or `taps=`/`sos=` calls.
@@ -4586,7 +4599,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 - Add trailing optional `taps(:)` and `sos(:,:)` keywords to `decimate` and
   `decimate_into`, reusing the existing SciFort FIR polyphase and IIR SOS
   kernels. These are available for real and complex inputs, rank-2/3
-  axis-selected functions and rank-1–15 assumed-rank output subroutines.
+  axis-selected functions and rank-1â€“15 assumed-rank output subroutines.
 - Preserve old positional APIs and their existing default Chebyshev-I IIR
   filters. Explicit filter coefficients are mutually exclusive and cannot
   accompany the designed-filter `ftype`/`n` options; validate real SOS
@@ -5404,8 +5417,8 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 ## 2026-10-25: rank-independent STFT and spectrogram
 
 - Added Fortran 2018 `stft_into` and `spectrogram_into` interfaces with
-  selectable one-based/negative axes for real and complex rank-1–14 input,
-  yielding rank-2–15 time-frequency arrays. Frequency replaces the signal
+  selectable one-based/negative axes for real and complex rank-1â€“14 input,
+  yielding rank-2â€“15 time-frequency arrays. Frequency replaces the signal
   axis and time is last. The existing legacy one-dimensional kernels are
   reused unchanged.
 - Added spectrogram `mode='psd'`, `'complex'`, `'magnitude'`, `'angle'`,
@@ -5419,7 +5432,7 @@ General banded eigensolving is currently O(n^3) time/O(n^2) storage.
 ## 2026-10-25: rank-independent spectral estimators
 
 - Added Fortran 2018 caller-output `periodogram_into`, `welch_into`,
-  `csd_into`, and `coherence_into` supporting rank-1–15 real and complex
+  `csd_into`, and `coherence_into` supporting rank-1â€“15 real and complex
   inputs and selectable axes. Cross-spectra also support mixed types.
 - Preserved existing 1-D kernels, periodogram and Welch averaging options,
   frequency conventions, and no-partial-write semantics.
@@ -6190,12 +6203,12 @@ All notable changes will be documented here.
   Fortran dependencies. See `docs/signal_window_families.md`.
 
 - Expanded the existing `scifort_signal.detrend` generic to real and complex
-  input arrays of ranks 1–3, including selected one-based axes and segmented
+  input arrays of ranks 1â€“3, including selected one-based axes and segmented
   linear fitting. Existing real one-dimensional calls are unchanged.
   Added independent Fortran tests and 720 SciPy 1.17 reference comparisons
   (maximum absolute error 5.35e-15).
 - Added the SciFort spectral extension `multitaper_harmonic_scan`, with
-  Bonferroni, Benjamini–Hochberg and Benjamini–Yekutieli corrected p-values,
+  Bonferroni, Benjaminiâ€“Hochberg and Benjaminiâ€“Yekutieli corrected p-values,
   configurable significance level, bin selection, default DC/Nyquist exclusion,
   and significant-line flags. Compared 160 randomized cases against independent
   SciPy/NumPy references (maximum corrected-p-value error 5.03e-13).
@@ -6620,7 +6633,7 @@ All notable changes will be documented here.
 
 - Added continuous-time `scipy.signal.lsim`, `step`, `impulse` and the
   corresponding separate ZPK entry points. Exact FOH and ZOH sampled input
-  propagation reuses SciFort's Padé matrix exponential. Supports real and
+  propagation reuses SciFort's PadÃ© matrix exponential. Supports real and
   complex state-space systems, TF/ZPK representations, initial states,
   and independent MIMO step/impulse responses. Added Fortran tests and
   522 seeded SciPy/SciPy-matrix-exponential comparisons. Continuous-time
@@ -6637,7 +6650,7 @@ All notable changes will be documented here.
 - Added `scipy.signal.cont2discrete` state-space and transfer-function
   discretization and `cont2discrete_zpk` for zeros/poles/gain. Supports ZOH,
   FOH, generalized bilinear (including Tustin, Euler, backward difference),
-  and impulse invariant discretization. Includes a scaled Padé matrix
+  and impulse invariant discretization. Includes a scaled PadÃ© matrix
   exponential, a pivoted linear solver, exact GBT ZPK root mapping,
   result types/status codes, fixed Fortran tests, 390 SciPy 1.17 comparisons,
   and updated standalone verification scripts. No new dependencies.
@@ -10062,7 +10075,7 @@ custom-grid, capped/interpolated, and contingency-table cases.
 - Added two numerical reference scripts (19,584 mixed-mode scalar checks,
   402 Fourier-domain complex coefficients) and ninth native ndimage test.
 
-## 2026-11-01 — FITPACK TCK compatibility and optional adaptive-knot backend
+## 2026-11-01 â€” FITPACK TCK compatibility and optional adaptive-knot backend
 
 - Add dependency-free `fitpack_tck_type`, `splrep` for s=0 and task=-1,
   `splev`, `splint`, `splder`, `splantider`, and `spalde`.
@@ -10072,7 +10085,7 @@ custom-grid, capped/interpolated, and contingency-table cases.
   Upstream build/link remains to be tested; no new mandatory dependency.
 - Continue prioritizing new SciPy algorithms; Delaunay is unchanged.
 
-## 2026-11-01 — Parametric FITPACK-compatible curve interpolation
+## 2026-11-01 â€” Parametric FITPACK-compatible curve interpolation
 
 - Add dependency-free, nonperiodic `splprep` with SciPy-style zero-residual
   interpolation and fixed-knot multichannel weighted least squares.
@@ -10083,7 +10096,7 @@ custom-grid, capped/interpolated, and contingency-table cases.
   than incorrectly substituting separate univariate smoothing splines.
 - Make no changes to Delaunay algorithms or FPM dependencies.
 
-## 2026-11-01 — Verified user-supplied FITPACK 2.0.0 offline
+## 2026-11-01 â€” Verified user-supplied FITPACK 2.0.0 offline
 
 - Compiled all 14 core and 26 C-API modules from `fitpack-main.zip` with GNU
   Fortran 14.2.0; upstream Fortran/C++ tests pass 66/66 in checked mode.
@@ -10096,7 +10109,7 @@ custom-grid, capped/interpolated, and contingency-table cases.
 - Kept FITPACK external: no upstream numerical source was copied into SciFort;
   the existing optional FPM tag remains unchanged pending separate verification.
 
-## 2026-11-01 — FITPACK 2.0.0 periodic and parametric smoothing
+## 2026-11-01 â€” FITPACK 2.0.0 periodic and parametric smoothing
 
 - Extend the verified optional FITPACK adapter with periodic scalar smoothing,
   adaptive-knot open parametric curves and closed parametric curves.
@@ -10109,7 +10122,7 @@ custom-grid, capped/interpolated, and contingency-table cases.
   differences in certain higher-degree smoothing cases.
 - Leave the existing Delaunay implementation unchanged.
 
-## 2026-11-10 — Differential evolution integer constraints and polishing hook
+## 2026-11-10 â€” Differential evolution integer constraints and polishing hook
 
 - Add integral coordinates, linear and nonlinear constraints, feasibility-first
   trial selection, constraint evaluation counters, and infeasible-status reporting.

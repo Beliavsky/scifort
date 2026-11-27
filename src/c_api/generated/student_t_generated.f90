@@ -41,7 +41,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_cdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -71,7 +70,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_cdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -97,7 +95,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_isf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -115,7 +112,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_isf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -145,7 +141,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_isf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -171,7 +166,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_logcdf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -189,7 +183,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_logcdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -219,7 +212,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_logcdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -245,7 +237,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_logpdf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -263,7 +254,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_logpdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -293,7 +283,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_logpdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -319,7 +308,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_logsf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -337,7 +325,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_logsf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -367,7 +354,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_logsf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -393,7 +379,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_pdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -423,7 +408,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_pdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -449,7 +433,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_ppf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -479,7 +462,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_ppf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element
@@ -505,7 +487,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_t_sf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -523,7 +504,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_sf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! degrees of freedom, > 0; +infinity gives normal; required
@@ -553,7 +533,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_t_sf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! degrees of freedom, > 0; +infinity gives normal; per element

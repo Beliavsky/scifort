@@ -89,6 +89,69 @@ class StateCodecTests(fixtures.OptionalArrayTests):
         group=self.policy['array_groups']['optional']
         group['output_dimensions']={'draw':{'n':1}}
 
+    @unittest.skipUnless(shutil.which('gfortran') and shutil.which('gcc'), 'compilers required')
+    def test_shared_module_imports_and_distinct_codecs(self):
+        # One module contains shared state bindings and a distinct codec using
+        # the same dummy name. Hoisting must preserve both type identities.
+        split = SOURCE.index('module example_samples')
+        prefix, native = SOURCE[:split], SOURCE[split:]
+        start = native.index('subroutine draw(')
+        end = native.index('end subroutine', start) + len('end subroutine')
+        draw = native[start:end]
+        shared = draw.replace('subroutine draw(', 'subroutine draw_again(', 1)
+        other = draw.replace('subroutine draw(', 'subroutine draw_other(', 1)
+        other = other.replace('counter_state', 'other_state')
+        native = native.replace('public :: draw', 'public :: draw, draw_again, draw_other', 1)
+        native = native.replace('use example_codec,only:counter_state',
+                                'use example_codec,only:counter_state\nuse other_codec,only:other_state')
+        native = native.replace('end module', shared + '\n' + other + '\nend module', 1)
+        second = prefix.replace('example_codec', 'other_codec').replace('counter_state', 'other_state')
+        self.source.write_text(prefix + second + native, encoding='ascii')
+        baseline = self.config['subroutines']['draw']
+        for name in ('draw_again', 'draw_other'):
+            policy = copy.deepcopy(baseline)
+            policy['symbol'] = 'example_' + name
+            if name == 'draw_other':
+                policy['state_codecs']['state'].update(module='other_codec',
+                    type_module='other_codec', type='other_state')
+            self.config['subroutines'][name] = policy
+        outputs = generate.generate(self.config, self.root)
+        source = outputs[self.root/'adapter.f90']
+        module, procedures = source.split('contains', 1)
+        self.assertEqual(source.count('implicit none'), 1)
+        self.assertEqual(module.count('use example_codec,'), 1)
+        self.assertEqual(module.count('use other_codec,'), 1)
+        self.assertEqual(module.count('c_int64_t'), 1)
+        self.assertNotIn('        use ', procedures)
+        self.assertIn('type(cg_type_state_2) :: cg_state_state', procedures)
+        for path, text in outputs.items():
+            path.write_text(text, encoding='utf-8')
+        client = self.root/'scope_client.c'
+        client.write_text("""#include "adapter.h"
+int main(void) {
+ int64_t state[2]={0,1}; double scale[1]={0},out[1]={77}; int status;
+ example_draw(1,1,state,out,scale,&status);
+ if(status || out[0]!=1 || state[0]!=1) return 1;
+ example_draw_again(1,1,state,out,scale,&status);
+ if(status || out[0]!=2 || state[0]!=2) return 2;
+ example_draw_other(1,1,state,out,scale,&status);
+ return status || out[0]!=3 || state[0]!=3;
+}
+""", encoding='ascii')
+        for index, flags in enumerate((['-O0','-g','-fcheck=all','-fbacktrace'], ['-O3'])):
+            folder = self.root/('scope' + str(index)); folder.mkdir()
+            lib = folder/('example.dll' if __import__('os').name=='nt' else 'example.so')
+            run(['gfortran',*flags,'-std=f2018','-shared','-fPIC',self.source,
+                 self.root/'adapter.f90','-o',lib], folder)
+            exe = folder/'scope.exe'
+            run(['gcc','-std=c11','-Wall','-Wextra','-Werror','-I',self.root,
+                 client,lib,'-o',exe], folder)
+            run([exe], folder)
+        # A public wrapper symbol must not collide with a hoisted codec alias.
+        self.config['subroutines']['draw']['symbol'] = 'cg_load_state'
+        source = generate.generate(self.config, self.root)[self.root/'adapter.f90']
+        self.assertIn('cg_load_state_2 => decode', source)
+
     def test_metadata_and_invalid_codec_policies(self):
         outputs=generate.generate(self.config,self.root)
         row=json.loads(outputs[self.root/'coverage.json'])['procedures'][0]

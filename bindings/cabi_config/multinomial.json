@@ -15,7 +15,7 @@
     "x": "observed category counts",
     "p": "probabilities with native final-entry adjustment",
     "n_samples": "number of sample columns, >= 0",
-    "state": "six caller-owned int64 RNG components",
+    "state": "caller-owned int64 RNG components",
     "samples": "integer category-count columns"
   },
   "array_functions": {

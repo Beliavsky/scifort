@@ -15,7 +15,7 @@
     "value": "native scalar or array result; invalid parameters produce native NaN",
     "status": "0 success/valid scalar call; otherwise see method status contract",
     "n_samples": "draw count, >= 0; output columns",
-    "state": "six caller-owned int64 recurrence components, updated in place",
+    "state": "caller-owned int64 recurrence components, updated in place",
     "samples": "shape (k,n_samples); generated simplex vectors by column"
   },
   "array_functions": {

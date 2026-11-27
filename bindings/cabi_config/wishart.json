@@ -16,7 +16,7 @@
     "status": "0 success; other codes follow the method-specific error contract",
     "n_samples": "number of sample matrices, >= 0",
     "samples": "shape (p,p,n_samples); matrix draws along the third axis",
-    "state": "six caller-owned int64 RNG components"
+    "state": "caller-owned int64 RNG components"
   },
   "array_functions": {
     "wishart_logpdf": {

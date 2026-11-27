@@ -18,7 +18,7 @@
     "value": "native scalar result, including NaN for numerical errors",
     "status": "0 success; other codes follow the method-specific error contract",
     "n_samples": "number of sample matrices, >= 0",
-    "state": "six caller-owned int64 RNG components",
+    "state": "caller-owned int64 RNG components",
     "samples": "shape (m,n,n_samples); matrices along the third axis",
     "has_mean": "0 omit mean; 1 use supplied mean",
     "has_row_spread": "0 omit row matrix; 1 use supplied matrix",

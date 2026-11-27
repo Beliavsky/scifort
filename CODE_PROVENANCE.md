@@ -1,3 +1,11 @@
+## 2026-11-27 - Generated adapter module scope
+
+The module-scope import organization and regression fixtures are original MIT
+SciFort generator work. No third-party implementation was imported or adapted.
+The change reuses existing native procedures and codec implementations without
+altering numerical formulas, C signatures, or state transport. Existing native
+and third-party provenance remains applicable.
+
 ## 2026-11-26 - Multivariate CDF and stateful-function bindings
 
 The stateful-function/optional-array generator extension, long-formal wrapping,

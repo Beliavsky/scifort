@@ -106,8 +106,11 @@ Never trade away correctness or provenance merely to add more functions.
 
 - Use lowercase Fortran.
 - Use ASCII characters only in source code, comments, and identifiers.
-- Use `implicit none` in every program, module, and procedure scope where it is
-  permitted.
+- Use `implicit none` in modules, programs, external procedures, and interface
+  bodies where needed. Contained procedures inherit their host's implicit typing rules; omit a redundant
+  `implicit none` when the host already has it.
+- Put shared `use` statements at module level. Use procedure-local imports only
+  when local scoping is needed; avoid repeating identical imports in procedures.
 - Define the working real kind once as `dp = kind(1.0d0)` in
   `scifort_kinds`; do not use `kind=8`.
 - Use explicit `public` lists and make modules `private` by default.

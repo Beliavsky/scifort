@@ -20,7 +20,6 @@ contains
         n, a, l, status) &
         bind(c, name="scifort_cholesky_lower_f64")
         !! Compute a lower Cholesky factor.
-        implicit none
         integer(c_int), value, intent(in) :: n !! system order, >= 1
         real(c_double), intent(in) :: a(n,n) !! symmetric matrix; lower triangle is authoritative
         real(c_double), intent(inout) :: l(n,n) !! lower-triangular matrix
@@ -45,7 +44,6 @@ contains
         n, a, eigenvalues, eigenvectors, rank, log_pdet, cutoff, status, allow_singular) &
         bind(c, name="scifort_psd_decompose_f64")
         !! Decompose a positive-semidefinite matrix and report numerical rank.
-        implicit none
         integer(c_int), value, intent(in) :: n !! system order, >= 1
         real(c_double), intent(in) :: a(n,n) !! symmetric matrix; lower triangle is authoritative
         real(c_double), intent(inout) :: eigenvalues(n) !! ascending eigenvalues
@@ -87,7 +85,6 @@ contains
         n, l, b, x, status) &
         bind(c, name="scifort_solve_lower_f64")
         !! Solve a lower-triangular real linear system.
-        implicit none
         integer(c_int), value, intent(in) :: n !! system order, >= 1
         real(c_double), intent(in) :: l(n,n) !! lower-triangular matrix
         real(c_double), intent(in) :: b(n) !! right-hand side
@@ -114,7 +111,6 @@ contains
         n, a, eigenvalues, eigenvectors, status) &
         bind(c, name="scifort_symmetric_eigen_jacobi_f64")
         !! Compute symmetric eigenvalues and eigenvectors.
-        implicit none
         integer(c_int), value, intent(in) :: n !! system order, >= 1
         real(c_double), intent(in) :: a(n,n) !! symmetric matrix; lower triangle is authoritative
         real(c_double), intent(inout) :: eigenvalues(n) !! ascending eigenvalues

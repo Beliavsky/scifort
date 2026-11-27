@@ -312,6 +312,42 @@ def prepare(config, api, identifier, source_lines):
     return entries
 
 
+def module_imports(entries, reserved=()):
+    """Share codec imports through host association, separating distinct bindings."""
+    bindings, aliases, modules = {}, set(reserved), {}
+    for entry in entries:
+        entry['state_import_aliases'] = {}
+        for arg, codec in entry.get('state_codecs', {}).items():
+            names = {}
+            for role, module, remote in (('type', codec['type_module'], codec['type']),
+                                         ('load', codec['module'], codec['load']),
+                                         ('store', codec['module'], codec['store'])):
+                key = (role, module, remote)
+                if key not in bindings:
+                    base = f'cg_{role}_{arg}'
+                    alias, number = base, 1
+                    while alias in aliases:
+                        number += 1
+                        suffix = f'_{number}'
+                        alias = base[:63-len(suffix)] + suffix
+                    aliases.add(alias)
+                    bindings[key] = alias
+                    modules.setdefault(module, []).append(f'{alias} => {remote}')
+                names[role] = bindings[key]
+            entry['state_import_aliases'][arg] = names
+    lines = []
+    for module, names in modules.items():
+        line = f'    use {module}, only : '
+        for i, name in enumerate(names):
+            term = name + (', ' if i < len(names)-1 else '')
+            if len(line) + len(term) > 100 and not line.endswith('only : '):
+                lines.append(line.rstrip() + ' &')
+                line = '        '
+            line += term
+        lines.append(line.rstrip())
+    return lines
+
+
 def emit(entry, index, config):
     name, policy, args, metadata = (entry[key] for key in ("name", "policy", "args", "metadata"))
     symbol, status = policy["symbol"], policy["status_argument"]
@@ -329,17 +365,8 @@ def emit(entry, index, config):
             line += term
         formal_lines.append(line)
     lines = [f"    subroutine {symbol}( &", *formal_lines,
-             f'        bind(c, name="{symbol}")', f"        !! {policy['description']}",
-             *(["        use, intrinsic :: iso_c_binding, only : c_int64_t"]
-               if policy.get('integer_limits') or policy.get('integer_sums') or entry.get('state_codecs') else []),
-             "        implicit none"]
-    if entry.get('state_codecs'):
-        imports = []
-        for arg, codec in entry['state_codecs'].items():
-            imports += [f"        use {codec['type_module']}, only : cg_type_{arg} => {codec['type']}",
-                        f"        use {codec['module']}, only : cg_load_{arg} => {codec['load']}, &",
-                        f"            cg_store_{arg} => {codec['store']}"]
-        lines[-1:-1] = imports
+             f'        bind(c, name="{symbol}")', f"        !! {policy['description']}"]
+    state_aliases = entry.get('state_import_aliases', {})
     cargs = []
     for dim in dimensions:
         lines.append(f"        integer(c_int), value, intent(in) :: {dim} !! {config['argument_docs'][dim]}")
@@ -369,13 +396,18 @@ def emit(entry, index, config):
         shape = "(" + ",".join(shapes[arg]) + ")" if arg in shapes else ""
         if arg in entry.get('state_codecs', {}):
             shape = f"({entry['state_codecs'][arg]['length']})"
-        lines.append(f"        {declaration} :: {arg}{shape} !! {config['argument_docs'][arg]}")
+        doc = config['argument_docs'][arg]
+        # Explicit extents already document the shape; retain the argument's meaning.
+        match = re.match(r"(?:shape\s*)?(\([^()]+\))\s*;\s*(.+)", doc, re.I) if shape else None
+        if match and re.sub(r"\s+", "", match[1]).lower() == shape.lower():
+            doc = match[2]
+        lines.append(f"        {declaration} :: {arg}{shape} !! {doc}")
     for arg in policy.get('logical_inputs', {}):
         lines.append(f"        logical :: cg_logical_{arg}")
     if entry.get('state_codecs'):
         lines.append('        integer :: cg_state_status')
         for arg in entry['state_codecs']:
-            lines.append(f'        type(cg_type_{arg}) :: cg_state_{arg}')
+            lines.append(f"        type({state_aliases[arg]['type']}) :: cg_state_{arg}")
     for arg in entry.get('optional_arrays', {}):
         shape = ','.join([':']*metadata[arg]['rank'])
         lines.append(f'        real(c_double), allocatable :: cg_optional_{arg}({shape})')
@@ -412,7 +444,7 @@ def emit(entry, index, config):
         lines += [f'        if ({flag} /= 0_c_int .and. {flag} /= 1_c_int) then',
                   f"            {status}={policy['invalid_status']}_c_int", '            return', '        end if']
     for arg, codec in entry.get('state_codecs', {}).items():
-        lines += [f'        call cg_load_{arg}({arg},cg_state_{arg},cg_state_status)',
+        lines += [f"        call {state_aliases[arg]['load']}({arg},cg_state_{arg},cg_state_status)",
                   '        if (cg_state_status /= 0) then',
                   f"            {status}={codec['invalid_status']}_c_int", '            return', '        end if']
     if entry.get('optional_arrays'):
@@ -433,7 +465,7 @@ def emit(entry, index, config):
             actual = f'cg_state_{arg}'
         lines.append(f"            {arg}={actual}" + (", &" if i < len(native_args)-1 else ")"))
     for arg in entry.get('state_codecs', {}):
-        lines.append(f'        call cg_store_{arg}(cg_state_{arg},{arg})')
+        lines.append(f"        call {state_aliases[arg]['store']}(cg_state_{arg},{arg})")
     if 'result_argument' in entry or entry.get('synthetic_status'):
         lines.append(f'        {status}=0_c_int')
     lines += [f"    end subroutine {symbol}", ""]

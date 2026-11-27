@@ -20,7 +20,7 @@
     "dimensions": "shape (m); unique one-based indices in [1,n], in requested order",
     "marginal_loc": "shape (m); selected location vector, in requested order",
     "marginal_shape": "shape (m,m); selected symmetric matrix from the lower input triangle",
-    "state": "six caller-owned int64 RNG components",
+    "state": "caller-owned int64 RNG components",
     "samples": "shape (n,n_samples); sample vectors by column",
     "n_samples": "number of sample columns, >= 0",
     "has_loc": "0 omit location; 1 use supplied vector",

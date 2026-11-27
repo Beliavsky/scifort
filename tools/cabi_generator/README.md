@@ -883,3 +883,33 @@ short signatures are unchanged. The independent stateful-function fixture tests
 optional presence, scalar results, state export on NaN, guards, promotion review
 and compiled C/Python behavior. See the
 [multivariate CDF contract](../../bindings/python/README.md#multivariate-box-cdf-and-normal-log-cdf).
+
+
+## Module scope in generated Fortran
+
+Generated adapters use one module-level `implicit none`; contained wrappers
+inherit that rule. Intrinsic kinds and shared RNG codec imports appear before
+`contains`, alongside native-procedure imports. Codec imports are grouped by
+module and reused for identical bindings. Distinct codec bindings receive
+separate private aliases, including when different procedures use the same
+state argument name; aliases also avoid public wrapper names.
+
+This changes source organization without changing C symbols, prototypes,
+argument order, numerical formulas, or state transport. Generator regression
+fixtures compile shared and distinct codecs with checked and optimized builds.
+
+Validation commands from the repository root (CMD):
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+## Comments on explicit-shape arguments
+
+Generated declarations omit a leading `shape (...);` or `(...);` comment when
+it matches the explicit extents already shown in the declaration. Descriptions,
+value constraints, and native assumed-shape annotations are retained. RNG buffer
+comments describe the caller-owned components without repeating the declared
+component count.

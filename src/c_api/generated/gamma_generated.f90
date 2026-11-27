@@ -41,7 +41,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_cdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -72,7 +71,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_cdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -98,7 +96,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_gamma_isf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -116,7 +113,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_isf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -147,7 +143,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_isf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -173,7 +168,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_gamma_logcdf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -191,7 +185,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_logcdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -222,7 +215,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_logcdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -248,7 +240,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_gamma_logpdf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -266,7 +257,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_logpdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -297,7 +287,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_logpdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -323,7 +312,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_gamma_logsf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -341,7 +329,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_logsf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -372,7 +359,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_logsf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -398,7 +384,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_pdf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -429,7 +414,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_pdf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -455,7 +439,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_ppf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -486,7 +469,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_ppf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! probability in [0, 1]; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
@@ -512,7 +494,6 @@ contains
         cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3) &
         result(cg_result) bind(c, name="scifort_gamma_sf_f64")
         !! Forward one scalar evaluation to the native Fortran function.
-        implicit none
         real(c_double), value, intent(in) :: cg_arg_0 !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
         real(c_double), value, intent(in) :: cg_arg_2 !! location, finite; required
@@ -530,7 +511,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_sf_vec_f64")
         !! Evaluate independent inputs using uniform scalar parameters.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! array length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; required
         real(c_double), value, intent(in) :: cg_arg_1 !! shape, finite and > 0; required
@@ -561,7 +541,6 @@ contains
         cg_count, cg_arg_0, cg_arg_1, cg_arg_2, cg_arg_3, cg_output, cg_status) &
         bind(c, name="scifort_gamma_sf_elementwise_f64")
         !! Evaluate corresponding elements of equally sized input arrays.
-        implicit none
         integer(c_size_t), value, intent(in) :: cg_count !! shared length, >= 0
         real(c_double), intent(in) :: cg_arg_0(cg_count) !! evaluation point; per element
         real(c_double), intent(in) :: cg_arg_1(cg_count) !! shape, finite and > 0; per element
