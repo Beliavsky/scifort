@@ -522,10 +522,11 @@ native dummy and dimension names. Selected names must be disjoint from
 This pattern accepts directly defined non-bind(c), non-impure functions with an
 explicit scalar or rank-one/two `real(kind)` result declaration and `result(...)`. Native inputs
 must be `intent(in)` real/default-integer scalars or rank-one/rank-two assumed-shape arrays,
-or scalar logicals with explicit integer mappings. Optional real/logical inputs
-are promoted to required C inputs. Arrays still require declared shapes; no
-optional-argument omission, callbacks, descriptors
-or native algorithm changes are introduced.
+or scalar logicals with explicit integer mappings. Reviewed state codecs also
+allow scalar derived-type intent(inout) arguments. Optional real/logical inputs
+are promoted to required C inputs unless optional_arrays explicitly preserves
+array absence through flags. Arrays still require declared shapes; no callbacks,
+C descriptors or native algorithm changes are introduced.
 
 The adapter is a `void` C subroutine with ordered dimensions, native inputs,
 result buffer pointer and status pointer. It checks extents/flags before modifying
@@ -756,8 +757,9 @@ C presence flags with `optional_arrays`:
 }
 ```
 
-Only real rank-one/two `optional, intent(in)` arrays are supported. Functions,
-optional scalar/output arrays, unknown arguments, flag-name collisions and
+Only real rank-one/two `optional, intent(in)` arrays are supported, in selected
+subroutines and array-input functions. Optional scalar/output arrays, unknown
+arguments, flag-name collisions and
 non-identifier flags are rejected. The mapping must be nonempty when supplied.
 Each by-value C-int flag precedes its corresponding explicit-shape array in the
 C signature: 0 means absent, 1 means present. Other values return the configured
@@ -785,7 +787,7 @@ add memory overhead. Native partial outputs and statuses remain unchanged.
 
 ## Reviewed serialized state codecs
 
-A `subroutines` policy may opt into `state_codecs` for required scalar
+A `subroutines` or `array_functions` policy may opt into `state_codecs` for scalar
 `type(name), intent(inout)` arguments. Each entry declares `module`,
 `type_module`, `type`, `load`, `store`, fixed positive `length`, and positive
 `invalid_status`. For example the Dirichlet policy names the native `rng_state`,
@@ -808,7 +810,11 @@ checks its int64 storage, extent, ownership and buffer disjointness, and passes
 that live state without copying. Snapshots are copies. States cannot have Python
 defaults. A required native integer status may opt into `optional_status: true`
 when its declaration is optional; C always supplies it. Other optional status
-forms and optional derived-state arguments remain unsupported.
+forms remain unsupported. A codec can explicitly set `promote_optional: true`
+for a native optional state argument. This flag must be true when supplied and
+must match an optional native declaration; omit it for required native state.
+C/Python still require the state buffer and the native function sees it present.
+No absent-state branch or hidden RNG is introduced.
 
 ## Output-defined dimensions
 
@@ -853,3 +859,27 @@ rank-three function results remain unsupported. Optional real inputs remain
 rank one/two. Shape annotations still validate the referenced axis against the
 actual rank and configured extent. See the independent rank-three fixture and
 [Wishart sampling contract](../../bindings/python/README.md#wishart-and-inverse-wishart-batch-sampling).
+
+## Stateful functions and optional arrays
+
+Array-input functions can combine serialized state codecs with optional-array
+presence flags. They return their native scalar/array result through caller-owned
+C storage and append call-level status, as other array functions do. State is
+decoded before the function call and exported afterward, including when the
+native result is NaN. Status 0 means a valid call, not numerical success or
+convergence. Extent/flag errors and codec errors preserve result/state.
+
+Python puts state parameters first so required state can precede native optional
+inputs; C keeps native argument order with array flags and result/status appended.
+Scalar functions return float, with no out mapping. A nonzero C call status raises
+RuntimeError; Python storage/ownership validation raises before C. State objects
+have no default and must belong to the same loaded library instance. Coverage
+and shape tables record native optional state promoted to required C state.
+The native optional_policy field remains required: C array pointers are always
+required, even when a configured flag makes the corresponding native array absent.
+
+Long Fortran adapter formal lists wrap below the free-form limit. Other existing
+short signatures are unchanged. The independent stateful-function fixture tests
+optional presence, scalar results, state export on NaN, guards, promotion review
+and compiled C/Python behavior. See the
+[multivariate CDF contract](../../bindings/python/README.md#multivariate-box-cdf-and-normal-log-cdf).

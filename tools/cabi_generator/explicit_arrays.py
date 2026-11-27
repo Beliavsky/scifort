@@ -28,14 +28,15 @@ def prepare(config, api, identifier, source_lines):
         if ('optional_status' in policy and (optional_status is not True or is_function or synthetic_status)):
             raise ValueError(f'{name}: optional_status must be true for a native subroutine status')
         codecs = policy.get('state_codecs', {})
-        if (not isinstance(codecs, dict) or ('state_codecs' in policy and not codecs)
-                or (is_function and codecs)):
-            raise ValueError(f'{name}: state_codecs must be a nonempty subroutine policy')
+        if (not isinstance(codecs, dict) or ('state_codecs' in policy and not codecs)):
+            raise ValueError(f'{name}: state_codecs must be a nonempty policy')
         for arg, codec in codecs.items():
             identifier(arg)
-            if (not isinstance(codec, dict) or set(codec) !=
+            if (not isinstance(codec, dict) or set(codec) - {'promote_optional'} !=
                     {'module', 'type_module', 'type', 'load', 'store', 'length', 'invalid_status'}):
                 raise ValueError(f'{name}: state codec needs module/type/load/store/length/status')
+            if 'promote_optional' in codec and codec['promote_optional'] is not True:
+                raise ValueError(f'{name}: promote_optional must be true when specified')
             for field in ('module', 'type_module', 'type', 'load', 'store'):
                 identifier(codec[field])
             if (type(codec['length']) is not int or not 1 <= codec['length'] <= 2147483647
@@ -61,10 +62,10 @@ def prepare(config, api, identifier, source_lines):
         if set(codecs) - set(native_args):
             raise ValueError(f'{name}: state codecs must name native arguments')
         optional_arrays = policy.get('optional_arrays', {})
-        if (not isinstance(optional_arrays, dict) or (is_function and 'optional_arrays' in policy)
+        if (not isinstance(optional_arrays, dict)
                 or ('optional_arrays' in policy and not optional_arrays)
                 or set(optional_arrays) - set(native_args)):
-            raise ValueError(f'{name}: optional_arrays must map native subroutine inputs to presence flags')
+            raise ValueError(f'{name}: optional_arrays must map native array inputs to presence flags')
         promoted = policy.get('required_optional_scalars', [])
         if (not isinstance(promoted, list) or ('required_optional_scalars' in policy and not promoted)
                 or any(not isinstance(a, str) or a not in native_args for a in promoted)
@@ -170,11 +171,15 @@ def prepare(config, api, identifier, source_lines):
                 continue
             if arg in codecs:
                 codec = codecs[arg]
+                codec_attrs = ({'intent(inout)', 'optional'} if codec.get('promote_optional')
+                               else {'intent(inout)'})
                 if (str(dtype).lower().replace(' ', '') != f"type({codec['type']})"
-                        or attrs != {'intent(inout)'} or any(entity.items[1:])
+                        or attrs != codec_attrs or any(entity.items[1:])
                         or arg in optional_arrays or arg in logical_inputs):
-                    raise ValueError(f'{name}: state codec needs a required scalar derived-type intent(inout)')
+                    raise ValueError(f'{name}: state codec requires a matching scalar derived-type intent(inout) policy')
                 metadata[arg] = dict(intent='inout', rank=0, category='state')
+                if codec.get('promote_optional'):
+                    metadata[arg]['optional'] = True
                 continue
             intent = next((value for value in ("in", "out", "inout") if f"intent({value})" in attrs), None)
             optional_policy = (arg in logical_inputs or is_function or arg in optional_arrays
@@ -311,7 +316,19 @@ def emit(entry, index, config):
     name, policy, args, metadata = (entry[key] for key in ("name", "policy", "args", "metadata"))
     symbol, status = policy["symbol"], policy["status_argument"]
     dimensions, shapes = entry["dimensions"], policy["shapes"]
-    lines = [f"    subroutine {symbol}( &", "        " + ", ".join([*dimensions, *args]) + ") &",
+    formal = "        " + ", ".join([*dimensions, *args]) + ") &"
+    formal_lines = [formal]
+    if len(formal) > 132:
+        formal_lines, line = [], "        "
+        names = [*dimensions, *args]
+        for i, arg in enumerate(names):
+            term = arg + (", " if i < len(names)-1 else ") &")
+            if len(line) + len(term) > 120 and line.strip():
+                formal_lines.append(line.rstrip() + " &")
+                line = "        "
+            line += term
+        formal_lines.append(line)
+    lines = [f"    subroutine {symbol}( &", *formal_lines,
              f'        bind(c, name="{symbol}")', f"        !! {policy['description']}",
              *(["        use, intrinsic :: iso_c_binding, only : c_int64_t"]
                if policy.get('integer_limits') or policy.get('integer_sums') or entry.get('state_codecs') else []),

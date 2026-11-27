@@ -1,3 +1,16 @@
+## 2026-11-26 - Multivariate CDF and stateful-function bindings
+
+- Add normal CDF/log-CDF and Student t CDF C/Python interfaces with explicit
+  caller-owned RNG state, optional box bounds and distribution parameters.
+- Extend function policies with reviewed state codecs, explicit promotion of
+  optional state and presence-controlled arrays; wrap long formal argument lists.
+- Document shapes, signed reversed boxes, singular matrices, integration budgets,
+  informational relative tolerance and log-CDF tail limitations.
+- Correct finite-df Student t integration for zero conditional variances in
+  singular shape matrices, including deterministic coordinates and endpoints.
+- Test native/C/Python values and final state, analytic probability identities,
+  approximation accuracy, reproducibility and transport/error preservation.
+
 ## 2026-11-26 - Matrix-normal and matrix-t sampling interfaces
 
 - Add generated C/Python matrix-normal and matrix-t batch samplers, reusing

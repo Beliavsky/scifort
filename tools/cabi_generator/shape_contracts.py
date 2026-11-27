@@ -133,6 +133,9 @@ def markdown(config, entries):
         if entry.get('synthetic_status'):
             lines += ['The adapter appends a call-level status; the native subroutine has no status argument.',
                       'Status 0 retains native numerical NaN/infinity; invalid extents preserve outputs.', '']
+        for arg, codec in entry.get('state_codecs', {}).items():
+            if codec.get('promote_optional'):
+                lines += [f'`{arg}` is optional natively but required and present through this C ABI.', '']
         if entry.get('optional_arrays'):
             for arg, flag in entry['optional_arrays'].items():
                 lines += [f'`{arg}` is optional natively: C flag `{flag}` is 0 absent or 1 present.',

@@ -9,11 +9,11 @@
   "functions": {},
   "argument_docs": {
     "n": "dimension, >= 1",
-    "x": "evaluation point",
-    "mean": "finite location vector; sampler presence flag selects optional default",
+    "x": "shape (n); evaluation point or upper box limits",
+    "mean": "finite location vector; presence flags select optional defaults",
     "cov": "covariance; lower triangle authoritative, all entries must be finite",
     "allow_singular": "0 reject singular covariance; 1 permit singular covariance",
-    "value": "native scalar density, log density or entropy; numerical NaN/infinity retained",
+    "value": "native scalar result; numerical NaN/infinity retained",
     "status": "0 success; other codes follow the method-specific error contract",
     "m": "retained dimension, >= 1; unique indices imply m <= n",
     "dimensions": "shape (m); unique one-based indices in [1,n], in requested order",
@@ -29,7 +29,12 @@
     "samples": "shape (n,n_samples); sample vectors by column",
     "n_samples": "number of sample columns, >= 0",
     "has_mean": "0 omit location; 1 use supplied vector",
-    "has_cov": "0 omit matrix; 1 use supplied matrix"
+    "has_cov": "0 omit matrix; 1 use supplied matrix",
+    "lower_limit": "shape (n); lower box limits; absent means negative infinity",
+    "has_lower_limit": "0 omit lower limits; 1 use supplied lower limits",
+    "maxpts": "QMC point budget; nonpositive selects the native default",
+    "abseps": "positive finite absolute error target",
+    "releps": "positive non-NaN informational relative tolerance"
   },
   "array_functions": {
     "multivariate_normal_pdf": {
@@ -121,6 +126,112 @@
       "optional_policy": "required",
       "description": "Evaluate multivariate normal entropy using the native PSD convention.",
       "shape_contract": true
+    },
+    "multivariate_normal_cdf": {
+      "symbol": "scifort_multivariate_normal_cdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n"
+        ],
+        "mean": [
+          "n"
+        ],
+        "cov": [
+          "n",
+          "n"
+        ],
+        "lower_limit": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate multivariate_normal cdf over a box using explicit RNG state.",
+      "shape_contract": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4,
+          "promote_optional": true
+        }
+      },
+      "optional_arrays": {
+        "mean": "has_mean",
+        "cov": "has_cov",
+        "lower_limit": "has_lower_limit"
+      },
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      }
+    },
+    "multivariate_normal_logcdf": {
+      "symbol": "scifort_multivariate_normal_logcdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n"
+        ],
+        "mean": [
+          "n"
+        ],
+        "cov": [
+          "n",
+          "n"
+        ],
+        "lower_limit": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate multivariate_normal logcdf over a box using explicit RNG state.",
+      "shape_contract": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4,
+          "promote_optional": true
+        }
+      },
+      "optional_arrays": {
+        "mean": "has_mean",
+        "cov": "has_cov",
+        "lower_limit": "has_lower_limit"
+      },
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      }
     }
   },
   "outputs": {
@@ -130,8 +241,6 @@
     "shape_documentation": "docs/multivariate_normal_shapes.md"
   },
   "excluded": {
-    "multivariate_normal_cdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-    "multivariate_normal_logcdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_normal_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "multivariate_status_success": "Native status constant, not a callable procedure.",
     "multivariate_status_invalid_shape": "Native status constant, not a callable procedure.",

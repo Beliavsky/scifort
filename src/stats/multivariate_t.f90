@@ -138,7 +138,15 @@ contains
     end function multivariate_t_pdf
 
     function multivariate_t_cdf(x, loc, shape, df, allow_singular, maxpts, lower_limit, state) result(y)
-        !! n = size(x), n >= 1.
+        !! Evaluate the probability of a rectangular multivariate t box.
+        !! @dimension n = size(x)
+        !! @require n >= 1
+        !! n=size(x), n>=1; all present vectors have length n and the matrix is (n,n).
+        !! Matrix entries and location must be finite; limits may be infinite but not NaN.
+        !! The lower matrix triangle is authoritative; singular PSD matrices need permission.
+        !! Reversed limits contribute one sign change per reversed coordinate.
+        !! Supplied state receives all randomized QMC shifts consumed by this call.
+        implicit none
         real(dp), intent(in) :: x(:) !! shape (n); upper integration limits
         real(dp), intent(in), optional :: loc(:) !! shape (n); location vector; zero when absent
         real(dp), intent(in), optional :: shape(:, :) !! shape (n,n); positive-semidefinite shape matrix; identity when absent

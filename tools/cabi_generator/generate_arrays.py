@@ -67,6 +67,9 @@ def prepare(policy, root, py_name):
                 flags = set(optional_arrays.values())
                 inputs = [a for a in entry['args'] if a != status and a not in flags
                           and (metadata[a]['intent'] == 'in' or metadata[a]['category'] == 'state')]
+                # State is explicit/required even when it follows native optional inputs.
+                inputs = ([a for a in inputs if metadata[a]['category'] == 'state'] +
+                          [a for a in inputs if metadata[a]['category'] != 'state'])
                 outputs = [a for a in entry['args'] if a != status and metadata[a]['intent'] == 'out']
                 if set(inputs + outputs + [status]) | flags != set(entry['args']):
                     raise ValueError('Python array adapters do not yet support native intent(inout)')

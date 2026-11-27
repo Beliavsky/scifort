@@ -7,6 +7,35 @@ Source: `src/stats/multivariate_normal.f90`; module: `scifort_multivariate_norma
 These declared contracts are checked against reviewed C adapter policies.
 They do not prove that the numerical implementation obeys the contract.
 
+## multivariate_normal_cdf
+
+Evaluate multivariate_normal cdf over a box using explicit RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(x)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `x` | `(:)` | `(n)` | shape (n); evaluation point or upper box limits |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
+| `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+| `lower_limit` | `(:)` | `(n)` | shape (n); lower box limits; absent means negative infinity |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 4 without native execution.
+
+`state` is optional natively but required and present through this C ABI.
+
+`mean` is optional natively: C flag `has_mean` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`cov` is optional natively: C flag `has_cov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`lower_limit` is optional natively: C flag `has_lower_limit` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
 ## multivariate_normal_entropy
 
 Evaluate multivariate normal entropy using the native PSD convention.
@@ -17,7 +46,7 @@ Evaluate multivariate normal entropy using the native PSD convention.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
 ## multivariate_normal_fit
@@ -32,7 +61,7 @@ Fit normal mean/covariance, preserving optional fixed parameters.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `data` | `(:,:)` | `(n,k)` | shape (n,k); finite observations by column |
-| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 | `fixed_mean` | `(:)` | `(n)` | shape (n); optional finite fixed mean vector |
 | `fixed_cov` | `(:,:)` | `(n,n)` | shape (n,n); optional finite PSD covariance, lower triangle used |
@@ -41,6 +70,35 @@ Fit normal mean/covariance, preserving optional fixed parameters.
 The C buffer remains required/full-sized when absent, but its values are ignored.
 
 `fixed_cov` is optional natively: C flag `has_fixed_cov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+## multivariate_normal_logcdf
+
+Evaluate multivariate_normal logcdf over a box using explicit RNG state.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `n` | `size(x)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `x` | `(:)` | `(n)` | shape (n); evaluation point or upper box limits |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
+| `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
+| `lower_limit` | `(:)` | `(n)` | shape (n); lower box limits; absent means negative infinity |
+
+`state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.
+Invalid serialized state returns status 4 without native execution.
+
+`state` is optional natively but required and present through this C ABI.
+
+`mean` is optional natively: C flag `has_mean` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`cov` is optional natively: C flag `has_cov` is 0 absent or 1 present.
+The C buffer remains required/full-sized when absent, but its values are ignored.
+
+`lower_limit` is optional natively: C flag `has_lower_limit` is 0 absent or 1 present.
 The C buffer remains required/full-sized when absent, but its values are ignored.
 
 ## multivariate_normal_logpdf
@@ -53,8 +111,8 @@ Evaluate multivariate normal log density.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `x` | `(:)` | `(n)` | evaluation point |
-| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `x` | `(:)` | `(n)` | shape (n); evaluation point or upper box limits |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
 ## multivariate_normal_marginal
@@ -69,7 +127,7 @@ Select multivariate normal marginal parameters using one-based indices.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `dimensions` | `(:)` | `(m)` | shape (m); unique one-based indices in [1,n], in requested order |
-| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 | `marginal_mean` | `(:)` | `(m)` | shape (m); selected location vector, in requested order |
 | `marginal_cov` | `(:,:)` | `(m,m)` | shape (m,m); selected symmetric matrix from the lower input triangle |
@@ -84,8 +142,8 @@ Evaluate multivariate normal density.
 
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
-| `x` | `(:)` | `(n)` | evaluation point |
-| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `x` | `(:)` | `(n)` | shape (n); evaluation point or upper box limits |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
 ## multivariate_normal_rvs_array
@@ -100,7 +158,7 @@ Draw multivariate_normal vectors using caller-owned RNG state.
 | Argument | Declared shape | Required shape | Meaning |
 | --- | --- | --- | --- |
 | `samples` | `(:,:)` | `(n,n_samples)` | shape (n,n_samples); sample vectors by column |
-| `mean` | `(:)` | `(n)` | finite location vector; sampler presence flag selects optional default |
+| `mean` | `(:)` | `(n)` | finite location vector; presence flags select optional defaults |
 | `cov` | `(:,:)` | `(n,n)` | covariance; lower triangle authoritative, all entries must be finite |
 
 `state` is native `type(rng_state)`; C uses caller-owned `int64_t[6]`.

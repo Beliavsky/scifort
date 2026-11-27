@@ -147,7 +147,15 @@ contains
 
     function multivariate_normal_cdf(x, mean, cov, allow_singular, maxpts, abseps, releps, &
             lower_limit, state) result(y)
-        !! n = size(x), n >= 1.
+        !! Evaluate the probability of a rectangular multivariate normal box.
+        !! @dimension n = size(x)
+        !! @require n >= 1
+        !! n=size(x), n>=1; all present vectors have length n and the matrix is (n,n).
+        !! Matrix entries and location must be finite; limits may be infinite but not NaN.
+        !! The lower matrix triangle is authoritative; singular PSD matrices need permission.
+        !! Reversed limits contribute one sign change per reversed coordinate.
+        !! Supplied state receives all randomized QMC shifts consumed by this call.
+        implicit none
         real(dp), intent(in) :: x(:) !! shape (n); upper integration limits; last-axis point in SciPy terminology
         real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
         real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent
@@ -242,7 +250,15 @@ contains
 
     function multivariate_normal_logcdf(x, mean, cov, allow_singular, maxpts, abseps, releps, &
             lower_limit, state) result(y)
-        !! n = size(x), n >= 1.
+        !! Evaluate the log probability of a rectangular multivariate normal box.
+        !! @dimension n = size(x)
+        !! @require n >= 1
+        !! n=size(x), n>=1; all present vectors have length n and the matrix is (n,n).
+        !! Matrix entries and location must be finite; limits may be infinite but not NaN.
+        !! The lower matrix triangle is authoritative; singular PSD matrices need permission.
+        !! Reversed limits contribute one sign change per reversed coordinate.
+        !! Supplied state receives all randomized QMC shifts consumed by this call.
+        implicit none
         real(dp), intent(in) :: x(:) !! shape (n); upper integration limits
         real(dp), intent(in), optional :: mean(:) !! shape (n); mean vector; zero vector when absent
         real(dp), intent(in), optional :: cov(:, :) !! shape (n,n); covariance matrix; identity when absent

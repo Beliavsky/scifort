@@ -1,11 +1,95 @@
 {
-  "generated_symbol_count": 5,
+  "generated_symbol_count": 6,
   "generator_version": "0.3.0",
   "procedures": [
     {
+      "arguments": [
+        "x",
+        "has_loc",
+        "loc",
+        "has_shape",
+        "shape",
+        "df",
+        "allow_singular",
+        "maxpts",
+        "has_lower_limit",
+        "lower_limit",
+        "state",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n"
+      ],
+      "dimensions": {
+        "n": 1
+      },
+      "interface": "explicit_shape_function",
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      },
+      "native_shape_documentation_review": [],
+      "optional_arrays": {
+        "loc": "has_loc",
+        "lower_limit": "has_lower_limit",
+        "shape": "has_shape"
+      },
+      "optional_promoted_to_required": [
+        "df",
+        "allow_singular",
+        "maxpts",
+        "state"
+      ],
       "procedure": "multivariate_t_cdf",
-      "reason": "Not selected in this density-only interface batch; requires separate reviewed policy.",
-      "state": "excluded"
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n": {
+            "argument": "x",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "loc": [
+          "n"
+        ],
+        "lower_limit": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ],
+        "x": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "promote_optional": true,
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_multivariate_t_cdf_f64"
+      ]
     },
     {
       "arguments": [
@@ -352,5 +436,5 @@
   ],
   "public_api_count": 11,
   "source": "src/stats/multivariate_t.f90",
-  "source_sha256": "9eed6752af1b9ac3f66a11fd991ffbd9ac957f4b936014483734849dcadbea8d"
+  "source_sha256": "d0eabd13f9a75a3efdb0a24e243dc6726140010755767c4c21d7d92f00b8ed34"
 }

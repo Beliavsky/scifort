@@ -188,6 +188,18 @@
           "cov": {
             "fill": "identity"
           }
+        },
+        "multivariate_normal_cdf": {
+          "allow_singular": false,
+          "maxpts": 0,
+          "abseps": 1e-05,
+          "releps": 1e-05
+        },
+        "multivariate_normal_logcdf": {
+          "allow_singular": false,
+          "maxpts": 0,
+          "abseps": 1e-05,
+          "releps": 1e-05
         }
       },
       "dimension_defaults": {
@@ -256,6 +268,11 @@
           "df": 1.0
         },
         "multivariate_t_rvs_array": {
+          "df": 1.0
+        },
+        "multivariate_t_cdf": {
+          "allow_singular": false,
+          "maxpts": 0,
           "df": 1.0
         }
       },

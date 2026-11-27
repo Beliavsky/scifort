@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 73,
+    "array_adapters": 76,
     "bulk": 88,
     "elementwise": 88,
     "exports": 218,
-    "python": 161,
+    "python": 164,
     "scalar": 88
   },
   "procedures": [
@@ -1198,11 +1198,10 @@
       "python": "multivariate_hypergeom.var"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_normal_cdf_f64",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_cdf",
-      "scalar_generated": false
+      "python": "multivariate_normal.cdf"
     },
     {
       "array_adapter": "scifort_multivariate_normal_entropy_f64",
@@ -1217,11 +1216,10 @@
       "python": "multivariate_normal.fit"
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_normal_logcdf_f64",
       "module": "scifort_multivariate_normal",
       "procedure": "multivariate_normal_logcdf",
-      "scalar_generated": false
+      "python": "multivariate_normal.logcdf"
     },
     {
       "array_adapter": "scifort_multivariate_normal_logpdf_f64",
@@ -1283,11 +1281,10 @@
       "scalar_generated": false
     },
     {
-      "bulk_generated": false,
-      "c_manifest_exclusion": "Not selected in this density-only interface batch; requires separate reviewed policy.",
+      "array_adapter": "scifort_multivariate_t_cdf_f64",
       "module": "scifort_multivariate_t",
       "procedure": "multivariate_t_cdf",
-      "scalar_generated": false
+      "python": "multivariate_t.cdf"
     },
     {
       "array_adapter": "scifort_multivariate_t_entropy_f64",

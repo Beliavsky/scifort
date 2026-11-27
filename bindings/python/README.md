@@ -1370,7 +1370,9 @@ All 124 generated artifacts passed the read-only check. Previous published C
 prototypes are unchanged. Encoding/BOM, ASCII Fortran, 132-column source limits,
 Markdown links and whitespace were checked. Reviewed coverage is now 151 Python
 methods and 63 array adapters. Other platforms and timing baselines were not
-newly validated. CDF and RNG-state interfaces remain outside the reviewed bindings; normal fitting is described below.
+newly validated in that batch. Normal fitting is described below; see the later
+[explicit RNG streams](#explicit-rng-streams-and-dirichlet-sampling) and
+[CDF interfaces](#multivariate-box-cdf-and-normal-log-cdf) sections for their contracts.
 
 ## Multivariate normal fitting
 
@@ -1555,7 +1557,8 @@ a future different RNG needs a separately documented format/interface.
 
 See the [generated sampler shapes](../../docs/dirichlet_shapes.md) and
 [reviewed codec policy](../../tools/cabi_generator/README.md#reviewed-serialized-state-codecs).
-CDF and other distribution sampler bindings remain future work.
+Multivariate CDFs are described in the later box-integration section; additional
+distribution sampler bindings remain future work.
 
 ## RNG and sampling interface validation (2026-11-26)
 
@@ -2167,3 +2170,126 @@ generated artifacts passed the read-only consistency check. Existing prototypes,
 retained notices, bounded native changes, UTF-8/BOM, Fortran ASCII/line lengths,
 added local links and whitespace checks passed. No numerical tests were repeated
 for final documentation-only edits.
+
+## Multivariate box CDF and normal log-CDF
+
+```python
+state = api.rng(123)
+cov = [[1., .4], [.4, 2.]]
+p = api.multivariate_normal.cdf(state, [.5, .3], cov=cov, maxpts=4000)
+state.set_state(api.rng(123).state)
+logp = api.multivariate_normal.logcdf(state, [.5, .3], cov=cov, maxpts=4000)
+pt = api.multivariate_t.cdf(api.rng(123), [.5, .3], shape=cov, df=5, maxpts=4000)
+```
+
+The generated methods return float:
+
+```python
+api.multivariate_normal.cdf(state, x, mean=None, cov=None, allow_singular=False,
+                           maxpts=0, abseps=1e-5, releps=1e-5, lower_limit=None)
+api.multivariate_normal.logcdf(state, x, mean=None, cov=None, allow_singular=False,
+                              maxpts=0, abseps=1e-5, releps=1e-5, lower_limit=None)
+api.multivariate_t.cdf(state, x, loc=None, shape=None, df=1.0,
+                      allow_singular=False, maxpts=0, lower_limit=None)
+```
+
+n=size(x) must be positive. x, location and lower_limit have shape `(n)`;
+cov/shape has shape `(n,n)`. Optional arrays preserve genuine native absence:
+zero location, identity matrix and negative-infinity lower bounds. The lower
+matrix triangle is authoritative, but all matrix entries must be finite.
+Location must be finite. Bounds may be infinite, but NaNs are invalid. PSD
+singularity requires allow_singular=True; indefinite matrices are invalid.
+Student t df must be positive or positive infinity, which delegates to normal
+integration. Shape is not covariance. Native scalar parameters are required at
+C and get explicit Python defaults. Python validates ranks, shapes, dtypes,
+C-integer ranges and disjointness before C; no broadcasting is performed.
+
+**SciFort interface convention:** state is explicitly required and comes first
+in Python. Native Fortran still accepts absent state (fixed local seeds), and
+SciPy uses its own RNG convention. The existing [stream API](#explicit-rng-streams-and-dirichlet-sampling)
+provides snapshot/restore and library ownership. C always validates the six-int64
+state, even when an analytic path consumes no random draws. One-dimensional
+CDFs are analytic and leave state unchanged. Normal log-CDF with diagonal
+covariance also leaves state unchanged and sums stable interval logarithms,
+remaining finite when independent tail probabilities underflow. Multivariate
+normal CDF generally still uses QMC for diagonal matrices. Correlated log-CDF
+logs the ordinary probability estimate, so underflow can still produce -infinity.
+
+Integration uses the existing randomized, tent-transformed Halton implementation,
+not SciPy's lattice sequence. Native/C/Python values and final state agree for
+the same method, controls and initial state. Snapshot/restore reproduces a call;
+repeated calls on one advancing stream can differ. State advancement depends on
+dimension and adaptive QMC batches, not a fixed number of draws per CDF call.
+Native changes to stopping decisions or numerical platforms may change streams.
+Matching SciPy seeds does not imply matching values or RNG state.
+
+Nonpositive maxpts selects the native dimension-dependent default: 1000000*n for
+normal, 1000*n for Student t, capped at the native integer maximum. Positive
+maxpts requests a point budget. The backend floors that budget at ten points;
+it is approximate and analytic paths need none. Normal abseps must be finite
+and positive, but is an error target, not a certified bound. Student t CDF uses
+the backend's default absolute target 1e-5. Normal releps must be positive and
+not NaN (positive infinity is accepted), but currently does not affect stopping.
+CDFs do not return the backend's error estimate, point count or a convergence
+status. Exhausting a budget can still return a finite approximate result and
+call status 0; select suitable budgets and validate numerical accuracy for the
+intended calculation. Setting maxpts=0 follows native defaults rather than
+adding a smaller wrapper budget.
+
+Reversed bounds swap each reversed coordinate and multiply by one negative sign
+per reversal. Thus CDF may return a negative signed box value. Normal log-CDF
+returns NaN for negative mass and -infinity for zero mass. The API retains native
+NaN/infinity results for invalid distributions or integration failures. Inputs
+can be converted; arrays must not overlap one another or state. Scalar function
+methods expose no out mapping.
+
+```c
+void scifort_multivariate_normal_cdf_f64(
+    int n, const double *x, int has_mean, const double *mean,
+    int has_cov, const double *cov, int allow_singular, int maxpts,
+    double abseps, double releps, int has_lower_limit, const double *lower_limit,
+    int64_t *state, double *value, int *status);
+void scifort_multivariate_normal_logcdf_f64(
+    int n, const double *x, int has_mean, const double *mean,
+    int has_cov, const double *cov, int allow_singular, int maxpts,
+    double abseps, double releps, int has_lower_limit, const double *lower_limit,
+    int64_t *state, double *value, int *status);
+void scifort_multivariate_t_cdf_f64(
+    int n, const double *x, int has_loc, const double *loc,
+    int has_shape, const double *shape, double df, int allow_singular, int maxpts,
+    int has_lower_limit, const double *lower_limit, int64_t *state,
+    double *value, int *status);
+```
+
+Every pointer must be valid, aligned, nonnull, fully sized and disjoint, including
+absent optional-array placeholders. Flags are 0/1. State and matrices use the
+same six-int64 and column-major conventions as sampling. Status 1 rejects invalid
+extent/flags and 4 rejects state, preserving result/state. Status 0 means native
+execution occurred; it does not guarantee a finite probability or convergence.
+Native-consumed state is exported even when the result is NaN. Python raises
+RuntimeError for nonzero C call status; its own validation raises TypeError or
+ValueError before C. The public state setter validates snapshots, so corrupt
+state normally arises only through raw C or private-buffer mutation. See the
+[normal shape contracts](../../docs/multivariate_normal_shapes.md) and
+[Student t shape contracts](../../docs/multivariate_t_shapes.md).
+
+
+The finite-df Student t backend handles zero conditional variances as
+point masses. Regression cases cover perfectly correlated and anticorrelated
+variables, finite interval intersections, mixed deterministic coordinates and
+zero-rank matrices, with inclusive deterministic endpoints.
+
+Validation commands for this extension (CMD):
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -p test_stateful_functions.py -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -p test_multivariate_cdf.py -v
+python -m unittest discover -s bindings/python/tests -v
+fpm test
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The binding tests build checked and optimized libraries and compile native,
+C and C++ clients. The full Fortran suite is required here because the singular
+Student t correction changes shared integration code.

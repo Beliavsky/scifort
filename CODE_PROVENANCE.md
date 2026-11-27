@@ -1,3 +1,19 @@
+## 2026-11-26 - Multivariate CDF and stateful-function bindings
+
+The stateful-function/optional-array generator extension, long-formal wrapping,
+reviewed manifests, shape documentation and independent counter fixtures are
+original MIT SciFort interface work. No numerical implementation was imported
+or adapted. Native edits add purpose/shape documentation and implicit-none.
+Finite-df Student t integration now reuses the existing deterministic normal
+interval helper for zero conditional variances: a point mass contributes one
+exactly when its residual interval contains zero. Positive-variance integration
+and RNG draw order are unchanged. Existing SciPy BSD-3-Clause attribution and
+license for integration transforms remain applicable. Tests compare native/C/Python
+streams, one-dimensional SciPy reference values, independent-coordinate products,
+log-tail identities and the
+standard bivariate elliptical orthant identity. The independent state fixture
+checks transport and error-state export without reproducing a probability routine.
+
 ## 2026-11-26 - Matrix-normal and matrix-t sampling interfaces
 
 The reviewed manifests, shape contracts, wrappers and interface tests are original

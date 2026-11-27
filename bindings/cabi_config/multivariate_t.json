@@ -9,12 +9,12 @@
   "functions": {},
   "argument_docs": {
     "n": "vector dimension; empty Student t batches permit zero",
-    "x": "evaluation point",
-    "loc": "finite location vector; sampler presence flag selects optional default",
+    "x": "shape (n); evaluation point or upper box limits",
+    "loc": "finite location vector; presence flags select optional defaults",
     "shape": "shape, not covariance; lower triangle used; all entries finite",
     "df": "degrees of freedom, > 0; +infinity gives the normal limit",
     "allow_singular": "0 reject singular shape; 1 permit singular shape",
-    "value": "native scalar density, log density or entropy; numerical NaN/infinity retained",
+    "value": "native scalar result; numerical NaN/infinity retained",
     "status": "0 success; other codes follow the method-specific error contract",
     "m": "retained dimension, >= 1; unique indices imply m <= n",
     "dimensions": "shape (m); unique one-based indices in [1,n], in requested order",
@@ -24,7 +24,12 @@
     "samples": "shape (n,n_samples); sample vectors by column",
     "n_samples": "number of sample columns, >= 0",
     "has_loc": "0 omit location; 1 use supplied vector",
-    "has_shape": "0 omit matrix; 1 use supplied matrix"
+    "has_shape": "0 omit matrix; 1 use supplied matrix",
+    "lower_limit": "shape (n); lower box limits; absent means negative infinity",
+    "has_lower_limit": "0 omit lower limits; 1 use supplied lower limits",
+    "maxpts": "QMC point budget; nonpositive selects the native default",
+    "abseps": "positive finite absolute error target",
+    "releps": "positive non-NaN informational relative tolerance"
   },
   "array_functions": {
     "multivariate_t_pdf": {
@@ -110,6 +115,59 @@
       "optional_policy": "required",
       "description": "Evaluate multivariate t entropy using the native PSD convention.",
       "shape_contract": true
+    },
+    "multivariate_t_cdf": {
+      "symbol": "scifort_multivariate_t_cdf_f64",
+      "dimensions": [
+        {
+          "name": "n",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "x": [
+          "n"
+        ],
+        "loc": [
+          "n"
+        ],
+        "shape": [
+          "n",
+          "n"
+        ],
+        "lower_limit": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "result_argument": "value",
+      "optional_policy": "required",
+      "description": "Evaluate multivariate_t cdf over a box using explicit RNG state.",
+      "shape_contract": true,
+      "state_codecs": {
+        "state": {
+          "module": "scifort_rng_c_bridge",
+          "type_module": "scifort_random",
+          "type": "rng_state",
+          "load": "rng_load_c_state",
+          "store": "rng_store_c_state",
+          "length": 6,
+          "invalid_status": 4,
+          "promote_optional": true
+        }
+      },
+      "optional_arrays": {
+        "loc": "has_loc",
+        "shape": "has_shape",
+        "lower_limit": "has_lower_limit"
+      },
+      "logical_inputs": {
+        "allow_singular": {
+          "false": 0,
+          "true": 1
+        }
+      }
     }
   },
   "outputs": {
@@ -119,7 +177,6 @@
     "shape_documentation": "docs/multivariate_t_shapes.md"
   },
   "excluded": {
-    "multivariate_t_cdf": "Not selected in this density-only interface batch; requires separate reviewed policy.",
     "multivariate_t_rvs": "Single draws are available through the batch sampler with n_samples=1.",
     "multivariate_t_status_success": "Native status constant, not a callable procedure.",
     "multivariate_t_status_invalid_shape": "Native status constant, not a callable procedure.",

@@ -347,7 +347,8 @@ Their reviewed annotations generate [native shape tables](../../docs/multivariat
 Python adds zero-mean/identity-covariance defaults through explicit policy and
 returns scalar floats; see the [Python contract](../python/README.md#multivariate-normal-densities).
 Entropy and marginalization are now also generated; see the contract below.
-Normal fitting is now also generated; CDF and random sampling remain outside the reviewed interfaces.
+Normal fitting is also generated. See the [batch samplers](#multivariate-normal-and-student-t-batch-samplers)
+and [CDF adapters](#multivariate-cdf-and-log-cdf-adapters) for the other interfaces.
 
 ## Multivariate Student t density adapters
 
@@ -379,7 +380,8 @@ unchanged. These are call-status codes, not `multivariate_t_status_*` failures.
 See the [generated native shape tables](../../docs/multivariate_t_shapes.md)
 and [Python defaults/singularity contract](../python/README.md#multivariate-student-t-densities).
 Entropy and marginalization are now also generated; see the contract below.
-CDF and random sampling remain outside the reviewed interfaces.
+See the [batch samplers](#multivariate-normal-and-student-t-batch-samplers)
+and [CDF adapters](#multivariate-cdf-and-log-cdf-adapters) for the other interfaces.
 
 ## Dirichlet density, entropy and moment adapters
 
@@ -588,3 +590,26 @@ rejecting a non-SPD column matrix. Existing native status differences for a
 nonfinite mean are retained. See [the detailed sampling contract](../python/README.md#matrix-normal-and-matrix-t-batch-sampling),
 [matrix-normal shapes](../../docs/matrix_normal_shapes.md#matrix_normal_rvs_array)
 and [matrix-t shapes](../../docs/matrix_t_shapes.md#matrix_t_rvs_array).
+
+## Multivariate CDF and log-CDF adapters
+
+The normal manifest selects CDF/log-CDF and the Student t manifest selects CDF.
+All use array_functions with scalar result/status, presence-controlled location,
+matrix and lower_limit, and a state codec with promote_optional true. Native
+state is optional; this reviewed C/Python interface requires it explicitly.
+Python places state first; C retains the native order and puts the six-int64
+state buffer just before value/status. Python infers n from x, uses native
+zero/identity/negative-infinity defaults through absence, and defaults maxpts to
+0 (native dimension-dependent budget), normal abseps/releps to 1e-5, Student t df
+to 1 and allow_singular to false. Adapters delegate to native integration; the
+finite-df Student t backend now correctly treats zero conditional variances
+as deterministic coordinates.
+
+Status 1 rejects extent/flag errors, 4 rejects serialized state, and 0 retains
+native results including NaN/infinity and signed reversed-box probabilities.
+Neither status 0 nor abseps implies certified convergence. Normal releps is only
+informational. The normal diagonal log-CDF uses stable interval logarithms;
+correlated log-CDF still logs a probability-domain QMC estimate. See the
+[Python/C contracts](../python/README.md#multivariate-box-cdf-and-normal-log-cdf),
+[normal shapes](../../docs/multivariate_normal_shapes.md) and
+[Student t shapes](../../docs/multivariate_t_shapes.md).

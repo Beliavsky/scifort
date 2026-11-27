@@ -17,6 +17,21 @@ extern "C" {
  * Invalid individual values follow the native function's behavior.
  * The status pointer must always be valid. */
 
+/* Evaluate multivariate_t cdf over a box using explicit RNG state.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * allow_singular: false=0, true=1; required, no default.
+ * Other flag values return invalid status with all outputs unchanged.
+ * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.
+ * Buffers remain required and fully sized when absent, but are not read.
+ * state: caller-owned int64_t[6]; invalid state returns 4 unchanged.
+ * State is validated even for empty calls and exported after native numerical errors.
+ * Status 0 means the call was valid; native numerical NaN/infinity is retained.
+ * Numerical parameter errors use native values, not call-level statuses. */
+void scifort_multivariate_t_cdf_f64(int arg_n, const double * arg_x, int arg_has_loc, const double * arg_loc, int arg_has_shape, const double * arg_shape, double arg_df, int arg_allow_singular, int arg_maxpts, int arg_has_lower_limit, const double * arg_lower_limit, int64_t * arg_state, double * arg_value, int *arg_status);
+
 /* Evaluate multivariate t entropy using the native PSD convention.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.

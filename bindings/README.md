@@ -144,3 +144,7 @@ through the same caller-owned stream bridge. See
 Matrix-normal and matrix-t batch sampling now reuse the same state bridge and
 rank-three output buffers, with optional mean and row/column parameters. See
 [matrix sampling contracts](python/README.md#matrix-normal-and-matrix-t-batch-sampling).
+
+Multivariate normal CDF/log-CDF and Student t CDF now have generated C/Python
+interfaces with caller-owned randomized-integration state. See
+[box integration contracts](python/README.md#multivariate-box-cdf-and-normal-log-cdf).

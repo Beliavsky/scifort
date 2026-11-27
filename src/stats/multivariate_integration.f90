@@ -40,9 +40,14 @@ contains
 
     subroutine qmvn_box(covar, low, high, probability, estimated_error, n_samples, status, &
             state, maxpts, abseps)
-        real(dp), intent(in) :: covar(:, :) !! positive-semidefinite covariance matrix
-        real(dp), intent(in) :: low(:) !! lower integration limits
-        real(dp), intent(in) :: high(:) !! upper integration limits
+        !! Estimate a rectangular box probability using randomized QMC when needed.
+        !! n=size(low), n>=1; size(high)=n and covar has shape (n,n).
+        !! Invalid candidate shapes return status without evaluating the integral.
+        !! A supplied state is mutated; absent state selects a fixed local seed.
+        implicit none
+        real(dp), intent(in) :: covar(:, :) !! shape (n,n); positive-semidefinite covariance matrix
+        real(dp), intent(in) :: low(:) !! shape (n); lower integration limits
+        real(dp), intent(in) :: high(:) !! shape (n); upper integration limits
         real(dp), intent(out) :: probability !! estimated probability of the box
         real(dp), intent(out) :: estimated_error !! three-standard-error batch estimate
         integer, intent(out) :: n_samples !! number of low-discrepancy points evaluated
@@ -86,9 +91,14 @@ contains
 
     subroutine qmvt_box(covar, low, high, df, probability, estimated_error, n_samples, status, &
             state, maxpts, abseps)
-        real(dp), intent(in) :: covar(:, :) !! positive-semidefinite shape matrix
-        real(dp), intent(in) :: low(:) !! lower integration limits
-        real(dp), intent(in) :: high(:) !! upper integration limits
+        !! Estimate a rectangular box probability using randomized QMC when needed.
+        !! n=size(low), n>=1; size(high)=n and covar has shape (n,n).
+        !! Invalid candidate shapes return status without evaluating the integral.
+        !! A supplied state is mutated; absent state selects a fixed local seed.
+        implicit none
+        real(dp), intent(in) :: covar(:, :) !! shape (n,n); positive-semidefinite shape matrix
+        real(dp), intent(in) :: low(:) !! shape (n); lower integration limits
+        real(dp), intent(in) :: high(:) !! shape (n); upper integration limits
         real(dp), intent(in) :: df !! degrees of freedom, > 0; +infinity gives normal
         real(dp), intent(out) :: probability !! estimated probability of the box
         real(dp), intent(out) :: estimated_error !! three-standard-error batch estimate
@@ -377,9 +387,12 @@ contains
 
     subroutine qmvt_qmc(cho, lo, hi, df, state, n_qmc, n_batches, probability, &
             estimated_error, n_samples)
-        real(dp), intent(in) :: cho(:, :) !! permuted/scaled lower Cholesky factor
-        real(dp), intent(in) :: lo(:) !! permuted/scaled lower limits
-        real(dp), intent(in) :: hi(:) !! permuted/scaled upper limits
+        !! Average conditional normal box masses over a shared chi-square scale.
+        !! n=size(lo), n>=1; cho has shape (n,n) and hi has length n.
+        implicit none
+        real(dp), intent(in) :: cho(:, :) !! shape (n,n); permuted/scaled lower Cholesky factor
+        real(dp), intent(in) :: lo(:) !! shape (n); permuted/scaled lower limits
+        real(dp), intent(in) :: hi(:) !! shape (n); permuted/scaled upper limits
         real(dp), intent(in) :: df !! degrees of freedom
         type(rng_state), intent(inout) :: state !! RNG used for shifts
         integer, intent(in) :: n_qmc !! low-discrepancy points per batch
@@ -433,8 +446,13 @@ contains
 
                 lo_scaled = lo(1) * r
                 hi_scaled = hi(1) * r
-                ck = clipped_normal_cdf(lo_scaled)
-                dk = clipped_normal_cdf(hi_scaled)
+                ! A zero conditional variance is an atom at zero, including its endpoints.
+                if (abs(cho(1, 1)) <= cholesky_tol) then
+                    call first_normal_interval(cho(1, 1), lo_scaled, hi_scaled, ck, dk)
+                else
+                    ck = clipped_normal_cdf(lo_scaled)
+                    dk = clipped_normal_cdf(hi_scaled)
+                end if
                 c(k) = ck
                 dc(k) = max(0.0_dp, dk - ck)
                 pv = dc(k)
@@ -451,8 +469,13 @@ contains
 
                     lo_scaled = lo(i) * r - s(i)
                     hi_scaled = hi(i) * r - s(i)
-                    ck = clipped_normal_cdf(lo_scaled)
-                    dk = clipped_normal_cdf(hi_scaled)
+                    ! A zero conditional variance is an atom at zero, including its endpoints.
+                    if (abs(cho(i, i)) <= cholesky_tol) then
+                        call first_normal_interval(cho(i, i), lo_scaled, hi_scaled, ck, dk)
+                    else
+                        ck = clipped_normal_cdf(lo_scaled)
+                        dk = clipped_normal_cdf(hi_scaled)
+                    end if
                     c(k) = ck
                     dc(k) = max(0.0_dp, dk - ck)
                     pv = pv * dc(k)
