@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 113,
+    "array_adapters": 116,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 279,
-    "python": 201,
+    "exports": 282,
+    "python": 204,
     "scalar": 88
   },
   "procedures": [
@@ -509,6 +509,12 @@
       "scalar_generated": true
     },
     {
+      "array_adapter": "scifort_gaussian_kde_covariance_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_covariance",
+      "python": "kde_bridge.covariance"
+    },
+    {
       "array_adapter": "scifort_gaussian_kde_create_f64",
       "module": "scifort_gaussian_kde_bridge",
       "procedure": "kde_create",
@@ -551,6 +557,12 @@
       "python": "kde_bridge.integrate_kde"
     },
     {
+      "array_adapter": "scifort_gaussian_kde_inv_cov_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_inv_cov",
+      "python": "kde_bridge.inv_cov"
+    },
+    {
       "array_adapter": "scifort_gaussian_kde_logpdf_f64",
       "module": "scifort_gaussian_kde_bridge",
       "procedure": "kde_logpdf",
@@ -573,6 +585,12 @@
       "module": "scifort_gaussian_kde_bridge",
       "procedure": "kde_resample",
       "python": "kde_bridge.resample"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_set_bandwidth_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_set_bandwidth",
+      "python": "kde_bridge.set_bandwidth"
     },
     {
       "array_adapter": "scifort_invwishart_entropy_f64",

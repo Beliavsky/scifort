@@ -4,22 +4,26 @@ module scifort_c_api_generated_gaussian_kde
     use, intrinsic :: iso_c_binding, only : c_double, c_int64_t, c_int, c_size_t, c_ptr
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : cg_kind => dp
-    use scifort_gaussian_kde_bridge, only : cg_native_0 => kde_create
-    use scifort_gaussian_kde_bridge, only : cg_native_1 => kde_destroy
-    use scifort_gaussian_kde_bridge, only : cg_native_2 => kde_info
-    use scifort_gaussian_kde_bridge, only : cg_native_3 => kde_integrate_box
-    use scifort_gaussian_kde_bridge, only : cg_native_4 => kde_integrate_box_1d
-    use scifort_gaussian_kde_bridge, only : cg_native_5 => kde_integrate_gaussian
-    use scifort_gaussian_kde_bridge, only : cg_native_6 => kde_integrate_kde
-    use scifort_gaussian_kde_bridge, only : cg_native_7 => kde_logpdf
-    use scifort_gaussian_kde_bridge, only : cg_native_8 => kde_marginal
-    use scifort_gaussian_kde_bridge, only : cg_native_9 => kde_pdf
-    use scifort_gaussian_kde_bridge, only : cg_native_10 => kde_resample
+    use scifort_gaussian_kde_bridge, only : cg_native_0 => kde_covariance
+    use scifort_gaussian_kde_bridge, only : cg_native_1 => kde_create
+    use scifort_gaussian_kde_bridge, only : cg_native_2 => kde_destroy
+    use scifort_gaussian_kde_bridge, only : cg_native_3 => kde_info
+    use scifort_gaussian_kde_bridge, only : cg_native_4 => kde_integrate_box
+    use scifort_gaussian_kde_bridge, only : cg_native_5 => kde_integrate_box_1d
+    use scifort_gaussian_kde_bridge, only : cg_native_6 => kde_integrate_gaussian
+    use scifort_gaussian_kde_bridge, only : cg_native_7 => kde_integrate_kde
+    use scifort_gaussian_kde_bridge, only : cg_native_8 => kde_inv_cov
+    use scifort_gaussian_kde_bridge, only : cg_native_9 => kde_logpdf
+    use scifort_gaussian_kde_bridge, only : cg_native_10 => kde_marginal
+    use scifort_gaussian_kde_bridge, only : cg_native_11 => kde_pdf
+    use scifort_gaussian_kde_bridge, only : cg_native_12 => kde_resample
+    use scifort_gaussian_kde_bridge, only : cg_native_13 => kde_set_bandwidth
     use scifort_random, only : cg_type_state => rng_state
     use scifort_rng_c_bridge, only : cg_load_state => rng_load_c_state, &
         cg_store_state => rng_store_c_state
     implicit none
     private
+    public :: scifort_gaussian_kde_covariance_f64
     public :: scifort_gaussian_kde_create_f64
     public :: scifort_gaussian_kde_destroy_f64
     public :: scifort_gaussian_kde_info_f64
@@ -27,11 +31,37 @@ module scifort_c_api_generated_gaussian_kde
     public :: scifort_gaussian_kde_integrate_box_f64
     public :: scifort_gaussian_kde_integrate_gaussian_f64
     public :: scifort_gaussian_kde_integrate_kde_f64
+    public :: scifort_gaussian_kde_inv_cov_f64
     public :: scifort_gaussian_kde_logpdf_f64
     public :: scifort_gaussian_kde_marginal_f64
     public :: scifort_gaussian_kde_pdf_f64
     public :: scifort_gaussian_kde_resample_f64
+    public :: scifort_gaussian_kde_set_bandwidth_f64
 contains
+
+    subroutine scifort_gaussian_kde_covariance_f64( &
+        d, handle, matrix, status) &
+        bind(c, name="scifort_gaussian_kde_covariance_f64")
+        !! Copy kernel covariance into caller-owned memory.
+        integer(c_int), value, intent(in) :: d !! data dimension
+        type(c_ptr), value, intent(in) :: handle !! opaque estimator; owning output, live input, nulled on destruction
+        real(c_double), intent(inout) :: matrix(d,d) !! copied kernel covariance or inverse; NaNs on native failure
+        integer(c_int), intent(out) :: status !! 0 success; 1-4 native; 5 null handle; 6 allocation; 7 invalid state
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (d < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_0( &
+            handle=handle, &
+            matrix=matrix, &
+            status=status)
+    end subroutine scifort_gaussian_kde_covariance_f64
 
     subroutine scifort_gaussian_kde_create_f64( &
         d, n, dataset, weights, bandwidth, factor, handle, status) &
@@ -59,7 +89,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_0( &
+        call cg_native_1( &
             dataset=dataset, &
             weights=weights, &
             bandwidth=bandwidth, &
@@ -80,7 +110,7 @@ contains
 
         ! Reject invalid extents before calling the native procedure.
         ! Call the native procedure through its module interface.
-        call cg_native_1( &
+        call cg_native_2( &
             handle=handle, &
             status=status)
     end subroutine scifort_gaussian_kde_destroy_f64
@@ -103,7 +133,7 @@ contains
 
         ! Reject invalid extents before calling the native procedure.
         ! Call the native procedure through its module interface.
-        call cg_native_2( &
+        call cg_native_3( &
             handle=handle, &
             d=d, &
             n=n, &
@@ -143,7 +173,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_3( &
+        call cg_native_4( &
             handle=handle, &
             low=low, &
             high=high, &
@@ -169,7 +199,7 @@ contains
 
         ! Reject invalid extents before calling the native procedure.
         ! Call the native procedure through its module interface.
-        call cg_native_4( &
+        call cg_native_5( &
             handle=handle, &
             low=low, &
             high=high, &
@@ -197,7 +227,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_5( &
+        call cg_native_6( &
             handle=handle, &
             mean=mean, &
             cov=cov, &
@@ -219,12 +249,36 @@ contains
 
         ! Reject invalid extents before calling the native procedure.
         ! Call the native procedure through its module interface.
-        call cg_native_6( &
+        call cg_native_7( &
             handle=handle, &
             other=other, &
             value=value, &
             status=status)
     end subroutine scifort_gaussian_kde_integrate_kde_f64
+
+    subroutine scifort_gaussian_kde_inv_cov_f64( &
+        d, handle, matrix, status) &
+        bind(c, name="scifort_gaussian_kde_inv_cov_f64")
+        !! Copy inverse kernel covariance into caller-owned memory.
+        integer(c_int), value, intent(in) :: d !! data dimension
+        type(c_ptr), value, intent(in) :: handle !! opaque estimator; owning output, live input, nulled on destruction
+        real(c_double), intent(inout) :: matrix(d,d) !! copied kernel covariance or inverse; NaNs on native failure
+        integer(c_int), intent(out) :: status !! 0 success; 1-4 native; 5 null handle; 6 allocation; 7 invalid state
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (d < 1_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_8( &
+            handle=handle, &
+            matrix=matrix, &
+            status=status)
+    end subroutine scifort_gaussian_kde_inv_cov_f64
 
     subroutine scifort_gaussian_kde_logpdf_f64( &
         d, m, handle, points, values, status) &
@@ -250,7 +304,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_7( &
+        call cg_native_9( &
             handle=handle, &
             points=points, &
             values=values, &
@@ -276,7 +330,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_8( &
+        call cg_native_10( &
             handle=handle, &
             dimensions=dimensions, &
             marginal_handle=marginal_handle, &
@@ -307,7 +361,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_9( &
+        call cg_native_11( &
             handle=handle, &
             points=points, &
             values=values, &
@@ -345,12 +399,33 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_10( &
+        call cg_native_12( &
             handle=handle, &
             state=cg_state_state, &
             samples=samples, &
             status=status)
         call cg_store_state(cg_state_state,state)
     end subroutine scifort_gaussian_kde_resample_f64
+
+    subroutine scifort_gaussian_kde_set_bandwidth_f64( &
+        handle, bandwidth, factor, status) &
+        bind(c, name="scifort_gaussian_kde_set_bandwidth_f64")
+        !! Transactionally update the bandwidth; failures preserve the estimator.
+        type(c_ptr), value, intent(in) :: handle !! opaque estimator; owning output, live input, nulled on destruction
+        integer(c_int), value, intent(in) :: bandwidth !! 0 Scott; 1 Silverman; 2 constant factor
+        real(c_double), value, intent(in) :: factor !! bandwidth factor; positive finite input for constant mode
+        integer(c_int), intent(out) :: status !! 0 success; 1-4 native; 5 null handle; 6 allocation; 7 invalid state
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        ! Call the native procedure through its module interface.
+        call cg_native_13( &
+            handle=handle, &
+            bandwidth=bandwidth, &
+            factor=factor, &
+            status=status)
+    end subroutine scifort_gaussian_kde_set_bandwidth_f64
 
 end module scifort_c_api_generated_gaussian_kde

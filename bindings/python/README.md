@@ -2767,8 +2767,8 @@ be strided or C-order and are converted for Fortran when needed.
 
 Read `d`, `n`, `neff` and `factor`, or call `scotts_factor()` and
 `silverman_factor()` for bandwidth information. Integration, resampling and independently owned marginals are also available
-as described below. Covariance access, callable bandwidths and bandwidth mutation
-after construction remain native Fortran capabilities. Native numerical algorithms and signatures are unchanged.
+as described below. Covariance access and bandwidth updates are also supported.
+Callable bandwidths remain unsupported. Native numerical algorithms and signatures are unchanged.
 
 Use a `with` block or call `close()` explicitly. Close is idempotent. Finalization
 also releases native storage, but its timing is not guaranteed. Closed estimators
@@ -2935,3 +2935,53 @@ Native/C/RNG agreement, original KDE regressions, executing C11/C++17 clients,
 SciPy integral/marginal references and resampling moments are covered. All 160
 generated artifacts matched. The new README example, local links, source ASCII/
 Fortran line limits and diff whitespace checks passed.
+
+## KDE covariance and bandwidth updates
+
+`kde.covariance` and `kde.inv_cov` return independent float64 `(d,d)` arrays.
+`kde.get_covariance(out=buffer)` and `kde.get_inv_cov(out=buffer)` reuse a writable,
+aligned, Fortran-contiguous float64 buffer of that shape. These arrays never
+expose native storage. The inverse is solved from the cached Cholesky factor.
+
+`kde.set_bandwidth('scott')`, `kde.set_bandwidth('silverman')` and
+`kde.set_bandwidth(0.5)` update the estimator and refresh cached Python bandwidth
+information while holding its handle lock. `None` retains the current rule and
+factor. Callable bandwidths are unsupported. Parent and marginal bandwidths are
+independent, including after the parent closes.
+
+The C functions `scifort_gaussian_kde_covariance_f64` and
+`scifort_gaussian_kde_inv_cov_f64` take `d`, a live handle, caller-owned
+column-major `(d,d)` output and status. A positive but mismatched dimension returns
+status 1 and fills the supplied matrix with NaNs. A nonpositive C dimension fails
+before native entry and leaves the output unchanged. Null handles return status 5
+and NaN matrices; inverse solve/nonfinite-result errors return status 4.
+
+`scifort_gaussian_kde_set_bandwidth_f64` takes a handle, mode (0 Scott, 1 Silverman,
+2 constant), factor and status. The factor is ignored for modes 0/1. Invalid mode
+or nonpositive/nonfinite constant returns status 2. The bridge updates a temporary
+native copy and commits only if covariance and Cholesky caches are finite with
+positive diagonals; overflow/underflow rejection returns status 4. Every failed
+update preserves the estimator. This representability guard is a **SciFort
+extension** to the wrapper contract; the native Fortran setter is unchanged.
+Temporary updates currently copy the estimator's data, costing O(d*n) storage.
+Finite caches do not guarantee accurate evaluation for every extreme scale.
+
+Focused validation command (checked and optimized libraries):
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_gaussian_kde*.py -v
+```
+
+Validation on 2026-11-27: all 16 focused KDE tests passed with GNU Fortran/GCC/G++
+17.0.0 20260510 (experimental), Python 3.13.3 and SciPy 1.15.3. Both checked
+(`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries passed, including
+native regression/agreement programs and C11/C++17 clients. Shared generator and
+runtime implementations and native numerical algorithms were unchanged; the
+unrelated full numerical suite was not rerun. Other compilers/platforms and the
+full range of extreme covariance conditioning were not newly validated.
+
+The unified regeneration check also passed for all 160 pipeline artifacts:
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```

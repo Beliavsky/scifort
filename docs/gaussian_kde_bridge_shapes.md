@@ -7,6 +7,22 @@ Source: `src/c_api/gaussian_kde_bridge.f90`; module: `scifort_gaussian_kde_bridg
 These declared contracts are checked against reviewed C adapter policies.
 They do not prove that the numerical implementation obeys the contract.
 
+## kde_covariance
+
+Copy kernel covariance into caller-owned memory.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `d` | `size(matrix,1)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `matrix` | `(:,:)` | `(d,d)` | copied kernel covariance or inverse; NaNs on native failure |
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
 ## kde_create
 
 Create an owning Gaussian KDE handle; data are copied.
@@ -110,6 +126,22 @@ Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases becom
 or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
 Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
 
+## kde_inv_cov
+
+Copy inverse kernel covariance into caller-owned memory.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `d` | `size(matrix,1)` | 1 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `matrix` | `(:,:)` | `(d,d)` | copied kernel covariance or inverse; NaNs on native failure |
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
+
 ## kde_logpdf
 
 Evaluate a batch of Gaussian KDE log densities.
@@ -191,3 +223,14 @@ or a `void **` output/inout slot. No descriptor or object layout crosses the ABI
 Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.
 
 When `n_samples == 0`: validate handle and dimension; leave RNG state unchanged
+
+## kde_set_bandwidth
+
+Transactionally update the bandwidth; failures preserve the estimator.
+
+Scalar native arguments; no array shape constraints.
+
+
+`handle` is an opaque `gaussian_kde` handle, transported as `void *` input
+or a `void **` output/inout slot. No descriptor or object layout crosses the ABI.
+Release ownership using `scifort_gaussian_kde_destroy_f64`; copied aliases become invalid.

@@ -1,3 +1,12 @@
+## 2026-11-27 - KDE covariance access and bandwidth updates
+
+- Add caller-owned covariance/inverse matrices and Scott/Silverman/constant
+  bandwidth updates through reviewed C adapters and Python estimator methods.
+- Refresh Python bandwidth information after updates; preserve estimator state
+  on invalid or unrepresentable updates and keep marginal estimators independent.
+- Document shape/layout, copied storage, error outputs and wrapper-only numerical
+  guards; retain the native numerical implementation and public signatures.
+
 ## 2026-11-27 - KDE integrals, resampling and owned marginals
 
 - Add Gaussian-product, interval, box and two-KDE product integrals through C/Python.

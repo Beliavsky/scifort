@@ -1,3 +1,14 @@
+## 2026-11-27 - KDE covariance and bandwidth interfaces
+
+The flat covariance getters, transactional bandwidth bridge, policies, Python
+methods and tests are original MIT SciFort interface work. They reuse existing
+native covariance caches, inverse solve and bandwidth setters without changing
+numerical algorithms. No upstream implementation was imported or adapted. Tests
+use installed SciPy public outputs, native/C agreement, covariance-inverse
+identities and independent parent/marginal storage. The wrapper-only finite-cache
+and positive-diagonal guard rejects unrepresentable updates before committing;
+it does not change native setter behavior.
+
 ## 2026-11-27 - KDE integration, sampling and marginal interfaces
 
 The six additional flat KDE bridges, reviewed adapter policies, generated C/Python

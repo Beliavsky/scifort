@@ -1028,3 +1028,8 @@ and concurrent reverse-order calls; KDE tests verify type-bound dispatch,
 native RNG consumption and copied marginal storage. Python coordinate-index
 normalization remains in the estimator facade; the flat C marginal bridge uses
 the native one-based coordinate convention.
+
+The reviewed KDE bridge also exposes copied covariance/inverse matrices and a
+transactional bandwidth update. It composes existing opaque input handles,
+scalar-only status procedures and output dimensions; no generator special case
+for type-bound methods is required. See the [Python contract](../../bindings/python/README.md#kde-covariance-and-bandwidth-updates).

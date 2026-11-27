@@ -29,6 +29,56 @@ class GaussianKDEMethodTests(unittest.TestCase):
             path,meta=build(checked=checked)
             cls.builds.append((path,meta,Scifort(path,dll_directories=meta['dll_directories'])))
 
+    def test_covariance_bandwidth_updates_and_failed_updates(self):
+        for _,_,api in self.builds:
+            for data in (DATA[0],DATA):
+                ref=gaussian_kde(data,weights=WEIGHTS)
+                with api.gaussian_kde(data,weights=WEIGHTS) as kde:
+                    for method in ('silverman',.35,None,'scott',.8):
+                        kde.set_bandwidth(method);ref.set_bandwidth(method)
+                        self.assertAlmostEqual(kde.factor,ref.factor,delta=2e-15)
+                        np.testing.assert_allclose(kde.covariance,ref.covariance,rtol=4e-15,atol=1e-16)
+                        np.testing.assert_allclose(kde.inv_cov,ref.inv_cov,rtol=5e-15,atol=1e-15)
+                        np.testing.assert_allclose(kde.pdf(data),ref.pdf(data),rtol=5e-15,atol=1e-16)
+                        np.testing.assert_allclose(kde.covariance@kde.inv_cov,np.eye(kde.d),atol=1e-15)
+                    saved=kde.covariance;factor=kde.factor;values=kde.pdf(data)
+                    for bad in (0.,-1.,np.nan,np.inf,1e308,1e-300,'bad',True,[.5],1j):
+                        with self.assertRaises((ValueError,TypeError)):kde.set_bandwidth(bad)
+                        self.assertEqual(kde.factor,factor)
+                        np.testing.assert_array_equal(kde.covariance,saved)
+                        np.testing.assert_array_equal(kde.pdf(data),values)
+                    saved[:]=0.
+                    self.assertTrue(np.any(kde.covariance!=0.))
+                    for getter in (kde.get_covariance,kde.get_inv_cov):
+                        out=np.empty((kde.d,kde.d),order='F')
+                        self.assertIs(getter(out=out),out)
+                        for badout in (np.zeros((kde.d+1,kde.d)),np.zeros((kde.d,kde.d),dtype=np.float32)):
+                            with self.assertRaises((ValueError,TypeError)):getter(out=badout)
+                        out.flags.writeable=False
+                        with self.assertRaises((ValueError,TypeError)):getter(out=out)
+                    for method in ('covariance','inv_cov'):
+                        wrong=getattr(api.kde_bridge,method)(kde._handle,d=kde.d+1)
+                        self.assertEqual(wrong.status,1)
+                        self.assertTrue(np.isnan(wrong.outputs['matrix']).all())
+                    self.assertEqual(api.kde_bridge.set_bandwidth(kde._handle,9,1.).status,2)
+                for operation in (lambda:kde.covariance,lambda:kde.inv_cov,lambda:kde.set_bandwidth(.5)):
+                    with self.assertRaises(ValueError):operation()
+
+    def test_bandwidth_marginal_independence(self):
+        for _,_,api in self.builds:
+            with api.gaussian_kde(DATA,weights=WEIGHTS) as parent:
+                with parent.marginal(0) as child:
+                    before=child.covariance;factor=child.factor
+                    parent.set_bandwidth(.3)
+                    self.assertEqual(child.factor,factor)
+                    np.testing.assert_array_equal(child.covariance,before)
+                    child.set_bandwidth('silverman')
+                    self.assertEqual(parent.factor,.3)
+                    parent.close()
+                    child.set_bandwidth(.6)
+                    self.assertEqual(child.factor,.6)
+                    self.assertTrue(np.isfinite(child.inv_cov).all())
+
     def test_gaussian_and_interval_integrals(self):
         for _,_,api in self.builds:
             for data in (DATA[0],DATA):
@@ -217,6 +267,15 @@ int main(void) {
  scifort_gaussian_kde_resample_f64(1,3,parent,state,out,&status); if(status) return 7;
  for(int i=0;i<3;++i) if(!isfinite(out[i])) return 8;
  scifort_gaussian_kde_marginal_f64(1,parent,axes,&child,&status); if(status || !child) return 9;
+ scifort_gaussian_kde_set_bandwidth_f64(parent,2,.5,&status); if(status) return 12;
+ scifort_gaussian_kde_covariance_f64(1,parent,&cov,&status); if(status || !(cov>0)) return 13;
+ scifort_gaussian_kde_inv_cov_f64(1,parent,&v,&status);
+ if(status || fabs(v*cov-1)>1e-14) return 14;
+ scifort_gaussian_kde_covariance_f64(1,NULL,&v,&status);
+ if(status!=5 || !isnan(v)) return 15;
+ v=77; scifort_gaussian_kde_covariance_f64(0,parent,&v,&status);
+ if(status!=1 || v!=77) return 16;
+ scifort_gaussian_kde_set_bandwidth_f64(NULL,0,1,&status); if(status!=5) return 17;
  scifort_gaussian_kde_destroy_f64(&parent,&status); if(status || parent) return 10;
  scifort_gaussian_kde_integrate_box_1d_f64(child,-INFINITY,INFINITY,&v,&status);
  if(status || fabs(v-1)>1e-14) return 11;

@@ -305,6 +305,72 @@
           "release_symbol": "scifort_gaussian_kde_destroy_f64"
         }
       }
+    },
+    "kde_covariance": {
+      "symbol": "scifort_gaussian_kde_covariance_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "matrix": [
+          "d",
+          "d"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Copy kernel covariance into caller-owned memory.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
+    },
+    "kde_inv_cov": {
+      "symbol": "scifort_gaussian_kde_inv_cov_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        }
+      ],
+      "shapes": {
+        "matrix": [
+          "d",
+          "d"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Copy inverse kernel covariance into caller-owned memory.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
+    },
+    "kde_set_bandwidth": {
+      "symbol": "scifort_gaussian_kde_set_bandwidth_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Transactionally update the bandwidth; failures preserve the estimator.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "scalar_only": true
     }
   },
   "excluded": {},
@@ -335,7 +401,8 @@
     "samples": "sample columns; NaNs on native failure",
     "k": "number of retained coordinates, >= 1",
     "dimensions": "distinct one-based coordinates within the parent dimension",
-    "marginal_handle": "new independently owned marginal; null on native failure"
+    "marginal_handle": "new independently owned marginal; null on native failure",
+    "matrix": "copied kernel covariance or inverse; NaNs on native failure"
   },
   "outputs": {
     "fortran": "src/c_api/generated/gaussian_kde_generated.f90",

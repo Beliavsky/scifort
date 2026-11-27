@@ -2,6 +2,7 @@
 ! Copyright (c) 2026 SciFort contributors
 module scifort_gaussian_kde_bridge
     use, intrinsic :: iso_c_binding, only : c_ptr, c_loc, c_f_pointer, c_associated, c_null_ptr
+    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
     use scifort_kinds, only : dp
     use scifort_math, only : quiet_nan
     use scifort_random, only : rng_state
@@ -11,6 +12,7 @@ module scifort_gaussian_kde_bridge
     public :: kde_create, kde_destroy, kde_pdf, kde_logpdf, kde_info
     public :: kde_integrate_gaussian, kde_integrate_box_1d, kde_integrate_box
     public :: kde_integrate_kde, kde_resample, kde_marginal
+    public :: kde_covariance, kde_inv_cov, kde_set_bandwidth
 contains
     subroutine kde_create(dataset, weights, bandwidth, factor, handle, status)
         !! Copy observations into a heap-owned estimator; failure returns a null handle.
@@ -289,4 +291,93 @@ contains
         end if
         marginal_handle = c_loc(child)
     end subroutine kde_marginal
+
+    subroutine kde_covariance(handle, matrix, status)
+        !! Copy the current kernel covariance.
+        !! @dimension d = size(matrix,1)
+        !! @require d >= 1
+        !! d must equal the estimator dimension; output never aliases native storage.
+        implicit none
+        type(c_ptr), intent(in) :: handle !! live estimator handle; null returns status 5
+        real(dp), intent(out) :: matrix(:,:) !! shape (d,d); copied matrix, NaNs on native failure
+        integer, intent(out) :: status !! 0 success; 1 shape; 4 solve/nonfinite inverse; 5 null handle
+        type(gaussian_kde), pointer :: kde
+        real(dp), allocatable :: evaluated(:,:)
+
+        matrix = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 1
+        if (size(matrix,1) /= kde%d .or. size(matrix,2) /= kde%d) return
+        evaluated = kde%covariance
+        status = 0
+        if (status == 0) matrix = evaluated
+    end subroutine kde_covariance
+
+    subroutine kde_inv_cov(handle, matrix, status)
+        !! Solve for the inverse current kernel covariance.
+        !! @dimension d = size(matrix,1)
+        !! @require d >= 1
+        !! d must equal the estimator dimension; output never aliases native storage.
+        implicit none
+        type(c_ptr), intent(in) :: handle !! live estimator handle; null returns status 5
+        real(dp), intent(out) :: matrix(:,:) !! shape (d,d); copied matrix, NaNs on native failure
+        integer, intent(out) :: status !! 0 success; 1 shape; 4 solve/nonfinite inverse; 5 null handle
+        type(gaussian_kde), pointer :: kde
+        real(dp), allocatable :: evaluated(:,:)
+
+        matrix = quiet_nan(0.0_dp)
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 1
+        if (size(matrix,1) /= kde%d .or. size(matrix,2) /= kde%d) return
+        allocate(evaluated(kde%d,kde%d))
+        call kde%inv_cov(evaluated, status)
+        if (status == 0) then
+            if (.not. all(ieee_is_finite(evaluated))) status = 4
+        end if
+        if (status == 0) matrix = evaluated
+    end subroutine kde_inv_cov
+
+    subroutine kde_set_bandwidth(handle, bandwidth, factor, status)
+        !! Update a temporary estimator and commit only a representable covariance.
+        !! Failed updates preserve the estimator, including its cached bandwidth rule.
+        implicit none
+        type(c_ptr), intent(in) :: handle !! live estimator to update; null returns status 5
+        integer, intent(in) :: bandwidth !! 0 Scott; 1 Silverman; 2 constant factor
+        real(dp), intent(in) :: factor !! positive finite factor for mode 2; ignored otherwise
+        integer, intent(out) :: status !! 0 success; 2 invalid mode/factor; 4 unrepresentable covariance; 5 null
+        type(gaussian_kde), pointer :: kde
+        type(gaussian_kde) :: candidate
+        integer :: i
+
+        status = 5
+        if (.not. c_associated(handle)) return
+        call c_f_pointer(handle, kde)
+        status = 2
+        if (bandwidth < 0 .or. bandwidth > 2) return
+        if (bandwidth == 2) then
+            if (.not. ieee_is_finite(factor) .or. factor <= 0.0_dp) return
+        end if
+        candidate = kde
+        select case (bandwidth)
+        case (0)
+            call candidate%set_bandwidth('scott', status)
+        case (1)
+            call candidate%set_bandwidth('silverman', status)
+        case (2)
+            call candidate%set_bandwidth(factor, status)
+        end select
+        if (status /= 0) return
+        status = 4
+        if (.not. all(ieee_is_finite(candidate%covariance))) return
+        if (.not. all(ieee_is_finite(candidate%cho_cov))) return
+        do i = 1, kde%d
+            if (candidate%covariance(i,i) <= 0.0_dp .or. candidate%cho_cov(i,i) <= 0.0_dp) return
+        end do
+        kde = candidate
+        status = 0
+    end subroutine kde_set_bandwidth
 end module scifort_gaussian_kde_bridge

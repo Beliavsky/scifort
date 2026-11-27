@@ -666,6 +666,12 @@
         "kde_resample": {
           "d": 1,
           "n_samples": 1
+        },
+        "kde_covariance": {
+          "d": 1
+        },
+        "kde_inv_cov": {
+          "d": 1
         }
       }
     }

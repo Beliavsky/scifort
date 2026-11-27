@@ -1279,7 +1279,22 @@ class Invwishart(ArrayGroup):
         return self._invoke('var', {'df': df, 'scale': scale}, out)
 
 class Kde_bridge(ArrayGroup):
-    _specs = {'create': {'arguments': ['dataset', 'weights', 'bandwidth', 'factor', 'handle', 'status'],
+    _specs = {'covariance': {'arguments': ['handle', 'matrix', 'status'],
+                    'definitions': {'d': {'argument': 'matrix', 'axis': 1}},
+                    'dimensions': ['d'],
+                    'inputs': ['handle'],
+                    'logical_inputs': {},
+                    'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                                 'matrix': {'category': 'real', 'intent': 'out', 'rank': 2}},
+                    'minimums': {'d': 1},
+                    'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                  'type': 'gaussian_kde'}},
+                    'output_dimensions': {'d': 1},
+                    'outputs': ['matrix'],
+                    'shapes': {'matrix': ['d', 'd']},
+                    'status': 'status',
+                    'symbol': 'scifort_gaussian_kde_covariance_f64'},
+     'create': {'arguments': ['dataset', 'weights', 'bandwidth', 'factor', 'handle', 'status'],
                 'definitions': {'d': {'argument': 'dataset', 'axis': 1},
                                 'n': {'argument': 'dataset', 'axis': 2}},
                 'dimensions': ['d', 'n'],
@@ -1405,6 +1420,21 @@ class Kde_bridge(ArrayGroup):
                        'shapes': {},
                        'status': 'status',
                        'symbol': 'scifort_gaussian_kde_integrate_kde_f64'},
+     'inv_cov': {'arguments': ['handle', 'matrix', 'status'],
+                 'definitions': {'d': {'argument': 'matrix', 'axis': 1}},
+                 'dimensions': ['d'],
+                 'inputs': ['handle'],
+                 'logical_inputs': {},
+                 'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                              'matrix': {'category': 'real', 'intent': 'out', 'rank': 2}},
+                 'minimums': {'d': 1},
+                 'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                               'type': 'gaussian_kde'}},
+                 'output_dimensions': {'d': 1},
+                 'outputs': ['matrix'],
+                 'shapes': {'matrix': ['d', 'd']},
+                 'status': 'status',
+                 'symbol': 'scifort_gaussian_kde_inv_cov_f64'},
      'logpdf': {'arguments': ['handle', 'points', 'values', 'status'],
                 'definitions': {'d': {'argument': 'points', 'axis': 1},
                                 'm': {'argument': 'points', 'axis': 2}},
@@ -1479,7 +1509,26 @@ class Kde_bridge(ArrayGroup):
                                              'type': 'rng_state',
                                              'type_module': 'scifort_random'}},
                   'status': 'status',
-                  'symbol': 'scifort_gaussian_kde_resample_f64'}}
+                  'symbol': 'scifort_gaussian_kde_resample_f64'},
+     'set_bandwidth': {'arguments': ['handle', 'bandwidth', 'factor', 'status'],
+                       'definitions': {},
+                       'dimensions': [],
+                       'inputs': ['handle', 'bandwidth', 'factor'],
+                       'logical_inputs': {},
+                       'metadata': {'bandwidth': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                                    'factor': {'category': 'real', 'intent': 'in', 'rank': 0},
+                                    'handle': {'category': 'handle', 'intent': 'in', 'rank': 0}},
+                       'minimums': {},
+                       'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                                     'type': 'gaussian_kde'}},
+                       'outputs': [],
+                       'shapes': {},
+                       'status': 'status',
+                       'symbol': 'scifort_gaussian_kde_set_bandwidth_f64'}}
+
+    def covariance(self, handle, *, d=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('covariance', {'handle': handle, 'd': d}, out)
 
     def create(self, dataset, weights, bandwidth=0, factor=1.0, *, out=None):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
@@ -1509,6 +1558,10 @@ class Kde_bridge(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('integrate_kde', {'handle': handle, 'other': other}, out)
 
+    def inv_cov(self, handle, *, d=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('inv_cov', {'handle': handle, 'd': d}, out)
+
     def logpdf(self, handle, points, *, out=None):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('logpdf', {'handle': handle, 'points': points}, out)
@@ -1524,6 +1577,10 @@ class Kde_bridge(ArrayGroup):
     def resample(self, state, handle, *, d=1, n_samples=1, out=None):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('resample', {'state': state, 'handle': handle, 'd': d, 'n_samples': n_samples}, out)
+
+    def set_bandwidth(self, handle, bandwidth, factor, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('set_bandwidth', {'handle': handle, 'bandwidth': bandwidth, 'factor': factor}, out)
 
 class Linalg(ArrayGroup):
     _specs = {'cholesky_lower': {'arguments': ['a', 'l', 'status'],

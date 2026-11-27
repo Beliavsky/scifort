@@ -27,6 +27,20 @@ program test_gaussian_kde_methods_c_api
     handle = c_null_ptr
     call scifort_gaussian_kde_create_f64(2_c_int,6_c_int,data,weights,0_c_int,1.0_c_double,handle,status)
     if (status /= 0 .or. .not. c_associated(handle)) stop 2
+    call scifort_gaussian_kde_covariance_f64(2_c_int,handle,cov,status)
+    if (status /= 0 .or. any(cov /= native%covariance)) stop 17
+    call native%inv_cov(reference(:,1:2),info)
+    call scifort_gaussian_kde_inv_cov_f64(2_c_int,handle,cov,status)
+    if (status /= 0 .or. any(cov /= reference(:,1:2))) stop 18
+    call native%set_bandwidth(0.4_c_double,info)
+    call scifort_gaussian_kde_set_bandwidth_f64(handle,2_c_int,0.4_c_double,status)
+    if (status /= 0) stop 19
+    call scifort_gaussian_kde_covariance_f64(2_c_int,handle,cov,status)
+    if (status /= 0 .or. any(cov /= native%covariance)) stop 20
+    call scifort_gaussian_kde_set_bandwidth_f64(handle,2_c_int,-1.0_c_double,status)
+    if (status /= 2) stop 21
+    call scifort_gaussian_kde_covariance_f64(2_c_int,handle,cov,status)
+    if (status /= 0 .or. any(cov /= native%covariance)) stop 22
     mean = 0.0_c_double
     cov = 0.0_c_double
     cov(1,1) = 1.0_c_double

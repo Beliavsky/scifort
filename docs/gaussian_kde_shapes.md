@@ -41,5 +41,10 @@ C marginals use distinct one-based coordinates; Python accepts zero-based and
 negative coordinates and preserves their order. The child copies storage,
 retains the parent bandwidth factor and survives parent destruction.
 
-Covariance access and bandwidth changes after construction remain native-only.
+Covariance and inverse getters now copy into caller-owned `(d,d)` arrays, where
+`d` must equal the estimator dimension. Bandwidth updates accept Scott, Silverman
+or a positive finite constant. The C/Python bridge commits updates only when
+covariance/Cholesky caches remain finite with positive diagonals, preserving the
+old object on failure; this guard is a SciFort extension to the wrapper contract.
+The native setter is unchanged. Getter outputs never alias estimator storage.
 General type-bound-method generation remains a later extension.

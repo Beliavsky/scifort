@@ -13,6 +13,12 @@ class GaussianKDE:
         if data.ndim != 2:
             raise ValueError('dataset must have shape (n,) or (d,n)')
         w = (np.ones(data.shape[1], dtype=np.float64) if weights is None else weights)
+        mode, factor = self._bandwidth_spec(bw_method)
+        result = api.kde_bridge.create(data, w, mode, factor)
+        self._adopt_result(api.kde_bridge, result, 'handle', 'initialization')
+
+    @staticmethod
+    def _bandwidth_spec(bw_method):
         if bw_method is None:
             mode, factor = 0, 1.
         elif isinstance(bw_method, str):
@@ -24,8 +30,45 @@ class GaussianKDE:
             if factor_array.ndim or isinstance(bw_method, (bool, np.bool_)):
                 raise TypeError('bw_method must be a scalar bandwidth factor')
             mode, factor = 2, float(factor_array)
-        result = api.kde_bridge.create(data, w, mode, factor)
-        self._adopt_result(api.kde_bridge, result, 'handle', 'initialization')
+        return mode, factor
+
+    def set_bandwidth(self, bw_method=None):
+        """Set Scott, Silverman or a positive factor; None retains the current rule."""
+        with self._handle._lock:
+            if self.closed:
+                raise ValueError('Gaussian KDE is closed')
+            if bw_method is not None:
+                mode, factor = self._bandwidth_spec(bw_method)
+                result = self._group.set_bandwidth(self._handle, mode, factor)
+                if result.status:
+                    raise ValueError(f'Gaussian KDE bandwidth update failed: status {result.status}')
+            self._info = self._query_info()
+
+    def _matrix(self, method, out):
+        with self._handle._lock:
+            result = getattr(self._group, method)(self._handle, d=self.d,
+                                                   out=None if out is None else {'matrix': out})
+            if result.status:
+                raise ValueError(f'Gaussian KDE {method} failed: status {result.status}')
+            return result.outputs['matrix']
+
+    @property
+    def covariance(self):
+        """Return an independent copy of the current kernel covariance."""
+        return self.get_covariance()
+
+    def get_covariance(self, *, out=None):
+        """Copy covariance into an optional writable column-major (d,d) buffer."""
+        return self._matrix('covariance', out)
+
+    @property
+    def inv_cov(self):
+        """Return an independent inverse kernel covariance."""
+        return self.get_inv_cov()
+
+    def get_inv_cov(self, *, out=None):
+        """Solve into an optional writable column-major (d,d) buffer."""
+        return self._matrix('inv_cov', out)
 
     def _adopt_result(self, group, result, name, operation):
         self._group = group
