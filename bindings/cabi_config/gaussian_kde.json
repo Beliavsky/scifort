@@ -1,0 +1,163 @@
+{
+  "schema_version": 2,
+  "source": "src/c_api/gaussian_kde_bridge.f90",
+  "module": "scifort_gaussian_kde_bridge",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_gaussian_kde",
+  "header_guard": "SCIFORT_GENERATED_GAUSSIAN_KDE_H",
+  "functions": {},
+  "subroutines": {
+    "kde_create": {
+      "symbol": "scifort_gaussian_kde_create_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        },
+        {
+          "name": "n",
+          "minimum": 2
+        }
+      ],
+      "shapes": {
+        "dataset": [
+          "d",
+          "n"
+        ],
+        "weights": [
+          "n"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Create an owning Gaussian KDE handle; data are copied.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
+    },
+    "kde_destroy": {
+      "symbol": "scifort_gaussian_kde_destroy_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Destroy an owning Gaussian KDE handle and null its slot.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    },
+    "kde_pdf": {
+      "symbol": "scifort_gaussian_kde_pdf_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        },
+        {
+          "name": "m",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "points": [
+          "d",
+          "m"
+        ],
+        "values": [
+          "m"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate a batch of Gaussian KDE densities.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
+    },
+    "kde_logpdf": {
+      "symbol": "scifort_gaussian_kde_logpdf_f64",
+      "dimensions": [
+        {
+          "name": "d",
+          "minimum": 1
+        },
+        {
+          "name": "m",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "points": [
+          "d",
+          "m"
+        ],
+        "values": [
+          "m"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Evaluate a batch of Gaussian KDE log densities.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      }
+    },
+    "kde_info": {
+      "symbol": "scifort_gaussian_kde_info_f64",
+      "dimensions": [],
+      "shapes": {},
+      "status_argument": "status",
+      "invalid_status": 1,
+      "description": "Read Gaussian KDE dimensions and bandwidth information.",
+      "shape_contract": true,
+      "opaque_handles": {
+        "handle": {
+          "type": "gaussian_kde",
+          "release_symbol": "scifort_gaussian_kde_destroy_f64"
+        }
+      },
+      "scalar_only": true
+    }
+  },
+  "excluded": {},
+  "argument_docs": {
+    "handle": "opaque estimator; owning output, live input, nulled on destruction",
+    "dataset": "finite observations by column",
+    "weights": "finite nonnegative observation weights with positive sum",
+    "bandwidth": "0 Scott; 1 Silverman; 2 constant factor",
+    "factor": "bandwidth factor; positive finite input for constant mode",
+    "d": "data dimension",
+    "n": "observation count",
+    "m": "evaluation point count, >= 0",
+    "points": "finite evaluation points by column",
+    "values": "evaluated densities or log densities; NaNs on native failure",
+    "neff": "effective sample size",
+    "scott": "Scott bandwidth factor",
+    "silverman": "Silverman bandwidth factor",
+    "status": "0 success; 1-4 native error; 5 null handle; 6 object allocation failure"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/gaussian_kde_generated.f90",
+    "header": "include/scifort_generated_gaussian_kde.h",
+    "coverage": "bindings/cabi_config/gaussian_kde_coverage.json",
+    "shape_documentation": "docs/gaussian_kde_bridge_shapes.md"
+  }
+}

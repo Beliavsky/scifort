@@ -66,7 +66,8 @@ def prepare(policy, root, py_name):
                 optional_arrays = entry.get('optional_arrays', {})
                 flags = set(optional_arrays.values())
                 inputs = [a for a in entry['args'] if a != status and a not in flags
-                          and (metadata[a]['intent'] == 'in' or metadata[a]['category'] == 'state')]
+                          and (metadata[a]['intent'] == 'in' or metadata[a]['category'] in ('state', 'handle')
+                               and metadata[a]['intent'] == 'inout')]
                 # State is explicit/required even when it follows native optional inputs.
                 inputs = ([a for a in inputs if metadata[a]['category'] == 'state'] +
                           [a for a in inputs if metadata[a]['category'] != 'state'])
@@ -101,8 +102,8 @@ def prepare(policy, root, py_name):
                 if not isinstance(values, dict) or set(values) - set(inputs):
                     raise ValueError(f'{name}: defaults must name scalar inputs')
                 for arg, value in values.items():
-                    if metadata[arg]['category'] == 'state':
-                        raise ValueError('state arguments cannot have defaults')
+                    if metadata[arg]['category'] in ('state', 'handle'):
+                        raise ValueError('state/handle arguments cannot have defaults')
                     if arg in optional_arrays:
                         raise ValueError('presence-controlled arrays use None, not configured fills/defaults')
                     info = metadata[arg]
@@ -142,6 +143,8 @@ def prepare(policy, root, py_name):
                     spec['optional_arrays'] = optional_arrays
                 if entry.get('state_codecs'):
                     spec['state_codecs'] = entry['state_codecs']
+                if entry.get('opaque_handles'):
+                    spec['opaque_handles'] = entry['opaque_handles']
                 if output_sizes:
                     spec['output_dimensions'] = output_sizes
                 array_defaults = {a: v['fill'] for a, v in values.items() if metadata[a]['rank']}

@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 268 |
+| exports | 273 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 102 |
+| array_adapters | 107 |
 | elementwise | 88 |
-| python | 190 |
+| python | 195 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -69,6 +69,11 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_gamma | gamma_pdf | scifort_gamma_pdf_f64 | scifort_gamma_pdf_vec_f64 |  | scifort_gamma_pdf_elementwise_f64 | gamma.pdf |
 | scifort_gamma | gamma_ppf | scifort_gamma_ppf_f64 | scifort_gamma_ppf_vec_f64 |  | scifort_gamma_ppf_elementwise_f64 | gamma.ppf |
 | scifort_gamma | gamma_sf | scifort_gamma_sf_f64 | scifort_gamma_sf_vec_f64 |  | scifort_gamma_sf_elementwise_f64 | gamma.sf |
+| scifort_gaussian_kde_bridge | kde_create |  |  | scifort_gaussian_kde_create_f64 |  | kde_bridge.create |
+| scifort_gaussian_kde_bridge | kde_destroy |  |  | scifort_gaussian_kde_destroy_f64 |  | kde_bridge.destroy |
+| scifort_gaussian_kde_bridge | kde_info |  |  | scifort_gaussian_kde_info_f64 |  | kde_bridge.info |
+| scifort_gaussian_kde_bridge | kde_logpdf |  |  | scifort_gaussian_kde_logpdf_f64 |  | kde_bridge.logpdf |
+| scifort_gaussian_kde_bridge | kde_pdf |  |  | scifort_gaussian_kde_pdf_f64 |  | kde_bridge.pdf |
 | scifort_invwishart | invwishart_entropy |  |  | scifort_invwishart_entropy_f64 |  | invwishart.entropy |
 | scifort_invwishart | invwishart_logpdf |  |  | scifort_invwishart_logpdf_f64 |  | invwishart.logpdf |
 | scifort_invwishart | invwishart_mean |  |  | scifort_invwishart_mean_f64 |  | invwishart.mean |

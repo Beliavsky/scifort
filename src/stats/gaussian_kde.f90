@@ -35,11 +35,11 @@ module scifort_gaussian_kde
         real(dp) :: neff = 0.0_dp !! effective sample size, 1/sum(weights**2)
         real(dp) :: factor = 0.0_dp !! current scalar bandwidth factor
         real(dp), allocatable :: dataset(:, :) !! observations by column, shape (d,n)
-        real(dp), allocatable :: weights(:) !! normalized nonnegative observation weights
-        real(dp), allocatable :: covariance(:, :) !! Gaussian-kernel covariance matrix
-        real(dp), allocatable :: cho_cov(:, :) !! lower Cholesky factor of covariance
-        real(dp), allocatable :: data_covariance(:, :) !! unbiased weighted sample covariance
-        real(dp), allocatable :: data_cho_cov(:, :) !! lower Cholesky factor of data covariance
+        real(dp), allocatable :: weights(:) !! shape (n); normalized nonnegative observation weights
+        real(dp), allocatable :: covariance(:, :) !! shape (d,d); Gaussian-kernel covariance matrix
+        real(dp), allocatable :: cho_cov(:, :) !! shape (d,d); lower Cholesky factor of covariance
+        real(dp), allocatable :: data_covariance(:, :) !! shape (d,d); unbiased weighted sample covariance
+        real(dp), allocatable :: data_cho_cov(:, :) !! shape (d,d); lower Cholesky factor of data covariance
         integer, private :: bandwidth_mode = bandwidth_scott
         real(dp), private :: bandwidth_constant_value = 0.0_dp
     contains
@@ -74,10 +74,13 @@ module scifort_gaussian_kde
 contains
 
     subroutine gaussian_kde_init_1d(kde, dataset, status, weights, bw_method, bw_factor)
+        !! Initialize a univariate Gaussian KDE; copy data and normalize weights.
+        !! n = size(dataset), n >= 2; optional weights must have the same length.
+        !! Empty observations are invalid; covariance must be positive.
         type(gaussian_kde), intent(out) :: kde !! initialized KDE object
-        real(dp), intent(in) :: dataset(:) !! univariate observations
+        real(dp), intent(in) :: dataset(:) !! shape (n); finite univariate observations
         integer, intent(out) :: status !! gaussian_kde_status_* result
-        real(dp), intent(in), optional :: weights(:) !! optional nonnegative observation weights
+        real(dp), intent(in), optional :: weights(:) !! shape (n); finite nonnegative observation weights
         character(len=*), intent(in), optional :: bw_method !! 'scott' or 'silverman'
         real(dp), intent(in), optional :: bw_factor !! positive constant bandwidth factor
 
@@ -89,10 +92,14 @@ contains
     end subroutine gaussian_kde_init_1d
 
     subroutine gaussian_kde_init_nd(kde, dataset, status, weights, bw_method, bw_factor)
+        !! Initialize a multivariate Gaussian KDE and cache its weighted covariance.
+        !! d = size(dataset,1), n = size(dataset,2); 1 <= d <= n and n >= 2.
+        !! Optional weights have length n; empty observations are invalid.
+        !! The weighted sample covariance must be positive definite.
         type(gaussian_kde), intent(out) :: kde !! initialized KDE object
-        real(dp), intent(in) :: dataset(:, :) !! observations by column, shape (dimension,n)
+        real(dp), intent(in) :: dataset(:, :) !! shape (d,n); finite observations by column
         integer, intent(out) :: status !! gaussian_kde_status_* result
-        real(dp), intent(in), optional :: weights(:) !! optional nonnegative observation weights
+        real(dp), intent(in), optional :: weights(:) !! shape (n); finite nonnegative observation weights
         character(len=*), intent(in), optional :: bw_method !! 'scott' or 'silverman'
         real(dp), intent(in), optional :: bw_factor !! positive constant bandwidth factor
 
@@ -232,8 +239,9 @@ contains
     end subroutine gaussian_kde_set_bandwidth_factor
 
     function gaussian_kde_evaluate_point(self, point, status) result(value)
+        !! Evaluate a single density; d = self%d >= 1 for an initialized estimator.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: point(:) !! one evaluation point, length d
+        real(dp), intent(in) :: point(:) !! shape (d); one finite evaluation point
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
         real(dp) :: value
 
@@ -253,8 +261,10 @@ contains
     end function gaussian_kde_evaluate_point
 
     function gaussian_kde_evaluate_points(self, points, status) result(values)
+        !! Evaluate densities by column; d = self%d >= 1, m = size(points,2) >= 0.
+        !! The allocated result has shape (m); an empty batch is permitted.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: points(:, :) !! evaluation points by column, shape (d,m)
+        real(dp), intent(in) :: points(:, :) !! shape (d,m); finite evaluation points by column
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
         real(dp), allocatable :: values(:)
 
@@ -265,8 +275,9 @@ contains
     end function gaussian_kde_evaluate_points
 
     function gaussian_kde_logpdf_point(self, point, status) result(value)
+        !! Evaluate a single log density; d = self%d >= 1 for an initialized estimator.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: point(:) !! one evaluation point, length d
+        real(dp), intent(in) :: point(:) !! shape (d); one finite evaluation point
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
         real(dp) :: value
 
@@ -286,8 +297,10 @@ contains
     end function gaussian_kde_logpdf_point
 
     function gaussian_kde_logpdf_points(self, points, status) result(values)
+        !! Evaluate stable log densities; d = self%d >= 1, m = size(points,2) >= 0.
+        !! The allocated result has shape (m); an empty batch is permitted.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: points(:, :) !! evaluation points by column, shape (d,m)
+        real(dp), intent(in) :: points(:, :) !! shape (d,m); finite evaluation points by column
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
         real(dp), allocatable :: values(:)
 
@@ -298,9 +311,11 @@ contains
     end function gaussian_kde_logpdf_points
 
     function gaussian_kde_integrate_gaussian(self, mean, cov, status) result(value)
+        !! Integrate the KDE times a Gaussian density; d = self%d >= 1.
+        !! The sum of kernel covariance and cov must be positive definite.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: mean(:) !! Gaussian mean vector, length d
-        real(dp), intent(in) :: cov(:, :) !! Gaussian covariance matrix, shape (d,d)
+        real(dp), intent(in) :: mean(:) !! shape (d); finite Gaussian mean vector
+        real(dp), intent(in) :: cov(:, :) !! shape (d,d); finite Gaussian covariance matrix
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
         real(dp) :: value
 
@@ -368,9 +383,10 @@ contains
     end function gaussian_kde_integrate_box_1d
 
     function gaussian_kde_integrate_box(self, low, high, maxpts, state, status) result(value)
+        !! Integrate over rectangular limits; d = self%d >= 1 for initialized self.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: low(:) !! lower rectangular integration bounds
-        real(dp), intent(in) :: high(:) !! upper rectangular integration bounds
+        real(dp), intent(in) :: low(:) !! shape (d); lower rectangular integration bounds
+        real(dp), intent(in) :: high(:) !! shape (d); upper rectangular integration bounds
         integer, intent(in), optional :: maxpts !! approximate maximum QMC points per Gaussian component
         type(rng_state), intent(inout), optional :: state !! explicit randomized-QMC state
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
@@ -454,9 +470,11 @@ contains
     end function gaussian_kde_integrate_kde
 
     subroutine gaussian_kde_resample(self, state, samples, status)
+        !! Draw mixture samples using explicit state; d = self%d >= 1.
+        !! m = size(samples,2) >= 0; an empty batch leaves RNG state unchanged.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all draws
-        real(dp), intent(out) :: samples(:, :) !! generated samples by column, shape (d,m)
+        real(dp), intent(out) :: samples(:, :) !! shape (d,m); generated samples by column
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
 
         integer :: i
@@ -491,8 +509,10 @@ contains
     end subroutine gaussian_kde_resample
 
     function gaussian_kde_marginal(self, dimensions, status) result(marginal)
+        !! Construct a marginal KDE using selected coordinate rows.
+        !! k = size(dimensions), 1 <= k <= self%d; empty selections are invalid.
         class(gaussian_kde), intent(in) :: self !! initialized multivariate KDE object
-        integer, intent(in) :: dimensions(:) !! unique one-based dimensions to retain
+        integer, intent(in) :: dimensions(:) !! shape (k); unique one-based dimensions in [1,self%d]
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
         type(gaussian_kde) :: marginal
 
@@ -522,8 +542,9 @@ contains
     end function gaussian_kde_marginal
 
     subroutine gaussian_kde_inv_cov(self, inv_cov, status)
+        !! Solve for the inverse kernel covariance; d = self%d >= 1.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(out) :: inv_cov(:, :) !! inverse of current kernel covariance
+        real(dp), intent(out) :: inv_cov(:, :) !! shape (d,d); inverse of current kernel covariance
         integer, intent(out), optional :: status !! gaussian_kde_status_* result
 
         integer :: i
@@ -572,8 +593,11 @@ contains
     end subroutine compute_covariance
 
     function evaluate_many(self, points, return_log, status) result(values)
+        !! Evaluate weighted Gaussian sums in the log domain for initialized self.
+        !! d = self%d >= 1, m = size(points,2) >= 0; result shape is (m).
+        !! Empty batches are permitted; nonfinite points return invalid-shape status.
         class(gaussian_kde), intent(in) :: self !! initialized KDE object
-        real(dp), intent(in) :: points(:, :) !! points by column, shape (d,m)
+        real(dp), intent(in) :: points(:, :) !! shape (d,m); finite evaluation points by column
         logical, intent(in) :: return_log !! return log density when true
         integer, intent(out) :: status !! gaussian_kde_status_* result
         real(dp), allocatable :: values(:)
@@ -628,7 +652,9 @@ contains
     end function evaluate_many
 
     pure function gaussian_log_norm_from_cholesky(l) result(value)
-        real(dp), intent(in) :: l(:, :) !! lower Cholesky factor of covariance
+        !! Compute log Gaussian normalization; d = size(l,1) >= 0 and l is square.
+        !! An empty factor returns zero.
+        real(dp), intent(in) :: l(:, :) !! shape (d,d); lower Cholesky factor with positive diagonal
         real(dp) :: value
 
         integer :: i
@@ -640,6 +666,8 @@ contains
     end function gaussian_log_norm_from_cholesky
 
     pure function outer_product(x, y) result(a)
+        !! Form the outer product with result shape (size(x),size(y)).
+        !! Vector lengths are independent and may be zero.
         real(dp), intent(in) :: x(:) !! left vector
         real(dp), intent(in) :: y(:) !! right vector
         real(dp) :: a(size(x),size(y))

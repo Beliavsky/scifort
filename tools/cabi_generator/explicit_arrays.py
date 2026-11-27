@@ -18,7 +18,8 @@ def prepare(config, api, identifier, source_lines):
             fields |= {'result_argument', 'optional_policy'}
         optional_fields = {'logical_inputs', 'shape_contract', 'length_choices',
                            'integer_limits', 'integer_sums', 'synthetic_status', 'optional_arrays',
-                           'state_codecs', 'optional_status', 'required_optional_scalars', 'scalar_only'}
+                           'state_codecs', 'optional_status', 'required_optional_scalars', 'scalar_only',
+                           'opaque_handles'}
         if not isinstance(policy, dict) or set(policy) - optional_fields != fields:
             raise ValueError(f"{name}: subroutine policy requires {sorted(fields)}")
         scalar_only = policy.get('scalar_only', False)
@@ -62,6 +63,17 @@ def prepare(config, api, identifier, source_lines):
             raise ValueError(f"{name}: expected a directly defined non-bind(c) subroutine")
         args = [identifier(str(a).lower()) for a in node.content[0].items[2].items]
         native_args = args[:]
+        handles = policy.get('opaque_handles', {})
+        if (not isinstance(handles, dict) or ('opaque_handles' in policy and not handles)
+                or set(handles) - set(native_args) or is_function and handles):
+            raise ValueError(f'{name}: opaque_handles needs native subroutine arguments')
+        for arg, handle in handles.items():
+            if not isinstance(handle, dict) or set(handle) != {'type', 'release_symbol'}:
+                raise ValueError(f'{name}: opaque handles need type and release_symbol')
+            for field in ('type', 'release_symbol'):
+                identifier(handle[field])
+            if arg in codecs:
+                raise ValueError(f'{name}: opaque handle cannot also be a state codec')
         if set(codecs) - set(native_args):
             raise ValueError(f'{name}: state codecs must name native arguments')
         optional_arrays = policy.get('optional_arrays', {})
@@ -170,6 +182,15 @@ def prepare(config, api, identifier, source_lines):
             if arg not in declared:
                 raise ValueError(f"{name}: {arg} needs an explicit declaration")
             dtype, attrs, entity = declared[arg]
+            if arg in handles:
+                intent = next((v for v in ('in', 'out', 'inout') if f'intent({v})' in attrs), None)
+                if (str(dtype).lower().replace(' ', '') != 'type(c_ptr)' or intent is None
+                        or attrs != {f'intent({intent})'} or any(entity.items[1:])
+                        or arg == status or arg in logical_inputs or arg in promoted
+                        or arg in optional_arrays):
+                    raise ValueError(f'{name}: opaque handles require scalar type(c_ptr) and intent only')
+                metadata[arg] = dict(intent=intent, rank=0, category='handle')
+                continue
             if arg == status:
                 expected_attrs = {'intent(out)', 'optional'} if optional_status else {'intent(out)'}
                 if str(dtype).lower() != "integer" or attrs != expected_attrs or any(entity.items[1:]):
@@ -306,6 +327,8 @@ def prepare(config, api, identifier, source_lines):
                      dimensions=dimensions, documentation_review=review)
         if codecs:
             entry['state_codecs'] = codecs
+        if handles:
+            entry['opaque_handles'] = handles
         if synthetic_status:
             entry.update(native_args=native_args, synthetic_status=True)
         if optional_arrays:
@@ -321,6 +344,19 @@ def prepare(config, api, identifier, source_lines):
                 raise ValueError(f'{name}: shape_contract must be true when specified')
             entry['shape_contract'] = shape_contracts.prepare(node, source_lines, entry)
         entries.append(entry)
+    # The release signature is deliberately narrow so ownership cleanup is portable.
+    symbols = {e['policy']['symbol']: e for e in entries}
+    for entry in entries:
+        for handle in entry.get('opaque_handles', {}).values():
+            release = symbols.get(handle['release_symbol'])
+            if release is None:
+                raise ValueError('opaque release_symbol must be selected in the same manifest')
+            payload = [a for a in release['args'] if a != release['policy']['status_argument']]
+            if (release['dimensions'] or len(payload) != 1
+                    or release['metadata'][payload[0]] != dict(intent='inout', rank=0, category='handle')
+                    or release.get('opaque_handles', {}).get(payload[0]) != handle
+                    or release.get('synthetic_status') or release.get('optional_status')):
+                raise ValueError('opaque release needs one matching inout handle and required native status')
     return entries
 
 
@@ -395,6 +431,9 @@ def emit(entry, index, config):
             if info['category'] == 'state':
                 declaration = 'integer(c_int64_t), intent(inout)'
                 ctype = 'int64_t *'
+            elif info['category'] == 'handle':
+                declaration = f'type(c_ptr){value}, intent({intent})'
+                ctype = 'void *' if value else 'void **'
             elif info['category'] == 'logical':
                 declaration = "integer(c_int), value, intent(in)"
                 ctype = "int"
@@ -529,6 +568,11 @@ def emit(entry, index, config):
                   native_shape_documentation_review=entry["documentation_review"])
     if complex_args:
         record['complex_arrays'] = record_complex
+    if entry.get('opaque_handles'):
+        record['opaque_handles'] = entry['opaque_handles']
+        header[-3:-3] = [' * Opaque inputs must be live handles of the reviewed type, or NULL where documented.',
+                        ' * Do not dereference/copy ownership; destruction invalidates all aliases.',
+                        ' * Handle outputs are owning; release exactly once with the configured destructor.']
     if entry.get('optional_arrays'):
         record['optional_arrays'] = entry['optional_arrays']
         header[-3:-3] = [' * Optional-array flags: 0 absent, 1 present; other values preserve outputs and return invalid status.',

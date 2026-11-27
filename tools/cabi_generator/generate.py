@@ -246,6 +246,8 @@ def generate(config, root):
     if not any(policy.get("vector_symbol") and policy.get("array_style", default_array_style) == "pointer"
                for _, _, _, policy in entries):
         lines[3:5] = ["    use, intrinsic :: iso_c_binding, only : c_double, c_int, c_size_t"]
+        if any(entry.get('opaque_handles') for entry in array_entries):
+            lines[3] += ', c_ptr'
     for index, (name, _, _, _) in enumerate(entries):
         lines.append(f"    use {config['module']}, only : cg_native_{index} => {name}")
     for index, entry in enumerate(array_entries, start=len(entries)):

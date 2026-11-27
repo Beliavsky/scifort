@@ -1,3 +1,16 @@
+## 2026-11-27 - Gaussian KDE owned-object interfaces
+
+The reviewed opaque-handle policy, generic pointer transport and Python lifetime
+runtime, flat KDE bridge, estimator facade, shape documentation and tests are
+original MIT SciFort interface work. No third-party numerical implementation was
+imported or adapted. The existing Gaussian KDE initializer and type-bound methods
+are called without changing their algorithms, formulas, bandwidth rules or native
+error conventions. Their original provenance remains below. The C boundary
+transports an opaque address; native allocatable components and descriptors stay
+inside Fortran. Tests use native agreement, an independently written Gaussian
+mixture expression, and installed SciPy public outputs; the independent generator
+fixture uses a heap-owned counter with no SciFort dependency.
+
 ## 2026-11-27 - Normal-inverse-gamma interface adapters
 
 The scalar-only generator extension, reviewed normal-inverse-gamma manifest,

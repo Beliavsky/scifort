@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 102,
+    "array_adapters": 107,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 268,
-    "python": 190,
+    "exports": 273,
+    "python": 195,
     "scalar": 88
   },
   "procedures": [
@@ -507,6 +507,36 @@
       "python": "gamma.sf",
       "scalar": "scifort_gamma_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_create_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_create",
+      "python": "kde_bridge.create"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_destroy_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_destroy",
+      "python": "kde_bridge.destroy"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_info_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_info",
+      "python": "kde_bridge.info"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_logpdf_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_logpdf",
+      "python": "kde_bridge.logpdf"
+    },
+    {
+      "array_adapter": "scifort_gaussian_kde_pdf_f64",
+      "module": "scifort_gaussian_kde_bridge",
+      "procedure": "kde_pdf",
+      "python": "kde_bridge.pdf"
     },
     {
       "array_adapter": "scifort_invwishart_entropy_f64",

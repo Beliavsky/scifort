@@ -647,6 +647,18 @@
           "n_samples": 1
         }
       }
+    },
+    "kde_bridge": {
+      "manifests": [
+        "bindings/cabi_config/gaussian_kde.json"
+      ],
+      "prefix": "kde_",
+      "defaults": {
+        "kde_create": {
+          "bandwidth": 0,
+          "factor": 1.0
+        }
+      }
     }
   }
 }

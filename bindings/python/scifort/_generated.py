@@ -1278,6 +1278,110 @@ class Invwishart(ArrayGroup):
         """Return the native array result; optionally use caller-owned out."""
         return self._invoke('var', {'df': df, 'scale': scale}, out)
 
+class Kde_bridge(ArrayGroup):
+    _specs = {'create': {'arguments': ['dataset', 'weights', 'bandwidth', 'factor', 'handle', 'status'],
+                'definitions': {'d': {'argument': 'dataset', 'axis': 1},
+                                'n': {'argument': 'dataset', 'axis': 2}},
+                'dimensions': ['d', 'n'],
+                'inputs': ['dataset', 'weights', 'bandwidth', 'factor'],
+                'logical_inputs': {},
+                'metadata': {'bandwidth': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                             'dataset': {'category': 'real', 'intent': 'in', 'rank': 2},
+                             'factor': {'category': 'real', 'intent': 'in', 'rank': 0},
+                             'handle': {'category': 'handle', 'intent': 'out', 'rank': 0},
+                             'weights': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                'minimums': {'d': 1, 'n': 2},
+                'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                              'type': 'gaussian_kde'}},
+                'outputs': ['handle'],
+                'shapes': {'dataset': ['d', 'n'], 'weights': ['n']},
+                'status': 'status',
+                'symbol': 'scifort_gaussian_kde_create_f64'},
+     'destroy': {'arguments': ['handle', 'status'],
+                 'definitions': {},
+                 'dimensions': [],
+                 'inputs': ['handle'],
+                 'logical_inputs': {},
+                 'metadata': {'handle': {'category': 'handle', 'intent': 'inout', 'rank': 0}},
+                 'minimums': {},
+                 'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                               'type': 'gaussian_kde'}},
+                 'outputs': [],
+                 'shapes': {},
+                 'status': 'status',
+                 'symbol': 'scifort_gaussian_kde_destroy_f64'},
+     'info': {'arguments': ['handle', 'd', 'n', 'neff', 'factor', 'scott', 'silverman', 'status'],
+              'definitions': {},
+              'dimensions': [],
+              'inputs': ['handle'],
+              'logical_inputs': {},
+              'metadata': {'d': {'category': 'integer', 'intent': 'out', 'rank': 0},
+                           'factor': {'category': 'real', 'intent': 'out', 'rank': 0},
+                           'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                           'n': {'category': 'integer', 'intent': 'out', 'rank': 0},
+                           'neff': {'category': 'real', 'intent': 'out', 'rank': 0},
+                           'scott': {'category': 'real', 'intent': 'out', 'rank': 0},
+                           'silverman': {'category': 'real', 'intent': 'out', 'rank': 0}},
+              'minimums': {},
+              'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                            'type': 'gaussian_kde'}},
+              'outputs': ['d', 'n', 'neff', 'factor', 'scott', 'silverman'],
+              'shapes': {},
+              'status': 'status',
+              'symbol': 'scifort_gaussian_kde_info_f64'},
+     'logpdf': {'arguments': ['handle', 'points', 'values', 'status'],
+                'definitions': {'d': {'argument': 'points', 'axis': 1},
+                                'm': {'argument': 'points', 'axis': 2}},
+                'dimensions': ['d', 'm'],
+                'inputs': ['handle', 'points'],
+                'logical_inputs': {},
+                'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                             'points': {'category': 'real', 'intent': 'in', 'rank': 2},
+                             'values': {'category': 'real', 'intent': 'out', 'rank': 1}},
+                'minimums': {'d': 1, 'm': 0},
+                'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                              'type': 'gaussian_kde'}},
+                'outputs': ['values'],
+                'shapes': {'points': ['d', 'm'], 'values': ['m']},
+                'status': 'status',
+                'symbol': 'scifort_gaussian_kde_logpdf_f64'},
+     'pdf': {'arguments': ['handle', 'points', 'values', 'status'],
+             'definitions': {'d': {'argument': 'points', 'axis': 1},
+                             'm': {'argument': 'points', 'axis': 2}},
+             'dimensions': ['d', 'm'],
+             'inputs': ['handle', 'points'],
+             'logical_inputs': {},
+             'metadata': {'handle': {'category': 'handle', 'intent': 'in', 'rank': 0},
+                          'points': {'category': 'real', 'intent': 'in', 'rank': 2},
+                          'values': {'category': 'real', 'intent': 'out', 'rank': 1}},
+             'minimums': {'d': 1, 'm': 0},
+             'opaque_handles': {'handle': {'release_symbol': 'scifort_gaussian_kde_destroy_f64',
+                                           'type': 'gaussian_kde'}},
+             'outputs': ['values'],
+             'shapes': {'points': ['d', 'm'], 'values': ['m']},
+             'status': 'status',
+             'symbol': 'scifort_gaussian_kde_pdf_f64'}}
+
+    def create(self, dataset, weights, bandwidth=0, factor=1.0, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('create', {'dataset': dataset, 'weights': weights, 'bandwidth': bandwidth, 'factor': factor}, out)
+
+    def destroy(self, handle, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('destroy', {'handle': handle}, out)
+
+    def info(self, handle, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('info', {'handle': handle}, out)
+
+    def logpdf(self, handle, points, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('logpdf', {'handle': handle, 'points': points}, out)
+
+    def pdf(self, handle, points, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('pdf', {'handle': handle, 'points': points}, out)
+
 class Linalg(ArrayGroup):
     _specs = {'cholesky_lower': {'arguments': ['a', 'l', 'status'],
                         'definitions': {'n': {'argument': 'a', 'axis': 1}},
@@ -3582,6 +3686,7 @@ class API(Library):
         self.dirichlet = Dirichlet(self._library)
         self.dirichlet_multinomial = Dirichlet_multinomial(self._library)
         self.invwishart = Invwishart(self._library)
+        self.kde_bridge = Kde_bridge(self._library)
         self.linalg = Linalg(self._library)
         self.matrix_normal = Matrix_normal(self._library)
         self.matrix_t = Matrix_t(self._library)

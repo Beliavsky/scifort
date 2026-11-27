@@ -969,3 +969,53 @@ The normal-inverse-gamma manifest demonstrates scalar joint densities, paired
 moments, paired single sampling and matching batch output vectors. Python uses
 one group with scalar density calls and `ArrayResult` for paired outputs.
 See [the native shape contracts](../../docs/normal_inverse_gamma_shapes.md).
+
+## Opaque owned objects through reviewed flat bridges
+
+A subroutine policy can declare `opaque_handles`, for example:
+
+```json
+"opaque_handles": {
+  "handle": {
+    "type": "gaussian_kde",
+    "release_symbol": "scifort_gaussian_kde_destroy_f64"
+  }
+}
+```
+
+The native argument must be a nonoptional scalar `type(c_ptr)` with explicit
+`intent(in)`, `intent(out)` or `intent(inout)`. Input pointers become C `void *`
+values; output/inout slots become `void **`. Arrays of pointers, optional handles,
+function results, state-codec/handle overlap and implicit ownership inference are
+rejected. Each release symbol must be selected in the same manifest and accept
+exactly one matching inout handle and a required native integer status. It must
+clear its slot on success and accept a null slot as already closed.
+
+`type` is a reviewed Python identity tag, not a C object layout or a runtime C
+pointer validator. An owning output must be released exactly once. Raw C callers
+must never pass foreign, fabricated or dangling addresses, duplicate ownership,
+or unload the library while an object is alive. A null input can be handled by
+the native bridge; its status is bridge-specific. Array extents/layout/buffer
+requirements still apply. The C ABI never exports native object fields or
+Fortran descriptors. There is no global handle registry.
+
+Generated Python groups return an `OwnedHandle` for every nonnull handle output,
+including native failure outputs if a bridge supplies one. A null output is
+`None`. Handles retain the loaded library, reject copying/pickling and release
+storage on explicit `close()` or finalization. Input handles are checked against
+the library instance and full type/release policy. Per-object reentrant locks
+serialize C calls against close; multiple handles are locked in identity order.
+Closed handles are rejected before entering C. Cleanup errors are reported by
+explicit close; finalizers suppress exceptions. Existing numeric-only calls use
+a fast path without handle-lock processing.
+
+This first implementation generates adapters for **flat bridge procedures**;
+it does not infer constructors, type-bound dispatch, allocatable result storage,
+or ownership from arbitrary derived-type definitions. The project-specific
+[Gaussian KDE bridge](../../src/c_api/gaussian_kde_bridge.f90) owns a native
+estimator and calls its type-bound methods, copying allocatable evaluation
+results into caller-owned buffers. Its small Python facade provides an estimator
+API. Further types can reuse the pointer policy and runtime with their own
+reviewed flat bridges. The independent `test_opaque_handles.py` fixture checks
+this mechanism with a non-SciFort counter in checked/optimized Fortran, C11,
+C++17 and Python, including concurrent close/call serialization.

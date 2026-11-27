@@ -30,5 +30,6 @@
   "uniform_direction.json",
   "vonmises_fisher.json",
   "unitary_group.json",
-  "normal_inverse_gamma.json"
+  "normal_inverse_gamma.json",
+  "gaussian_kde.json"
 ]

@@ -1,3 +1,14 @@
+## 2026-11-27 - Owned Gaussian KDE C/Python interfaces
+
+- Add copied-data KDE construction, destruction, batch PDF/log-PDF and bandwidth
+  information through opaque handles, with Scott, Silverman and constant factors.
+- Extend reviewed flat-bridge generation with explicit c_ptr ownership policies,
+  validated release signatures, Python cleanup and per-object close/call locking.
+- Document native public/private array shapes, dimension relationships and empty
+  cases; preserve the existing numerical implementation and native API.
+- Test weighted/native/SciPy agreement, log-density tails, singular data, buffers,
+  C/C++ clients and object lifecycle with checked and optimized libraries.
+
 ## 2026-11-27 - Paired normal-inverse-gamma interfaces
 
 - Add all six public normal-inverse-gamma C/Python methods: scalar density,

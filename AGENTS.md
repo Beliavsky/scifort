@@ -136,7 +136,8 @@ Never trade away correctness or provenance merely to add more functions.
   functions, plus Wishart, inverse-Wishart, matrix-normal, matrix-t and
   Poisson-binomial methods, real orthogonal/correlation matrix samplers,
   fixed-margin random tables, uniform directions, von Mises-Fisher methods,
-  unitary-group sampling and paired normal-inverse-gamma samples.
+  unitary-group sampling, paired normal-inverse-gamma samples and Gaussian-KDE
+  bridge procedures.
   Keep readable shape comments
   and follow `tools/cabi_generator/README.md`. Do not apply the prototype broadly or treat
   conditional prose as verified assertions.

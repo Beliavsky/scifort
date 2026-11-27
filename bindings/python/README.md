@@ -2737,3 +2737,98 @@ C11 and C++17 clients. The 96 existing generator tests passed; both new scalar
 tests passed after a focused rerun correcting a test assertion's C parameter
 spelling. The pipeline checked all 156 artifacts. The README example, new local
 links, source ASCII/line limits and diff whitespace checks passed.
+
+## Owned Gaussian KDE estimators
+
+`api.gaussian_kde(dataset, bw_method=None, weights=None)` creates an estimator
+with its own copied data and covariance caches. Dataset shape is `(n,)` for
+univariate observations or `(d,n)` with observations by column. Require `n >= 2`,
+`1 <= d <= n`, finite data and positive-definite weighted covariance. Optional
+weights have shape `(n,)`, are finite/nonnegative and have a positive finite sum.
+Bandwidth is `None`/`'scott'`, `'silverman'`, or a positive finite scalar factor.
+Callable bandwidth rules are not supported in this first wrapper.
+
+```python
+with api.gaussian_kde([-2., -.5, .25, 1.5, 3.], bw_method='silverman') as kde:
+    density = kde.pdf([-1., 0., 2.])
+    log_density = kde.logpdf([-1., 0., 2.])
+    assert density.shape == log_density.shape == (3,)
+    assert kde.d == 1 and kde.n == 5
+```
+
+`evaluate` and calling the estimator are aliases of `pdf`. Multivariate points
+use `(d,m)`; a vector of length `d` represents one multivariate point. Univariate
+vectors represent batches; a scalar represents one univariate point. Results
+always have shape `(m,)`. Empty batches are supported. `logpdf` calls the native
+log-domain implementation directly and remains useful when PDF underflows.
+Both methods accept `out=` with a writable, aligned, native float64 contiguous
+vector of the requested length, disjoint from input storage. Input arrays may
+be strided or C-order and are converted for Fortran when needed.
+
+Read `d`, `n`, `neff` and `factor`, or call `scotts_factor()` and
+`silverman_factor()` for bandwidth information. The initial interface does not
+provide integration, resampling, marginalization, covariance access, callable
+bandwidths or bandwidth mutation after construction. Those remain native Fortran
+capabilities. Native numerical algorithms and signatures are unchanged.
+
+Use a `with` block or call `close()` explicitly. Close is idempotent. Finalization
+also releases native storage, but its timing is not guaranteed. Closed estimators
+reject evaluation, information access and re-entry. Ownership cannot be copied
+or pickled. The object retains its library, so it can outlive the original
+`Scifort` facade. Per-handle locks prevent close from racing a native call.
+Failed construction releases partially initialized native storage. Numerical or
+parameter failures raise `ValueError` with the native status; Python shape/type
+validation occurs before C entry where possible.
+
+The five C entry points are `scifort_gaussian_kde_create_f64`,
+`scifort_gaussian_kde_destroy_f64`, `scifort_gaussian_kde_pdf_f64`,
+`scifort_gaussian_kde_logpdf_f64` and `scifort_gaussian_kde_info_f64`.
+Creation takes column-major data, weights and bandwidth mode 0 Scott, 1 Silverman
+or 2 constant; the factor is ignored for modes 0/1. Pass unit weights for the
+unweighted case. Initialize a fresh `void *` slot to NULL, pass its address, and
+release the returned owning handle exactly once with destroy. Destroy accepts
+a null slot and clears a live slot. Never overwrite a live owning slot with
+another create call, free the pointer yourself, or pass copied/dangling/foreign
+handles. C callers must synchronize destruction against all object calls and
+keep the library loaded. The ABI does not validate arbitrary nonnull addresses.
+
+All scalar output pointers and array buffers must be valid, non-NULL and
+disjoint, including buffers for empty arrays. C extent guards preserve outputs
+on rejection. After native entry, failed creation returns NULL, failed evaluation
+fills its output with NaNs, and failed info returns zero dimensions and NaNs.
+Status codes are 0 success, 1 invalid shape/nonfinite point, 2 invalid parameter,
+3 singular covariance, 4 linear-algebra failure, 5 null handle and 6 failure to
+allocate the outer object. Native internal array allocations retain their
+existing runtime allocation behavior. A bad extent rejected before native entry
+leaves even the handle slot unchanged; initialize it to NULL before creation.
+
+The generated low-level `api.kde_bridge` methods return `ArrayResult` and an
+owned handle; the estimator facade manages those details. Reviewed flat bridges
+are used for type-bound dispatch; the generator does not infer general derived
+objects automatically. See [the C header](../../include/scifort_generated_gaussian_kde.h),
+[native shape contracts](../../docs/gaussian_kde_shapes.md) and
+[generated bridge contracts](../../docs/gaussian_kde_bridge_shapes.md).
+
+Validation commands (CMD):
+
+```bat
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+python -m unittest discover -s bindings/python/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The full generator and binding suites cover the shared handle/runtime changes.
+Binding checks use GNU Fortran with `-O0 -g -fcheck=all -fbacktrace` and `-O3`,
+both with `-std=f2018 -fimplicit-none -Werror=implicit-interface -shared -fPIC`.
+KDE-specific tests execute native agreement and the existing native KDE suite,
+and compile/run C11/C++17 clients. Native numerical code is unchanged, so the
+full native `fpm test` suite is not rerun for this interface change.
+
+Local validation on 2026-11-27 used Python 3.13.3, SciPy 1.15.3
+and GNU Fortran 17.0.0 20260510 (experimental) on Windows. All 100 generator
+tests passed in 495.384 seconds, including the independent opaque-object C/C++/
+Python fixture; all 148 binding tests passed in 460.477 seconds. These include
+all six KDE tests, checked/optimized native KDE agreement and the original native
+KDE regressions, plus executing C11/C++17 clients. The pipeline checked all 160
+artifacts. The README example, new local documentation links, changed-source
+ASCII/Fortran line limits and diff whitespace checks also passed.

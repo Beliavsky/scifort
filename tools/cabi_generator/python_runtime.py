@@ -3,12 +3,52 @@
 from __future__ import annotations
 
 import ctypes as C
+from contextlib import ExitStack
 from collections.abc import Mapping
 from typing import NamedTuple
 import os
 from pathlib import Path
+from threading import RLock
 
 import numpy as np
+
+
+class OwnedHandle:
+    """Own one native object and keep its library loaded until destruction."""
+    def __init__(self, library, pointer, policy):
+        self._library, self._pointer = library, pointer
+        self._policy, self._lock = policy, RLock()
+        self._release = getattr(library, policy['release_symbol'])
+        self._release.argtypes = [C.POINTER(C.c_void_p), C.POINTER(C.c_int)]
+        self._release.restype = None
+
+    @property
+    def closed(self):
+        with self._lock:
+            return not bool(self._pointer.value)
+
+    def close(self):
+        with self._lock:
+            if self._pointer.value:
+                status = C.c_int(-1)
+                self._release(C.byref(self._pointer), C.byref(status))
+                if status.value or self._pointer.value:
+                    raise RuntimeError(f'native object destruction failed: status {status.value}')
+
+    def __copy__(self):
+        raise TypeError('native object ownership cannot be copied')
+
+    def __deepcopy__(self, memo):
+        return self.__copy__()
+
+    def __reduce_ex__(self, protocol):
+        raise TypeError('native objects cannot be pickled')
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass  # Explicit close reports errors; finalizers must not raise.
 
 
 class Distribution:
@@ -176,6 +216,8 @@ class ArrayGroup:
                 info = spec['metadata'][arg]
                 if info['category'] == 'state':
                     types.append(C.c_void_p)
+                elif info['category'] == 'handle':
+                    types.append(C.c_void_p if info['intent'] == 'in' else C.POINTER(C.c_void_p))
                 elif info['rank']:
                     types.append(C.c_void_p)
                 elif info['category'] == 'logical':
@@ -187,10 +229,31 @@ class ArrayGroup:
             self._functions[name] = function
 
     def _invoke(self, name, inputs, out):
+        if not self._specs[name].get('opaque_handles'):
+            return self._invoke_locked(name, inputs, out)
+        # ctypes releases the GIL: serialize close against every native handle call.
+        handles = [inputs[a] for a in self._specs[name]['inputs']
+                   if self._specs[name]['metadata'][a]['category'] == 'handle'
+                   and isinstance(inputs[a], OwnedHandle)]
+        with ExitStack() as stack:
+            for handle in sorted({id(h): h for h in handles}.values(), key=id):
+                stack.enter_context(handle._lock)
+            return self._invoke_locked(name, inputs, out)
+
+    def _invoke_locked(self, name, inputs, out):
         spec = self._specs[name]
         originals, values = {}, {}
         for arg in spec['inputs']:
             info, value = spec['metadata'][arg], inputs[arg]
+            if info['category'] == 'handle':
+                if not isinstance(value, OwnedHandle):
+                    raise TypeError(f'{arg} must be an owned native handle')
+                if value._library is not self._library or value._policy != spec['opaque_handles'][arg]:
+                    raise ValueError(f'{arg} belongs to a different library or native object type')
+                if value.closed:
+                    raise ValueError(f'{arg} is closed')
+                values[arg] = (value._pointer if info['intent'] == 'in' else C.byref(value._pointer))
+                continue
             if info['category'] == 'state':
                 codec = spec['state_codecs'][arg]
                 if not isinstance(value, StateBuffer) or value._library is not self._library:
@@ -294,8 +357,9 @@ class ArrayGroup:
         for arg in spec['outputs']:
             info = spec['metadata'][arg]
             if not info['rank']:
-                cls = C.c_int if info['category'] == 'integer' else C.c_double
-                scalars[arg] = cls(0 if cls is C.c_int else float('nan'))
+                cls = (C.c_void_p if info['category'] == 'handle' else
+                       C.c_int if info['category'] == 'integer' else C.c_double)
+                scalars[arg] = cls() if cls is C.c_void_p else cls(0 if cls is C.c_int else float('nan'))
                 values[arg] = C.byref(scalars[arg])
                 continue
             dtype = self._array_dtype(info)
@@ -340,7 +404,9 @@ class ArrayGroup:
         self._functions[name](*(dimensions[d] for d in spec['dimensions']),
                               *(values[a] for a in spec['arguments']))
         for arg, scalar in scalars.items():
-            outputs[arg] = scalar.value
+            outputs[arg] = (OwnedHandle(self._library, scalar, spec['opaque_handles'][arg])
+                            if spec['metadata'][arg]['category'] == 'handle' and scalar.value
+                            else scalar.value)
         if 'result_argument' in spec:
             if status.value:
                 raise RuntimeError(f'C ABI returned unexpected status {status.value}')

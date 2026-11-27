@@ -1,0 +1,263 @@
+{
+  "generated_symbol_count": 5,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "dataset",
+        "weights",
+        "bandwidth",
+        "factor",
+        "handle",
+        "status"
+      ],
+      "dimension_order": [
+        "d",
+        "n"
+      ],
+      "dimensions": {
+        "d": 1,
+        "n": 2
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_create",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "d": {
+            "argument": "dataset",
+            "axis": 1
+          },
+          "n": {
+            "argument": "dataset",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "d": 1,
+          "n": 2
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "dataset": [
+          "d",
+          "n"
+        ],
+        "weights": [
+          "n"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_create_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_destroy",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_destroy_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "d",
+        "n",
+        "neff",
+        "factor",
+        "scott",
+        "silverman",
+        "status"
+      ],
+      "dimension_order": [],
+      "dimensions": {},
+      "interface": "scalar_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_info",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {},
+        "minimums": {},
+        "schema_version": 1
+      },
+      "shapes": {},
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_info_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "points",
+        "values",
+        "status"
+      ],
+      "dimension_order": [
+        "d",
+        "m"
+      ],
+      "dimensions": {
+        "d": 1,
+        "m": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_logpdf",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "return an empty result after handle and dimension validation",
+            "dimension": "m",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "d": {
+            "argument": "points",
+            "axis": 1
+          },
+          "m": {
+            "argument": "points",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "d": 1,
+          "m": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "points": [
+          "d",
+          "m"
+        ],
+        "values": [
+          "m"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_logpdf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "handle",
+        "points",
+        "values",
+        "status"
+      ],
+      "dimension_order": [
+        "d",
+        "m"
+      ],
+      "dimensions": {
+        "d": 1,
+        "m": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "opaque_handles": {
+        "handle": {
+          "release_symbol": "scifort_gaussian_kde_destroy_f64",
+          "type": "gaussian_kde"
+        }
+      },
+      "optional_promoted_to_required": [],
+      "procedure": "kde_pdf",
+      "shape_contract": {
+        "conditions": [
+          {
+            "description": "return an empty result after handle and dimension validation",
+            "dimension": "m",
+            "value": 0
+          }
+        ],
+        "definitions": {
+          "d": {
+            "argument": "points",
+            "axis": 1
+          },
+          "m": {
+            "argument": "points",
+            "axis": 2
+          }
+        },
+        "minimums": {
+          "d": 1,
+          "m": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "points": [
+          "d",
+          "m"
+        ],
+        "values": [
+          "m"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_gaussian_kde_pdf_f64"
+      ]
+    }
+  ],
+  "public_api_count": 5,
+  "source": "src/c_api/gaussian_kde_bridge.f90",
+  "source_sha256": "cd6cae2dd7e9319b6b92fc1ecd154be887ac2b9f77183e97f1032365da8d5799"
+}
