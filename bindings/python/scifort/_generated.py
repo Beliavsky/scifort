@@ -2850,6 +2850,123 @@ class Random_correlation(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('rvs', {'state': state, 'eigs': eigs, 'tol': tol, 'diag_tol': diag_tol}, out)
 
+class Random_table(ArrayGroup):
+    _specs = {'logpmf': {'arguments': ['x', 'row', 'col', 'value', 'status'],
+                'definitions': {'n_cols': {'argument': 'col', 'axis': None},
+                                'n_rows': {'argument': 'row', 'axis': None}},
+                'dimensions': ['n_rows', 'n_cols'],
+                'inputs': ['x', 'row', 'col'],
+                'logical_inputs': {},
+                'metadata': {'col': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                             'row': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                             'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                             'x': {'category': 'integer', 'intent': 'in', 'rank': 2}},
+                'minimums': {'n_cols': 1, 'n_rows': 1},
+                'outputs': ['value'],
+                'result_argument': 'value',
+                'shapes': {'col': ['n_cols'], 'row': ['n_rows'], 'x': ['n_rows', 'n_cols']},
+                'status': 'status',
+                'symbol': 'scifort_random_table_logpmf_f64'},
+     'mean': {'arguments': ['row', 'col', 'value', 'status'],
+              'definitions': {'n_cols': {'argument': 'col', 'axis': None},
+                              'n_rows': {'argument': 'row', 'axis': None}},
+              'dimensions': ['n_rows', 'n_cols'],
+              'inputs': ['row', 'col'],
+              'logical_inputs': {},
+              'metadata': {'col': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                           'row': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                           'value': {'category': 'real', 'intent': 'out', 'rank': 2}},
+              'minimums': {'n_cols': 1, 'n_rows': 1},
+              'outputs': ['value'],
+              'result_argument': 'value',
+              'shapes': {'col': ['n_cols'], 'row': ['n_rows'], 'value': ['n_rows', 'n_cols']},
+              'status': 'status',
+              'symbol': 'scifort_random_table_mean_f64'},
+     'pmf': {'arguments': ['x', 'row', 'col', 'value', 'status'],
+             'definitions': {'n_cols': {'argument': 'col', 'axis': None},
+                             'n_rows': {'argument': 'row', 'axis': None}},
+             'dimensions': ['n_rows', 'n_cols'],
+             'inputs': ['x', 'row', 'col'],
+             'logical_inputs': {},
+             'metadata': {'col': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'row': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'value': {'category': 'real', 'intent': 'out', 'rank': 0},
+                          'x': {'category': 'integer', 'intent': 'in', 'rank': 2}},
+             'minimums': {'n_cols': 1, 'n_rows': 1},
+             'outputs': ['value'],
+             'result_argument': 'value',
+             'shapes': {'col': ['n_cols'], 'row': ['n_rows'], 'x': ['n_rows', 'n_cols']},
+             'status': 'status',
+             'symbol': 'scifort_random_table_pmf_f64'},
+     'rvs': {'arguments': ['state', 'row', 'col', 'sample', 'status'],
+             'definitions': {'n_cols': {'argument': 'col', 'axis': None},
+                             'n_rows': {'argument': 'row', 'axis': None}},
+             'dimensions': ['n_rows', 'n_cols'],
+             'inputs': ['state', 'row', 'col'],
+             'logical_inputs': {},
+             'metadata': {'col': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'row': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                          'sample': {'category': 'integer', 'intent': 'out', 'rank': 2},
+                          'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+             'minimums': {'n_cols': 1, 'n_rows': 1},
+             'outputs': ['sample'],
+             'shapes': {'col': ['n_cols'], 'row': ['n_rows'], 'sample': ['n_rows', 'n_cols']},
+             'state_codecs': {'state': {'invalid_status': 4,
+                                        'length': 6,
+                                        'load': 'rng_load_c_state',
+                                        'module': 'scifort_rng_c_bridge',
+                                        'store': 'rng_store_c_state',
+                                        'type': 'rng_state',
+                                        'type_module': 'scifort_random'}},
+             'status': 'status',
+             'symbol': 'scifort_random_table_rvs_f64'},
+     'rvs_array': {'arguments': ['state', 'row', 'col', 'samples', 'status'],
+                   'definitions': {'n_cols': {'argument': 'col', 'axis': None},
+                                   'n_rows': {'argument': 'row', 'axis': None},
+                                   'n_samples': {'argument': 'samples', 'axis': 3}},
+                   'dimensions': ['n_rows', 'n_cols', 'n_samples'],
+                   'inputs': ['state', 'row', 'col'],
+                   'logical_inputs': {},
+                   'metadata': {'col': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                                'row': {'category': 'integer', 'intent': 'in', 'rank': 1},
+                                'samples': {'category': 'integer', 'intent': 'out', 'rank': 3},
+                                'state': {'category': 'state', 'intent': 'inout', 'rank': 0}},
+                   'minimums': {'n_cols': 0, 'n_rows': 0, 'n_samples': 0},
+                   'output_dimensions': {'n_samples': 1},
+                   'outputs': ['samples'],
+                   'shapes': {'col': ['n_cols'],
+                              'row': ['n_rows'],
+                              'samples': ['n_rows', 'n_cols', 'n_samples']},
+                   'state_codecs': {'state': {'invalid_status': 4,
+                                              'length': 6,
+                                              'load': 'rng_load_c_state',
+                                              'module': 'scifort_rng_c_bridge',
+                                              'store': 'rng_store_c_state',
+                                              'type': 'rng_state',
+                                              'type_module': 'scifort_random'}},
+                   'status': 'status',
+                   'symbol': 'scifort_random_table_rvs_array_f64'}}
+
+    def logpmf(self, x, row, col):
+        """Return the native scalar value."""
+        return self._invoke('logpmf', {'x': x, 'row': row, 'col': col}, None)
+
+    def mean(self, row, col, *, out=None):
+        """Return the native array result; optionally use caller-owned out."""
+        return self._invoke('mean', {'row': row, 'col': col}, out)
+
+    def pmf(self, x, row, col):
+        """Return the native scalar value."""
+        return self._invoke('pmf', {'x': x, 'row': row, 'col': col}, None)
+
+    def rvs(self, state, row, col, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs', {'state': state, 'row': row, 'col': col}, out)
+
+    def rvs_array(self, state, row, col, *, n_samples=1, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('rvs_array', {'state': state, 'row': row, 'col': col, 'n_samples': n_samples}, out)
+
 class Special_ortho_group(ArrayGroup):
     _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
              'definitions': {'n': {'argument': 'sample', 'axis': 1}},
@@ -3068,6 +3185,7 @@ class API(Library):
         self.ortho_group = Ortho_group(self._library)
         self.poisson_binom = Poisson_binom(self._library)
         self.random_correlation = Random_correlation(self._library)
+        self.random_table = Random_table(self._library)
         self.special_ortho_group = Special_ortho_group(self._library)
         self.wishart = Wishart(self._library)
 

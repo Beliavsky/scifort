@@ -7349,3 +7349,14 @@ helpers. See the [binding contracts](../bindings/python/README.md#real-random-ma
 and reviewed [orthogonal](ortho_group_shapes.md),
 [special-orthogonal](special_ortho_group_shapes.md), and
 [correlation](random_correlation_shapes.md) shape documentation.
+
+### Fixed-margin table interfaces and count limits
+
+The native random_table procedures now document constrained assumed-shape
+arguments and have generated explicit-shape C/Python interfaces. Probability,
+mean, single sampling and batch sampling are covered. Native marginal validation
+rejects negative, unequal or excessive totals before summing; totals must be
+<= huge(0)-1 to keep count-plus-one factorial arguments representable. Off-support
+table row/column sums are also checked without integer overflow. See the
+[shape contracts](random_table_shapes.md) and
+[binding details](../bindings/python/README.md#fixed-margin-random-tables).

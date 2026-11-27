@@ -542,6 +542,18 @@
           "diag_tol": 1e-07
         }
       }
+    },
+    "random_table": {
+      "manifests": [
+        "bindings/cabi_config/random_table.json"
+      ],
+      "prefix": "random_table_",
+      "defaults": {},
+      "output_dimensions": {
+        "random_table_rvs_array": {
+          "n_samples": 1
+        }
+      }
     }
   }
 }

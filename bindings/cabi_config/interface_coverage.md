@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 233 |
+| exports | 242 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 81 |
+| array_adapters | 86 |
 | elementwise | 88 |
-| python | 169 |
+| python | 174 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -213,6 +213,15 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_random_correlation | random_correlation_status_invalid_shape |  |  |  |  |  |
 | scifort_random_correlation | random_correlation_status_numerical_failure |  |  |  |  |  |
 | scifort_random_correlation | random_correlation_status_success |  |  |  |  |  |
+| scifort_random_table | random_table_logpmf |  |  | scifort_random_table_logpmf_f64 |  | random_table.logpmf |
+| scifort_random_table | random_table_mean |  |  | scifort_random_table_mean_f64 |  | random_table.mean |
+| scifort_random_table | random_table_pmf |  |  | scifort_random_table_pmf_f64 |  | random_table.pmf |
+| scifort_random_table | random_table_rvs |  |  | scifort_random_table_rvs_f64 |  | random_table.rvs |
+| scifort_random_table | random_table_rvs_array |  |  | scifort_random_table_rvs_array_f64 |  | random_table.rvs_array |
+| scifort_random_table | random_table_status_invalid_parameter |  |  |  |  |  |
+| scifort_random_table | random_table_status_invalid_shape |  |  |  |  |  |
+| scifort_random_table | random_table_status_numerical_failure |  |  |  |  |  |
+| scifort_random_table | random_table_status_success |  |  |  |  |  |
 | scifort_special_ortho_group | special_ortho_group_rvs |  |  | scifort_special_ortho_group_rvs_f64 |  | special_ortho_group.rvs |
 | scifort_special_ortho_group | special_ortho_group_rvs_array |  |  | scifort_special_ortho_group_rvs_array_f64 |  | special_ortho_group.rvs_array |
 | scifort_special_ortho_group | special_ortho_group_status_invalid_shape |  |  |  |  |  |

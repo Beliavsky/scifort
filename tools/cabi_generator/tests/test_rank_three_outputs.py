@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Rank-three real output and third-axis dimension contracts."""
+"""Rank-three real/integer output and third-axis dimension contracts."""
 import shutil
 import unittest
 import test_optional_arrays as fixtures
@@ -52,7 +52,7 @@ class RankThreeOutputTests(fixtures.OptionalArrayTests):
         self.assertIn('def stack(self, x, *, b=1, out=None):',self.python_outputs()[self.root/'python/example/_generated.py'])
         for source in (SOURCE.replace('intent(out) :: cube','intent(in) :: cube'),
                        SOURCE.replace('intent(out) :: cube','intent(inout) :: cube'),
-                       SOURCE.replace('real(c_double),intent(out) :: cube','integer,intent(out) :: cube'),
+                       SOURCE.replace('real(c_double),intent(out) :: cube','integer,intent(in) :: cube'),
                        SOURCE.replace('cube(:,:,:)', 'cube(:,:,:,:)'),
                        SOURCE.replace('size(cube,3)', 'size(cube,4)')):
             self.source.write_text(source,encoding='ascii')
@@ -103,3 +103,46 @@ for bad in (-1,True,2**31,1.5):
             run([exe],folder);run(['python',script,self.root/'python',lib],folder)
         if shutil.which('g++'):
             run(['g++','-std=c++17','-Wall','-Wextra','-Werror','-I',self.root,'-fsyntax-only',client],self.root)
+
+    @unittest.skipUnless(shutil.which('gfortran') and shutil.which('gcc'), 'GNU compilers required')
+    def test_integer_cube_layout_and_python_buffers(self):
+        self.source.write_text(SOURCE.replace('real(c_double),intent', 'integer,intent'), encoding='ascii')
+        outputs = self.python_outputs()
+        outputs.update(generate.generate(self.config, self.root))
+        for path, text in outputs.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding='utf-8')
+        client = self.root/'client.c'
+        client.write_text('''#include "adapter.h"
+int main(void) {
+ int x[6]={1,2,3,4,5,6},out[12],status;
+ example_stack(2,3,2,x,out,&status);
+ if(status || out[0]!=101 || out[5]!=106 || out[6]!=201 || out[11]!=206) return 1;
+ out[0]=77; example_stack(2,3,-1,x,out,&status);
+ return status!=1 || out[0]!=77;
+}
+''', encoding='ascii')
+        script = self.root/'check.py'
+        script.write_text('''import ctypes as C
+import sys
+import numpy as np
+sys.path.insert(0,sys.argv[1])
+from example._generated import Optional
+api=Optional(C.CDLL(sys.argv[2]));x=np.arange(6,dtype=np.intc).reshape(2,3)
+out=np.empty((2,3,4),dtype=np.intc,order='F');r=api.stack(x,b=4,out={'cube':out})
+assert r.status==0 and r.outputs['cube'] is out
+for k in range(4): np.testing.assert_array_equal(out[:,:,k],x+100*(k+1))
+assert api.stack(x,b=0).outputs['cube'].shape==(2,3,0)
+for bad in (np.empty((2,3,4),order='F'),np.empty((2,3,4),dtype=np.intc)):
+ try: api.stack(x,b=4,out={'cube':bad})
+ except (ValueError,TypeError): pass
+ else: raise AssertionError('invalid integer cube buffer')
+''', encoding='ascii')
+        for index, flags in enumerate((['-O0','-g','-fcheck=all','-ftrapv'], ['-O3'])):
+            folder = self.root/str(index); folder.mkdir()
+            lib = folder/('example.dll' if __import__('os').name=='nt' else 'example.so')
+            run(['gfortran',*flags,'-std=f2018','-shared','-fPIC',self.source,self.root/'adapter.f90','-o',lib],folder)
+            exe = folder/'client.exe'
+            run(['gcc','-std=c11','-Wall','-Wextra','-Werror','-I',self.root,client,lib,'-o',exe],folder)
+            run([exe],folder)
+            run(['python',script,self.root/'python',lib],folder)

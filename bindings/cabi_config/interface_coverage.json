@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 81,
+    "array_adapters": 86,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 233,
-    "python": 169,
+    "exports": 242,
+    "python": 174,
     "scalar": 88
   },
   "procedures": [
@@ -1550,6 +1550,64 @@
       "c_manifest_exclusion": "Native status constant, not a callable procedure.",
       "module": "scifort_random_correlation",
       "procedure": "random_correlation_status_success",
+      "scalar_generated": false
+    },
+    {
+      "array_adapter": "scifort_random_table_logpmf_f64",
+      "module": "scifort_random_table",
+      "procedure": "random_table_logpmf",
+      "python": "random_table.logpmf"
+    },
+    {
+      "array_adapter": "scifort_random_table_mean_f64",
+      "module": "scifort_random_table",
+      "procedure": "random_table_mean",
+      "python": "random_table.mean"
+    },
+    {
+      "array_adapter": "scifort_random_table_pmf_f64",
+      "module": "scifort_random_table",
+      "procedure": "random_table_pmf",
+      "python": "random_table.pmf"
+    },
+    {
+      "array_adapter": "scifort_random_table_rvs_f64",
+      "module": "scifort_random_table",
+      "procedure": "random_table_rvs",
+      "python": "random_table.rvs"
+    },
+    {
+      "array_adapter": "scifort_random_table_rvs_array_f64",
+      "module": "scifort_random_table",
+      "procedure": "random_table_rvs_array",
+      "python": "random_table.rvs_array"
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_table",
+      "procedure": "random_table_status_invalid_parameter",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_table",
+      "procedure": "random_table_status_invalid_shape",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_table",
+      "procedure": "random_table_status_numerical_failure",
+      "scalar_generated": false
+    },
+    {
+      "bulk_generated": false,
+      "c_manifest_exclusion": "Native status constant, not a callable procedure.",
+      "module": "scifort_random_table",
+      "procedure": "random_table_status_success",
       "scalar_generated": false
     },
     {

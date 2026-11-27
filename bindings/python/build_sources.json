@@ -13,6 +13,7 @@
     "ortho_group",
     "poisson_binom",
     "random_correlation",
+    "random_table",
     "special_ortho_group",
     "wishart"
   ],
@@ -172,6 +173,12 @@
       "src/kinds.f90",
       "src/random.f90",
       "src/stats/random_correlation.f90"
+    ],
+    "src/c_api/generated/random_table_generated.f90": [
+      "src/c_api/rng_bridge.f90",
+      "src/kinds.f90",
+      "src/random.f90",
+      "src/stats/random_table.f90"
     ],
     "src/c_api/generated/special_ortho_group_generated.f90": [
       "src/c_api/rng_bridge.f90",
@@ -394,6 +401,12 @@
       "src/random.f90",
       "src/stats/normal.f90"
     ],
+    "src/stats/random_table.f90": [
+      "src/kinds.f90",
+      "src/math.f90",
+      "src/random.f90",
+      "src/stats/multivariate_hypergeom.f90"
+    ],
     "src/stats/special_ortho_group.f90": [
       "src/kinds.f90",
       "src/random.f90",
@@ -472,6 +485,7 @@
     "scifort_c_api_generated_ortho_group": "src/c_api/generated/ortho_group_generated.f90",
     "scifort_c_api_generated_poisson_binom": "src/c_api/generated/poisson_binom_generated.f90",
     "scifort_c_api_generated_random_correlation": "src/c_api/generated/random_correlation_generated.f90",
+    "scifort_c_api_generated_random_table": "src/c_api/generated/random_table_generated.f90",
     "scifort_c_api_generated_special_ortho_group": "src/c_api/generated/special_ortho_group_generated.f90",
     "scifort_c_api_generated_student_t": "src/c_api/generated/student_t_generated.f90",
     "scifort_c_api_generated_weibull": "src/c_api/generated/weibull_generated.f90",
@@ -509,6 +523,7 @@
     "scifort_random": "src/random.f90",
     "scifort_random_correlation": "src/stats/random_correlation.f90",
     "scifort_random_matrix_helpers": "src/stats/random_matrix_helpers.f90",
+    "scifort_random_table": "src/stats/random_table.f90",
     "scifort_rng_c_bridge": "src/c_api/rng_bridge.f90",
     "scifort_special_elementary": "src/special/elementary.f90",
     "scifort_special_ortho_group": "src/stats/special_ortho_group.f90",
@@ -553,6 +568,7 @@
     "src/c_api/generated/ortho_group_generated.f90": "9a1493c180b65db22142a4aae711973cbe23941f17aa0005b1af8c37adc6637c",
     "src/c_api/generated/poisson_binom_generated.f90": "c1f17721ad3045772b05378009919e6212aeb9cabe373c4ec60584aca0b420e6",
     "src/c_api/generated/random_correlation_generated.f90": "3d10bd133c36b38889e12d86a043425b93b2afc36a2968ffe9e968ca67333cc0",
+    "src/c_api/generated/random_table_generated.f90": "3ab77e13925e16ac12a9893e6859112e6945b404c34ce7ebe3c2fcfdfd0851cf",
     "src/c_api/generated/special_ortho_group_generated.f90": "9559dcf5f3aa726d01fb8788484722774b543d2709b191fccf8051d7a6890d16",
     "src/c_api/generated/student_t_generated.f90": "c86f8767f5e7114308c357eef3046b69df86442d2a864517b5987d93ee40ebdc",
     "src/c_api/generated/weibull_generated.f90": "6618fbaef1cf4bd7d9b77e62ef14f4617456aeec703a58e8135534e38caef3b8",
@@ -594,6 +610,7 @@
     "src/stats/poisson_binom.f90": "0872d1301897add8d98c8cfcb6cf64f4a77b7c92ed84b80b526e6f5fb7a50863",
     "src/stats/random_correlation.f90": "8dc57eaaa5584c90b30dbf40f27fa3ae6c3dd6af393c80e11b730497820e59cd",
     "src/stats/random_matrix_helpers.f90": "231f3b22297c9ec04e971fc9ecd37fffa7623c68ab22c02486139b1193ed59a9",
+    "src/stats/random_table.f90": "227c362afa5f59f5b8f0822ae174c9de639ab319910ca22812f5bb6a669778b3",
     "src/stats/special_ortho_group.f90": "4b0979b9d8510c4a94b3f456c6a76e280db494f60b6ea1bf7aed69465da440ea",
     "src/stats/student_t.f90": "d7ae54d6af2fbe0492325cae5c07ee1a8d5ff4454e693df399ee7b82bca7735e",
     "src/stats/weibull.f90": "2a7f2cdbdcd1052bd62cf9875f27c8d708b982ebe475513318e7fe3589d55585",
@@ -674,6 +691,8 @@
     "src/c_api/generated/poisson_binom_generated.f90",
     "src/stats/random_correlation.f90",
     "src/c_api/generated/random_correlation_generated.f90",
+    "src/stats/random_table.f90",
+    "src/c_api/generated/random_table_generated.f90",
     "src/stats/special_ortho_group.f90",
     "src/c_api/generated/special_ortho_group_generated.f90",
     "src/c_api/generated/student_t_generated.f90",

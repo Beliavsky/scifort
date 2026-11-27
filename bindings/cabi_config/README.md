@@ -623,3 +623,12 @@ All reuse the existing RNG codec and optional-status promotion; no generator
 extension is required. Python exposes output dimensions for orthogonal draws and
 infers correlation dimension from eigenvalues. See the
 [shape, state, status and memory contracts](../python/README.md#real-random-matrix-sampling).
+
+## Fixed-margin tables
+
+The random_table manifest covers pmf/logpmf, the matrix-valued mean, and both
+sampling forms. Integer rank-three outputs reuse the explicit-array adapter,
+Python output allocation and RNG state codec; higher ranks and rank-three inputs
+remain unsupported. Shapes and numerical count limits are documented in the
+[native contracts](../../docs/random_table_shapes.md) and
+[C/Python interface](../python/README.md#fixed-margin-random-tables).

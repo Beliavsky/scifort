@@ -1,0 +1,347 @@
+{
+  "generated_symbol_count": 5,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "row",
+        "col",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n_rows",
+        "n_cols"
+      ],
+      "dimensions": {
+        "n_cols": 1,
+        "n_rows": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "random_table_logpmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n_cols": {
+            "argument": "col",
+            "axis": null
+          },
+          "n_rows": {
+            "argument": "row",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n_cols": 1,
+          "n_rows": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col": [
+          "n_cols"
+        ],
+        "row": [
+          "n_rows"
+        ],
+        "x": [
+          "n_rows",
+          "n_cols"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_random_table_logpmf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "row",
+        "col",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n_rows",
+        "n_cols"
+      ],
+      "dimensions": {
+        "n_cols": 1,
+        "n_rows": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_result_extents": [
+        "size(row)",
+        "size(col)"
+      ],
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "random_table_mean",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n_cols": {
+            "argument": "col",
+            "axis": null
+          },
+          "n_rows": {
+            "argument": "row",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n_cols": 1,
+          "n_rows": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col": [
+          "n_cols"
+        ],
+        "row": [
+          "n_rows"
+        ],
+        "value": [
+          "n_rows",
+          "n_cols"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_random_table_mean_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "x",
+        "row",
+        "col",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "n_rows",
+        "n_cols"
+      ],
+      "dimensions": {
+        "n_cols": 1,
+        "n_rows": 1
+      },
+      "interface": "explicit_shape_function",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "random_table_pmf",
+      "result_argument": "value",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n_cols": {
+            "argument": "col",
+            "axis": null
+          },
+          "n_rows": {
+            "argument": "row",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n_cols": 1,
+          "n_rows": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col": [
+          "n_cols"
+        ],
+        "row": [
+          "n_rows"
+        ],
+        "x": [
+          "n_rows",
+          "n_cols"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_random_table_pmf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "row",
+        "col",
+        "sample",
+        "status"
+      ],
+      "dimension_order": [
+        "n_rows",
+        "n_cols"
+      ],
+      "dimensions": {
+        "n_cols": 1,
+        "n_rows": 1
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "random_table_rvs",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n_cols": {
+            "argument": "col",
+            "axis": null
+          },
+          "n_rows": {
+            "argument": "row",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "n_cols": 1,
+          "n_rows": 1
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col": [
+          "n_cols"
+        ],
+        "row": [
+          "n_rows"
+        ],
+        "sample": [
+          "n_rows",
+          "n_cols"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_random_table_rvs_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "state",
+        "row",
+        "col",
+        "samples",
+        "status"
+      ],
+      "dimension_order": [
+        "n_rows",
+        "n_cols",
+        "n_samples"
+      ],
+      "dimensions": {
+        "n_cols": 0,
+        "n_rows": 0,
+        "n_samples": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "optional_status_promoted_to_required": true,
+      "procedure": "random_table_rvs_array",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "n_cols": {
+            "argument": "col",
+            "axis": null
+          },
+          "n_rows": {
+            "argument": "row",
+            "axis": null
+          },
+          "n_samples": {
+            "argument": "samples",
+            "axis": 3
+          }
+        },
+        "minimums": {
+          "n_cols": 0,
+          "n_rows": 0,
+          "n_samples": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "col": [
+          "n_cols"
+        ],
+        "row": [
+          "n_rows"
+        ],
+        "samples": [
+          "n_rows",
+          "n_cols",
+          "n_samples"
+        ]
+      },
+      "state": "generated",
+      "state_codecs": {
+        "state": {
+          "invalid_status": 4,
+          "length": 6,
+          "load": "rng_load_c_state",
+          "module": "scifort_rng_c_bridge",
+          "store": "rng_store_c_state",
+          "type": "rng_state",
+          "type_module": "scifort_random"
+        }
+      },
+      "status_argument": "status",
+      "symbols": [
+        "scifort_random_table_rvs_array_f64"
+      ]
+    },
+    {
+      "procedure": "random_table_status_invalid_parameter",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "random_table_status_invalid_shape",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "random_table_status_numerical_failure",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    },
+    {
+      "procedure": "random_table_status_success",
+      "reason": "Native status constant, not a callable procedure.",
+      "state": "excluded"
+    }
+  ],
+  "public_api_count": 9,
+  "source": "src/stats/random_table.f90",
+  "source_sha256": "227c362afa5f59f5b8f0822ae174c9de639ab319910ca22812f5bb6a669778b3"
+}

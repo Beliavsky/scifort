@@ -134,7 +134,8 @@ Never trade away correctness or provenance merely to add more functions.
   opt-in prototype for reviewed linalg/matrix helpers, multivariate normal/Student t
   densities, Dirichlet, multinomial, multivariate hypergeometric and Dirichlet-multinomial
   functions, plus Wishart, inverse-Wishart, matrix-normal, matrix-t and
-  Poisson-binomial methods and real orthogonal/correlation matrix samplers.
+  Poisson-binomial methods, real orthogonal/correlation matrix samplers,
+  and fixed-margin random tables.
   Keep readable shape comments
   and follow `tools/cabi_generator/README.md`. Do not apply the prototype broadly or treat
   conditional prose as verified assertions.

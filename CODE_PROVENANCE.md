@@ -1,3 +1,14 @@
+## 2026-11-27 - Fixed-margin table interfaces and safe count sums
+
+The rank-three integer-output generator extension, manifests, adapters,
+documentation and regression tests are original MIT SciFort work. The native
+bounded-accumulation helper checks remaining integer capacity before each
+addition; it replaces unsafe validation sums without importing an algorithm.
+Existing random_table factorial formulas and conditional-hypergeometric sampling
+remain in use, with their existing provenance below. Tests use exact small-table
+probabilities, installed SciPy public numerical outputs and independent margin/
+stream identities. No third-party implementation source was copied or adapted.
+
 ## 2026-11-27 - Real random matrix sampling interfaces
 
 The reviewed manifests, generated C/Python adapters, shape documentation and

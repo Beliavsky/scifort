@@ -30,9 +30,15 @@ module scifort_random_table
 contains
 
     function random_table_logpmf(x, row, col) result(y)
-        integer, intent(in) :: x(:, :) !! nonnegative contingency table
-        integer, intent(in) :: row(:) !! prescribed row sums, nonnegative integers
-        integer, intent(in) :: col(:) !! prescribed column sums, nonnegative integers
+        !! Evaluate the log probability of a table with fixed margins.
+        !! @dimension n_rows = size(row)
+        !! @dimension n_cols = size(col)
+        !! @require n_rows >= 1
+        !! @require n_cols >= 1
+        !! Nonempty margins must be nonnegative with equal totals <= huge(0)-1.
+        integer, intent(in) :: x(:, :) !! shape (n_rows,n_cols); nonnegative contingency table
+        integer, intent(in) :: row(:) !! shape (n_rows); nonnegative prescribed row sums
+        integer, intent(in) :: col(:) !! shape (n_cols); nonnegative prescribed column sums
         real(dp) :: y
 
         integer :: i
@@ -48,13 +54,13 @@ contains
             return
         end if
         do i = 1, size(row)
-            if (sum(x(i,:)) /= row(i)) then
+            if (bounded_count_total(x(i,:)) /= row(i)) then
                 y = negative_infinity(0.0_dp)
                 return
             end if
         end do
         do j = 1, size(col)
-            if (sum(x(:,j)) /= col(j)) then
+            if (bounded_count_total(x(:,j)) /= col(j)) then
                 y = negative_infinity(0.0_dp)
                 return
             end if
@@ -76,9 +82,15 @@ contains
     end function random_table_logpmf
 
     function random_table_pmf(x, row, col) result(y)
-        integer, intent(in) :: x(:, :) !! nonnegative contingency table
-        integer, intent(in) :: row(:) !! prescribed row sums, nonnegative integers
-        integer, intent(in) :: col(:) !! prescribed column sums, nonnegative integers
+        !! Evaluate the probability of a table with fixed margins.
+        !! @dimension n_rows = size(row)
+        !! @dimension n_cols = size(col)
+        !! @require n_rows >= 1
+        !! @require n_cols >= 1
+        !! Nonempty margins must be nonnegative with equal totals <= huge(0)-1.
+        integer, intent(in) :: x(:, :) !! shape (n_rows,n_cols); nonnegative contingency table
+        integer, intent(in) :: row(:) !! shape (n_rows); nonnegative prescribed row sums
+        integer, intent(in) :: col(:) !! shape (n_cols); nonnegative prescribed column sums
         real(dp) :: y
 
         real(dp) :: logp
@@ -92,9 +104,16 @@ contains
     end function random_table_pmf
 
     function random_table_mean(row, col) result(mu)
-        integer, intent(in) :: row(:) !! prescribed row sums, nonnegative integers
-        integer, intent(in) :: col(:) !! prescribed column sums, nonnegative integers
-        real(dp) :: mu(size(row), size(col))
+        !! Return expected counts for a table with fixed margins.
+        !! @dimension n_rows = size(row)
+        !! @dimension n_cols = size(col)
+        !! @require n_rows >= 1
+        !! @require n_cols >= 1
+        !! Nonempty margins must be nonnegative with equal totals <= huge(0)-1.
+        !! A zero total returns NaN in every entry.
+        integer, intent(in) :: row(:) !! shape (n_rows); nonnegative prescribed row sums
+        integer, intent(in) :: col(:) !! shape (n_cols); nonnegative prescribed column sums
+        real(dp) :: mu(size(row), size(col)) !! shape (n_rows,n_cols); expected table counts
 
         integer :: i
         integer :: j
@@ -117,10 +136,16 @@ contains
     end function random_table_mean
 
     subroutine random_table_rvs(state, row, col, sample, status)
+        !! Draw a fixed-margin table using explicit RNG state.
+        !! @dimension n_rows = size(row)
+        !! @dimension n_cols = size(col)
+        !! @require n_rows >= 1
+        !! @require n_cols >= 1
+        !! Nonempty margins must be nonnegative with equal totals <= huge(0)-1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by conditional draws
-        integer, intent(in) :: row(:) !! prescribed row sums, nonnegative integers
-        integer, intent(in) :: col(:) !! prescribed column sums, nonnegative integers
-        integer, intent(out) :: sample(:, :) !! sampled table with shape (size(row), size(col))
+        integer, intent(in) :: row(:) !! shape (n_rows); nonnegative prescribed row sums
+        integer, intent(in) :: col(:) !! shape (n_cols); nonnegative prescribed column sums
+        integer, intent(out) :: sample(:, :) !! shape (n_rows,n_cols); sampled table
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: i
@@ -155,10 +180,19 @@ contains
     end subroutine random_table_rvs
 
     subroutine random_table_rvs_array(state, row, col, samples, status)
+        !! Draw fixed-margin tables using explicit RNG state.
+        !! @dimension n_rows = size(row)
+        !! @dimension n_cols = size(col)
+        !! @require n_rows >= 0
+        !! @require n_cols >= 0
+        !! @dimension n_samples = size(samples,3)
+        !! @require n_samples >= 0
+        !! An empty batch skips native marginal validation and leaves state unchanged.
+        !! Nonempty margins must be nonnegative with equal totals <= huge(0)-1.
         type(rng_state), intent(inout) :: state !! explicit RNG state advanced by all table draws
-        integer, intent(in) :: row(:) !! prescribed row sums, nonnegative integers
-        integer, intent(in) :: col(:) !! prescribed column sums, nonnegative integers
-        integer, intent(out) :: samples(:, :, :) !! tables indexed by third dimension
+        integer, intent(in) :: row(:) !! shape (n_rows); nonnegative prescribed row sums
+        integer, intent(in) :: col(:) !! shape (n_cols); nonnegative prescribed column sums
+        integer, intent(out) :: samples(:, :, :) !! shape (n_rows,n_cols,n_samples); tables along the third axis
         integer, intent(out), optional :: status !! zero on success; nonzero for invalid/numerical failure
 
         integer :: info
@@ -180,12 +214,43 @@ contains
     end subroutine random_table_rvs_array
 
     pure logical function valid_marginals(row, col) result(valid)
-        integer, intent(in) :: row(:) !! candidate row sums
-        integer, intent(in) :: col(:) !! candidate column sums
+        !! Validate margins without overflowing default-integer sums.
+        !! n_rows = size(row), n_cols = size(col); both must be >= 1 for valid margins.
+        !! Nonnegative margins must have equal totals <= huge(0)-1.
+        integer, intent(in) :: row(:) !! shape (n_rows); candidate row sums
+        integer, intent(in) :: col(:) !! shape (n_cols); candidate column sums
 
-        valid = size(row) >= 1 .and. size(col) >= 1
-        if (.not. valid) return
-        valid = all(row >= 0) .and. all(col >= 0) .and. sum(row) == sum(col)
+        integer :: row_total
+        integer :: col_total
+
+        valid = .false.
+        if (size(row) < 1 .or. size(col) < 1) return
+        row_total = bounded_count_total(row)
+        col_total = bounded_count_total(col)
+        valid = row_total >= 0 .and. col_total >= 0 .and. row_total == col_total
     end function valid_marginals
+
+    pure integer function bounded_count_total(counts) result(total)
+        !! Sum nonnegative counts up to huge(0)-1; return -1 for invalid or excessive counts.
+        !! The vector length is unrestricted, including zero.
+        integer, intent(in) :: counts(:) !! nonnegative counts to sum; empty input has total zero
+
+        integer :: i
+        integer, parameter :: maximum = huge(0)-1
+
+        total = 0
+        do i = 1, size(counts)
+            if (counts(i) < 0) then
+                total = -1
+                return
+            end if
+            ! Check the remaining capacity before adding, so the addition cannot overflow.
+            if (counts(i) > maximum-total) then
+                total = -1
+                return
+            end if
+            total = total + counts(i)
+        end do
+    end function bounded_count_total
 
 end module scifort_random_table

@@ -25,6 +25,7 @@
 #include "scifort_generated_ortho_group.h"
 #include "scifort_generated_poisson_binom.h"
 #include "scifort_generated_random_correlation.h"
+#include "scifort_generated_random_table.h"
 #include "scifort_generated_special_ortho_group.h"
 #include "scifort_generated_student_t.h"
 #include "scifort_generated_weibull.h"

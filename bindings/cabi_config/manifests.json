@@ -25,5 +25,6 @@
   "poisson_binom.json",
   "ortho_group.json",
   "special_ortho_group.json",
-  "random_correlation.json"
+  "random_correlation.json",
+  "random_table.json"
 ]

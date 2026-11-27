@@ -1,3 +1,13 @@
+## 2026-11-27 - Fixed-margin table C/Python interfaces
+
+- Add random_table probability, log probability, mean and single/batch samplers
+  with native assumed-shape documentation and generated C/Python adapters.
+- Extend the generator to support rank-three integer outputs with checked
+  column-major layout and Python integer-buffer tests.
+- Prevent native marginal/table sum overflow and count-plus-one overflow;
+  document the supported count domain and preserve established error conventions.
+- Add reference, normalization, sampling-law, stream, buffer and overflow tests.
+
 ## 2026-11-27 - Real random matrix C/Python samplers
 
 - Add orthogonal and special-orthogonal single/batch sampling adapters and

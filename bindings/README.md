@@ -152,3 +152,7 @@ interfaces with caller-owned randomized-integration state. See
 Real orthogonal, special-orthogonal and prescribed-eigenvalue correlation
 matrix samplers now have generated C/Python interfaces. See
 [random matrix sampling](python/README.md#real-random-matrix-sampling).
+
+Fixed-margin random tables now expose probability, mean and single/batch sampling
+through generated C/Python interfaces, including rank-three integer outputs. See
+[the table contracts](python/README.md#fixed-margin-random-tables).

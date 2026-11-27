@@ -2382,3 +2382,87 @@ Local validation on 2026-11-27 used Python 3.13.3 and GNU Fortran/GCC/G++
 282.035 seconds, including both build configurations and the native/C/C++ clients.
 The three native numerical implementations are unchanged apart from comments;
 the full `fpm test` suite was not rerun for this bounded interface addition.
+
+## Fixed-margin random tables
+
+`api.random_table` provides `pmf(x, row, col)`, `logpmf(x, row, col)`,
+`mean(row, col)`, `rvs(state, row, col)`, and
+`rvs_array(state, row, col, *, n_samples=1)`. Probability methods return scalars
+and `mean` returns a float64 matrix. Samplers return `ArrayResult` with an integer
+`outputs["sample"]` matrix or `outputs["samples"]` cube.
+
+Required shapes are row `(n_rows)`, col `(n_cols)`, x/sample/mean
+`(n_rows,n_cols)`, and samples `(n_rows,n_cols,n_samples)`. Batch slices are last,
+matching Fortran layout. Dimensions come from row and col; only n_samples is an
+explicit output-size keyword. Probability, mean and single sampling require
+nonempty margins. Empty batches also allow zero-length margins; use explicitly
+typed integer arrays such as `np.array([], dtype=np.intc)`, since Python lists
+with no elements do not identify an integer dtype.
+
+```python
+row, col = [3, 5], [2, 4, 2]
+probability = api.random_table.pmf([[1, 1, 1], [1, 3, 1]], row, col)
+mean = api.random_table.mean(row, col)
+stream = api.rng(123)
+result = api.random_table.rvs_array(stream, row, col, n_samples=10)
+assert result.status == 0
+samples = result.outputs["samples"]  # shape (2,3,10), dtype np.intc
+```
+
+Inputs must contain integers, with no floating, complex, or boolean values.
+Python checks C-int range before conversion. Output buffers must be writable,
+aligned, Fortran-contiguous `np.intc` arrays of the exact shape, passed through
+`out={"sample": buffer}` or `out={"samples": buffer}`. The mean accepts a float64
+output buffer through `out=buffer`. Inputs, output and state must not overlap.
+The [native shape contracts](../../docs/random_table_shapes.md) also cover the
+private marginal validator; its bounded-sum helper accepts any vector length.
+
+Nonempty sampling requires nonnegative margins with equal totals. Native code
+now checks sums before addition, requiring totals <= `huge(0)-1` so factorial
+arguments `total+1` and `count+1` cannot overflow. This is 2147483646 for the
+reviewed C-int build. The same domain applies to probability and mean calls.
+Invalid margins produce NaN from pmf/logpmf/mean; negative table entries produce
+NaN. Nonnegative tables whose row or column sums do not match the valid margins
+have pmf 0 and logpmf -infinity, including tables whose sums exceed integer range.
+Zero margins define an all-zero table with probability 1; its mean retains the
+native NaN result for zero total. Avoid assuming uniformly high relative accuracy
+for probabilities obtained by subtracting large log-factorials at large totals.
+
+Status 1 denotes adapter dimension errors and preserves output/state. Invalid
+serialized state returns 4, also preserving buffers, including on empty calls.
+Native marginal errors return 2 with zeroed sample output and unchanged state;
+status 3 denotes conditional-sampler failure. A numerical failure retains consumed
+state and completed tables; the current table can be partial, and later tables
+are zeroed. Empty batches skip native marginal validation but still validate
+shapes, C-int representability and RNG state. Repeated single draws and split
+batches match whole batches exactly for a shared initial stream. SciFort does
+not reproduce SciPy's random bit sequences or its Boyett/Patefield method options.
+
+The generated `scifort_generated_random_table.h`, included by `scifort.h`, exports
+`scifort_random_table_{pmf,logpmf,mean,rvs,rvs_array}_f64`. Dimensions n_rows and
+n_cols precede the native arguments; batch sampling additionally takes n_samples
+before state. C uses contiguous column-major `int` table/count buffers, `double`
+probability/mean outputs and caller-owned `int64_t[6]` state. All pointers must
+be valid and non-NULL, even for empty arrays; sizes and nonoverlap are caller
+responsibilities. Scalar native results retain NaN/infinity with status 0.
+Integer-domain handling agrees with the native implementation.
+
+Focused validation commands from the repository root (CMD):
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_random_table.py -v
+build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_generator/tests -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+The focused test builds checked and optimized libraries, compares native/C/Python
+values and RNG state, exercises a C11 client and C++17 headers, and compiles the
+native random_table module with `-ftrapv` in its checked overflow client.
+
+Local validation on 2026-11-27 used Python 3.13.3, SciPy 1.15.3 and GNU
+Fortran/GCC/G++ 17.0.0 20260510 (experimental) on Windows. All 93 generator
+tests passed in 599.194 seconds; all seven focused table tests passed in
+275.567 seconds across checked and optimized builds. The pipeline checked all
+140 artifacts. The numerical change is confined to random_table validation;
+focused native/C/Python and overflow-trapping checks cover that behavior.
+The full native `fpm test` suite was not rerun.

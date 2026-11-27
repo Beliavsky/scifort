@@ -913,3 +913,12 @@ it matches the explicit extents already shown in the declaration. Descriptions,
 value constraints, and native assumed-shape annotations are retained. RNG buffer
 comments describe the caller-owned components without repeating the declared
 component count.
+
+## Rank-three integer outputs
+
+Explicit-array adapters now accept default-integer `intent(out)` arrays with
+rank three, alongside real rank-three outputs. C uses `int *`; Python allocates
+or validates Fortran-contiguous `np.intc` output cubes. Dimension and state
+policies are unchanged. Rank-three input/inout arrays and higher ranks remain
+unsupported. The independent rank-three fixture compiles real and integer C and
+Python clients; the random_table manifest exercises this pattern in SciFort.
