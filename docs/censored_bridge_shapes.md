@@ -45,6 +45,44 @@ Evaluate native beta censored nnlf; input groups have independent lengths.
 | `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
 | `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
 
+## censored_cauchy_loglikelihood
+
+Evaluate native cauchy censored loglikelihood; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
+## censored_cauchy_nnlf
+
+Evaluate native cauchy censored nnlf; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
 ## censored_exponential_loglikelihood
 
 Evaluate native exponential censored loglikelihood; input groups have independent lengths.
@@ -121,6 +159,82 @@ Evaluate native gamma censored nnlf; input groups have independent lengths.
 | `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
 | `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
 
+## censored_laplace_loglikelihood
+
+Evaluate native laplace censored loglikelihood; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
+## censored_laplace_nnlf
+
+Evaluate native laplace censored nnlf; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
+## censored_logistic_loglikelihood
+
+Evaluate native logistic censored loglikelihood; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
+## censored_logistic_nnlf
+
+Evaluate native logistic censored nnlf; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
 ## censored_lognormal_loglikelihood
 
 Evaluate native lognormal censored loglikelihood; input groups have independent lengths.
@@ -181,6 +295,44 @@ Evaluate native normal censored loglikelihood; input groups have independent len
 ## censored_normal_nnlf
 
 Evaluate native normal censored nnlf; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
+## censored_rayleigh_loglikelihood
+
+Evaluate native rayleigh censored loglikelihood; input groups have independent lengths.
+
+| Dimension | Definition | Minimum |
+| --- | --- | ---: |
+| `nu` | `size(uncensored)` | 0 |
+| `nl` | `size(left)` | 0 |
+| `nr` | `size(right)` | 0 |
+| `ni` | `size(lower)` | 0 |
+
+| Argument | Declared shape | Required shape | Meaning |
+| --- | --- | --- | --- |
+| `uncensored` | `(:)` | `(nu)` | finite exact observations |
+| `left` | `(:)` | `(nl)` | finite upper censoring limits |
+| `right` | `(:)` | `(nr)` | finite lower censoring limits |
+| `lower` | `(:)` | `(ni)` | ordered interval lower endpoints; equal finite endpoints mean exact observations |
+| `upper` | `(:)` | `(ni)` | interval upper endpoints paired with lower; one infinite endpoint permitted |
+
+## censored_rayleigh_nnlf
+
+Evaluate native rayleigh censored nnlf; input groups have independent lengths.
 
 | Dimension | Definition | Minimum |
 | --- | --- | ---: |

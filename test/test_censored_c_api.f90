@@ -10,7 +10,11 @@ program test_censored_c_api
         weibull_censored_loglikelihood, weibull_censored_nnlf, &
         lognormal_censored_loglikelihood, lognormal_censored_nnlf, &
         gamma_censored_loglikelihood, gamma_censored_nnlf, &
-        beta_censored_loglikelihood, beta_censored_nnlf
+        beta_censored_loglikelihood, beta_censored_nnlf, &
+        logistic_censored_loglikelihood, logistic_censored_nnlf, &
+        laplace_censored_loglikelihood, laplace_censored_nnlf, &
+        cauchy_censored_loglikelihood, cauchy_censored_nnlf, &
+        rayleigh_censored_loglikelihood, rayleigh_censored_nnlf
     use scifort_censored_bridge, only : censored_normal_loglikelihood
     use scifort_c_api_generated_censored
     implicit none
@@ -76,6 +80,38 @@ program test_censored_c_api
     call scifort_beta_censored_nnlf_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
         exact,left,right,lower,upper,0.4_dp,0.6_dp,-0.2_dp,6.0_dp,value,status)
     if (status /= 0 .or. value /= expected) error stop 'beta nnlf native/C mismatch'
+    expected = logistic_censored_loglikelihood(data,0.0_dp,1.3_dp)
+    call scifort_logistic_censored_loglikelihood_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'logistic loglikelihood native/C mismatch'
+    expected = logistic_censored_nnlf(data,0.0_dp,1.3_dp)
+    call scifort_logistic_censored_nnlf_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'logistic nnlf native/C mismatch'
+    expected = laplace_censored_loglikelihood(data,0.0_dp,1.3_dp)
+    call scifort_laplace_censored_loglikelihood_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'laplace loglikelihood native/C mismatch'
+    expected = laplace_censored_nnlf(data,0.0_dp,1.3_dp)
+    call scifort_laplace_censored_nnlf_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'laplace nnlf native/C mismatch'
+    expected = cauchy_censored_loglikelihood(data,0.0_dp,1.3_dp)
+    call scifort_cauchy_censored_loglikelihood_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'cauchy loglikelihood native/C mismatch'
+    expected = cauchy_censored_nnlf(data,0.0_dp,1.3_dp)
+    call scifort_cauchy_censored_nnlf_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'cauchy nnlf native/C mismatch'
+    expected = rayleigh_censored_loglikelihood(data,0.0_dp,1.3_dp)
+    call scifort_rayleigh_censored_loglikelihood_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'rayleigh loglikelihood native/C mismatch'
+    expected = rayleigh_censored_nnlf(data,0.0_dp,1.3_dp)
+    call scifort_rayleigh_censored_nnlf_f64(3_c_int,1_c_int,1_c_int,2_c_int, &
+        exact,left,right,lower,upper,0.0_dp,1.3_dp,value,status)
+    if (status /= 0 .or. value /= expected) error stop 'rayleigh nnlf native/C mismatch'
     call scifort_normal_censored_loglikelihood_f64(0_c_int,0_c_int,0_c_int,0_c_int, &
         empty,empty,empty,empty,empty,0.0_dp,1.0_dp,value,status)
     if (status /= 0 .or. value /= 0.0_dp) error stop 'empty data'
@@ -89,5 +125,5 @@ program test_censored_c_api
     call censored_normal_loglikelihood(empty,empty,empty,lower,upper(:1), &
         0.0_dp,1.0_dp,value,native_status)
     if (native_status /= 1 .or. .not. ieee_is_nan(value)) error stop 'unpaired native limits'
-    print '(a)', 'Censored likelihood native/C checks passed for six families.'
+    print '(a)', 'Censored likelihood native/C checks passed for ten families.'
 end program test_censored_c_api

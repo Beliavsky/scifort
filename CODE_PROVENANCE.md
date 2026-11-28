@@ -1,3 +1,15 @@
+## 2026-11-28 - Location-scale censored adapters
+
+The additional logistic, Laplace, Cauchy and Rayleigh flat adapters, policies,
+Python methods, shape comments and interface tests are original MIT SciFort work.
+They call existing censored implementations without changing native numerical
+statements or public signatures. No upstream implementation or third-party
+dependency was imported; existing native provenance and limitations still apply.
+Tests use public installed SciPy density/tail outputs, native/C agreement,
+reflection and Rayleigh/Weibull identities. Extreme-interval references/formulas
+are retained from `test/test_censored.f90`, `test/test_censored_laplace.f90`,
+`test/test_censored_cauchy.f90` and `test/test_censored_rayleigh_max.f90`.
+
 ## 2026-11-28 - Lognormal, gamma and beta censored adapters
 
 The six additional flat adapters, policies, Python methods, shape comments and

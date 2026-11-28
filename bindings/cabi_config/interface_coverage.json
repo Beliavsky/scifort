@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 135,
+    "array_adapters": 143,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 301,
-    "python": 223,
+    "exports": 309,
+    "python": 231,
     "scalar": 88
   },
   "procedures": [
@@ -181,6 +181,18 @@
       "python": "censored_bridge.beta_nnlf"
     },
     {
+      "array_adapter": "scifort_cauchy_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_cauchy_loglikelihood",
+      "python": "censored_bridge.cauchy_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_cauchy_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_cauchy_nnlf",
+      "python": "censored_bridge.cauchy_nnlf"
+    },
+    {
       "array_adapter": "scifort_exponential_censored_loglikelihood_f64",
       "module": "scifort_censored_bridge",
       "procedure": "censored_exponential_loglikelihood",
@@ -205,6 +217,30 @@
       "python": "censored_bridge.gamma_nnlf"
     },
     {
+      "array_adapter": "scifort_laplace_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_laplace_loglikelihood",
+      "python": "censored_bridge.laplace_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_laplace_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_laplace_nnlf",
+      "python": "censored_bridge.laplace_nnlf"
+    },
+    {
+      "array_adapter": "scifort_logistic_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_logistic_loglikelihood",
+      "python": "censored_bridge.logistic_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_logistic_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_logistic_nnlf",
+      "python": "censored_bridge.logistic_nnlf"
+    },
+    {
       "array_adapter": "scifort_lognormal_censored_loglikelihood_f64",
       "module": "scifort_censored_bridge",
       "procedure": "censored_lognormal_loglikelihood",
@@ -227,6 +263,18 @@
       "module": "scifort_censored_bridge",
       "procedure": "censored_normal_nnlf",
       "python": "censored_bridge.normal_nnlf"
+    },
+    {
+      "array_adapter": "scifort_rayleigh_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_rayleigh_loglikelihood",
+      "python": "censored_bridge.rayleigh_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_rayleigh_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_rayleigh_nnlf",
+      "python": "censored_bridge.rayleigh_nnlf"
     },
     {
       "array_adapter": "scifort_weibull_censored_loglikelihood_f64",

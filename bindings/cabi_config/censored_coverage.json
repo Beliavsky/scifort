@@ -1,5 +1,5 @@
 {
-  "generated_symbol_count": 12,
+  "generated_symbol_count": 20,
   "generator_version": "0.3.0",
   "procedures": [
     {
@@ -162,6 +162,164 @@
       "status_argument": "status",
       "symbols": [
         "scifort_beta_censored_nnlf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_cauchy_loglikelihood",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_cauchy_censored_loglikelihood_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_cauchy_nnlf",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_cauchy_censored_nnlf_f64"
       ]
     },
     {
@@ -489,6 +647,322 @@
         "right",
         "lower",
         "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_laplace_loglikelihood",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_laplace_censored_loglikelihood_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_laplace_nnlf",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_laplace_censored_nnlf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_logistic_loglikelihood",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_logistic_censored_loglikelihood_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_logistic_nnlf",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_logistic_censored_nnlf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
         "s",
         "loc",
         "scale",
@@ -807,6 +1281,164 @@
         "right",
         "lower",
         "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_rayleigh_loglikelihood",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_rayleigh_censored_loglikelihood_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
+        "loc",
+        "scale",
+        "value",
+        "status"
+      ],
+      "dimension_order": [
+        "nu",
+        "nl",
+        "nr",
+        "ni"
+      ],
+      "dimensions": {
+        "ni": 0,
+        "nl": 0,
+        "nr": 0,
+        "nu": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "censored_rayleigh_nnlf",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "ni": {
+            "argument": "lower",
+            "axis": null
+          },
+          "nl": {
+            "argument": "left",
+            "axis": null
+          },
+          "nr": {
+            "argument": "right",
+            "axis": null
+          },
+          "nu": {
+            "argument": "uncensored",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "ni": 0,
+          "nl": 0,
+          "nr": 0,
+          "nu": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "left": [
+          "nl"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "right": [
+          "nr"
+        ],
+        "uncensored": [
+          "nu"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_rayleigh_censored_nnlf_f64"
+      ]
+    },
+    {
+      "arguments": [
+        "uncensored",
+        "left",
+        "right",
+        "lower",
+        "upper",
         "c",
         "loc",
         "scale",
@@ -961,7 +1593,7 @@
       ]
     }
   ],
-  "public_api_count": 12,
+  "public_api_count": 20,
   "source": "src/c_api/censored_bridge.f90",
-  "source_sha256": "07be78740527376ad5fe299659f198e5eb51fa1cdd9726f4b90003b688339c6d"
+  "source_sha256": "f937019ef28f05b69117ee5c4fbbdb14c5a38676ec72b795ddb18dcaa3d78f04"
 }

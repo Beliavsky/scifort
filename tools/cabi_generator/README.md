@@ -1067,3 +1067,9 @@ Lognormal, gamma and beta censored adapters extend the same reviewed policy with
 one or two explicit scalar shape parameters. No parser, code generator or Python
 runtime change is needed. Native parameter-vector shapes and the finite rounded
 upper-support restriction for beta are documented in the shared censored contract.
+
+Logistic, Laplace, Cauchy and Rayleigh censored methods reuse the same flat adapter
+policy without shape parameters. Native private helper vectors and the shared
+location/scale helper require `params(2)`; the generator/runtime and dependency
+graph are unchanged. Their censoring, endpoint and scale conventions are recorded
+in the shared censored contract.

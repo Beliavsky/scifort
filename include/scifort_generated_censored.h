@@ -32,6 +32,22 @@ void scifort_beta_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_nr,
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_beta_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_a, double arg_b, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
 
+/* Evaluate native cauchy censored loglikelihood; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_cauchy_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
+/* Evaluate native cauchy censored nnlf; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_cauchy_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
 /* Evaluate native exponential censored loglikelihood; input groups have independent lengths.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.
@@ -64,6 +80,38 @@ void scifort_gamma_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_nr
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_gamma_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_a, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
 
+/* Evaluate native laplace censored loglikelihood; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_laplace_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
+/* Evaluate native laplace censored nnlf; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_laplace_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
+/* Evaluate native logistic censored loglikelihood; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_logistic_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
+/* Evaluate native logistic censored nnlf; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_logistic_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
 /* Evaluate native lognormal censored loglikelihood; input groups have independent lengths.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.
  * All array pointers must be valid and non-NULL, including empty arrays.
@@ -95,6 +143,22 @@ void scifort_normal_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_n
  * Invalid extents return status 1 without changing output.
  * Other status/output behavior is inherited from the native procedure. */
 void scifort_normal_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
+/* Evaluate native rayleigh censored loglikelihood; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_rayleigh_censored_loglikelihood_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
+
+/* Evaluate native rayleigh censored nnlf; input groups have independent lengths.
+ * Explicit-shape arrays: contiguous column-major storage; no overlap.
+ * All array pointers must be valid and non-NULL, including empty arrays.
+ * All scalar output pointers must also be valid and non-NULL.
+ * Invalid extents return status 1 without changing output.
+ * Other status/output behavior is inherited from the native procedure. */
+void scifort_rayleigh_censored_nnlf_f64(int arg_nu, int arg_nl, int arg_nr, int arg_ni, const double * arg_uncensored, const double * arg_left, const double * arg_right, const double * arg_lower, const double * arg_upper, double arg_loc, double arg_scale, double * arg_value, int *arg_status);
 
 /* Evaluate native weibull censored loglikelihood; input groups have independent lengths.
  * Explicit-shape arrays: contiguous column-major storage; no overlap.

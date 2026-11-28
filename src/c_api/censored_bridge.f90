@@ -18,7 +18,15 @@ module scifort_censored_bridge
         native_gamma_loglikelihood => gamma_censored_loglikelihood, &
         native_gamma_nnlf => gamma_censored_nnlf, &
         native_beta_loglikelihood => beta_censored_loglikelihood, &
-        native_beta_nnlf => beta_censored_nnlf
+        native_beta_nnlf => beta_censored_nnlf, &
+        native_logistic_loglikelihood => logistic_censored_loglikelihood, &
+        native_logistic_nnlf => logistic_censored_nnlf, &
+        native_laplace_loglikelihood => laplace_censored_loglikelihood, &
+        native_laplace_nnlf => laplace_censored_nnlf, &
+        native_cauchy_loglikelihood => cauchy_censored_loglikelihood, &
+        native_cauchy_nnlf => cauchy_censored_nnlf, &
+        native_rayleigh_loglikelihood => rayleigh_censored_loglikelihood, &
+        native_rayleigh_nnlf => rayleigh_censored_nnlf
     implicit none
     private
     public :: censored_normal_loglikelihood
@@ -33,6 +41,14 @@ module scifort_censored_bridge
     public :: censored_gamma_nnlf
     public :: censored_beta_loglikelihood
     public :: censored_beta_nnlf
+    public :: censored_logistic_loglikelihood
+    public :: censored_logistic_nnlf
+    public :: censored_laplace_loglikelihood
+    public :: censored_laplace_nnlf
+    public :: censored_cauchy_loglikelihood
+    public :: censored_cauchy_nnlf
+    public :: censored_rayleigh_loglikelihood
+    public :: censored_rayleigh_nnlf
 contains
     subroutine censored_normal_loglikelihood(uncensored, left, right, lower, upper, &
             loc, scale, value, status)
@@ -467,6 +483,270 @@ contains
         if (status /= 0) return
         value = native_beta_nnlf(data,a, b, loc, scale)
     end subroutine censored_beta_nnlf
+
+    subroutine censored_logistic_loglikelihood(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate logistic log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite center
+        real(dp), intent(in) :: scale !! finite positive logistic scale
+        real(dp), intent(out) :: value !! log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_logistic_loglikelihood(data,loc, scale)
+    end subroutine censored_logistic_loglikelihood
+
+    subroutine censored_logistic_nnlf(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate logistic negative log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite center
+        real(dp), intent(in) :: scale !! finite positive logistic scale
+        real(dp), intent(out) :: value !! negative log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_logistic_nnlf(data,loc, scale)
+    end subroutine censored_logistic_nnlf
+
+    subroutine censored_laplace_loglikelihood(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate laplace log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite center
+        real(dp), intent(in) :: scale !! finite positive mean absolute deviation
+        real(dp), intent(out) :: value !! log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_laplace_loglikelihood(data,loc, scale)
+    end subroutine censored_laplace_loglikelihood
+
+    subroutine censored_laplace_nnlf(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate laplace negative log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite center
+        real(dp), intent(in) :: scale !! finite positive mean absolute deviation
+        real(dp), intent(out) :: value !! negative log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_laplace_nnlf(data,loc, scale)
+    end subroutine censored_laplace_nnlf
+
+    subroutine censored_cauchy_loglikelihood(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate cauchy log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite median
+        real(dp), intent(in) :: scale !! finite positive half width at half maximum
+        real(dp), intent(out) :: value !! log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_cauchy_loglikelihood(data,loc, scale)
+    end subroutine censored_cauchy_loglikelihood
+
+    subroutine censored_cauchy_nnlf(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate cauchy negative log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite median
+        real(dp), intent(in) :: scale !! finite positive half width at half maximum
+        real(dp), intent(out) :: value !! negative log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_cauchy_nnlf(data,loc, scale)
+    end subroutine censored_cauchy_nnlf
+
+    subroutine censored_rayleigh_loglikelihood(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate rayleigh log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite lower support endpoint
+        real(dp), intent(in) :: scale !! finite positive Rayleigh scale
+        real(dp), intent(out) :: value !! log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_rayleigh_loglikelihood(data,loc, scale)
+    end subroutine censored_rayleigh_loglikelihood
+
+    subroutine censored_rayleigh_nnlf(uncensored, left, right, lower, upper, &
+            loc, scale, value, status)
+        !! Evaluate rayleigh negative log likelihood using native endpoint/tail conventions.
+        !! @dimension nu = size(uncensored)
+        !! @dimension nl = size(left)
+        !! @dimension nr = size(right)
+        !! @dimension ni = size(lower)
+        !! size(upper) = ni; corresponding endpoints must be paired.
+        !! @require nu >= 0
+        !! @require nl >= 0
+        !! @require nr >= 0
+        !! @require ni >= 0
+        !! All group lengths are independent; empty groups are permitted.
+        !! Their sum must fit the native default integer kind.
+        real(dp), intent(in) :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in) :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in) :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in) :: lower(:) !! shape (ni); interval lower endpoints
+        real(dp), intent(in) :: upper(:) !! shape (ni); interval upper endpoints
+        real(dp), intent(in) :: loc !! finite lower support endpoint
+        real(dp), intent(in) :: scale !! finite positive Rayleigh scale
+        real(dp), intent(out) :: value !! negative log likelihood; NaN for invalid input
+        integer, intent(out) :: status !! 0 evaluated; 1 count/shape; 2 data/parameters
+        type(censored_data) :: data
+
+        value = quiet_nan(0.0_dp)
+        status = 2
+        if (.not. valid_loc_scale(loc,scale)) return
+        call pack_censored_samples(uncensored,left,right,lower,upper,data,status)
+        if (status /= 0) return
+        value = native_rayleigh_nnlf(data,loc, scale)
+    end subroutine censored_rayleigh_nnlf
 
     subroutine pack_censored_samples(uncensored, left, right, lower, upper, data, status)
         !! Copy validated groups into a local native object; no storage is retained.

@@ -756,6 +756,38 @@
         "censored_beta_nnlf": {
           "loc": 0.0,
           "scale": 1.0
+        },
+        "censored_logistic_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_logistic_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_laplace_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_laplace_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_cauchy_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_cauchy_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_rayleigh_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_rayleigh_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
         }
       }
     }

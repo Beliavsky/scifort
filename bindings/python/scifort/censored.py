@@ -5,7 +5,7 @@ from ._runtime import Distribution
 
 
 class CensoredLikelihoods:
-    """Censored likelihoods for six reviewed distribution families."""
+    """Censored likelihoods for ten reviewed distribution families."""
 
     def __init__(self, api):
         self._bridge = api.censored_bridge
@@ -104,4 +104,52 @@ class CensoredLikelihoods:
         """Evaluate beta negative log likelihood; empty data contributes zero."""
         return self._evaluate('beta_nnlf', uncensored, left, right, interval,
                               dict(a=a, b=b, loc=loc, scale=scale))
+
+    def logistic_loglikelihood(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate logistic log likelihood; empty data contributes zero."""
+        return self._evaluate('logistic_loglikelihood', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def logistic_nnlf(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate logistic negative log likelihood; empty data contributes zero."""
+        return self._evaluate('logistic_nnlf', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def laplace_loglikelihood(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate laplace log likelihood; empty data contributes zero."""
+        return self._evaluate('laplace_loglikelihood', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def laplace_nnlf(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate laplace negative log likelihood; empty data contributes zero."""
+        return self._evaluate('laplace_nnlf', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def cauchy_loglikelihood(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate cauchy log likelihood; empty data contributes zero."""
+        return self._evaluate('cauchy_loglikelihood', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def cauchy_nnlf(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate cauchy negative log likelihood; empty data contributes zero."""
+        return self._evaluate('cauchy_nnlf', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def rayleigh_loglikelihood(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate rayleigh log likelihood; empty data contributes zero."""
+        return self._evaluate('rayleigh_loglikelihood', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
+
+    def rayleigh_nnlf(self, uncensored=None, *, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate rayleigh negative log likelihood; empty data contributes zero."""
+        return self._evaluate('rayleigh_nnlf', uncensored, left, right, interval,
+                              dict(loc=loc, scale=scale))
 

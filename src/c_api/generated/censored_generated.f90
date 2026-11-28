@@ -6,28 +6,44 @@ module scifort_c_api_generated_censored
     use scifort_kinds, only : cg_kind => dp
     use scifort_censored_bridge, only : cg_native_0 => censored_beta_loglikelihood
     use scifort_censored_bridge, only : cg_native_1 => censored_beta_nnlf
-    use scifort_censored_bridge, only : cg_native_2 => censored_exponential_loglikelihood
-    use scifort_censored_bridge, only : cg_native_3 => censored_exponential_nnlf
-    use scifort_censored_bridge, only : cg_native_4 => censored_gamma_loglikelihood
-    use scifort_censored_bridge, only : cg_native_5 => censored_gamma_nnlf
-    use scifort_censored_bridge, only : cg_native_6 => censored_lognormal_loglikelihood
-    use scifort_censored_bridge, only : cg_native_7 => censored_lognormal_nnlf
-    use scifort_censored_bridge, only : cg_native_8 => censored_normal_loglikelihood
-    use scifort_censored_bridge, only : cg_native_9 => censored_normal_nnlf
-    use scifort_censored_bridge, only : cg_native_10 => censored_weibull_loglikelihood
-    use scifort_censored_bridge, only : cg_native_11 => censored_weibull_nnlf
+    use scifort_censored_bridge, only : cg_native_2 => censored_cauchy_loglikelihood
+    use scifort_censored_bridge, only : cg_native_3 => censored_cauchy_nnlf
+    use scifort_censored_bridge, only : cg_native_4 => censored_exponential_loglikelihood
+    use scifort_censored_bridge, only : cg_native_5 => censored_exponential_nnlf
+    use scifort_censored_bridge, only : cg_native_6 => censored_gamma_loglikelihood
+    use scifort_censored_bridge, only : cg_native_7 => censored_gamma_nnlf
+    use scifort_censored_bridge, only : cg_native_8 => censored_laplace_loglikelihood
+    use scifort_censored_bridge, only : cg_native_9 => censored_laplace_nnlf
+    use scifort_censored_bridge, only : cg_native_10 => censored_logistic_loglikelihood
+    use scifort_censored_bridge, only : cg_native_11 => censored_logistic_nnlf
+    use scifort_censored_bridge, only : cg_native_12 => censored_lognormal_loglikelihood
+    use scifort_censored_bridge, only : cg_native_13 => censored_lognormal_nnlf
+    use scifort_censored_bridge, only : cg_native_14 => censored_normal_loglikelihood
+    use scifort_censored_bridge, only : cg_native_15 => censored_normal_nnlf
+    use scifort_censored_bridge, only : cg_native_16 => censored_rayleigh_loglikelihood
+    use scifort_censored_bridge, only : cg_native_17 => censored_rayleigh_nnlf
+    use scifort_censored_bridge, only : cg_native_18 => censored_weibull_loglikelihood
+    use scifort_censored_bridge, only : cg_native_19 => censored_weibull_nnlf
     implicit none
     private
     public :: scifort_beta_censored_loglikelihood_f64
     public :: scifort_beta_censored_nnlf_f64
+    public :: scifort_cauchy_censored_loglikelihood_f64
+    public :: scifort_cauchy_censored_nnlf_f64
     public :: scifort_exponential_censored_loglikelihood_f64
     public :: scifort_exponential_censored_nnlf_f64
     public :: scifort_gamma_censored_loglikelihood_f64
     public :: scifort_gamma_censored_nnlf_f64
+    public :: scifort_laplace_censored_loglikelihood_f64
+    public :: scifort_laplace_censored_nnlf_f64
+    public :: scifort_logistic_censored_loglikelihood_f64
+    public :: scifort_logistic_censored_nnlf_f64
     public :: scifort_lognormal_censored_loglikelihood_f64
     public :: scifort_lognormal_censored_nnlf_f64
     public :: scifort_normal_censored_loglikelihood_f64
     public :: scifort_normal_censored_nnlf_f64
+    public :: scifort_rayleigh_censored_loglikelihood_f64
+    public :: scifort_rayleigh_censored_nnlf_f64
     public :: scifort_weibull_censored_loglikelihood_f64
     public :: scifort_weibull_censored_nnlf_f64
 contains
@@ -142,6 +158,108 @@ contains
             status=status)
     end subroutine scifort_beta_censored_nnlf_f64
 
+    subroutine scifort_cauchy_censored_loglikelihood_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_cauchy_censored_loglikelihood_f64")
+        !! Evaluate native cauchy censored loglikelihood; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_2( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_cauchy_censored_loglikelihood_f64
+
+    subroutine scifort_cauchy_censored_nnlf_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_cauchy_censored_nnlf_f64")
+        !! Evaluate native cauchy censored nnlf; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_3( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_cauchy_censored_nnlf_f64
+
     subroutine scifort_exponential_censored_loglikelihood_f64( &
         nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
         bind(c, name="scifort_exponential_censored_loglikelihood_f64")
@@ -181,7 +299,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_2( &
+        call cg_native_4( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -232,7 +350,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_3( &
+        call cg_native_5( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -284,7 +402,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_4( &
+        call cg_native_6( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -337,7 +455,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_5( &
+        call cg_native_7( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -349,6 +467,210 @@ contains
             value=value, &
             status=status)
     end subroutine scifort_gamma_censored_nnlf_f64
+
+    subroutine scifort_laplace_censored_loglikelihood_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_laplace_censored_loglikelihood_f64")
+        !! Evaluate native laplace censored loglikelihood; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_8( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_laplace_censored_loglikelihood_f64
+
+    subroutine scifort_laplace_censored_nnlf_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_laplace_censored_nnlf_f64")
+        !! Evaluate native laplace censored nnlf; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_9( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_laplace_censored_nnlf_f64
+
+    subroutine scifort_logistic_censored_loglikelihood_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_logistic_censored_loglikelihood_f64")
+        !! Evaluate native logistic censored loglikelihood; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_10( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_logistic_censored_loglikelihood_f64
+
+    subroutine scifort_logistic_censored_nnlf_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_logistic_censored_nnlf_f64")
+        !! Evaluate native logistic censored nnlf; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_11( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_logistic_censored_nnlf_f64
 
     subroutine scifort_lognormal_censored_loglikelihood_f64( &
         nu, nl, nr, ni, uncensored, left, right, lower, upper, s, loc, scale, value, status) &
@@ -390,7 +712,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_6( &
+        call cg_native_12( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -443,7 +765,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_7( &
+        call cg_native_13( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -495,7 +817,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_8( &
+        call cg_native_14( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -546,7 +868,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_9( &
+        call cg_native_15( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -557,6 +879,108 @@ contains
             value=value, &
             status=status)
     end subroutine scifort_normal_censored_nnlf_f64
+
+    subroutine scifort_rayleigh_censored_loglikelihood_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_rayleigh_censored_loglikelihood_f64")
+        !! Evaluate native rayleigh censored loglikelihood; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_16( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_rayleigh_censored_loglikelihood_f64
+
+    subroutine scifort_rayleigh_censored_nnlf_f64( &
+        nu, nl, nr, ni, uncensored, left, right, lower, upper, loc, scale, value, status) &
+        bind(c, name="scifort_rayleigh_censored_nnlf_f64")
+        !! Evaluate native rayleigh censored nnlf; input groups have independent lengths.
+        integer(c_int), value, intent(in) :: nu !! exact observation count, >= 0
+        integer(c_int), value, intent(in) :: nl !! left-censored count, >= 0
+        integer(c_int), value, intent(in) :: nr !! right-censored count, >= 0
+        integer(c_int), value, intent(in) :: ni !! interval count, >= 0
+        real(c_double), intent(in) :: uncensored(nu) !! finite exact observations
+        real(c_double), intent(in) :: left(nl) !! finite upper censoring limits
+        real(c_double), intent(in) :: right(nr) !! finite lower censoring limits
+        real(c_double), intent(in) :: lower(ni) !! ordered interval lower endpoints; equal finite endpoints mean exact observations
+        real(c_double), intent(in) :: upper(ni) !! interval upper endpoints paired with lower; one infinite endpoint permitted
+        real(c_double), value, intent(in) :: loc !! finite location
+        real(c_double), value, intent(in) :: scale !! finite positive scale
+        real(c_double), intent(inout) :: value !! likelihood result; NaN for invalid input
+        integer(c_int), intent(out) :: status !! 0 evaluated; 1 extents/count/shape; 2 invalid data/parameters
+        ! Direct array association requires matching native and C kinds.
+        integer, parameter :: cg_real_kind_check=1/merge(1,0,cg_kind == c_double)
+        integer, parameter :: cg_int_kind_check=1/merge(1,0,kind(0) == c_int)
+
+        ! Reject invalid extents before calling the native procedure.
+        if (nu < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nl < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (nr < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        if (ni < 0_c_int) then
+            status=1_c_int
+            return
+        end if
+        ! The compiler supplies assumed-shape descriptors inside Fortran.
+        call cg_native_17( &
+            uncensored=uncensored, &
+            left=left, &
+            right=right, &
+            lower=lower, &
+            upper=upper, &
+            loc=loc, &
+            scale=scale, &
+            value=value, &
+            status=status)
+    end subroutine scifort_rayleigh_censored_nnlf_f64
 
     subroutine scifort_weibull_censored_loglikelihood_f64( &
         nu, nl, nr, ni, uncensored, left, right, lower, upper, c, loc, scale, value, status) &
@@ -598,7 +1022,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_10( &
+        call cg_native_18( &
             uncensored=uncensored, &
             left=left, &
             right=right, &
@@ -651,7 +1075,7 @@ contains
             return
         end if
         ! The compiler supplies assumed-shape descriptors inside Fortran.
-        call cg_native_11( &
+        call cg_native_19( &
             uncensored=uncensored, &
             left=left, &
             right=right, &

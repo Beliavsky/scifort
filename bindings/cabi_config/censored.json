@@ -511,6 +511,342 @@
       "invalid_status": 1,
       "shape_contract": true,
       "description": "Evaluate native beta censored nnlf; input groups have independent lengths."
+    },
+    "censored_logistic_loglikelihood": {
+      "symbol": "scifort_logistic_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native logistic censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_logistic_nnlf": {
+      "symbol": "scifort_logistic_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native logistic censored nnlf; input groups have independent lengths."
+    },
+    "censored_laplace_loglikelihood": {
+      "symbol": "scifort_laplace_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native laplace censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_laplace_nnlf": {
+      "symbol": "scifort_laplace_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native laplace censored nnlf; input groups have independent lengths."
+    },
+    "censored_cauchy_loglikelihood": {
+      "symbol": "scifort_cauchy_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native cauchy censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_cauchy_nnlf": {
+      "symbol": "scifort_cauchy_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native cauchy censored nnlf; input groups have independent lengths."
+    },
+    "censored_rayleigh_loglikelihood": {
+      "symbol": "scifort_rayleigh_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native rayleigh censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_rayleigh_nnlf": {
+      "symbol": "scifort_rayleigh_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native rayleigh censored nnlf; input groups have independent lengths."
     }
   },
   "excluded": {},

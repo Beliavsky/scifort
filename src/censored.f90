@@ -12291,17 +12291,19 @@ contains
     end function log_hazard_mass
 
     pure function rayleigh_log_hazard(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite point strictly above the support endpoint
-        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite lower support endpoint and positive scale
         real(dp) :: value
         value = 2.0_dp*(log_distance(x,params(1))-log(params(2))) - scifort_log_two
     end function rayleigh_log_hazard
 
     pure function rayleigh_lpdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
-        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite lower support endpoint and positive scale
         real(dp) :: value
         value = negative_infinity(0.0_dp)
         if (x <= params(1)) return
@@ -12310,9 +12312,10 @@ contains
     end function rayleigh_lpdf
 
     pure function rayleigh_lcdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite upper censoring limit
-        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite lower support endpoint and positive scale
         real(dp) :: value
         value = negative_infinity(0.0_dp)
         if (x <= params(1)) return
@@ -12320,9 +12323,10 @@ contains
     end function rayleigh_lcdf
 
     pure function rayleigh_lsf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite lower censoring limit
-        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite lower support endpoint and positive scale
         real(dp) :: value
         value = 0.0_dp
         if (x <= params(1)) return
@@ -12330,10 +12334,11 @@ contains
     end function rayleigh_lsf
 
     pure function rayleigh_interval(a, b, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: a !! finite lower interval endpoint
         real(dp), intent(in) :: b !! finite upper interval endpoint, > a
-        real(dp), intent(in) :: params(:) !! finite lower support endpoint and positive scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite lower support endpoint and positive scale
         real(dp) :: value, loga, logb, logdelta
         value = negative_infinity(0.0_dp)
         if (b <= params(1)) return
@@ -12630,9 +12635,10 @@ contains
     end function cauchy_censored_nnlf
 
     pure function cauchy_log_distance(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite observation or censoring limit
-        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite median and positive finite scale
         real(dp) :: value
         value = negative_infinity(0.0_dp)
         if (x == params(1)) return
@@ -12655,9 +12661,10 @@ contains
     end function cauchy_logatan_exp
 
     pure function cauchy_lpdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
-        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite median and positive finite scale
         real(dp) :: value, logz
         logz = cauchy_log_distance(x, params)
         value = -log(scifort_pi) - log(params(2)) - log1pexp(2.0_dp * logz)
@@ -12675,28 +12682,31 @@ contains
     end function cauchy_log_small_tail
 
     pure function cauchy_lcdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite upper censoring limit
-        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite median and positive finite scale
         real(dp) :: value
         value = cauchy_log_small_tail(cauchy_log_distance(x, params))
         if (x > params(1)) value = log1p_safe(-exp(value))
     end function cauchy_lcdf
 
     pure function cauchy_lsf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite lower censoring limit
-        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite median and positive finite scale
         real(dp) :: value
         value = cauchy_log_small_tail(cauchy_log_distance(x, params))
         if (x < params(1)) value = log1p_safe(-exp(value))
     end function cauchy_lsf
 
     pure function cauchy_interval(a, b, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: a !! finite lower interval endpoint
         real(dp), intent(in) :: b !! finite upper interval endpoint, > a
-        real(dp), intent(in) :: params(:) !! finite median and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite median and positive finite scale
         real(dp) :: value, loga, logb, logratio, left, right, large, small
         loga = cauchy_log_distance(a, params)
         logb = cauchy_log_distance(b, params)
@@ -12748,17 +12758,19 @@ contains
     end function laplace_censored_nnlf
 
     pure function laplace_lpdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value
         value = -abs(location_scale_z(x, params)) - scifort_log_two - log(params(2))
     end function laplace_lpdf
 
     pure function laplace_lcdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! upper censoring limit
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value, z
         z = location_scale_z(x, params)
         if (z <= 0.0_dp) then
@@ -12769,9 +12781,10 @@ contains
     end function laplace_lcdf
 
     pure function laplace_lsf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! lower censoring limit
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value, z
         z = location_scale_z(x, params)
         if (z >= 0.0_dp) then
@@ -12782,10 +12795,11 @@ contains
     end function laplace_lsf
 
     pure function laplace_interval(a, b, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: a !! finite lower interval endpoint
         real(dp), intent(in) :: b !! finite upper interval endpoint, > a
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value, left, right, large, small, logscale
         logscale = log(params(2))
         if (b <= params(1)) then
@@ -12951,9 +12965,10 @@ contains
     end function logistic_censored_nnlf
 
     pure function location_scale_z(x, params) result(z)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! evaluation point, possibly infinite
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: z, delta, factor, ratio
         integer :: power
 
@@ -12983,35 +12998,39 @@ contains
     end function location_scale_z
 
     pure function logistic_lpdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! exact observation
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value, a
         a = abs(location_scale_z(x, params))
         value = -a - 2.0_dp * log1p_safe(exp(-a)) - log(params(2))
     end function logistic_lpdf
 
     pure function logistic_lcdf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! upper censoring limit
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value
         value = -log1pexp(-location_scale_z(x, params))
     end function logistic_lcdf
 
     pure function logistic_lsf(x, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: x !! lower censoring limit
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value
         value = -log1pexp(location_scale_z(x, params))
     end function logistic_lsf
 
     pure function logistic_interval(a, b, params) result(value)
+        !! size(params) = 2; location and positive scale, in that order.
         implicit none
         real(dp), intent(in) :: a !! finite lower endpoint
         real(dp), intent(in) :: b !! finite upper endpoint, > a
-        real(dp), intent(in) :: params(:) !! finite center and positive finite scale
+        real(dp), intent(in) :: params(:) !! shape (2); finite center and positive finite scale
         real(dp) :: value
         ! F(b)-F(a) = F(b)*S(a)*(1-exp(-(b-a)/scale)).
         value = logistic_lcdf(b, params) + logistic_lsf(a, params) + &

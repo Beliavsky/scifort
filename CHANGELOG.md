@@ -1,3 +1,12 @@
+## 2026-11-28 - Logistic, Laplace, Cauchy and Rayleigh censored interfaces
+
+- Add eight C/Python log-likelihood and NNLF methods through the existing
+  copied-data adapters, retaining native endpoint and tail behavior.
+- Document parameter-vector shapes for private density/tail/interval helpers,
+  distance/hazard calculations and the shared location-scale helper.
+- Add mixed-censoring, support, reflection, Rayleigh/Weibull identity, narrow-tail,
+  invalid-input and C/C++ checks; extend native/C comparisons to twenty methods.
+
 ## 2026-11-28 - Lognormal, gamma and beta censored interfaces
 
 - Add six C/Python log-likelihood and NNLF methods using the existing censored

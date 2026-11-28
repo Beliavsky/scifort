@@ -3149,9 +3149,13 @@ lognormal_nll = api.censored.lognormal_nnlf([1.0, 2.0], s=0.8, right=[3.0])
 gamma_value = api.censored.gamma_loglikelihood([1.0, 2.0], a=2.5, scale=1.3)
 beta_value = api.censored.beta_loglikelihood(
     [0.2, 0.6], a=0.4, b=0.6, interval=[[0.3, 0.5]])
+logistic_value = api.censored.logistic_loglikelihood(
+    [-0.5, 0.2], left=[-1.0], right=[1.5])
+rayleigh_nll = api.censored.rayleigh_nnlf([0.5, 1.2], interval=[[1.4, 1.8]])
 ```
 
-Normal, exponential, minimum-Weibull, lognormal, gamma and beta each expose `*_loglikelihood` and
+Normal, exponential, minimum-Weibull, lognormal, gamma, beta, logistic, Laplace,
+Cauchy and Rayleigh each expose `*_loglikelihood` and
 `*_nnlf` under `api.censored`, returning scalar floats. Independent input groups
 are copied into a local native `censored_data` object; no handles require cleanup.
 Omitted groups are empty. Location defaults to zero and scale to one; Weibull
@@ -3159,7 +3163,10 @@ requires keyword `c`; lognormal requires `s`, gamma requires `a`, and beta
 requires `a,b`. Scale and all shape parameters must be finite and positive;
 location is finite. Beta preserves the native finite-upper-support restriction.
 Lognormal scale is `exp(mean(log(x-loc)))` and `s` is its log standard deviation;
-gamma scale is its inverse rate and beta scale is its support width.
+gamma scale is its inverse rate and beta scale is its support width. The four
+location-scale additions need no shape keywords: Laplace scale is its mean
+absolute deviation, Cauchy scale its half width at half maximum, and Rayleigh uses
+cumulative hazard `0.5*((x-loc)/scale)**2` on `x >= loc`.
 
 `interval` has shape `(n_interval,2)`. Equal finite endpoints mean an exact
 observation; one infinite endpoint means one-sided censoring. Reversed endpoints,
@@ -3213,3 +3220,18 @@ artifacts passed the consistency check. Static comparison confirmed unchanged
 native numerical statements/signatures and unchanged 112-file dependency graph.
 The full numerical suite was not rerun for these isolated interface additions;
 other compilers and platforms were not newly validated.
+
+Validation on 2026-11-28 (location-scale additions): all 19 censored-interface
+tests and ten general binding tests passed with checked and optimized libraries
+using GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3,
+SciPy 1.15.3 and NumPy 2.2.6. The expanded native/C regression covers twenty
+methods across ten families; C11/C++17 clients exercise all eight new symbols.
+New checks cover mixed/empty/one-sided/interval censoring, reflection,
+Rayleigh/Weibull identity, support endpoints, strided/read-only aliases,
+invalid data/parameters, raw C output preservation and extreme/narrow/subnormal
+intervals. The expanded README example passed against the checked library.
+All 172 generated artifacts passed consistency checks. Native numerical
+statements/signatures and the 112-file dependency graph are unchanged; ASCII,
+line-length, local-link and whitespace checks passed. The full numerical suite
+was not rerun for these isolated interfaces; other compilers/platforms were not
+newly validated.
