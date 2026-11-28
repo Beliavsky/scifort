@@ -1048,3 +1048,10 @@ compiled. Module termination, duplicate providers, ordering, cycles, preprocessi
 INCLUDE and submodule restrictions remain checked. Numerical syntax/semantics
 are the compiler's responsibility; reviewed interface generation still uses its
 full parser and existing supported grammar.
+
+The reviewed logrank bridge uses existing rank-one input arrays, four independent
+nonnegative dimensions and two scalar outputs. Its status guard validates finite
+data and alternative codes before native calls; zero variance retains native
+NaN results with success status. No generator/runtime changes were needed.
+The lightweight interval type reduces the binding build closure without changing
+existing type import paths. See [logrank_shapes.md](../../docs/logrank_shapes.md).

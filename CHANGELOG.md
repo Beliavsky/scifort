@@ -1,3 +1,14 @@
+## 2026-11-27 - Lightweight intervals and logrank interfaces
+
+- Move the shared confidence-interval value type into a lightweight module and
+  preserve existing contingency/statistics imports through re-export of that type.
+- Reduce binding source dependencies from 143 to 101 files, including new logrank
+  adapters, by removing the empirical module's contingency dependency.
+- Add flat C/Python logrank comparisons with independent event/censor vectors,
+  signed normal statistics, explicit alternatives and invalid-input status guards.
+- Document native/public/private array contracts and preserve empty/zero-variance
+  NaN behavior; test type identity, numerical agreement and group-swap identities.
+
 ## 2026-11-27 - Empirical CDF and Kaplan-Meier interfaces
 
 - Expose copied-data ECDF/Kaplan-Meier construction, batch evaluation, exact-length

@@ -146,7 +146,7 @@ class ECDFTests(unittest.TestCase):
                 program=folder/'regression.f90'
                 original=(ROOT/'test/test_empirical_distribution.f90').read_text(encoding='utf-8')
                 old='    use scifort_stats, only : confidence_interval, ecdf, ecdf_confidence_interval, &\n        ecdf_result, normal_cdf, normal_pdf, normal_ppf, order_statistic, &\n        order_statistic_distribution, quantile_test, quantile_test_result'
-                new='    use scifort_contingency_meta, only : confidence_interval\n    use scifort_normal, only : normal_cdf, normal_pdf, normal_ppf\n    use scifort_empirical_distribution, only : ecdf, ecdf_confidence_interval, &\n        ecdf_result, order_statistic, order_statistic_distribution, quantile_test, quantile_test_result'
+                new='    use scifort_confidence_interval, only : confidence_interval\n    use scifort_normal, only : normal_cdf, normal_pdf, normal_ppf\n    use scifort_empirical_distribution, only : ecdf, ecdf_confidence_interval, &\n        ecdf_result, order_statistic, order_statistic_distribution, quantile_test, quantile_test_result'
                 self.assertIn(old,original)
                 program.write_text(original.replace(old,new),encoding='utf-8')
                 for source in (program,ROOT/'test/test_ecdf_c_api.f90'):

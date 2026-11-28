@@ -3057,22 +3057,82 @@ build\cabi-generator-venv\Scripts\python.exe -m unittest discover -s tools/cabi_
 build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
 ```
 
-The existing native empirical-distribution module imports the contingency module
-for a confidence-interval result type. That dependency currently brings additional
-statistics/descriptive modules into the shared-library build, even though the
-new C ABI exposes only ECDF operations. They are recorded in the generated build
-plan; a first optimized build can take substantially longer. No additional
-numerical APIs are inferred from those dependencies.
+The native empirical-distribution module now imports its confidence-interval
+result type from a lightweight module. Existing contingency/statistics import
+paths re-export that same type. The binding build no longer pulls in the previous
+contingency, hypothesis and high-rank descriptive dependency chain solely for
+this type. With the logrank adapters included, its generated source closure is
+101 files, down from 143. Fortran consumers must rebuild their module files.
 
 Validation on 2026-11-27: all six ECDF tests passed against checked
 (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries, using GNU
 Fortran/GCC/G++ 17.0.0 20260510 (experimental), Python 3.13.3 and SciPy 1.15.3.
-They include ordinary/tied/right-censored/empty samples, endpoint and NaN behavior,
-both Greenwood methods at levels 0, 0.9 and 1, invalid inputs, buffers, ownership,
-C/C++ clients, direct native/C agreement and the existing native empirical
-regression program. The new README example also ran against the checked library.
-All 101 generator tests passed; the final eight planner tests were rerun after
-parser refinements and passed. The unified check passed for all 164 artifacts.
-Native numerical statements and shared Python runtime implementations were
-unchanged; the unrelated full `fpm test` suite was not rerun. Other compilers and
-platforms were not newly validated.
+They cover ordinary/tied/right-censored/empty samples, endpoints and NaNs,
+Greenwood intervals, invalid inputs, ownership, C/C++ clients and native/C
+agreement. Generator implementation tests from the preceding ECDF changeset
+passed (101 tests); this changeset does not modify the generator implementation.
+Current logrank and full native validation are recorded below.
+
+## Logrank survival comparisons
+
+```python
+result = api.logrank([1., 2., 2.], [2., 3., 4., 6.],
+                     x_right=[2., 5.], y_right=[4.], alternative='less')
+statistic, pvalue = result
+```
+
+`api.logrank(x, y, *, x_right=None, y_right=None, alternative='two-sided')`
+returns an immutable `LogrankResult` with `.statistic` and `.pvalue`. Event and
+right-censoring inputs are finite one-dimensional real vectors; all four lengths
+are independent. Omitting either censor vector means no censoring in that group.
+Python converts strided inputs as needed and copies overlapping read-only arrays,
+including comparisons of a sample with itself. This signature uses separate
+vectors rather than SciPy's `CensoredData` objects. Left/interval censoring is
+unsupported.
+
+The signed standard-normal statistic is positive for excess observed deaths in
+X relative to the pooled expected count. `'less'` returns its normal CDF,
+`'greater'` its normal SF, and `'two-sided'` doubles the SF of its absolute value,
+capped at one. Swapping groups reverses the sign and interchanges one-sided
+alternatives. Tied censoring and event times use the native risk-set convention.
+Empty groups, all-censored samples and other zero-variance cases return NaNs with
+successful completion, matching native behavior. Invalid/nonfinite inputs raise
+`ValueError` instead of entering native error-stop paths.
+
+The generated [C header](../../include/scifort_generated_logrank.h) exposes
+`scifort_logrank_f64(nx, rx, ny, ry, x, x_right, y, y_right, alternative,
+statistic, pvalue, status)`. Counts are independent nonnegative C ints; alternative
+is 0 two-sided, 1 less or 2 greater. Input buffers must be valid and disjoint,
+including valid addresses for zero lengths; scalar outputs must be valid,
+non-null and disjoint. Negative extents return status 1 without changing outputs.
+Native count overflow returns 1 with NaNs; invalid alternatives/nonfinite times
+return 2 with NaNs; zero-variance results return 0 with NaNs. No descriptors,
+characters, Fortran logicals or derived types cross the ABI. The low-level
+`api.survival.logrank(x, x_right, y, y_right, alternative=0)` returns an `ArrayResult`
+with status and both scalar outputs. No generator/runtime extension was required.
+
+See [shape and shared-type contracts](../../docs/logrank_shapes.md). The existing
+public Fortran import paths for `confidence_interval` remain available; a new
+native regression checks type identity across those paths and both interval
+producers. Full native tests are required for this shared dependency move.
+
+Validation commands:
+
+```bat
+fpm test
+python -m unittest discover -s bindings/python/tests -p test_logrank.py -v
+python -m unittest discover -s bindings/python/tests -p test_ecdf.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+Validation on 2026-11-27: all seven logrank tests passed against checked and
+optimized libraries with the compiler and Python versions listed above. Coverage
+includes SciPy references, independent lengths, ties, group swaps, extreme tails,
+empty/all-censored samples, aliases, raw C errors, C11/C++17 clients and native/C
+agreement. The Python example ran successfully against the checked library.
+The unified pipeline consistency check passed for all 168 artifacts.
+The full `fpm test` run also passed (exit code 0), using fpm 0.12.0 alpha
+and the same GNU Fortran compiler. It rebuilt the shared-type dependents and
+validated existing import paths, both interval producers, native logrank and
+native/C agreement. Existing array-temporary runtime warnings appeared without
+test failures. Other compilers and platforms were not newly validated.

@@ -1,0 +1,84 @@
+{
+  "generated_symbol_count": 1,
+  "generator_version": "0.3.0",
+  "procedures": [
+    {
+      "arguments": [
+        "x",
+        "x_right",
+        "y",
+        "y_right",
+        "alternative",
+        "statistic",
+        "pvalue",
+        "status"
+      ],
+      "dimension_order": [
+        "nx",
+        "rx",
+        "ny",
+        "ry"
+      ],
+      "dimensions": {
+        "nx": 0,
+        "ny": 0,
+        "rx": 0,
+        "ry": 0
+      },
+      "interface": "explicit_shape_subroutine",
+      "native_shape_documentation_review": [],
+      "optional_promoted_to_required": [],
+      "procedure": "survival_logrank",
+      "shape_contract": {
+        "conditions": [],
+        "definitions": {
+          "nx": {
+            "argument": "x",
+            "axis": null
+          },
+          "ny": {
+            "argument": "y",
+            "axis": null
+          },
+          "rx": {
+            "argument": "x_right",
+            "axis": null
+          },
+          "ry": {
+            "argument": "y_right",
+            "axis": null
+          }
+        },
+        "minimums": {
+          "nx": 0,
+          "ny": 0,
+          "rx": 0,
+          "ry": 0
+        },
+        "schema_version": 1
+      },
+      "shapes": {
+        "x": [
+          "nx"
+        ],
+        "x_right": [
+          "rx"
+        ],
+        "y": [
+          "ny"
+        ],
+        "y_right": [
+          "ry"
+        ]
+      },
+      "state": "generated",
+      "status_argument": "status",
+      "symbols": [
+        "scifort_logrank_f64"
+      ]
+    }
+  ],
+  "public_api_count": 1,
+  "source": "src/c_api/logrank_bridge.f90",
+  "source_sha256": "a38b942dd17bfb0fff23233d2515419323f54b253f61e8ffd797e47e3c47081e"
+}

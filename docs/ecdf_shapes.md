@@ -34,3 +34,8 @@ storage. A bound survives closing its source; closing one function does not clos
 its partner. Bounds do not contain variance data, so nested intervals return
 status 2. All owned outputs need fresh slots and must be destroyed exactly once;
 null destruction is idempotent. Raw non-null handles must be valid and live.
+
+The empirical module now imports the shared interval type from a lightweight
+module; existing public import paths remain available. See
+[logrank_shapes.md](logrank_shapes.md) for that compatibility contract and the
+related survival comparison interfaces.

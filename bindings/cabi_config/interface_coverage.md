@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 288 |
+| exports | 289 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 122 |
+| array_adapters | 123 |
 | elementwise | 88 |
-| python | 210 |
+| python | 211 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -135,6 +135,7 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_lognormal | lognormal_pdf | scifort_lognormal_pdf_f64 | scifort_lognormal_pdf_vec_f64 |  | scifort_lognormal_pdf_elementwise_f64 | lognormal.pdf |
 | scifort_lognormal | lognormal_ppf | scifort_lognormal_ppf_f64 | scifort_lognormal_ppf_vec_f64 |  | scifort_lognormal_ppf_elementwise_f64 | lognormal.ppf |
 | scifort_lognormal | lognormal_sf | scifort_lognormal_sf_f64 | scifort_lognormal_sf_vec_f64 |  | scifort_lognormal_sf_elementwise_f64 | lognormal.sf |
+| scifort_logrank_bridge | survival_logrank |  |  | scifort_logrank_f64 |  | survival.logrank |
 | scifort_matrix_distribution_helpers | invert_lower |  |  | scifort_invert_lower_f64 |  | linalg.invert_lower |
 | scifort_matrix_distribution_helpers | log_multivariate_gamma |  |  |  |  |  |
 | scifort_matrix_distribution_helpers | matrix_status_invalid_parameter |  |  |  |  |  |

@@ -8,6 +8,7 @@
 
 module scifort_contingency_meta
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
+    use scifort_confidence_interval, only : confidence_interval
     use scifort_beta, only : beta_ppf
     use scifort_binomial, only : binomial_cdf, binomial_pmf, binomial_sf
     use scifort_chi2, only : chi2_cdf, chi2_sf
@@ -24,10 +25,7 @@ module scifort_contingency_meta
 
     real(dp), parameter :: pi_dp = acos(-1.0_dp)
 
-    type, public :: confidence_interval
-        real(dp) :: low !! lower confidence limit
-        real(dp) :: high !! upper confidence limit
-    end type confidence_interval
+    public :: confidence_interval ! Re-export the same shared type for existing users.
 
     type, public :: binomtest_result
         integer :: k !! observed number of successes

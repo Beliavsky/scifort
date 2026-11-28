@@ -3625,6 +3625,39 @@ class Special_ortho_group(ArrayGroup):
         """Return ArrayResult(status, outputs); retain native failure outputs."""
         return self._invoke('rvs_array', {'state': state, 'n': n, 'n_samples': n_samples}, out)
 
+class Survival(ArrayGroup):
+    _specs = {'logrank': {'arguments': ['x',
+                               'x_right',
+                               'y',
+                               'y_right',
+                               'alternative',
+                               'statistic',
+                               'pvalue',
+                               'status'],
+                 'definitions': {'nx': {'argument': 'x', 'axis': None},
+                                 'ny': {'argument': 'y', 'axis': None},
+                                 'rx': {'argument': 'x_right', 'axis': None},
+                                 'ry': {'argument': 'y_right', 'axis': None}},
+                 'dimensions': ['nx', 'rx', 'ny', 'ry'],
+                 'inputs': ['x', 'x_right', 'y', 'y_right', 'alternative'],
+                 'logical_inputs': {},
+                 'metadata': {'alternative': {'category': 'integer', 'intent': 'in', 'rank': 0},
+                              'pvalue': {'category': 'real', 'intent': 'out', 'rank': 0},
+                              'statistic': {'category': 'real', 'intent': 'out', 'rank': 0},
+                              'x': {'category': 'real', 'intent': 'in', 'rank': 1},
+                              'x_right': {'category': 'real', 'intent': 'in', 'rank': 1},
+                              'y': {'category': 'real', 'intent': 'in', 'rank': 1},
+                              'y_right': {'category': 'real', 'intent': 'in', 'rank': 1}},
+                 'minimums': {'nx': 0, 'ny': 0, 'rx': 0, 'ry': 0},
+                 'outputs': ['statistic', 'pvalue'],
+                 'shapes': {'x': ['nx'], 'x_right': ['rx'], 'y': ['ny'], 'y_right': ['ry']},
+                 'status': 'status',
+                 'symbol': 'scifort_logrank_f64'}}
+
+    def logrank(self, x, x_right, y, y_right, alternative=0, *, out=None):
+        """Return ArrayResult(status, outputs); retain native failure outputs."""
+        return self._invoke('logrank', {'x': x, 'x_right': x_right, 'y': y, 'y_right': y_right, 'alternative': alternative}, out)
+
 class Uniform_direction(ArrayGroup):
     _specs = {'rvs': {'arguments': ['state', 'sample', 'status'],
              'definitions': {'n': {'argument': 'sample', 'axis': None}},
@@ -4027,6 +4060,7 @@ class API(Library):
         self.random_correlation = Random_correlation(self._library)
         self.random_table = Random_table(self._library)
         self.special_ortho_group = Special_ortho_group(self._library)
+        self.survival = Survival(self._library)
         self.uniform_direction = Uniform_direction(self._library)
         self.unitary_group = Unitary_group(self._library)
         self.vonmises_fisher = Vonmises_fisher(self._library)

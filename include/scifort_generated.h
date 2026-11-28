@@ -16,6 +16,7 @@
 #include "scifort_generated_linalg.h"
 #include "scifort_generated_logistic.h"
 #include "scifort_generated_lognormal.h"
+#include "scifort_generated_logrank.h"
 #include "scifort_generated_matrix_helpers.h"
 #include "scifort_generated_matrix_normal.h"
 #include "scifort_generated_matrix_t.h"

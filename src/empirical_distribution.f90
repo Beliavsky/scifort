@@ -11,7 +11,7 @@ module scifort_empirical_distribution
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite, ieee_is_nan
     use scifort_beta, only : beta_cdf, beta_isf, beta_pdf, beta_ppf, beta_sf
     use scifort_binomial, only : binomial_cdf, binomial_isf, binomial_ppf, binomial_sf
-    use scifort_contingency_meta, only : confidence_interval
+    use scifort_confidence_interval, only : confidence_interval
     use scifort_kinds, only : dp
     use scifort_math, only : negative_infinity, positive_infinity, quiet_nan
     use scifort_normal, only : normal_cdf, normal_ppf, normal_sf
@@ -140,8 +140,10 @@ contains
     end function ecdf_censored
 
     function logrank_arrays(x, y, alternative) result(res)
-        real(dp), intent(in) :: x(:) !! uncensored observations in group X
-        real(dp), intent(in) :: y(:) !! uncensored observations in group Y
+        !! Compare uncensored groups; nx = size(x), ny = size(y), both >= 0.
+        !! Lengths are independent; empty or zero-variance comparisons return NaNs.
+        real(dp), intent(in) :: x(:) !! shape (nx); finite event times in group X
+        real(dp), intent(in) :: y(:) !! shape (ny); finite event times in group Y
         character(len=*), intent(in), optional :: alternative !! two-sided, less, or greater
         type(logrank_result) :: res
         real(dp), allocatable :: empty(:)
@@ -171,8 +173,10 @@ contains
     end function logrank_censored
 
     function logrank_censored_array(x, y, alternative) result(res)
+        !! Compare censored X with uncensored Y; ny = size(y) >= 0.
+        !! Event and censoring lengths are independent; empty groups are permitted.
         type(censored_data), intent(in) :: x !! group X right-censored sample
-        real(dp), intent(in) :: y(:) !! uncensored observations in group Y
+        real(dp), intent(in) :: y(:) !! shape (ny); finite event times in group Y
         character(len=*), intent(in), optional :: alternative !! two-sided, less, or greater
         type(logrank_result) :: res
         real(dp), allocatable :: empty(:)
@@ -190,7 +194,9 @@ contains
     end function logrank_censored_array
 
     function logrank_array_censored(x, y, alternative) result(res)
-        real(dp), intent(in) :: x(:) !! uncensored observations in group X
+        !! Compare uncensored X with censored Y; nx = size(x) >= 0.
+        !! Event and censoring lengths are independent; empty groups are permitted.
+        real(dp), intent(in) :: x(:) !! shape (nx); finite event times in group X
         type(censored_data), intent(in) :: y !! group Y right-censored sample
         character(len=*), intent(in), optional :: alternative !! two-sided, less, or greater
         type(logrank_result) :: res
@@ -209,11 +215,16 @@ contains
     end function logrank_array_censored
 
     function logrank_core(x_uncensored, x_right, y_uncensored, y_right, alternative) result(res)
-        real(dp), intent(in) :: x_uncensored(:)
-        real(dp), intent(in) :: x_right(:)
-        real(dp), intent(in) :: y_uncensored(:)
-        real(dp), intent(in) :: y_right(:)
-        character(len=*), intent(in), optional :: alternative
+        !! Compute the signed normal logrank statistic and its tail probability.
+        !! nx = size(x_uncensored), rx = size(x_right), ny = size(y_uncensored),
+        !! ry = size(y_right); all lengths >= 0 and independent, including empty groups.
+        !! Event/censoring ties are included in the risk set at the event time.
+        !! Positive statistic means excess deaths in X; zero variance returns NaNs.
+        real(dp), intent(in) :: x_uncensored(:) !! shape (nx); finite event times in group X
+        real(dp), intent(in) :: x_right(:) !! shape (rx); finite right-censoring times in group X
+        real(dp), intent(in) :: y_uncensored(:) !! shape (ny); finite event times in group Y
+        real(dp), intent(in) :: y_right(:) !! shape (ry); finite right-censoring times in group Y
+        character(len=*), intent(in), optional :: alternative !! two-sided (default), less or greater
         type(logrank_result) :: res
 
         character(len=9) :: alt
@@ -308,9 +319,10 @@ contains
     end function right_censoring_only
 
     subroutine unpack_censored_data(sample, uncensored, right)
-        type(censored_data), intent(in) :: sample
-        real(dp), allocatable, intent(out) :: uncensored(:)
-        real(dp), allocatable, intent(out) :: right(:)
+        !! Copy independent event/censor arrays; absent components become empty vectors.
+        type(censored_data), intent(in) :: sample !! sample whose event and right-censor vectors are copied
+        real(dp), allocatable, intent(out) :: uncensored(:) !! allocated copy of sample%uncensored, or length zero when absent
+        real(dp), allocatable, intent(out) :: right(:) !! allocated copy of sample%right, or length zero when absent
 
         if (allocated(sample%uncensored)) then
             uncensored = sample%uncensored
@@ -325,8 +337,9 @@ contains
     end subroutine unpack_censored_data
 
     pure integer function count_equal_value(values, target) result(n)
-        real(dp), intent(in) :: values(:)
-        real(dp), intent(in) :: target
+        !! Count ties in a vector of unrestricted length, including zero.
+        real(dp), intent(in) :: values(:) !! event times to compare
+        real(dp), intent(in) :: target !! event time whose ties are counted
         integer :: i
 
         n = 0
@@ -336,9 +349,11 @@ contains
     end function count_equal_value
 
     pure integer function count_at_risk(uncensored, right, time) result(n)
-        real(dp), intent(in) :: uncensored(:)
-        real(dp), intent(in) :: right(:)
-        real(dp), intent(in) :: time
+        !! Count observations at risk; event and censor vectors have independent lengths.
+        !! Either length may be zero; times equal to the event time remain at risk.
+        real(dp), intent(in) :: uncensored(:) !! finite event times, unrestricted length
+        real(dp), intent(in) :: right(:) !! finite right-censoring times, unrestricted length
+        real(dp), intent(in) :: time !! event time at which the risk set is counted
         integer :: i
 
         n = 0

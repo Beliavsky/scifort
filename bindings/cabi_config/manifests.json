@@ -32,5 +32,6 @@
   "unitary_group.json",
   "normal_inverse_gamma.json",
   "gaussian_kde.json",
-  "ecdf.json"
+  "ecdf.json",
+  "logrank.json"
 ]

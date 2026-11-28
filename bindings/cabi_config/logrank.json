@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "source": "src/c_api/logrank_bridge.f90",
+  "module": "scifort_logrank_bridge",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_logrank",
+  "header_guard": "SCIFORT_GENERATED_LOGRANK_H",
+  "functions": {},
+  "subroutines": {
+    "survival_logrank": {
+      "symbol": "scifort_logrank_f64",
+      "dimensions": [
+        {
+          "name": "nx",
+          "minimum": 0
+        },
+        {
+          "name": "rx",
+          "minimum": 0
+        },
+        {
+          "name": "ny",
+          "minimum": 0
+        },
+        {
+          "name": "ry",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "x": [
+          "nx"
+        ],
+        "x_right": [
+          "rx"
+        ],
+        "y": [
+          "ny"
+        ],
+        "y_right": [
+          "ry"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Compare ordinary or right-censored samples using the signed normal logrank statistic."
+    }
+  },
+  "excluded": {},
+  "argument_docs": {
+    "x": "finite event times in group X",
+    "x_right": "finite right-censoring times in group X",
+    "y": "finite event times in group Y",
+    "y_right": "finite right-censoring times in group Y",
+    "nx": "group X event count, >= 0",
+    "rx": "group X censor count, >= 0",
+    "ny": "group Y event count, >= 0",
+    "ry": "group Y censor count, >= 0",
+    "alternative": "0 two-sided; 1 less; 2 greater",
+    "statistic": "signed normal statistic; NaN when undefined or invalid",
+    "pvalue": "tail probability; NaN when undefined or invalid",
+    "status": "0 completed (NaNs if undefined); 1 extents/count; 2 invalid samples/alternative"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/logrank_generated.f90",
+    "header": "include/scifort_generated_logrank.h",
+    "coverage": "bindings/cabi_config/logrank_coverage.json",
+    "shape_documentation": "docs/logrank_bridge_shapes.md"
+  }
+}

@@ -1,3 +1,14 @@
+## 2026-11-27 - Shared interval type and logrank adapters
+
+The lightweight shared interval module, preserved import re-exports, flat logrank
+bridge, reviewed policies, Python facade, tests and documentation are original
+MIT SciFort work. The interval fields and native numerical implementations are
+unchanged; existing Kaplan-Meier/logrank/Greenwood provenance remains below.
+No upstream implementation text was imported or adapted. Tests compare installed
+SciPy public outputs, native/C results, group-swap identities and existing native
+regressions. A native type-identity regression checks the direct shared module,
+legacy contingency import, statistics facade and interval-producing procedures.
+
 ## 2026-11-27 - Empirical distribution interfaces
 
 The ECDF flat bridges, ownership adapters, Python objects, shape documentation,

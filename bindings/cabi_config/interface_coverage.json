@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 122,
+    "array_adapters": 123,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 288,
-    "python": 210,
+    "exports": 289,
+    "python": 211,
     "scalar": 88
   },
   "procedures": [
@@ -1010,6 +1010,12 @@
       "python": "lognormal.sf",
       "scalar": "scifort_lognormal_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_logrank_f64",
+      "module": "scifort_logrank_bridge",
+      "procedure": "survival_logrank",
+      "python": "survival.logrank"
     },
     {
       "array_adapter": "scifort_invert_lower_f64",

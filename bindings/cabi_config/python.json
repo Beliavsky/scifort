@@ -691,6 +691,17 @@
           "m": 0
         }
       }
+    },
+    "survival": {
+      "manifests": [
+        "bindings/cabi_config/logrank.json"
+      ],
+      "prefix": "survival_",
+      "defaults": {
+        "survival_logrank": {
+          "alternative": 0
+        }
+      }
     }
   }
 }
