@@ -1,3 +1,13 @@
+## 2026-11-27 - Censored likelihood interfaces
+
+- Add six explicit-shape C adapters for normal, exponential and minimum-Weibull
+  censored log-likelihoods/NNLFs, using the existing native algorithms.
+- Add stateless Python methods with independent exact/left/right groups and
+  paired interval endpoints; preserve empty, infinite and undefined results.
+- Document native constructor/callback and bridge array shapes, parameter ranges,
+  endpoint conventions, buffer ownership and error statuses.
+- Add focused native/C/Python tests, C/C++ clients and saved extreme-tail references.
+
 ## 2026-11-27 - Lightweight intervals and logrank interfaces
 
 - Move the shared confidence-interval value type into a lightweight module and

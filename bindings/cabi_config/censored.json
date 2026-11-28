@@ -1,0 +1,287 @@
+{
+  "schema_version": 2,
+  "source": "src/c_api/censored_bridge.f90",
+  "module": "scifort_censored_bridge",
+  "kind_module": "scifort_kinds",
+  "kind_name": "dp",
+  "wrapper_module": "scifort_c_api_generated_censored",
+  "header_guard": "SCIFORT_GENERATED_CENSORED_H",
+  "functions": {},
+  "subroutines": {
+    "censored_normal_loglikelihood": {
+      "symbol": "scifort_normal_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native normal censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_normal_nnlf": {
+      "symbol": "scifort_normal_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native normal censored nnlf; input groups have independent lengths."
+    },
+    "censored_exponential_loglikelihood": {
+      "symbol": "scifort_exponential_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native exponential censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_exponential_nnlf": {
+      "symbol": "scifort_exponential_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native exponential censored nnlf; input groups have independent lengths."
+    },
+    "censored_weibull_loglikelihood": {
+      "symbol": "scifort_weibull_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native weibull censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_weibull_nnlf": {
+      "symbol": "scifort_weibull_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native weibull censored nnlf; input groups have independent lengths."
+    }
+  },
+  "excluded": {},
+  "argument_docs": {
+    "uncensored": "finite exact observations",
+    "left": "finite upper censoring limits",
+    "right": "finite lower censoring limits",
+    "nu": "exact observation count, >= 0",
+    "nl": "left-censored count, >= 0",
+    "nr": "right-censored count, >= 0",
+    "ni": "interval count, >= 0",
+    "c": "finite positive Weibull shape",
+    "loc": "finite location",
+    "scale": "finite positive scale",
+    "value": "likelihood result; NaN for invalid input",
+    "status": "0 evaluated; 1 extents/count/shape; 2 invalid data/parameters",
+    "lower": "ordered interval lower endpoints; equal finite endpoints mean exact observations",
+    "upper": "interval upper endpoints paired with lower; one infinite endpoint permitted"
+  },
+  "outputs": {
+    "fortran": "src/c_api/generated/censored_generated.f90",
+    "header": "include/scifort_generated_censored.h",
+    "coverage": "bindings/cabi_config/censored_coverage.json",
+    "shape_documentation": "docs/censored_bridge_shapes.md"
+  }
+}

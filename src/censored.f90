@@ -13019,11 +13019,17 @@ contains
     end function logistic_interval
 
     function make_censored_data(uncensored, left, right, interval, status) result(data)
+        !! Copy observation groups; each length is independent and may be zero.
+        !! nu = size(uncensored), nl = size(left), nr = size(right), ni = size(interval,1).
+        !! Absent groups are empty. Interval columns are lower/upper limits.
+        !! Ordered equal finite endpoints mean exact observations; one infinite endpoint
+        !! means one-sided censoring. Both endpoints infinite, NaNs or reversed limits
+        !! are invalid. Exact/left/right vectors must be finite.
         implicit none
-        real(dp), intent(in), optional :: uncensored(:) !! finite exact observations
-        real(dp), intent(in), optional :: left(:) !! finite upper censoring limits
-        real(dp), intent(in), optional :: right(:) !! finite lower censoring limits
-        real(dp), intent(in), optional :: interval(:,:) !! (n,2) lower/upper limits
+        real(dp), intent(in), optional :: uncensored(:) !! shape (nu); finite exact observations
+        real(dp), intent(in), optional :: left(:) !! shape (nl); finite upper censoring limits
+        real(dp), intent(in), optional :: right(:) !! shape (nr); finite lower censoring limits
+        real(dp), intent(in), optional :: interval(:,:) !! shape (ni,2); lower/upper limits
         integer, intent(out), optional :: status !! 0 valid, 1 invalid; invalid data is retained
         type(censored_data) :: data
 
@@ -13207,10 +13213,11 @@ contains
     end function log_exponential_mass
 
     pure function exponential_interval(a, b, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: a !! finite lower endpoint
         real(dp), intent(in) :: b !! finite upper endpoint, > a
-        real(dp), intent(in) :: params(:) !! location and positive scale
+        real(dp), intent(in) :: params(:) !! shape (2); location and positive scale
         real(dp) :: value, lower
 
         value = negative_infinity(0.0_dp)
@@ -13221,10 +13228,11 @@ contains
     end function exponential_interval
 
     pure function normal_interval(a, b, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: a !! finite lower endpoint
         real(dp), intent(in) :: b !! finite upper endpoint, > a
-        real(dp), intent(in) :: params(:) !! mean and positive standard deviation
+        real(dp), intent(in) :: params(:) !! shape (2); mean and positive standard deviation
         real(dp) :: value, z, logwidth, logscaled
 
         z = (a - params(1)) / params(2)
@@ -13316,10 +13324,11 @@ contains
     end function lognormal_logz
 
     pure function weibull_interval(a, b, params) result(value)
+        !! size(params) = 3; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: a !! finite lower endpoint
         real(dp), intent(in) :: b !! finite upper endpoint, > a
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, lower, loglo, loghi, logratio, logr, delta, logdelta
 
         value = negative_infinity(0.0_dp)
@@ -13351,9 +13360,10 @@ contains
     end function weibull_interval
 
     pure function weibull_log_hazard(x, params) result(value)
+        !! size(params) = 3; shape, location and scale in that order.
         implicit none
         real(dp), intent(in) :: x !! finite point strictly above location
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logz, distance
         logical :: finite_distance
         logz = log_distance(x, params(2)) - log(params(3))
@@ -13457,73 +13467,82 @@ contains
     end function weibull_censored_nnlf
 
     pure function normal_lpdf(x, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! mean and standard deviation
+        real(dp), intent(in) :: params(:) !! shape (2); mean and standard deviation
         real(dp) :: value
         value = normal_logpdf(x, params(1), params(2))
     end function normal_lpdf
 
     pure function normal_lcdf(x, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! mean and standard deviation
+        real(dp), intent(in) :: params(:) !! shape (2); mean and standard deviation
         real(dp) :: value
         value = normal_logcdf(x, params(1), params(2))
     end function normal_lcdf
 
     pure function normal_lsf(x, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! mean and standard deviation
+        real(dp), intent(in) :: params(:) !! shape (2); mean and standard deviation
         real(dp) :: value
         value = normal_logsf(x, params(1), params(2))
     end function normal_lsf
 
     pure function exponential_lpdf(x, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! location and scale
+        real(dp), intent(in) :: params(:) !! shape (2); location and scale
         real(dp) :: value
         value = exponential_logpdf(x, params(1), params(2))
     end function exponential_lpdf
 
     pure function exponential_lcdf(x, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! location and scale
+        real(dp), intent(in) :: params(:) !! shape (2); location and scale
         real(dp) :: value
         value = exponential_logcdf(x, params(1), params(2))
     end function exponential_lcdf
 
     pure function exponential_lsf(x, params) result(value)
+        !! size(params) = 2; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! location and scale
+        real(dp), intent(in) :: params(:) !! shape (2); location and scale
         real(dp) :: value
         value = exponential_logsf(x, params(1), params(2))
     end function exponential_lsf
 
     pure function weibull_lpdf(x, params) result(value)
+        !! size(params) = 3; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! shape, location, scale
+        real(dp), intent(in) :: params(:) !! shape (3); shape, location, scale
         real(dp) :: value
         value = weibull_logpdf(x, params(1), params(2), params(3))
     end function weibull_lpdf
 
     pure function weibull_lcdf(x, params) result(value)
+        !! size(params) = 3; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! shape, location, scale
+        real(dp), intent(in) :: params(:) !! shape (3); shape, location, scale
         real(dp) :: value
         value = weibull_logcdf(x, params(1), params(2), params(3))
     end function weibull_lcdf
 
     pure function weibull_lsf(x, params) result(value)
+        !! size(params) = 3; parameter order is documented below.
         implicit none
         real(dp), intent(in) :: x !! evaluation point
-        real(dp), intent(in) :: params(:) !! shape, location, scale
+        real(dp), intent(in) :: params(:) !! shape (3); shape, location, scale
         real(dp) :: value
         value = weibull_logsf(x, params(1), params(2), params(3))
     end function weibull_lsf

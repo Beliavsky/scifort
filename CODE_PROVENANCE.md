@@ -1,3 +1,15 @@
+## 2026-11-27 - Censored likelihood adapters
+
+The flat censored-data bridges, reviewed policies, Python facade, shape comments,
+tests and documentation are original MIT SciFort interface work. They delegate to
+existing normal/exponential/Weibull censored likelihoods without changing numerical
+statements or public native signatures. Their existing implementation provenance
+and mathematical references remain below; no upstream implementation was copied
+or adapted for this interface addition. Tests use installed SciPy public density
+and tail outputs, direct native/C agreement, distribution identities, and existing
+mpmath reference values from `test/test_censored.f90` (including exact binary64
+narrow-interval endpoints). No new third-party source or dependency was imported.
+
 ## 2026-11-27 - Shared interval type and logrank adapters
 
 The lightweight shared interval module, preserved import re-exports, flat logrank

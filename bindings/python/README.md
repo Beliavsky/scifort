@@ -3061,8 +3061,9 @@ The native empirical-distribution module now imports its confidence-interval
 result type from a lightweight module. Existing contingency/statistics import
 paths re-export that same type. The binding build no longer pulls in the previous
 contingency, hypothesis and high-rank descriptive dependency chain solely for
-this type. With the logrank adapters included, its generated source closure is
-101 files, down from 143. Fortran consumers must rebuild their module files.
+this type. With the logrank adapters included, its generated source closure was
+101 files, down from 143. The censored-likelihood adapters add 11 source files,
+bringing the current closure to 112. Fortran consumers must rebuild their module files.
 
 Validation on 2026-11-27: all six ECDF tests passed against checked
 (`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries, using GNU
@@ -3136,3 +3137,57 @@ and the same GNU Fortran compiler. It rebuilt the shared-type dependents and
 validated existing import paths, both interval producers, native logrank and
 native/C agreement. Existing array-temporary runtime warnings appeared without
 test failures. Other compilers and platforms were not newly validated.
+
+## Censored likelihoods
+
+```python
+value = api.censored.normal_loglikelihood(
+    [0.5, 1.2, 2.5], left=[0.3], right=[3.5],
+    interval=[[1.1, 1.4], [4.0, 4.4]], loc=0.4, scale=1.3)
+nll = api.censored.weibull_nnlf([1.0, 2.0], c=1.7, right=[3.0], scale=2.3)
+```
+
+Normal, exponential and minimum-Weibull each expose `*_loglikelihood` and
+`*_nnlf` under `api.censored`, returning scalar floats. Independent input groups
+are copied into a local native `censored_data` object; no handles require cleanup.
+Omitted groups are empty. Location defaults to zero and scale to one; Weibull
+requires keyword `c`. Scale and `c` must be finite and positive; location is finite.
+
+`interval` has shape `(n_interval,2)`. Equal finite endpoints mean an exact
+observation; one infinite endpoint means one-sided censoring. Reversed endpoints,
+NaNs, two infinite endpoints and nonfinite exact/left/right observations are
+invalid. Empty data gives zero with valid parameters. Impossible observations
+retain native infinite likelihoods; valid indeterminate sums retain NaNs.
+Invalid calls raise `ValueError`, while invalid numeric types may raise `TypeError`.
+Strided, read-only and overlapping inputs are accepted without modification.
+
+The generated C interface takes independent counts and five vectors, with
+separate equal-length lower/upper interval endpoints. It returns scalar `value`
+and integer `status`. The low-level Python `api.censored_bridge` group exposes
+that layout and returns an `ArrayResult`. See the complete
+[shape, buffer and error contracts](../../docs/censored_shapes.md),
+[generated contracts](../../docs/censored_bridge_shapes.md), and
+[C header](../../include/scifort_generated_censored.h).
+
+Focused validation commands (CMD):
+
+```bat
+python -m unittest discover -s bindings/python/tests -p test_censored.py -v
+python -m unittest discover -s bindings/python/tests -p test_bindings.py -v
+python -m unittest discover -s bindings/python/tests -p test_logrank.py -v
+python -m unittest discover -s bindings/python/tests -p test_ecdf.py -v
+build\cabi-generator-venv\Scripts\python.exe tools\cabi_generator\pipeline.py bindings\cabi_config\pipeline.json --check
+```
+
+Validation on 2026-11-27: seven new censored-likelihood tests, ten general binding
+tests, seven logrank tests and six ECDF tests passed using checked
+(`-O0 -g -fcheck=all -fbacktrace`) and optimized (`-O3`) libraries. Compiler:
+GNU Fortran/GCC/G++ 17.0.0 20260510 (experimental); Python 3.13.3, SciPy 1.15.3,
+NumPy 2.2.6. Both profiles compiled and ran the native/C regression program and
+C11/C++17 clients. The new Python example passed against the checked library.
+The unified consistency check passed for all 172 artifacts. Static comparison
+confirmed that native censored numerical statements/signatures are unchanged;
+Fortran ASCII/line lengths, documentation links and diff whitespace checks passed.
+The full numerical suite was not rerun for these isolated additive interfaces;
+existing native dependencies, generator/runtime implementations and build flags
+are unchanged. Other compilers and platforms were not newly validated.

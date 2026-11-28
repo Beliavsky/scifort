@@ -33,5 +33,6 @@
   "normal_inverse_gamma.json",
   "gaussian_kde.json",
   "ecdf.json",
-  "logrank.json"
+  "logrank.json",
+  "censored.json"
 ]

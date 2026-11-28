@@ -702,6 +702,38 @@
           "alternative": 0
         }
       }
+    },
+    "censored_bridge": {
+      "manifests": [
+        "bindings/cabi_config/censored.json"
+      ],
+      "prefix": "censored_",
+      "defaults": {
+        "censored_normal_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_normal_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_exponential_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_exponential_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_weibull_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_weibull_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        }
+      }
     }
   }
 }

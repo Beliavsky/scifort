@@ -4,6 +4,7 @@
 #define SCIFORT_GENERATED_H
 #include "scifort_generated_beta.h"
 #include "scifort_generated_cauchy.h"
+#include "scifort_generated_censored.h"
 #include "scifort_generated_chi2.h"
 #include "scifort_generated_dirichlet.h"
 #include "scifort_generated_dirichlet_multinomial.h"

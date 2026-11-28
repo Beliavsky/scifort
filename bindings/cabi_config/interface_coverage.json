@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 123,
+    "array_adapters": 129,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 289,
-    "python": 211,
+    "exports": 295,
+    "python": 217,
     "scalar": 88
   },
   "procedures": [
@@ -167,6 +167,42 @@
       "python": "cauchy.sf",
       "scalar": "scifort_cauchy_sf_f64",
       "scalar_generated": true
+    },
+    {
+      "array_adapter": "scifort_exponential_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_exponential_loglikelihood",
+      "python": "censored_bridge.exponential_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_exponential_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_exponential_nnlf",
+      "python": "censored_bridge.exponential_nnlf"
+    },
+    {
+      "array_adapter": "scifort_normal_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_normal_loglikelihood",
+      "python": "censored_bridge.normal_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_normal_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_normal_nnlf",
+      "python": "censored_bridge.normal_nnlf"
+    },
+    {
+      "array_adapter": "scifort_weibull_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_weibull_loglikelihood",
+      "python": "censored_bridge.weibull_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_weibull_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_weibull_nnlf",
+      "python": "censored_bridge.weibull_nnlf"
     },
     {
       "bulk": "scifort_chi2_cdf_vec_f64",

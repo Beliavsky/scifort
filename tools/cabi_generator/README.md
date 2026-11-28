@@ -1055,3 +1055,10 @@ data and alternative codes before native calls; zero variance retains native
 NaN results with success status. No generator/runtime changes were needed.
 The lightweight interval type reduces the binding build closure without changing
 existing type import paths. See [logrank_shapes.md](../../docs/logrank_shapes.md).
+
+The reviewed censored-likelihood bridge uses five rank-one inputs with four
+independent nonnegative dimensions; the lower and upper endpoint arrays share
+one dimension. Existing policies enforce that pairing without extending the
+generator. Python converts `(ni,2)` interval matrices to the two vectors; native
+construction, parameter validation and likelihood calculations remain outside
+the generator. See [censored_shapes.md](../../docs/censored_shapes.md).

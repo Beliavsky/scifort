@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 289 |
+| exports | 295 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 123 |
+| array_adapters | 129 |
 | elementwise | 88 |
-| python | 211 |
+| python | 217 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,6 +29,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_cauchy | cauchy_pdf | scifort_cauchy_pdf_f64 | scifort_cauchy_pdf_vec_f64 |  | scifort_cauchy_pdf_elementwise_f64 | cauchy.pdf |
 | scifort_cauchy | cauchy_ppf | scifort_cauchy_ppf_f64 | scifort_cauchy_ppf_vec_f64 |  | scifort_cauchy_ppf_elementwise_f64 | cauchy.ppf |
 | scifort_cauchy | cauchy_sf | scifort_cauchy_sf_f64 | scifort_cauchy_sf_vec_f64 |  | scifort_cauchy_sf_elementwise_f64 | cauchy.sf |
+| scifort_censored_bridge | censored_exponential_loglikelihood |  |  | scifort_exponential_censored_loglikelihood_f64 |  | censored_bridge.exponential_loglikelihood |
+| scifort_censored_bridge | censored_exponential_nnlf |  |  | scifort_exponential_censored_nnlf_f64 |  | censored_bridge.exponential_nnlf |
+| scifort_censored_bridge | censored_normal_loglikelihood |  |  | scifort_normal_censored_loglikelihood_f64 |  | censored_bridge.normal_loglikelihood |
+| scifort_censored_bridge | censored_normal_nnlf |  |  | scifort_normal_censored_nnlf_f64 |  | censored_bridge.normal_nnlf |
+| scifort_censored_bridge | censored_weibull_loglikelihood |  |  | scifort_weibull_censored_loglikelihood_f64 |  | censored_bridge.weibull_loglikelihood |
+| scifort_censored_bridge | censored_weibull_nnlf |  |  | scifort_weibull_censored_nnlf_f64 |  | censored_bridge.weibull_nnlf |
 | scifort_chi2 | chi2_cdf | scifort_chi2_cdf_f64 | scifort_chi2_cdf_vec_f64 |  | scifort_chi2_cdf_elementwise_f64 | chi2.cdf |
 | scifort_chi2 | chi2_isf | scifort_chi2_isf_f64 | scifort_chi2_isf_vec_f64 |  | scifort_chi2_isf_elementwise_f64 | chi2.isf |
 | scifort_chi2 | chi2_logcdf | scifort_chi2_logcdf_f64 | scifort_chi2_logcdf_vec_f64 |  | scifort_chi2_logcdf_elementwise_f64 | chi2.logcdf |
