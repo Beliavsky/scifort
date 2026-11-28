@@ -4,12 +4,12 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 
 | Interface | Count |
 | --- | ---: |
-| exports | 295 |
+| exports | 301 |
 | scalar | 88 |
 | bulk | 88 |
-| array_adapters | 129 |
+| array_adapters | 135 |
 | elementwise | 88 |
-| python | 217 |
+| python | 223 |
 
 | Module | Export | Scalar C | Bulk C | Array adapter | Elementwise C | Python |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,8 +29,14 @@ Reviewed C batch and Python policy only; not a whole-project inventory.
 | scifort_cauchy | cauchy_pdf | scifort_cauchy_pdf_f64 | scifort_cauchy_pdf_vec_f64 |  | scifort_cauchy_pdf_elementwise_f64 | cauchy.pdf |
 | scifort_cauchy | cauchy_ppf | scifort_cauchy_ppf_f64 | scifort_cauchy_ppf_vec_f64 |  | scifort_cauchy_ppf_elementwise_f64 | cauchy.ppf |
 | scifort_cauchy | cauchy_sf | scifort_cauchy_sf_f64 | scifort_cauchy_sf_vec_f64 |  | scifort_cauchy_sf_elementwise_f64 | cauchy.sf |
+| scifort_censored_bridge | censored_beta_loglikelihood |  |  | scifort_beta_censored_loglikelihood_f64 |  | censored_bridge.beta_loglikelihood |
+| scifort_censored_bridge | censored_beta_nnlf |  |  | scifort_beta_censored_nnlf_f64 |  | censored_bridge.beta_nnlf |
 | scifort_censored_bridge | censored_exponential_loglikelihood |  |  | scifort_exponential_censored_loglikelihood_f64 |  | censored_bridge.exponential_loglikelihood |
 | scifort_censored_bridge | censored_exponential_nnlf |  |  | scifort_exponential_censored_nnlf_f64 |  | censored_bridge.exponential_nnlf |
+| scifort_censored_bridge | censored_gamma_loglikelihood |  |  | scifort_gamma_censored_loglikelihood_f64 |  | censored_bridge.gamma_loglikelihood |
+| scifort_censored_bridge | censored_gamma_nnlf |  |  | scifort_gamma_censored_nnlf_f64 |  | censored_bridge.gamma_nnlf |
+| scifort_censored_bridge | censored_lognormal_loglikelihood |  |  | scifort_lognormal_censored_loglikelihood_f64 |  | censored_bridge.lognormal_loglikelihood |
+| scifort_censored_bridge | censored_lognormal_nnlf |  |  | scifort_lognormal_censored_nnlf_f64 |  | censored_bridge.lognormal_nnlf |
 | scifort_censored_bridge | censored_normal_loglikelihood |  |  | scifort_normal_censored_loglikelihood_f64 |  | censored_bridge.normal_loglikelihood |
 | scifort_censored_bridge | censored_normal_nnlf |  |  | scifort_normal_censored_nnlf_f64 |  | censored_bridge.normal_nnlf |
 | scifort_censored_bridge | censored_weibull_loglikelihood |  |  | scifort_weibull_censored_loglikelihood_f64 |  | censored_bridge.weibull_loglikelihood |

@@ -1,3 +1,14 @@
+## 2026-11-28 - Lognormal, gamma and beta censored interfaces
+
+- Add six C/Python log-likelihood and NNLF methods using the existing censored
+  observation layout, with required scalar shape parameters.
+- Preserve the native beta finite-upper-support parameter restriction and
+  numerical NaN/infinity behavior without changing native algorithms.
+- Document constrained parameter-vector shapes in public bridge procedures and
+  private native lognormal, gamma and beta helpers.
+- Add mixed-censoring, support, identity, invalid-input, saved-tail and C/C++ tests;
+  expand native/C comparisons to all six bound censored families.
+
 ## 2026-11-27 - Censored likelihood interfaces
 
 - Add six explicit-shape C adapters for normal, exponential and minimum-Weibull

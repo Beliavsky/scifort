@@ -1,3 +1,15 @@
+## 2026-11-28 - Lognormal, gamma and beta censored adapters
+
+The six additional flat adapters, policies, Python methods, shape comments and
+tests are original MIT SciFort interface work. They delegate to existing native
+censored methods; native numerical statements and signatures are unchanged. No
+upstream implementation text or new third-party dependency was imported. Existing
+native provenance and limitations remain applicable. Tests compare installed
+SciPy public density/tail values, direct native/C results, transformation and
+reflection identities, and saved mpmath references in `test/test_censored.f90`.
+The beta upper-support guard repeats the existing native parameter validity rule;
+it does not introduce a new numerical method or expand the supported regime.
+
 ## 2026-11-27 - Censored likelihood adapters
 
 The flat censored-data bridges, reviewed policies, Python facade, shape comments,

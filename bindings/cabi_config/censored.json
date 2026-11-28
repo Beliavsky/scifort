@@ -259,6 +259,258 @@
       "invalid_status": 1,
       "shape_contract": true,
       "description": "Evaluate native weibull censored nnlf; input groups have independent lengths."
+    },
+    "censored_lognormal_loglikelihood": {
+      "symbol": "scifort_lognormal_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native lognormal censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_lognormal_nnlf": {
+      "symbol": "scifort_lognormal_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native lognormal censored nnlf; input groups have independent lengths."
+    },
+    "censored_gamma_loglikelihood": {
+      "symbol": "scifort_gamma_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native gamma censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_gamma_nnlf": {
+      "symbol": "scifort_gamma_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native gamma censored nnlf; input groups have independent lengths."
+    },
+    "censored_beta_loglikelihood": {
+      "symbol": "scifort_beta_censored_loglikelihood_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native beta censored loglikelihood; input groups have independent lengths."
+    },
+    "censored_beta_nnlf": {
+      "symbol": "scifort_beta_censored_nnlf_f64",
+      "dimensions": [
+        {
+          "name": "nu",
+          "minimum": 0
+        },
+        {
+          "name": "nl",
+          "minimum": 0
+        },
+        {
+          "name": "nr",
+          "minimum": 0
+        },
+        {
+          "name": "ni",
+          "minimum": 0
+        }
+      ],
+      "shapes": {
+        "uncensored": [
+          "nu"
+        ],
+        "left": [
+          "nl"
+        ],
+        "right": [
+          "nr"
+        ],
+        "lower": [
+          "ni"
+        ],
+        "upper": [
+          "ni"
+        ]
+      },
+      "status_argument": "status",
+      "invalid_status": 1,
+      "shape_contract": true,
+      "description": "Evaluate native beta censored nnlf; input groups have independent lengths."
     }
   },
   "excluded": {},
@@ -276,7 +528,10 @@
     "value": "likelihood result; NaN for invalid input",
     "status": "0 evaluated; 1 extents/count/shape; 2 invalid data/parameters",
     "lower": "ordered interval lower endpoints; equal finite endpoints mean exact observations",
-    "upper": "interval upper endpoints paired with lower; one infinite endpoint permitted"
+    "upper": "interval upper endpoints paired with lower; one infinite endpoint permitted",
+    "s": "finite positive lognormal log standard deviation",
+    "a": "finite positive first shape",
+    "b": "finite positive second beta shape"
   },
   "outputs": {
     "fortran": "src/c_api/generated/censored_generated.f90",

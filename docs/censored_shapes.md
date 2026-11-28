@@ -1,6 +1,7 @@
 # Censored likelihood array contracts
 
-The initial C/Python family set is normal, exponential and minimum Weibull.
+The C/Python family set is normal, exponential, minimum Weibull, lognormal, gamma
+and beta.
 The adapters call the existing native log-likelihood and negative log-likelihood
 (`nnlf`) procedures in [censored.f90](../src/censored.f90); their algorithms,
 public names and endpoint behavior are unchanged.
@@ -10,10 +11,13 @@ public names and endpoint behavior are unchanged.
 | Procedure | Array constraints | Empty behavior |
 | --- | --- | --- |
 | Native `make_censored_data` | optional `uncensored(nu)`, `left(nl)`, `right(nr)`, `interval(ni,2)`; independent group lengths | absent or zero-length groups contribute no observations |
-| Six public procedures in `scifort_censored_bridge` | `uncensored(nu)`, `left(nl)`, `right(nr)`, `lower(ni)`, `upper(ni)`; endpoint vectors have equal lengths | all lengths may be zero; valid parameters give log-likelihood and NNLF zero |
+| Twelve public procedures in `scifort_censored_bridge` | `uncensored(nu)`, `left(nl)`, `right(nr)`, `lower(ni)`, `upper(ni)`; endpoint vectors have equal lengths | all lengths may be zero; valid parameters give log-likelihood and NNLF zero |
 | Private `pack_censored_samples` | the same five vector shapes; total `nu+nl+nr+ni` must fit the native default integer | copied groups, including empty groups, are local to the call |
 | Native normal/exponential PDF, CDF, SF and interval callbacks | `params(2)` contains location and positive scale | length must be exactly two |
 | Native Weibull PDF, CDF, SF, interval and log-hazard helpers | `params(3)` contains positive shape, location and positive scale | length must be exactly three |
+| Native lognormal PDF/CDF/SF, interval, standardization and log-coordinate helpers | `params(3)` contains positive log standard deviation, location and positive scale | length must be exactly three |
+| Native gamma PDF/CDF/SF, interval and scaled-coordinate helpers | `params(3)` contains positive shape, location and positive inverse rate | length must be exactly three |
+| Native beta parameter, distance/coordinate, density, tail and interval helpers | `params(4)` contains positive first/second shapes, location and positive support width | length must be exactly four |
 | Generic native `censored_loglikelihood` and `tail_interval` | `params(:)` has the length required by the supplied callbacks | no universal parameter-vector length |
 
 See the [generated bridge contracts](censored_bridge_shapes.md) and
@@ -33,24 +37,41 @@ family's support are valid data and retain native zero-density/probability rules
 Location is finite; scale is finite and strictly positive. Weibull shape `c` is
 finite and strictly positive. Normal scale is its standard deviation; exponential
 scale is its inverse rate. Weibull uses `((x-loc)/scale)**c` as cumulative hazard
-on its support. These are the existing native parameterizations.
+on its support. Lognormal `s` is the standard deviation of `log(x-loc)` and
+`scale` is `exp(mean(log(x-loc)))`. Gamma `a` is its shape and `scale` its inverse
+rate. Beta `a,b` are its shapes and `scale` is its support width. All shape
+parameters are finite and positive. These are the existing native parameterizations.
+Beta additionally requires a finite rounded upper support edge: when `loc > 0`,
+`scale <= huge(1.0_dp)-loc`. Violating this native limit returns status 2 even
+for empty observations. No additional upper-edge representability requirement
+is introduced by the wrappers.
 
 Impossible observations can give log-likelihood `-inf` and NNLF `+inf`. Infinite
 endpoint densities and indeterminate sums retain the native `+inf` or NaN result
 with status 0. Status reports call validity, not finiteness of the answer.
-Stable native interval algorithms are reused, including intervals whose rounded
+Native numerical limitations also remain: for example, unsupported beta
+scaled-underflow expansions can yield NaN with status 0. These are not reclassified
+as invalid calls. Stable native interval algorithms are reused, including intervals whose rounded
 CDF values coincide and far-tail intervals.
 
 ## C ABI
 
 Each symbol is named `scifort_<family>_censored_<method>_f64`, with families
-`normal`, `exponential`, `weibull` and methods `loglikelihood`, `nnlf`.
+`normal`, `exponential`, `weibull`, `lognormal`, `gamma`, `beta` and methods `loglikelihood`, `nnlf`.
 Argument order is:
 
 ```text
 nu, nl, nr, ni, uncensored, left, right, lower, upper,
-[c for Weibull], loc, scale, value, status
+[family shape parameters], loc, scale, value, status
 ```
+
+| Family | Shape parameters in C order | Required Python keywords |
+| --- | --- | --- |
+| Normal, exponential | none | none |
+| Minimum Weibull | `c` | `c` |
+| Lognormal | `s` | `s` |
+| Gamma | `a` | `a` |
+| Beta | `a, b` | `a`, `b` |
 
 Counts are nonnegative C `int` values; scalar parameters are `double` values.
 Inputs are explicit-length contiguous binary64 vectors. `value` and `status` are
@@ -73,9 +94,11 @@ lengths. Python checks vector ranks and matching shapes before C entry.
 ## Python
 
 `api.censored.normal_loglikelihood`, `normal_nnlf`, `exponential_loglikelihood`,
-`exponential_nnlf`, `weibull_loglikelihood` and `weibull_nnlf` return Python floats.
+`exponential_nnlf`, `weibull_loglikelihood`, `weibull_nnlf`,
+`lognormal_loglikelihood`, `lognormal_nnlf`, `gamma_loglikelihood`, `gamma_nnlf`,
+`beta_loglikelihood` and `beta_nnlf` return Python floats.
 The first argument is optional `uncensored`; keywords are `left`, `right`,
-`interval`, `loc=0.0`, `scale=1.0`, plus required keyword `c` for Weibull.
+`interval`, `loc=0.0`, `scale=1.0`, plus the family shape keywords listed above.
 Omitted groups are empty. `interval` has shape `(ni,2)` with lower/upper columns;
 `[]` is also accepted as an empty interval group. Strided, read-only and overlapping
 inputs are accepted through conversion/copying; inputs are not modified. No NumPy

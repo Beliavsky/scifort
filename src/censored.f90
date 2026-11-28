@@ -13272,10 +13272,11 @@ contains
     end function normal_small_interval
 
     pure function lognormal_interval(a, b, params) result(value)
+        !! size(params) = 3; log standard deviation, location, scale.
         implicit none
         real(dp), intent(in) :: a !! finite lower endpoint
         real(dp), intent(in) :: b !! finite upper endpoint, > a
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logr, logspan, z
 
         value = negative_infinity(0.0_dp)
@@ -13300,9 +13301,10 @@ contains
     end function lognormal_interval
 
     pure function lognormal_standardized(x, params) result(value)
+        !! size(params) = 3; log standard deviation, location, scale.
         implicit none
         real(dp), intent(in) :: x !! finite point above location
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logz
         logz = lognormal_logz(x, params)
         if (params(1) < 1.0_dp) then
@@ -13315,9 +13317,10 @@ contains
     end function lognormal_standardized
 
     pure function lognormal_logz(x, params) result(value)
+        !! size(params) = 3; log standard deviation, location, scale.
         implicit none
         real(dp), intent(in) :: x !! finite point above location
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value
         ! Reuse the stable log distance/scale calculation, with unit exponent.
         value = weibull_log_hazard(x, [1.0_dp, params(2), params(3)])
@@ -13576,9 +13579,10 @@ contains
     end function lognormal_censored_nnlf
 
     pure function lognormal_lpdf(x, params) result(value)
+        !! size(params) = 3; log standard deviation, location, scale.
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, z
         value = negative_infinity(0.0_dp)
         if (x <= params(2)) return
@@ -13588,9 +13592,10 @@ contains
     end function lognormal_lpdf
 
     pure function lognormal_lcdf(x, params) result(value)
+        !! size(params) = 3; log standard deviation, location, scale.
         implicit none
         real(dp), intent(in) :: x !! finite upper censoring limit
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value
         value = negative_infinity(0.0_dp)
         if (x <= params(2)) return
@@ -13598,9 +13603,10 @@ contains
     end function lognormal_lcdf
 
     pure function lognormal_lsf(x, params) result(value)
+        !! size(params) = 3; log standard deviation, location, scale.
         implicit none
         real(dp), intent(in) :: x !! finite lower censoring limit
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value
         value = 0.0_dp
         if (x <= params(2)) return
@@ -13639,9 +13645,10 @@ contains
     end function gamma_censored_nnlf
 
     pure function gamma_lpdf(x, params) result(value)
+        !! size(params) = 3; shape, location, inverse rate.
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logz, distance_log, z
         value = negative_infinity(0.0_dp)
         if (x < params(2)) return
@@ -13666,9 +13673,10 @@ contains
     end function gamma_lpdf
 
     pure function gamma_lcdf(x, params) result(value)
+        !! size(params) = 3; shape, location, inverse rate.
         implicit none
         real(dp), intent(in) :: x !! finite upper censoring limit
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logz
         value = negative_infinity(0.0_dp)
         if (x <= params(2)) return
@@ -13684,9 +13692,10 @@ contains
     end function gamma_lcdf
 
     pure function gamma_lsf(x, params) result(value)
+        !! size(params) = 3; shape, location, inverse rate.
         implicit none
         real(dp), intent(in) :: x !! finite lower censoring limit
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logz, logp
         value = 0.0_dp
         if (x <= params(2)) return
@@ -13718,9 +13727,10 @@ contains
     end function gamma_small_kernel
 
     pure function gamma_scaled(x, params, logz) result(value)
+        !! size(params) = 3; shape, location, inverse rate.
         implicit none
         real(dp), intent(in) :: x !! finite point strictly above location
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp), intent(in) :: logz !! log standardized distance within normal real range
         real(dp) :: value
         ! Direct division retains near-mode accuracy for large shapes. Use the
@@ -13734,10 +13744,11 @@ contains
     end function gamma_scaled
 
     pure function gamma_interval(a, b, params) result(value)
+        !! size(params) = 3; shape, location, inverse rate.
         implicit none
         real(dp), intent(in) :: a !! finite lower interval endpoint
         real(dp), intent(in) :: b !! finite upper endpoint, > a
-        real(dp), intent(in) :: params(:) !! positive shape, location, positive scale
+        real(dp), intent(in) :: params(:) !! shape (3); positive shape, location, positive scale
         real(dp) :: value, logwidth, logrelative, logscaled, q, d, correction, t(3), r(3)
         value = negative_infinity(0.0_dp)
         if (b <= params(2)) return
@@ -13793,8 +13804,9 @@ contains
     end function beta_censored_nnlf
 
     pure function beta_parameters_valid(params) result(valid)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
-        real(dp), intent(in) :: params(:) !! first/second shapes, location, support width
+        real(dp), intent(in) :: params(:) !! shape (4); first/second shapes, location, support width
         logical :: valid
         valid = .false.
         if (.not. all(ieee_is_finite(params))) return
@@ -13807,9 +13819,10 @@ contains
     end function beta_parameters_valid
 
     pure subroutine beta_distances(x, params, left, right)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: x !! finite observation or censoring limit
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp), intent(out) :: left !! distance above lower edge; negative outside support
         real(dp), intent(out) :: right !! distance below upper edge; negative outside support
         real(dp) :: upper, correction
@@ -13848,9 +13861,10 @@ contains
     end subroutine beta_distances
 
     pure subroutine beta_coordinates(x, params, left, right, z, w, logz, logw)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: x !! finite point strictly inside support
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp), intent(in) :: left !! positive distance above lower edge, possibly infinite
         real(dp), intent(in) :: right !! positive distance below upper edge
         real(dp), intent(out) :: z !! standardized lower distance, possibly rounded to 0 or 1
@@ -13870,9 +13884,10 @@ contains
     end subroutine beta_coordinates
 
     pure function beta_lpdf(x, params) result(value)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: x !! finite exact observation
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp) :: value, left, right, z, w, logz, logw, shape, other
         value = negative_infinity(0.0_dp)
         call beta_distances(x,params,left,right)
@@ -13898,9 +13913,10 @@ contains
     end function beta_lpdf
 
     pure subroutine beta_logtails(x, params, logp, logq)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: x !! finite censoring limit
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp), intent(out) :: logp !! stable log lower probability
         real(dp), intent(out) :: logq !! stable log upper probability
         real(dp) :: left, right, z, w, logz, logw, p, q
@@ -13955,26 +13971,29 @@ contains
     end function beta_small_tail
 
     pure function beta_lcdf(x, params) result(value)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: x !! finite upper censoring limit
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp) :: value, logq
         call beta_logtails(x,params,value,logq)
     end function beta_lcdf
 
     pure function beta_lsf(x, params) result(value)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: x !! finite lower censoring limit
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp) :: value, logp
         call beta_logtails(x,params,logp,value)
     end function beta_lsf
 
     pure function beta_interval(a, b, params) result(value)
+        !! size(params) = 4; first/second shapes, location, support width.
         implicit none
         real(dp), intent(in) :: a !! finite lower interval endpoint
         real(dp), intent(in) :: b !! finite upper interval endpoint, > a
-        real(dp), intent(in) :: params(:) !! valid first/second shapes, location, width
+        real(dp), intent(in) :: params(:) !! shape (4); valid first/second shapes, location, width
         real(dp) :: value, left, right, logwidth, logql, logqr, ql, qr, t(3), r(3), correction
         value = negative_infinity(0.0_dp)
         call beta_distances(b,params,left,right)

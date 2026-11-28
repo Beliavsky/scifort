@@ -732,6 +732,30 @@
         "censored_weibull_nnlf": {
           "loc": 0.0,
           "scale": 1.0
+        },
+        "censored_lognormal_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_lognormal_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_gamma_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_gamma_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_beta_loglikelihood": {
+          "loc": 0.0,
+          "scale": 1.0
+        },
+        "censored_beta_nnlf": {
+          "loc": 0.0,
+          "scale": 1.0
         }
       }
     }

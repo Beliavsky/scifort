@@ -5,7 +5,7 @@ from ._runtime import Distribution
 
 
 class CensoredLikelihoods:
-    """Normal, exponential and minimum-Weibull censored likelihoods."""
+    """Censored likelihoods for six reviewed distribution families."""
 
     def __init__(self, api):
         self._bridge = api.censored_bridge
@@ -68,4 +68,40 @@ class CensoredLikelihoods:
         """Evaluate weibull negative log likelihood; empty data contributes zero."""
         return self._evaluate('weibull_nnlf', uncensored, left, right, interval,
                               dict(c=c, loc=loc, scale=scale))
+
+    def lognormal_loglikelihood(self, uncensored=None, *, s, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate lognormal log likelihood; empty data contributes zero."""
+        return self._evaluate('lognormal_loglikelihood', uncensored, left, right, interval,
+                              dict(s=s, loc=loc, scale=scale))
+
+    def lognormal_nnlf(self, uncensored=None, *, s, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate lognormal negative log likelihood; empty data contributes zero."""
+        return self._evaluate('lognormal_nnlf', uncensored, left, right, interval,
+                              dict(s=s, loc=loc, scale=scale))
+
+    def gamma_loglikelihood(self, uncensored=None, *, a, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate gamma log likelihood; empty data contributes zero."""
+        return self._evaluate('gamma_loglikelihood', uncensored, left, right, interval,
+                              dict(a=a, loc=loc, scale=scale))
+
+    def gamma_nnlf(self, uncensored=None, *, a, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate gamma negative log likelihood; empty data contributes zero."""
+        return self._evaluate('gamma_nnlf', uncensored, left, right, interval,
+                              dict(a=a, loc=loc, scale=scale))
+
+    def beta_loglikelihood(self, uncensored=None, *, a, b, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate beta log likelihood; empty data contributes zero."""
+        return self._evaluate('beta_loglikelihood', uncensored, left, right, interval,
+                              dict(a=a, b=b, loc=loc, scale=scale))
+
+    def beta_nnlf(self, uncensored=None, *, a, b, left=None, right=None,
+            interval=None, loc=0.0, scale=1.0):
+        """Evaluate beta negative log likelihood; empty data contributes zero."""
+        return self._evaluate('beta_nnlf', uncensored, left, right, interval,
+                              dict(a=a, b=b, loc=loc, scale=scale))
 

@@ -119,7 +119,7 @@ is smaller than the native Fortran API. A generated Python interface covers elev
 univariate distribution families, multivariate normal/Student-t densities,
 Dirichlet, Wishart/inverse-Wishart, matrix-normal/matrix-t and discrete
 multivariate distributions, Poisson-binomial methods, empirical CDF/Kaplan-Meier
-estimation, logrank comparisons, normal/exponential/Weibull censored likelihoods,
+estimation, logrank comparisons, [censored likelihoods for six families](docs/censored_shapes.md),
 and eight matrix procedures. R, MATLAB, and Octave
 wrappers are planned; see
 [language bindings](bindings/README.md).

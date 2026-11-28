@@ -3145,13 +3145,21 @@ value = api.censored.normal_loglikelihood(
     [0.5, 1.2, 2.5], left=[0.3], right=[3.5],
     interval=[[1.1, 1.4], [4.0, 4.4]], loc=0.4, scale=1.3)
 nll = api.censored.weibull_nnlf([1.0, 2.0], c=1.7, right=[3.0], scale=2.3)
+lognormal_nll = api.censored.lognormal_nnlf([1.0, 2.0], s=0.8, right=[3.0])
+gamma_value = api.censored.gamma_loglikelihood([1.0, 2.0], a=2.5, scale=1.3)
+beta_value = api.censored.beta_loglikelihood(
+    [0.2, 0.6], a=0.4, b=0.6, interval=[[0.3, 0.5]])
 ```
 
-Normal, exponential and minimum-Weibull each expose `*_loglikelihood` and
+Normal, exponential, minimum-Weibull, lognormal, gamma and beta each expose `*_loglikelihood` and
 `*_nnlf` under `api.censored`, returning scalar floats. Independent input groups
 are copied into a local native `censored_data` object; no handles require cleanup.
 Omitted groups are empty. Location defaults to zero and scale to one; Weibull
-requires keyword `c`. Scale and `c` must be finite and positive; location is finite.
+requires keyword `c`; lognormal requires `s`, gamma requires `a`, and beta
+requires `a,b`. Scale and all shape parameters must be finite and positive;
+location is finite. Beta preserves the native finite-upper-support restriction.
+Lognormal scale is `exp(mean(log(x-loc)))` and `s` is its log standard deviation;
+gamma scale is its inverse rate and beta scale is its support width.
 
 `interval` has shape `(n_interval,2)`. Equal finite endpoints mean an exact
 observation; one infinite endpoint means one-sided censoring. Reversed endpoints,
@@ -3172,7 +3180,7 @@ that layout and returns an `ArrayResult`. See the complete
 Focused validation commands (CMD):
 
 ```bat
-python -m unittest discover -s bindings/python/tests -p test_censored.py -v
+python -m unittest discover -s bindings/python/tests -p "test_censored*.py" -v
 python -m unittest discover -s bindings/python/tests -p test_bindings.py -v
 python -m unittest discover -s bindings/python/tests -p test_logrank.py -v
 python -m unittest discover -s bindings/python/tests -p test_ecdf.py -v
@@ -3191,3 +3199,17 @@ Fortran ASCII/line lengths, documentation links and diff whitespace checks passe
 The full numerical suite was not rerun for these isolated additive interfaces;
 existing native dependencies, generator/runtime implementations and build flags
 are unchanged. Other compilers and platforms were not newly validated.
+
+Validation on 2026-11-28: all 13 censored-interface tests (including six new-family
+checks) and ten general binding tests passed against checked and optimized
+libraries with the compiler/Python/SciPy versions listed above. The expanded
+native/C test covers all twelve methods; C11/C++17 clients exercise all six new
+symbols. Tests include mixed/empty/right/left/interval censoring, equal/infinite
+endpoints, scalar shape guards, nonfinite data, strided/read-only aliases,
+lognormal transformation, gamma/exponential and beta reflection identities,
+saved adjacent-endpoint/extreme-tail references, and native numerical NaNs.
+The expanded Python example passed against the checked library. All 172 generated
+artifacts passed the consistency check. Static comparison confirmed unchanged
+native numerical statements/signatures and unchanged 112-file dependency graph.
+The full numerical suite was not rerun for these isolated interface additions;
+other compilers and platforms were not newly validated.

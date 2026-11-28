@@ -1062,3 +1062,8 @@ one dimension. Existing policies enforce that pairing without extending the
 generator. Python converts `(ni,2)` interval matrices to the two vectors; native
 construction, parameter validation and likelihood calculations remain outside
 the generator. See [censored_shapes.md](../../docs/censored_shapes.md).
+
+Lognormal, gamma and beta censored adapters extend the same reviewed policy with
+one or two explicit scalar shape parameters. No parser, code generator or Python
+runtime change is needed. Native parameter-vector shapes and the finite rounded
+upper-support restriction for beta are documented in the shared censored contract.

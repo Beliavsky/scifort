@@ -1,10 +1,10 @@
 {
   "counts": {
-    "array_adapters": 129,
+    "array_adapters": 135,
     "bulk": 88,
     "elementwise": 88,
-    "exports": 295,
-    "python": 217,
+    "exports": 301,
+    "python": 223,
     "scalar": 88
   },
   "procedures": [
@@ -169,6 +169,18 @@
       "scalar_generated": true
     },
     {
+      "array_adapter": "scifort_beta_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_beta_loglikelihood",
+      "python": "censored_bridge.beta_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_beta_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_beta_nnlf",
+      "python": "censored_bridge.beta_nnlf"
+    },
+    {
       "array_adapter": "scifort_exponential_censored_loglikelihood_f64",
       "module": "scifort_censored_bridge",
       "procedure": "censored_exponential_loglikelihood",
@@ -179,6 +191,30 @@
       "module": "scifort_censored_bridge",
       "procedure": "censored_exponential_nnlf",
       "python": "censored_bridge.exponential_nnlf"
+    },
+    {
+      "array_adapter": "scifort_gamma_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_gamma_loglikelihood",
+      "python": "censored_bridge.gamma_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_gamma_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_gamma_nnlf",
+      "python": "censored_bridge.gamma_nnlf"
+    },
+    {
+      "array_adapter": "scifort_lognormal_censored_loglikelihood_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_lognormal_loglikelihood",
+      "python": "censored_bridge.lognormal_loglikelihood"
+    },
+    {
+      "array_adapter": "scifort_lognormal_censored_nnlf_f64",
+      "module": "scifort_censored_bridge",
+      "procedure": "censored_lognormal_nnlf",
+      "python": "censored_bridge.lognormal_nnlf"
     },
     {
       "array_adapter": "scifort_normal_censored_loglikelihood_f64",
